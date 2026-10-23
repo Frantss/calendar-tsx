@@ -35,26 +35,31 @@ Override any `--calendar-*` token on an ancestor of the calendar:
 ```css
 .schedule {
   --calendar-accent: light-dark(#1f5f8b, #7cb7e0);
+  --calendar-accent-contrast: light-dark(#ffffff, #0b1a24);
   --calendar-slot-height: 2.5rem;
 }
 ```
 
-| Token                                                                                      | Default (light, dark)                       |
-| ------------------------------------------------------------------------------------------ | ------------------------------------------- |
-| `--calendar-surface`, `--calendar-surface-muted`                                           | `#ffffff` `#f5f4f1`, `#171615` `#201f1d`    |
-| `--calendar-text`, `--calendar-text-muted`                                                 | `#1c1b19` `#5f5c56`, `#f2efe9` `#a9a49b`    |
-| `--calendar-border`                                                                        | `#dedbd4`, `#34322e`                        |
-| `--calendar-accent`, `--calendar-accent-contrast`                                          | `#b4441e` `#ffffff`, `#f08a5d` `#1a0d07`    |
-| `--calendar-event`, `--calendar-event-border`                                              | `#ebe6dc` `#d3ccbf`, `#2e2b27` `#45413b`    |
-| `--calendar-event-text`, `--calendar-focus-ring`                                           | unset: fall back to the text and the accent |
-| `--calendar-radius`, `--calendar-bar-radius`                                               | `0.375rem`, `0.25rem`                       |
-| `--calendar-font-size`, `--calendar-font-size-sm`, `--calendar-font-size-xs`               | `0.875rem`, `0.75rem`, `0.6875rem`          |
-| `--calendar-slot-height`, `--calendar-axis-width`                                          | `3rem`, `4rem`                              |
-| `--calendar-bar-height`, `--calendar-bar-gap`, `--calendar-bar-inset`                      | `1.375rem`, `2px`, `2px`                    |
-| `--calendar-day-header-height`, `--calendar-overflow-height`, `--calendar-week-min-height` | `2rem`, `1.5rem`, `6rem`                    |
+**Accent.** `--calendar-accent` recolors the calendar on its own: today's marker, the now line, today's column tint,
+the focus ring and the events, which are tints of it unless `--calendar-event` is set. Set `--calendar-accent-contrast`
+with it for the numbers on today's marker. Use a `light-dark()` pair so each mode gets a fitting shade.
 
-The theme sets no font family; the calendar inherits the page's. `--calendar-event-text` and `--calendar-focus-ring`
-are left unset on purpose: a token declared as `var(--other)` resolves where it is declared, so a default on `:root`
+| Token                                                                                      | Default (light, dark)                                 |
+| ------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
+| `--calendar-surface`, `--calendar-surface-muted`                                           | `#ffffff` `#f5f4f1`, `#171615` `#201f1d`              |
+| `--calendar-text`, `--calendar-text-muted`                                                 | `#1c1b19` `#5f5c56`, `#f2efe9` `#a9a49b`              |
+| `--calendar-border`                                                                        | `#dedbd4`, `#34322e`                                  |
+| `--calendar-accent`, `--calendar-accent-contrast`                                          | `#b4441e` `#ffffff`, `#f08a5d` `#1a0d07`              |
+| `--calendar-event`, `--calendar-event-border`                                              | unset: the accent tinted 16% and 24% into the surface |
+| `--calendar-event-text`, `--calendar-focus-ring`                                           | unset: fall back to the text and the accent           |
+| `--calendar-radius`, `--calendar-bar-radius`                                               | `0.375rem`, `0.25rem`                                 |
+| `--calendar-font-size`, `--calendar-font-size-sm`, `--calendar-font-size-xs`               | `0.875rem`, `0.75rem`, `0.6875rem`                    |
+| `--calendar-slot-height`, `--calendar-axis-width`                                          | `3rem`, `4rem`                                        |
+| `--calendar-bar-height`, `--calendar-bar-gap`, `--calendar-bar-inset`                      | `1.375rem`, `2px`, `2px`                              |
+| `--calendar-day-header-height`, `--calendar-overflow-height`, `--calendar-week-min-height` | `2rem`, `1.5rem`, `6rem`                              |
+
+The theme sets no font family; the calendar inherits the page's. The event tokens and `--calendar-focus-ring` are left
+unset on purpose: a token declared as `var(--other)` resolves where it is declared, so a default on `:root`
 would ignore an override of the token it points to.
 
 **Dark mode.** Colors use `light-dark()`, so they follow the inherited `color-scheme`. The theme never sets it: declare
@@ -76,9 +81,9 @@ scroll inside the page rather than show all 24 hours.
 
 `shadcn.css` replaces `default.css`: it maps the calendar tokens onto shadcn/ui's variables (`--background`,
 `--foreground`, `--muted`, `--muted-foreground`, `--border`, `--primary`, `--primary-foreground`, `--ring`,
-`--radius`), so the calendar follows the app's palette, radius and `.dark` class with no further setup. Events are
-`--primary` tinted 16% into `--background`, because shadcn's `--secondary`, `--muted` and `--accent` sit almost on the
-background in light mode. Use the Tailwind v4 variable naming (full `oklch()` colors, not the v3 HSL channels).
+`--radius`), so the calendar follows the app's palette, radius and `.dark` class with no further setup. Events take
+the default theme's accent tint, so they are `--primary` tinted 16% into `--background`; shadcn's `--secondary`,
+`--muted` and `--accent` sit almost on the background in light mode. Use the Tailwind v4 variable naming (full `oklch()` colors, not the v3 HSL channels).
 
 ```css
 @import 'tailwindcss';
