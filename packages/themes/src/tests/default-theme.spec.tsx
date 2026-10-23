@@ -3,8 +3,13 @@
 import { expect, it } from 'vitest';
 import { cdp } from 'vitest/browser';
 
-import type { Calendar_MonthLayout, Calendar_TimeGridLayout } from '@calendar-tsx/core';
+import type { Calendar_ListLayout, Calendar_MonthLayout, Calendar_TimeGridLayout } from '@calendar-tsx/core';
+import { listView } from '@calendar-tsx/core';
 import {
+  ListView,
+  ListViewDay,
+  ListViewDayHeader,
+  ListViewEvent,
   MonthViewDay,
   MonthViewDayTrigger,
   MonthViewOverflow,
@@ -224,4 +229,38 @@ it('leaves a gap between the day number and the first bar', async () => {
 
   // 0.25rem at the default 16px root size
   expect(bar.top - trigger.bottom).toBeCloseTo(4, 0);
+});
+
+const List = () => {
+  const list = useCalendarSelector(state => state.layout) as Calendar_ListLayout<ThemesSetup_EventData>;
+
+  return (
+    <ListView model={list}>
+      {list.days.map(day => (
+        <ListViewDay key={day.key} day={day}>
+          <ListViewDayHeader day={day}>{day.key}</ListViewDayHeader>
+          {day.events.map(event => (
+            <ListViewEvent key={event.id} event={event}>
+              {event.data.title}
+            </ListViewEvent>
+          ))}
+        </ListViewDay>
+      ))}
+    </ListView>
+  );
+};
+
+it('stacks list events as full-width rows under a muted day header', async () => {
+  await themesSetup_render(<List />, {
+    views: { list: listView({ days: 1 }) },
+    view: 'list',
+    events: ['Yoga', 'Swim'].map(id => themesSetup_timed(id, { date: '2026-03-11', start: '09:00', end: '10:00' })),
+  });
+  const header = themesSetup_part('list-day-header')[0];
+  const [yoga, swim] = themesSetup_part('list-event').map(themesSetup_rect);
+  const root = themesSetup_rect(themesSetup_part('list-root')[0]);
+
+  expect(header && getComputedStyle(header).backgroundColor).toBe('rgb(245, 244, 241)');
+  expect(swim?.top).toBeGreaterThanOrEqual(yoga?.bottom ?? Infinity);
+  expect(yoga?.width).toBeCloseTo(root.width - 2, 0);
 });
