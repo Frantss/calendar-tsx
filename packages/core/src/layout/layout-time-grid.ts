@@ -19,6 +19,9 @@ import { layoutIntervals_clip, layoutIntervals_complement, layoutIntervals_day }
 import { layoutLanes_assign } from '#layout/layout-lanes';
 
 const DEFAULT_SLOT_MINUTES = 30;
+const DEFAULT_MIN_EVENT_MINUTES = 15;
+const DEFAULT_SHORT_EVENT_MINUTES = 30;
+const MS_PER_MINUTE = 60_000;
 const MINUTES_PER_DAY = 24 * 60;
 
 const matchesResource = <TData, TResourceData>(
@@ -40,6 +43,8 @@ const buildColumn = <TData, TResourceData>({
   timeZone,
   now,
   overlap,
+  minEventMs,
+  shortEventMs,
 }: {
   date: Temporal.PlainDate;
   resource?: Calendar_Resource<TResourceData>;
@@ -48,6 +53,8 @@ const buildColumn = <TData, TResourceData>({
   timeZone: string;
   now: Temporal.ZonedDateTime;
   overlap: Calendar_TimeGridOverlap;
+  minEventMs: number;
+  shortEventMs: number;
 }): Calendar_TimeGridColumn<TData, TResourceData> => {
   // Real wall-clock day length in `timeZone`, so DST days are 23 or 25 hours long.
   const day = layoutIntervals_day(date, timeZone);
@@ -63,11 +70,14 @@ const buildColumn = <TData, TResourceData>({
 
     if (endMs <= day.startMs || startMs >= day.endMs) return [];
 
+    const clippedStart = Math.max(startMs, day.startMs);
+
+    // Laid out at least `minEventMs` long, so a brief event stays visible and gets its own lane (D39)
     return [
       {
         event,
-        startMs: Math.max(startMs, day.startMs),
-        endMs: Math.min(endMs, day.endMs),
+        startMs: clippedStart,
+        endMs: Math.min(Math.max(endMs, clippedStart + minEventMs), day.endMs),
         continuesBefore: startMs < day.startMs,
         continuesAfter: endMs > day.endMs,
       },
@@ -141,6 +151,7 @@ const buildColumn = <TData, TResourceData>({
       lanes: item.lanes,
       inlineStart: item.inlineStart,
       inlineSize: item.inlineSize,
+      isShort: item.endMs - item.startMs < shortEventMs,
       continuesBefore: item.continuesBefore,
       continuesAfter: item.continuesAfter,
     })),
@@ -251,6 +262,8 @@ export const layoutTimeGrid_build = <TData, TResourceData>({
       timeZone,
       now,
       overlap: definition.overlap ?? 'side-by-side',
+      minEventMs: (definition.minEventMinutes ?? DEFAULT_MIN_EVENT_MINUTES) * MS_PER_MINUTE,
+      shortEventMs: (definition.shortEventMinutes ?? DEFAULT_SHORT_EVENT_MINUTES) * MS_PER_MINUTE,
     }),
   );
   const slotMinutes = definition.slotMinutes ?? DEFAULT_SLOT_MINUTES;

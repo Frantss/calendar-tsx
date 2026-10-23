@@ -71,6 +71,33 @@ it('cascades overlapping events so later lanes cover at most half of an event', 
   });
 });
 
+const brief = [
+  fixtures_timed('call', { date: '2026-03-11', start: '09:00', end: '09:05' }),
+  fixtures_timed('ping', { date: '2026-03-11', start: '09:05', end: '09:10' }),
+  fixtures_timed('review', { date: '2026-03-11', start: '10:00', end: '11:00' }),
+];
+
+it('lays a brief event out at the minimum length, in its own lane, and flags it short', async () => {
+  const utils = await setup({ events: brief });
+  const segment = (id: string) => utils.column('all:2026-03-11')?.segments.find(item => item.event.id === id);
+
+  expect(segment('call')?.span).toBeCloseTo(15 / (24 * 60));
+  expect(utils.lanes('all:2026-03-11')).toEqual(['call:0/2', 'ping:1/2', 'review:0/1']);
+  expect([segment('call')?.isShort, segment('ping')?.isShort, segment('review')?.isShort]).toEqual([true, true, false]);
+  // the event itself keeps its real end
+  expect(String(segment('call')?.event.end)).toContain('T09:05:00');
+});
+
+it('lays events out at their exact length with minEventMinutes 0 and flags short by shortEventMinutes', async () => {
+  const views = { ...calendarSetup_defaults.views, day: timeGridView({ days: 1, minEventMinutes: 0, shortEventMinutes: 10 }) };
+  const utils = await setup({ views, events: brief });
+  const segments = utils.column('all:2026-03-11')?.segments;
+
+  expect(segments?.[0]?.span).toBeCloseTo(5 / (24 * 60));
+  expect(utils.lanes('all:2026-03-11')).toEqual(['call:0/1', 'ping:0/1', 'review:0/1']);
+  expect(segments?.map(segment => segment.isShort)).toEqual([true, true, false]);
+});
+
 it('reports no lanes for a column without timed events', async () => {
   const utils = await setup();
 

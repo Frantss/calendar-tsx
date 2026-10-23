@@ -292,6 +292,7 @@ export const TimeGridViewEvent = forwardRef<HTMLButtonElement, TimeGridViewEvent
         {
           type: 'button',
           'data-overlap': flag(segment.lanes > 1),
+          'data-short': flag(segment.isShort),
           'data-continues-before': flag(segment.continuesBefore),
           'data-continues-after': flag(segment.continuesAfter),
           style: vars({

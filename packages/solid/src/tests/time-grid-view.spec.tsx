@@ -106,6 +106,18 @@ it('positions timed events and flags overlaps', async () => {
   expect(ui.part('time-grid-column')[0]?.getAttribute('style')).toBe('--cal-column-lanes: 2;');
 });
 
+it('flags short events', async () => {
+  const { ui } = setup({
+    events: [
+      fixtures_timed('Call', { date: '2026-03-11', start: '09:00', end: '09:05' }),
+      fixtures_timed('Review', { date: '2026-03-11', start: '10:00', end: '11:00' }),
+    ],
+  });
+
+  await expect.element(ui.event('Call')).toHaveAttribute('data-short', '');
+  await expect.element(ui.event('Review')).not.toHaveAttribute('data-short');
+});
+
 it('renders all-day events in the all-day row only', async () => {
   const { ui } = setup({ events: [fixtures_allDay('Fair', { start: '2026-03-11' })] });
 

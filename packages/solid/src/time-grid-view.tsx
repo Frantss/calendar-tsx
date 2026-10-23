@@ -302,6 +302,7 @@ export const TimeGridViewEvent = <TData,>(props: TimeGridViewEventProps<TData>) 
         () => ({
           type: 'button',
           'data-overlap': flag(local.segment.lanes > 1),
+          'data-short': flag(local.segment.isShort),
           'data-continues-before': flag(local.segment.continuesBefore),
           'data-continues-after': flag(local.segment.continuesAfter),
           style: vars({

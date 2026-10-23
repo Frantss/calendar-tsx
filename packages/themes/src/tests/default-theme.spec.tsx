@@ -178,6 +178,18 @@ it('cascades overlapping events with the later lane on top', async () => {
   expect(at(yoga.left + yoga.width / 4, pilates.top + 4)).toBe('Yoga');
 });
 
+it('draws a brief event at the minimum length with its content on one line', async () => {
+  await themesSetup_render(<TimeGrid />, {
+    events: [themesSetup_timed('Call', { date: '2026-03-11', start: '09:00', end: '09:05' })],
+  });
+  const column = themesSetup_rect(themesSetup_part('time-grid-column')[0]);
+  const call = event('Call');
+
+  // 15 minutes of the day, less --calendar-event-gap
+  expect(themesSetup_rect(call).height).toBeCloseTo(column.height / 96 - 4, 0);
+  expect(call && getComputedStyle(call).flexDirection).toBe('row');
+});
+
 it('lines column headers up with their columns', async () => {
   await themesSetup_render(<TimeGrid />, { view: 'week' });
   const headers = themesSetup_part('time-grid-column-header').map(header => themesSetup_rect(header).left);

@@ -160,6 +160,10 @@ export type Calendar_TimeGridViewSettings = {
   minColumnWidth?: string;
   /** Defaults to `'side-by-side'`; `'cascade'` lets later lanes cover up to half of an event (D38). */
   overlap?: Calendar_TimeGridOverlap;
+  /** Shorter timed events are laid out this long, on screen and for lanes; defaults to 15, `0` turns it off (D39). */
+  minEventMinutes?: number;
+  /** Segments laid out shorter than this are flagged `isShort`; defaults to 30 (D39). */
+  shortEventMinutes?: number;
 };
 
 /** A run of `days` days, or the calendar month or year containing the date (D36). */
@@ -229,6 +233,8 @@ export type Calendar_TimeGridSegment<TData, TFeatures = {}> = {
   /** Fractions of the column's width, after expansion into free lanes and any cascade (D38). */
   inlineStart: number;
   inlineSize: number;
+  /** Laid out shorter than the view's `shortEventMinutes`, so one line of content fits (D39). */
+  isShort: boolean;
   continuesBefore: boolean;
   continuesAfter: boolean;
 } & Calendar_PickFeatures<Calendar_TimeGridSegment_FeatureMap, TFeatures>;
