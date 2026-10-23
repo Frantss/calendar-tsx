@@ -201,7 +201,6 @@ type Calendar_Options<TData, TResourceData, TViews extends Record<string, Calend
   date: Temporal.PlainDate; // controlled (D5, D7)
   onNavigate: (next: Calendar_Navigation<TViews>) => void;
   events: Calendar_EventInput<TData>[]; // D2, D7, D8
-  backgroundEvents?: Calendar_EventInput<TData>[]; // D37
   resources?: Calendar_Resource<TResourceData>[]; // D12
   eventOrder?: (a: Calendar_Event<TData>, b: Calendar_Event<TData>, context: Calendar_ViewContext<TViews>) => number; // D16
   firstDayOfWeek?: 1 | 2 | 3 | 4 | 5 | 6 | 7; // ISO; 7 = Sunday
@@ -929,7 +928,7 @@ Time-grid fractions use the real wall-clock day length, as `unavailable` does (D
 
 **Considered and rejected:**
 
-- **A `display: 'background'` flag on events, as FullCalendar does.** Background entries would then pass through `eventOrder`, lane assignment, month bars, `hiddenCount`, the list view and the event store, each of which would have to filter them out, and `data: TData` would type two unrelated things.
+- **A `display: 'background'` flag on events, as FullCalendar does.** Background entries would then pass through `eventOrder`, lane assignment, month bars, `hiddenCount`, the list view and the event store, each of which would have to filter them out, and `data: TData` would type two unrelated things. D37 later adopts the flag for individual dated events, which need ids and payloads; layers stay the mechanism for rules.
 - **A dedicated `businessHoursFeature` with weekly rules in the core.** Narrower: it shades business hours only, leaves background events missing, and puts recurrence in the core against D12.
 - **A weekly-rules helper plus a calendar-wide `availability` option only.** Smallest, but the consumer recomputes on every navigation, month view gets nothing, and background events stay missing.
 - **Replacing D12 now.** `availability` would become a `kind: 'unavailable'` inverse layer per resource, and `Calendar_Resource.availability` would stop being required. Deferred until background layers are proven: it is a breaking change to the time-grid model.
@@ -1005,7 +1004,7 @@ Rejected: `weeks` on `monthView` (a one-week "month" view, and a settings bag wh
 
 Rejected: `listView({ months })` (a count cannot express a calendar year, since `months: 12` would start at the month of `date`); separate `listMonthView`/`listYearView` factories (four names for one layout). The same month and year periods are what `dayGridYear` needs later (D35).
 
-### D37 — Background events are a separate input, laid out under the events
+### D37 — Background events are events with `display: 'background'`, laid out under the others
 
 **Serves:** C13; D33
 
@@ -1013,7 +1012,9 @@ Rejected: `listView({ months })` (a count cannot express a calendar year, since 
 
 **Relation to D33.** Background layers and background events both shade time, but they answer different questions. A layer is a rule the app configures once: a `kind` of shading (closed, holiday) over ranges that may repeat weekly or be inverted, styled by `data-kind`, with no identity per range. A background event is one dated item from the app's data: it has an id, a `TData` payload the app renders or links from, continuation flags across days and weeks, and a place in the all-day row. Business hours are a layer; a booked-out afternoon or a conference fetched with the events is a background event. The two coexist and stack: layers render through `backgroundFeature`'s `backgrounds` fields, background events through the core's `backgroundEvents` fields.
 
-**Why:** Background events are shaded ranges with an event's shape: an id, a timed or all-day span, optional `resourceIds`, and `data`. They arrive as their own option, `backgroundEvents`, beside `events`. As a flag on `events` they would reach every consumer of the event list (`day.events` in the overflow popover, list days, `eventOrder`, feature `events` stages), and each would have to filter them out. The input shares `TData` (D8): a second generic would stay `unknown` whenever the app names `TData` explicitly, because TypeScript has no partial type-argument inference, and apps already discriminate `data` by kind. The option is tracked by reference like `events` (D24), normalised to `timeZone` (D7), clipped to the visible range and kept in input order; it reaches layout features as `Calendar_LayoutInput.backgroundEvents`.
+**Why:** A background event is a shaded range with an event's shape: an id, a timed or all-day span, optional `resourceIds`, and `data`. It is an ordinary entry in `events` with `display: 'background'` (`Calendar_EventDisplay`, default `'auto'`, after FullCalendar's `display`), so an app keeps one list of everything on the calendar, one id space, one fetch and one event store. The core splits the list right after normalising and clipping (D7): background events skip `eventOrder` and feature `events` stages, keep their input order, and reach layout features separately as `Calendar_LayoutInput.backgroundEvents`. Every list the core hands out (`day.events`, list days, the bars and segments) excludes them, so the split happens once in the core rather than in each consumer. They share `TData` (D8) and are tracked with `events` (D24).
+
+**Amended:** the first implementation took a separate `backgroundEvents` option, to keep background events out of every consumer of the event list. Folding them into `events` keeps that guarantee for the core's own outputs, because the split happens before layout. What remains on the app is its own code that reads the `events` input directly (a search box, a count), which filters on `display`. D33 rejected a `display` flag as the mechanism for layers, because rules would then pass through every event consumer; here it marks individual dated events only, and layers remain the mechanism for rules.
 
 Layout:
 
@@ -1028,7 +1029,8 @@ Parts: `MonthView_WeekBackgroundEvent`, `TimeGridView_AllDayBackgroundEvent` and
 
 **Rejected:**
 
-- **A `background` flag on events:** it leaks into every list of events, as above.
+- **A separate `backgroundEvents` option** (the first implementation): two lists to fetch and keep in step, ids checked for duplicates only within each, and the event store could not hold background events.
+- **`kind: 'background'`:** a background event is itself timed or all-day, so it would need two more kinds or a nested flag; `kind` keeps the date shape (D7) and `display` the rendering.
 - **Background layers (D33) for these entries:** a layer per entry loses the id and payload, and one layer of all entries cannot tell the app which entry a shaded span came from, nor flag continuation across days.
 - **Sharing D33's parts and fields:** layers are keyed by layer and `kind`, background events by event; one part would need both shapes. They keep separate names (`backgrounds` against `backgroundEvents`, `TimeGridViewBackground` against `TimeGridViewBackgroundEvent`).
 - **Extending resource `availability` (D12):** it is the inverse (shade outside the intervals), per resource only, and has no payload.
@@ -1068,7 +1070,7 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - `event.data` keeps its `TData` type through to the parts (type test). _(D8)_
 - `createEvent` returns its argument, infers `TData` from `data`, keeps the timed or all-day variant, and rejects a mixed shape (type test). _(D7, D8)_
 - An event without `kind` is a type error, and `event.kind` narrows the union (type test). _(D7)_
-- Replacing `backgroundEvents` re-derives the layout; it is tracked by reference like `events`. _(C13, D24, D37)_
+- An event with `display: 'background'` reaches neither `eventOrder`, list days nor `day.events`, and appears only as background spans and segments. _(C13, D37)_
 
 ### Month layout
 

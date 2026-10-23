@@ -1,12 +1,17 @@
 import type { ReadonlyStore } from '@tanstack/store';
 import type { Temporal } from 'temporal-polyfill';
 
+/** `'background'` shades the range under the other events instead of laying it out as one (D37). */
+export type Calendar_EventDisplay = 'auto' | 'background';
+
 export type Calendar_TimedEventInput<TData> = {
   id: string;
   kind: 'timed';
   start: Temporal.ZonedDateTime;
   end: Temporal.ZonedDateTime;
   resourceIds?: string[];
+  /** Defaults to `'auto'`. */
+  display?: Calendar_EventDisplay;
   data: TData;
 };
 
@@ -17,6 +22,8 @@ export type Calendar_AllDayEventInput<TData> = {
   /** Inclusive; defaults to `start`. */
   end?: Temporal.PlainDate;
   resourceIds?: string[];
+  /** Defaults to `'auto'`. */
+  display?: Calendar_EventDisplay;
   data: TData;
 };
 
@@ -325,9 +332,9 @@ export type Calendar_LayoutKey = keyof Calendar_Layout_FeatureMap<unknown, unkno
 export type Calendar_LayoutInput<TData, TResourceData> = {
   range: Calendar_Range;
   period: Calendar_Range;
-  /** Normalised to `timeZone`, clipped to `range`, sorted by `eventOrder`. */
+  /** Normalised to `timeZone`, clipped to `range`, sorted by `eventOrder`; no background events. */
   events: Calendar_Event<TData>[];
-  /** Normalised to `timeZone`, clipped to `range`, in input order (D37). */
+  /** The events with `display: 'background'`: normalised and clipped likewise, in input order (D37). */
   backgroundEvents: Calendar_Event<TData>[];
   resources: Calendar_Resource<TResourceData>[];
   timeZone: string;
@@ -463,13 +470,11 @@ export type Calendar_Options<
   view: keyof TViews & string;
   date: Temporal.PlainDate;
   onNavigate: (next: Calendar_Navigation<TViews>) => void;
-  /** Ids must be unique; tracked by reference. */
-  events: Calendar_EventInput<TData>[];
   /**
-   * Shaded ranges under the events (D37): no lanes or rows, no `eventOrder`, not counted by `maxEventsPerDay`. Without
-   * `resourceIds` they cover every resource column. Ids must be unique; tracked by reference.
+   * Ids must be unique; tracked by reference. Events with `display: 'background'` are shaded under the others: no
+   * lanes or rows, no `eventOrder`, no feature `events` stages, not in `day.events` or the list (D37).
    */
-  backgroundEvents?: Calendar_EventInput<TData>[];
+  events: Calendar_EventInput<TData>[];
   /** Tracked by reference. */
   resources?: Calendar_Resource<TResourceData>[];
   /** Read when the layout derives; changing it alone does not re-derive. */

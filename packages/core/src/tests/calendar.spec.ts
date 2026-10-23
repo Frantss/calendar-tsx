@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 
 import { intervalClock } from '#calendar-clock';
 import type { Calendar_Clock } from '#calendar.types';
-import { fixtures_allDay, fixtures_at, fixtures_timed } from '#tests/calendar.fixtures';
+import { fixtures_allDay, fixtures_at, fixtures_background, fixtures_timed } from '#tests/calendar.fixtures';
 import { calendarSetup_create, calendarSetup_defaults } from '#tests/calendar.setup';
 
 afterEach(() => {
@@ -101,15 +101,6 @@ it('re-derives when the events reference changes', async () => {
   expect(utils.state()).not.toBe(before);
 });
 
-it('re-derives when the backgroundEvents reference changes', async () => {
-  const utils = await calendarSetup_create();
-  const before = utils.state();
-
-  utils.update({ backgroundEvents: [fixtures_allDay('holiday', { start: '2026-03-17' })] });
-
-  expect(utils.state()).not.toBe(before);
-});
-
 it('reads eventOrder at derivation time without tracking it', async () => {
   const events = [
     fixtures_timed('a', { date: '2026-03-11', start: '09:00', end: '10:00' }),
@@ -133,6 +124,26 @@ it('passes the active view context to eventOrder', async () => {
   await calendarSetup_create({ view: 'week', events, eventOrder }).then(utils => utils.state());
 
   expect(eventOrder.mock.calls[0]?.[2]).toMatchObject({ view: 'week', kind: 'timeGrid' });
+});
+
+it('keeps background events out of eventOrder, the list and day event lists', async () => {
+  const eventOrder = vi.fn((..._args: unknown[]) => 0);
+  const events = [
+    fixtures_timed('a', { date: '2026-03-11', start: '09:00', end: '10:00' }),
+    fixtures_timed('b', { date: '2026-03-11', start: '11:00', end: '12:00' }),
+    fixtures_background(fixtures_timed('closed', { date: '2026-03-11', start: '12:00', end: '13:00' })),
+    fixtures_background(fixtures_allDay('holiday', { start: '2026-03-12' })),
+  ];
+  const ids = (list: { id: string }[] = []) => list.map(event => event.id);
+
+  const list = (await calendarSetup_create({ view: 'list_week', events, eventOrder })).state().layout;
+  const month = (await calendarSetup_create({ view: 'month', events })).state().layout;
+  const days = month.kind === 'month' ? month.weeks.flatMap(week => week.days) : [];
+
+  expect(eventOrder.mock.calls.flatMap(([a, b]) => ids([a, b] as { id: string }[]))).not.toContain('closed');
+  expect(list.kind === 'list' ? list.days.map(day => ids(day.events)) : []).toEqual([['a', 'b']]);
+  expect(ids(days.find(day => day.key === '2026-03-12')?.events)).toEqual([]);
+  expect(month.kind === 'month' ? month.weeks.flatMap(week => ids(week.backgroundEvents.map(span => span.event))) : []).toEqual(['holiday']);
 });
 
 it('lays timed events out in the calendar time zone, whatever their input zone', async () => {

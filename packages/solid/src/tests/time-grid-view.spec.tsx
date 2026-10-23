@@ -4,7 +4,7 @@ import { page } from 'vitest/browser';
 
 import type { Calendar_TimeGridLayout } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
-import { fixtures_allDay, fixtures_resource, fixtures_timed } from '#tests/calendar.fixtures';
+import { fixtures_allDay, fixtures_background, fixtures_resource, fixtures_timed } from '#tests/calendar.fixtures';
 import {
   TimeGridViewAllDay,
   TimeGridViewAllDayBackgroundEvent,
@@ -144,9 +144,9 @@ it('navigates from a column trigger', async () => {
 it('renders background events as inert shades under the events', async () => {
   const { ui } = await setup({
     view: 'week',
-    backgroundEvents: [
-      fixtures_timed('Closed', { date: '2026-03-11', start: '12:00', end: '18:00' }),
-      fixtures_allDay('Break', { start: '2026-03-12', end: '2026-03-13' }),
+    events: [
+      fixtures_background(fixtures_timed('Closed', { date: '2026-03-11', start: '12:00', end: '18:00' })),
+      fixtures_background(fixtures_allDay('Break', { start: '2026-03-12', end: '2026-03-13' })),
     ],
   });
   const [allDay] = ui.part('time-grid-all-day-background-event');

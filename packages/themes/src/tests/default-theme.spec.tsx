@@ -42,7 +42,14 @@ import {
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
 import '../../default.css';
 
-import { themesSetup_allDay, themesSetup_part, themesSetup_rect, themesSetup_render, themesSetup_timed } from '#tests/themes.setup';
+import {
+  themesSetup_allDay,
+  themesSetup_background,
+  themesSetup_part,
+  themesSetup_rect,
+  themesSetup_render,
+  themesSetup_timed,
+} from '#tests/themes.setup';
 
 const TimeGrid = ({ eventClassName }: { eventClassName?: string }) => {
   const grid = useCalendarSelector(state => state.layout) as Calendar_TimeGridLayout<ThemesSetup_EventData, null>;
@@ -366,8 +373,10 @@ it('scrolls a long list once its height is limited', async () => {
 
 it('shades a timed background event under the events it overlaps', async () => {
   await themesSetup_render(<TimeGrid />, {
-    events: [themesSetup_timed('Yoga', { date: '2026-03-11', start: '12:00', end: '13:00' })],
-    backgroundEvents: [themesSetup_timed('Closed', { date: '2026-03-11', start: '12:00', end: '18:00' })],
+    events: [
+      themesSetup_timed('Yoga', { date: '2026-03-11', start: '12:00', end: '13:00' }),
+      themesSetup_background(themesSetup_timed('Closed', { date: '2026-03-11', start: '12:00', end: '18:00' })),
+    ],
   });
   event('Yoga')?.scrollIntoView({ block: 'center' });
   const column = themesSetup_rect(themesSetup_part('time-grid-column')[0]);
@@ -382,8 +391,10 @@ it('shades a timed background event under the events it overlaps', async () => {
 it('spans an all-day background event over every bar row of the all-day section', async () => {
   await themesSetup_render(<TimeGrid />, {
     view: 'week',
-    events: ['A', 'B'].map(id => themesSetup_allDay(id, { start: '2026-03-11', end: '2026-03-11' })),
-    backgroundEvents: [themesSetup_allDay('Break', { start: '2026-03-11', end: '2026-03-12' })],
+    events: [
+      ...['A', 'B'].map(id => themesSetup_allDay(id, { start: '2026-03-11', end: '2026-03-11' })),
+      themesSetup_background(themesSetup_allDay('Break', { start: '2026-03-11', end: '2026-03-12' })),
+    ],
   });
   const shade = themesSetup_rect(themesSetup_part('time-grid-all-day-background-event')[0]);
   const bars = themesSetup_part('time-grid-all-day-event').map(bar => themesSetup_rect(bar));
@@ -398,7 +409,7 @@ it('spans an all-day background event over every bar row of the all-day section'
 it('tints month days under an all-day background event and keeps their triggers clickable', async () => {
   await themesSetup_render(<Month />, {
     view: 'month',
-    backgroundEvents: [themesSetup_allDay('Break', { start: '2026-03-10', end: '2026-03-12' })],
+    events: [themesSetup_background(themesSetup_allDay('Break', { start: '2026-03-10', end: '2026-03-12' }))],
   });
   const first = themesSetup_rect(themesSetup_part('month-day', '[data-date="2026-03-10"]')[0]);
   const last = themesSetup_rect(themesSetup_part('month-day', '[data-date="2026-03-12"]')[0]);

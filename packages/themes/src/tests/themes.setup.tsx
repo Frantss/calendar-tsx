@@ -32,7 +32,6 @@ const themesSetup_defaults = iife(() => ({
   events: [] as ThemesSetup_Event[],
   backgrounds: [] as Calendar_BackgroundLayer[],
   resources: [] as Calendar_Resource<null>[],
-  backgroundEvents: [] as ThemesSetup_Event[],
   colorScheme: 'light' as CSSProperties['colorScheme'],
   className: undefined as string | undefined,
 }));
@@ -53,9 +52,15 @@ export const themesSetup_allDay = (id: string, { start, end }: { start: string; 
   data: { title: id },
 });
 
+/** The event, shaded under the others instead of laid out (D37). */
+export const themesSetup_background = <TEvent extends ThemesSetup_Event>(event: TEvent): TEvent => ({
+  ...event,
+  display: 'background',
+});
+
 /** Renders `children` at a fixed width so geometry is deterministic; each spec imports the stylesheets it tests. */
 export const themesSetup_render = async (children: ReactNode, overrides: Partial<typeof themesSetup_defaults> = {}) => {
-  const { view, events, backgrounds, resources, backgroundEvents, colorScheme, className, ...rest } = {
+  const { view, events, backgrounds, resources, colorScheme, className, ...rest } = {
     ...themesSetup_defaults,
     ...overrides,
   };
@@ -69,7 +74,6 @@ export const themesSetup_render = async (children: ReactNode, overrides: Partial
       events,
       backgrounds,
       resources,
-      backgroundEvents,
       date: Temporal.PlainDate.from('2026-03-11'),
       timeZone: themesSetup_timeZone,
       firstDayOfWeek: 7,

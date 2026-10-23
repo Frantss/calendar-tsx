@@ -5,7 +5,7 @@ import { page } from 'vitest/browser';
 import type { Calendar_MonthLayout, Calendar_Views } from '@calendar-tsx/core';
 import { dayGridView, monthView, timeGridView } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
-import { fixtures_allDay, fixtures_timed } from '#tests/calendar.fixtures';
+import { fixtures_allDay, fixtures_background, fixtures_timed } from '#tests/calendar.fixtures';
 import {
   MonthViewDay,
   MonthViewDayTrigger,
@@ -173,7 +173,7 @@ it('renders a rolling four-week day grid and a fixed six-week month', async () =
 });
 
 it('positions all-day background events across the week row', async () => {
-  await setup({ backgroundEvents: [fixtures_allDay('Break', { start: '2026-03-06', end: '2026-03-09' })] });
+  await setup({ events: [fixtures_background(fixtures_allDay('Break', { start: '2026-03-06', end: '2026-03-09' }))] });
   const [first, second] = document.querySelectorAll('[data-part="month-week-background-event"]');
 
   expect(first?.getAttribute('style')).toBe('--cal-col-start: 5; --cal-col-span: 2;');

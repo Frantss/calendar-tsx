@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 
 import { monthView } from '#calendar-views';
 import type { Calendar_MonthLayout } from '#calendar.types';
-import { fixtures_allDay, fixtures_timed } from '#tests/calendar.fixtures';
+import { fixtures_allDay, fixtures_background, fixtures_timed } from '#tests/calendar.fixtures';
 import type { CalendarSetup_Overrides } from '#tests/calendar.setup';
 import { calendarSetup_create, calendarSetup_defaults } from '#tests/calendar.setup';
 
@@ -110,10 +110,10 @@ it('shows six weeks with fixedWeekCount and pads them as outside days', async ()
 
 it('spans all-day background events across week rows without taking rows', async () => {
   const utils = await setup({
-    events: busyDay(6),
-    backgroundEvents: [
-      fixtures_allDay('break', { start: '2026-03-20', end: '2026-03-25' }),
-      fixtures_timed('closed', { date: '2026-03-25', start: '12:00', end: '13:00' }),
+    events: [
+      ...busyDay(6),
+      fixtures_background(fixtures_allDay('break', { start: '2026-03-20', end: '2026-03-25' })),
+      fixtures_background(fixtures_timed('closed', { date: '2026-03-25', start: '12:00', end: '13:00' })),
     ],
   });
 

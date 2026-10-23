@@ -1,6 +1,11 @@
 import { Temporal } from 'temporal-polyfill';
 
-import type { Calendar_AllDayEventInput, Calendar_Resource, Calendar_TimedEventInput } from '#calendar.types';
+import type {
+  Calendar_AllDayEventInput,
+  Calendar_EventInput,
+  Calendar_Resource,
+  Calendar_TimedEventInput,
+} from '#calendar.types';
 
 export type Fixtures_EventData = { title: string };
 
@@ -37,6 +42,12 @@ export const fixtures_allDay = (
   end: end ? Temporal.PlainDate.from(end) : undefined,
   resourceIds,
   data: { title: id },
+});
+
+/** The event, shaded under the others instead of laid out (D37). */
+export const fixtures_background = <TEvent extends Calendar_EventInput<Fixtures_EventData>>(event: TEvent): TEvent => ({
+  ...event,
+  display: 'background',
 });
 
 export const fixtures_resource = (

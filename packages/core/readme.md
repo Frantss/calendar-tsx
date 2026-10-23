@@ -53,16 +53,17 @@ const fair = createEvent<EventData>({ id: 'fair', kind: 'allDay', start: Tempora
 
 ## Background events
 
-`backgroundEvents` takes ranges shaped like events (timed or all-day, optional `resourceIds`, `data`) and lays them
-out under the events, without lanes or rows (design D37). Use them for dated items from your data; use background
-layers for rules such as business hours:
+An event with `display: 'background'` is shaded under the other events instead of laid out as one (design D37). It
+takes no lane or row and skips `eventOrder`; `day.events` and the list leave it out. Use it for dated items from your
+data; use background layers for rules such as business hours:
 
 ```ts
 createCalendar({
   ...options,
-  backgroundEvents: [
-    { id: 'holiday', kind: 'allDay', start: Temporal.PlainDate.from('2026-03-17'), data: { kind: 'holiday' } },
-    { id: 'lunch', kind: 'timed', start: lunchStart, end: lunchEnd, data: { kind: 'closed' } },
+  events: [
+    ...events,
+    { id: 'holiday', kind: 'allDay', display: 'background', start: Temporal.PlainDate.from('2026-03-17'), data },
+    { id: 'lunch', kind: 'timed', display: 'background', start: lunchStart, end: lunchEnd, data },
   ],
 });
 ```
@@ -70,7 +71,7 @@ createCalendar({
 - Time grid: `column.backgroundEvents` segments (all-day ones cover the whole column) and `allDay.backgroundEvents`
   spans.
 - Month: `week.backgroundEvents` spans, for all-day background events only.
-- List: ignored.
+- List: left out.
 - Without `resourceIds`, a background event shades every resource column.
 
 ## Features

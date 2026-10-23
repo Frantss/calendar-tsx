@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 
 import { timeGridView } from '#calendar-views';
 import type { Calendar_TimeGridLayout } from '#calendar.types';
-import { fixtures_allDay, fixtures_resource, fixtures_timed } from '#tests/calendar.fixtures';
+import { fixtures_allDay, fixtures_background, fixtures_resource, fixtures_timed } from '#tests/calendar.fixtures';
 import type { CalendarSetup_Overrides } from '#tests/calendar.setup';
 import { calendarSetup_create, calendarSetup_defaults } from '#tests/calendar.setup';
 
@@ -156,10 +156,10 @@ it('emits half-hour slots and the minimum column width', async () => {
 
 it('shades a timed background event under the events without taking a lane', async () => {
   const utils = await setup({
-    events: [fixtures_timed('yoga', { date: '2026-03-11', start: '09:00', end: '10:00' })],
-    backgroundEvents: [
-      fixtures_timed('closed', { date: '2026-03-11', start: '09:00', end: '12:00' }),
-      fixtures_timed('elsewhere', { date: '2026-03-20', start: '09:00', end: '12:00' }),
+    events: [
+      fixtures_timed('yoga', { date: '2026-03-11', start: '09:00', end: '10:00' }),
+      fixtures_background(fixtures_timed('closed', { date: '2026-03-11', start: '09:00', end: '12:00' })),
+      fixtures_background(fixtures_timed('elsewhere', { date: '2026-03-20', start: '09:00', end: '12:00' })),
     ],
   });
   const background = utils.column('all:2026-03-11')?.backgroundEvents;
@@ -173,7 +173,7 @@ it('shades a timed background event under the events without taking a lane', asy
 it('splits a background event crossing midnight across columns', async () => {
   const utils = await setup({
     view: 'week',
-    backgroundEvents: [fixtures_timed('night', { date: '2026-03-12', start: '22:00', end: '06:00', endDate: '2026-03-13' })],
+    events: [fixtures_background(fixtures_timed('night', { date: '2026-03-12', start: '22:00', end: '06:00', endDate: '2026-03-13' }))],
   });
 
   expect(utils.column('all:2026-03-12')?.backgroundEvents[0]).toMatchObject({ continuesBefore: false, continuesAfter: true });
@@ -184,9 +184,9 @@ it('shades every resource column unless the background event names resources', a
   const utils = await setup({
     view: 'resources',
     resources: [fixtures_resource('ana'), fixtures_resource('room')],
-    backgroundEvents: [
-      fixtures_timed('closed', { date: '2026-03-11', start: '12:00', end: '13:00' }),
-      fixtures_timed('cleaning', { date: '2026-03-11', start: '08:00', end: '09:00', resourceIds: ['room'] }),
+    events: [
+      fixtures_background(fixtures_timed('closed', { date: '2026-03-11', start: '12:00', end: '13:00' })),
+      fixtures_background(fixtures_timed('cleaning', { date: '2026-03-11', start: '08:00', end: '09:00', resourceIds: ['room'] })),
     ],
   });
 
@@ -197,8 +197,10 @@ it('shades every resource column unless the background event names resources', a
 it('spans an all-day background event across the all-day row and shades each whole column', async () => {
   const utils = await setup({
     view: 'week',
-    events: [fixtures_allDay('fair', { start: '2026-03-12' })],
-    backgroundEvents: [fixtures_allDay('break', { start: '2026-03-12', end: '2026-03-13' })],
+    events: [
+      fixtures_allDay('fair', { start: '2026-03-12' }),
+      fixtures_background(fixtures_allDay('break', { start: '2026-03-12', end: '2026-03-13' })),
+    ],
   });
 
   expect(utils.layout.allDay?.backgroundEvents).toEqual([
