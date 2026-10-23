@@ -1,0 +1,24 @@
+/*
+ * The default layout in Stripe's colors, taken from the public `--hds-color-*` tokens on stripe.com: blurple
+ * (brand-600 #533afd, a step deeper than the logo's #635bff) on slate neutrals. Not affiliated with or endorsed by
+ * Stripe. Events follow the accent through the default theme's tint.
+ */
+@import './default.css';
+
+@layer calendar.base, calendar.theme, calendar.density;
+
+@layer calendar.theme {
+  :where(:root) {
+    /* neutral-0 / neutral-25 light, neutralDark-990 / neutralDark-950 dark */
+    --calendar-surface: light-dark(#ffffff, #0d1738);
+    --calendar-surface-muted: light-dark(#f8fafd, #122054);
+    /* text-solid and text-soft */
+    --calendar-text: light-dark(#061b31, #ffffff);
+    --calendar-text-muted: light-dark(#50617a, #a3b5d6);
+    /* One step stronger than Stripe's quiet borders, which are 1.2:1 and lose the grid */
+    --calendar-border: light-dark(#d4dee9, #23356e);
+    /* brand-600 with white (6.19:1), brandDark-400 with neutralDark-990 (5.64:1) */
+    --calendar-accent: light-dark(#533afd, #7389ff);
+    --calendar-accent-contrast: light-dark(#ffffff, #0d1738);
+  }
+}

@@ -9,6 +9,7 @@
     "default.css",
     "shadcn.css",
     "revenuecat.css",
+    "stripe.css",
     "compact.css"
   ],
   "type": "module",
@@ -24,6 +25,7 @@
     "./default.css": "./default.css",
     "./shadcn.css": "./shadcn.css",
     "./revenuecat.css": "./revenuecat.css",
+    "./stripe.css": "./stripe.css",
     "./compact.css": "./compact.css",
     "./package.json": "./package.json"
   },
