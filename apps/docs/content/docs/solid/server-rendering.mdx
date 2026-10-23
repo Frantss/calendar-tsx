@@ -1,0 +1,35 @@
+---
+title: Server rendering
+description: Render with renderToString, hydrate with hydrate, and keep "now" identical on both sides.
+---
+
+The package renders with `solid-js/web`'s `renderToString` and hydrates with `hydrate`. There is no separate server
+entry: the parts render every element through `<Dynamic>`, so one build serves both sides, and `solid-js/web`'s export
+conditions pick the server or client runtime.
+
+On the server the clock never starts, because `onMount` does not run there.
+
+## Hydration
+
+Today's highlight (`data-today`) and the now indicator depend on "now". If the server and the client derive different
+ones, for example across midnight, `hydrate` throws a hydration mismatch. Derive the same one on both sides:
+
+1. Pick an instant once per request, on the server.
+2. Send it to the client as a string, with the page's data.
+3. Pass it as `initialNow` on both sides.
+
+```tsx
+const Schedule = (props: { now: string }) => {
+  const calendar = useCalendar(() => ({
+    ...options,
+    initialNow: Temporal.Instant.from(props.now),
+  }));
+
+  return <CalendarProvider value={calendar}>{/* parts */}</CalendarProvider>;
+};
+```
+
+`initialNow` is read once, when the instance is created. After mounting, the client reads its clock and catches up to
+the real time. See [clock and server rendering](/docs/core/clock-and-server-rendering).
+
+Solid has no Server Components, so unlike the React package the entry carries no `'use client'` directive.
