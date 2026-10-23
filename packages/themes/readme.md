@@ -13,12 +13,13 @@ JavaScript.
 import '@calendar-tsx/themes/default.css';
 ```
 
-| File          | Contents                                                                                      |
-| ------------- | --------------------------------------------------------------------------------------------- |
-| `base.css`    | Positioning only: month bars, time-grid columns and lanes, the now line. Every theme uses it. |
-| `default.css` | `base.css` plus the default look.                                                             |
-| `shadcn.css`  | The default look with its tokens read from shadcn/ui's variables. See [shadcn/ui](#shadcnui). |
-| `compact.css` | Density only: smaller slots, bars and text. Import it after any theme.                        |
+| File             | Contents                                                                                      |
+| ---------------- | --------------------------------------------------------------------------------------------- |
+| `base.css`       | Positioning only: month bars, time-grid columns and lanes, the now line. Every theme uses it. |
+| `default.css`    | `base.css` plus the default look.                                                             |
+| `shadcn.css`     | The default look with its tokens read from shadcn/ui's variables. See [shadcn/ui](#shadcnui). |
+| `revenuecat.css` | The default layout in RevenueCat's brand colors. See [RevenueCat](#revenuecat).               |
+| `compact.css`    | Density only: smaller slots, bars and text. Import it after any theme.                        |
 
 Import `base.css` alone to write your own look on top of working layout.
 
@@ -86,6 +87,14 @@ background in light mode. Use the Tailwind v4 variable naming (full `oklch()` co
 
 Dark mode follows shadcn's `.dark` class, on `<html>` or on any element around the calendar; `color-scheme` is not
 needed.
+
+## RevenueCat
+
+`revenuecat.css` replaces `default.css` with RevenueCat's press-kit colors, used the way the kit recommends:
+monochrome black purple (`#1f1f47`) with the brand colors as accents. The exact red (`#f2545b`) marks today and the now
+line, with black purple numbers on it; royal blue (`#576cdb`) tints events and draws the focus ring. Dark mode uses
+black purple as the surface. On white the brand red is 3.39:1, so the theme keeps it to fills and lines and writes
+today's time-grid header in the text color instead.
 
 ## Tailwind
 
