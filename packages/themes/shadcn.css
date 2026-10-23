@@ -1,0 +1,32 @@
+/*
+ * The default theme with its tokens read from shadcn/ui's variables (Tailwind v4 naming), so the calendar takes the
+ * app's palette and radius. shadcn's `.dark` redefines those variables, so dark mode follows it without `color-scheme`.
+ * The mapping is repeated on `.dark` because a custom property resolves its `var()` where it is declared: on `:root`
+ * alone, a `.dark` below the root would not reach it.
+ */
+@import './default.css';
+
+@layer calendar.base, calendar.theme, calendar.density;
+
+@layer calendar.theme {
+  :where(:root, .dark) {
+    --calendar-surface: var(--background);
+    --calendar-surface-muted: var(--muted);
+    --calendar-text: var(--foreground);
+    --calendar-text-muted: var(--muted-foreground);
+    --calendar-border: var(--border);
+    --calendar-accent: var(--primary);
+    --calendar-accent-contrast: var(--primary-foreground);
+    /*
+     * Events are tinted with --primary: shadcn's --secondary, --muted and --accent are all near the background in
+     * light mode (1.09:1 in the neutral palette). 16% keeps dark mode where --secondary had it.
+     */
+    --calendar-event: color-mix(in oklab, var(--primary) 16%, var(--background));
+    --calendar-event-text: var(--foreground);
+    --calendar-event-border: color-mix(in oklab, var(--primary) 24%, var(--background));
+    --calendar-focus-ring: var(--ring);
+    --calendar-radius: var(--radius);
+    /* shadcn's --radius-sm */
+    --calendar-bar-radius: calc(var(--radius) * 0.6);
+  }
+}

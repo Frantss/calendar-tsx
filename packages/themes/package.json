@@ -1,12 +1,13 @@
 {
   "name": "@calendar-tsx/themes",
   "version": "0.0.0",
-  "description": "Stylesheets for @calendar-tsx parts: a positioning base and a default theme.",
+  "description": "Stylesheets for @calendar-tsx parts: a positioning base, themes and density.",
   "license": "MIT",
   "author": "Frantss <frantss.bongiovanni@gmail.com>",
   "files": [
     "base.css",
     "default.css",
+    "shadcn.css",
     "compact.css"
   ],
   "type": "module",
@@ -20,6 +21,7 @@
   "exports": {
     "./base.css": "./base.css",
     "./default.css": "./default.css",
+    "./shadcn.css": "./shadcn.css",
     "./compact.css": "./compact.css",
     "./package.json": "./package.json"
   },
