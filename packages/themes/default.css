@@ -23,7 +23,7 @@
     --calendar-font-size: 0.875rem;
     --calendar-font-size-sm: 0.75rem;
     --calendar-font-size-xs: 0.6875rem;
-    --calendar-day-header-height: 2rem;
+    --calendar-day-header-height: 2.25rem;
     --calendar-bar-height: 1.375rem;
     --calendar-bar-gap: 2px;
     --calendar-bar-inset: 2px;
@@ -145,12 +145,15 @@
     color: var(--calendar-text-muted);
   }
 
-  /* Day numbers: a circle so today's accent reads as a marker, not a filled cell */
+  /*
+   * Day numbers: a circle so today's accent reads as a marker, not a filled cell. It is 0.5rem shorter than the day
+   * header: 0.25rem for the cell's padding above it and 0.25rem of gap above the first bar.
+   */
   :where([data-scope='calendar']:is([data-part='month-day-trigger'], [data-part='time-grid-column-trigger'])) {
     display: inline-grid;
     place-items: center;
-    min-inline-size: calc(var(--calendar-day-header-height) - 0.25rem);
-    block-size: calc(var(--calendar-day-header-height) - 0.25rem);
+    min-inline-size: calc(var(--calendar-day-header-height) - 0.5rem);
+    block-size: calc(var(--calendar-day-header-height) - 0.5rem);
     padding-inline: 0.25rem;
     border-radius: 999px;
     font-variant-numeric: tabular-nums;

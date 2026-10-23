@@ -214,3 +214,14 @@ it.each([
   probe.remove();
   style.remove();
 });
+
+it('leaves a gap between the day number and the first bar', async () => {
+  await themesSetup_render(<Month />, { view: 'month', events: [themesSetup_allDay('Fair', { start: '2026-03-11', end: '2026-03-11' })] });
+  const trigger = themesSetup_rect(
+    themesSetup_part('month-day', '[data-date="2026-03-11"]')[0]?.querySelector('[data-part="month-day-trigger"]') ?? undefined,
+  );
+  const bar = themesSetup_rect(themesSetup_part('month-week-event')[0]);
+
+  // 0.25rem at the default 16px root size
+  expect(bar.top - trigger.bottom).toBeCloseTo(4, 0);
+});
