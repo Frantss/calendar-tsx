@@ -19,6 +19,7 @@ import '@calendar-tsx/themes/default.css';
 | `default.css`    | `base.css` plus the default look.                                                             |
 | `shadcn.css`     | The default look with its tokens read from shadcn/ui's variables. See [shadcn/ui](#shadcnui). |
 | `revenuecat.css` | The default layout in RevenueCat's brand colors. See [RevenueCat](#revenuecat).               |
+| `stripe.css`     | The default layout in Stripe's colors. See [Stripe](#stripe).                                 |
 | `compact.css`    | Density only: smaller slots, bars and text. Import it after any theme.                        |
 
 Import `base.css` alone to write your own look on top of working layout.
@@ -100,6 +101,16 @@ monochrome black purple (`#1f1f47`) with the brand colors as accents. The exact 
 line, with black purple numbers on it; royal blue (`#576cdb`) tints events and draws the focus ring. Dark mode uses
 black purple as the surface. On white the brand red is 3.39:1, so the theme keeps it to fills and lines and writes
 today's time-grid header in the text color instead.
+
+## Stripe
+
+`stripe.css` replaces `default.css` with the colors from the public `--hds-color-*` tokens on stripe.com: blurple
+`#533afd` (`brand-600`, a step deeper than the logo's `#635bff`) marks today and the now line and tints events, on
+slate neutrals (`#061b31` text on white; white on `#0d1738` in dark mode, with `#7389ff` as the accent). Borders are
+one step stronger than Stripe's quiet borders, which at 1.2:1 lose the grid.
+
+This theme is not affiliated with or endorsed by Stripe. Stripe's [Marks Usage Terms](https://stripe.com/marks/legal)
+cover its names, design elements and trade dress.
 
 ## Tailwind
 
