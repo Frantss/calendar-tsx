@@ -6,7 +6,7 @@
  */
 @import './base.css';
 
-@layer calendar.base, calendar.theme;
+@layer calendar.base, calendar.theme, calendar.density;
 
 @layer calendar.theme {
   :where(:root) {
@@ -22,6 +22,8 @@
     --calendar-radius: 0.375rem;
     --calendar-bar-radius: 0.25rem;
     --calendar-font-size: 0.875rem;
+    --calendar-font-size-sm: 0.75rem;
+    --calendar-font-size-xs: 0.6875rem;
     --calendar-day-header-height: 2rem;
     --calendar-bar-height: 1.375rem;
     --calendar-bar-gap: 2px;
@@ -75,7 +77,7 @@
     border-radius: var(--calendar-bar-radius);
     background: var(--calendar-event);
     color: var(--calendar-event-text, var(--calendar-text));
-    font-size: 0.75rem;
+    font-size: var(--calendar-font-size-sm);
     line-height: calc(var(--calendar-bar-height) - 2px);
     white-space: nowrap;
     overflow: hidden;
@@ -105,7 +107,7 @@
   :where([data-scope='calendar'][data-part='month-header-cell']) {
     padding: 0.375rem 0.5rem;
     color: var(--calendar-text-muted);
-    font-size: 0.75rem;
+    font-size: var(--calendar-font-size-sm);
     font-weight: 600;
   }
 
@@ -152,7 +154,7 @@
     padding: 0.125rem 0.25rem;
     border-radius: var(--calendar-bar-radius);
     color: var(--calendar-text-muted);
-    font-size: 0.75rem;
+    font-size: var(--calendar-font-size-sm);
   }
 
   :where([data-scope='calendar'][data-part='month-overflow']):hover {
@@ -175,7 +177,7 @@
     padding: 0.375rem 0.25rem;
     border-inline-start: 1px solid var(--calendar-border);
     color: var(--calendar-text-muted);
-    font-size: 0.75rem;
+    font-size: var(--calendar-font-size-sm);
     font-weight: 600;
     text-align: center;
   }
@@ -200,7 +202,7 @@
   :where([data-scope='calendar'][data-part='time-grid-axis-label']) {
     padding-inline-end: 0.5rem;
     color: var(--calendar-text-muted);
-    font-size: 0.6875rem;
+    font-size: var(--calendar-font-size-xs);
     font-variant-numeric: tabular-nums;
     text-align: end;
     translate: 0 -0.5lh;
@@ -238,7 +240,7 @@
     border-radius: var(--calendar-bar-radius);
     background: var(--calendar-event);
     color: var(--calendar-event-text, var(--calendar-text));
-    font-size: 0.75rem;
+    font-size: var(--calendar-font-size-sm);
     line-height: 1.3;
     overflow: hidden;
     /* buttons center their content; events read from the top, at their start time */
@@ -288,7 +290,7 @@
     margin: 0;
     padding: 0.5rem 0.75rem;
     background: var(--calendar-surface-muted);
-    font-size: 0.8125rem;
+    font-size: var(--calendar-font-size);
     font-weight: 600;
   }
 

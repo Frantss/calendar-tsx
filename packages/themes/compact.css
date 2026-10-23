@@ -1,0 +1,20 @@
+/*
+ * Compact density: smaller slots, bars and text for dashboards, sidebars and wide resource grids. Sets size tokens
+ * only, in a layer after the themes, so it combines with any of them: import it after the theme.
+ */
+@layer calendar.base, calendar.theme, calendar.density;
+
+@layer calendar.density {
+  :where(:root) {
+    --calendar-font-size: 0.75rem;
+    --calendar-font-size-sm: 0.6875rem;
+    --calendar-font-size-xs: 0.625rem;
+    --calendar-day-header-height: 1.5rem;
+    --calendar-bar-height: 1.125rem;
+    --calendar-bar-gap: 1px;
+    --calendar-overflow-height: 1.125rem;
+    --calendar-week-min-height: 4.5rem;
+    --calendar-slot-height: 2rem;
+    --calendar-axis-width: 3.25rem;
+  }
+}

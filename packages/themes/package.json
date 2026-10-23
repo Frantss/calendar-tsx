@@ -6,7 +6,8 @@
   "author": "Frantss <frantss.bongiovanni@gmail.com>",
   "files": [
     "base.css",
-    "default.css"
+    "default.css",
+    "compact.css"
   ],
   "type": "module",
   "sideEffects": [
@@ -19,6 +20,7 @@
   "exports": {
     "./base.css": "./base.css",
     "./default.css": "./default.css",
+    "./compact.css": "./compact.css",
     "./package.json": "./package.json"
   },
   "scripts": {
