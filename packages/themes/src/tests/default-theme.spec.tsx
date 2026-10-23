@@ -194,3 +194,23 @@ it('restores the today marker with system colors in forced-colors mode', async (
   probe.remove();
   await cdp().send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'none' }] });
 });
+
+it.each([
+  ['tints events from an accent set on an ancestor', 'accent', 'color-mix(in oklab, rgb(0, 0, 255) 16%, #ffffff)'],
+  ['lets --calendar-event override the accent tint', 'accent fill', 'rgb(1, 2, 3)'],
+] as const)('%s', async (_, className, expected) => {
+  const style = document.head.appendChild(document.createElement('style'));
+  style.textContent = '.accent { --calendar-accent: rgb(0, 0, 255); } .fill { --calendar-event: rgb(1, 2, 3); }';
+  const probe = document.body.appendChild(document.createElement('div'));
+  probe.style.color = expected;
+
+  await themesSetup_render(<TimeGrid />, {
+    className,
+    events: [themesSetup_timed('Yoga', { date: '2026-03-11', start: '09:00', end: '10:00' })],
+  });
+  const yoga = event('Yoga');
+
+  expect(yoga && getComputedStyle(yoga).backgroundColor).toBe(getComputedStyle(probe).color);
+  probe.remove();
+  style.remove();
+});
