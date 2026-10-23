@@ -1,0 +1,44 @@
+---
+title: Server rendering
+description: Render on the server, hydrate on the client, and use the parts from React Server Components.
+---
+
+The parts render with `renderToString` and stream like any other component.
+
+## Hydration
+
+Today's highlight and the now indicator depend on "now". For the markup to hydrate, the server and the client must
+derive the same one:
+
+1. Pick an instant once per request, on the server.
+2. Send it to the client as a string, with the page's data.
+3. Pass it as `initialNow` on both sides.
+
+```tsx
+// server: const now = Temporal.Now.instant().toString(), sent with the page data
+const calendar = useCalendar({ ...options, initialNow: Temporal.Instant.from(now) });
+```
+
+`initialNow` is read once, when the instance is created. After mounting, the calendar reads its clock and catches up to
+the real time. See [clock and server rendering](/docs/core/clock-and-server-rendering).
+
+## React Server Components
+
+The package entry is marked `'use client'`, so Server Components can import and render the parts. The options cannot
+cross that boundary as props: `Temporal` values, `views` and `onNavigate` are not serializable.
+
+Create the calendar inside a client component, and pass it only strings to parse:
+
+```tsx
+'use client';
+
+export const Schedule = ({ now, date }: { now: string; date: string }) => {
+  const calendar = useCalendar({
+    ...options,
+    date: Temporal.PlainDate.from(date),
+    initialNow: Temporal.Instant.from(now),
+  });
+
+  return <CalendarProvider value={calendar}>{/* parts */}</CalendarProvider>;
+};
+```

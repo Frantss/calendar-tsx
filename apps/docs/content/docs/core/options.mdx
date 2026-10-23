@@ -11,6 +11,9 @@ createCalendar<TData, TResourceData, TViews, TFeatures>(options);
 `TFeatures` are inferred from `views` and `features`, so `view` and `onNavigate` only accept your view keys, and the
 options, state and actions of the registered [features](/docs/core/features) appear on the calendar.
 
+Let TypeScript infer all four. Passing some explicitly, as in `createCalendar<Booking>(…)`, turns off inference for
+the others, and view keys widen to `string`. Type `events` as `Calendar_EventInput<Booking>[]` instead.
+
 | Option           | Type                                     | Default         | Tracked        |
 | ---------------- | ---------------------------------------- | --------------- | -------------- |
 | `timeZone`       | `string` (IANA zone)                     | —               | Yes            |

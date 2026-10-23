@@ -1,0 +1,112 @@
+---
+title: Overview
+description: React bindings for the core — hooks and unstyled, composable parts.
+---
+
+`@calendar-tsx/react` creates a [core](/docs/core) calendar from React state and renders its layouts with unstyled
+parts: `MonthView*`, `TimeGridView*` and `ListView*`. The parts emit geometry and state as attributes; style them
+yourself or with a [theme](/docs/themes).
+
+## Install
+
+```npm
+npm i @calendar-tsx/react @calendar-tsx/core temporal-polyfill
+```
+
+React 18 and 19 are supported.
+
+## Quick start
+
+```tsx
+import type { Calendar_EventInput, Calendar_State } from '@calendar-tsx/core';
+import { createCalendarViews, monthView, timeGridView } from '@calendar-tsx/core';
+import {
+  CalendarProvider,
+  MonthView,
+  MonthViewDay,
+  MonthViewWeek,
+  MonthViewWeekEvent,
+  useCalendar,
+  useCalendarSelector,
+} from '@calendar-tsx/react';
+import '@calendar-tsx/themes/default.css';
+import { useState } from 'react';
+import { Temporal } from 'temporal-polyfill';
+
+type Booking = { title: string };
+
+// module scope: views and features are compared by reference
+const views = createCalendarViews({
+  month: monthView({ maxEventsPerDay: 3 }),
+  week: timeGridView({ days: 7 }),
+});
+
+export const App = ({ events }: { events: Calendar_EventInput<Booking>[] }) => {
+  const [view, setView] = useState<keyof typeof views.views>('month');
+  const [date, setDate] = useState(() => Temporal.Now.plainDateISO());
+
+  const calendar = useCalendar({
+    timeZone: 'America/New_York',
+    views: views.views,
+    features: { ...views.features },
+    view,
+    date,
+    events,
+    onNavigate: next => {
+      setView(next.view);
+      setDate(next.date);
+    },
+  });
+
+  return (
+    <CalendarProvider value={calendar}>
+      <button onClick={() => calendar.api.prev()}>Previous</button>
+      <button onClick={() => calendar.api.today()}>Today</button>
+      <button onClick={() => calendar.api.next()}>Next</button>
+      <Month />
+    </CalendarProvider>
+  );
+};
+
+// the context erases the instance's types; annotate the selector to get them back
+type State = Calendar_State<Booking, unknown, typeof views.views>;
+
+const Month = () => {
+  const layout = useCalendarSelector((state: State) => state.layout);
+
+  if (layout.kind !== 'month') return null;
+
+  return (
+    <MonthView model={layout}>
+      {layout.weeks.map(week => (
+        <MonthViewWeek key={week.key} week={week}>
+          {week.days.map(day => (
+            <MonthViewDay key={day.key} day={day}>
+              {day.date.day}
+            </MonthViewDay>
+          ))}
+          {week.segments.map(segment => (
+            <MonthViewWeekEvent key={segment.key} segment={segment}>
+              {segment.event.data.title}
+            </MonthViewWeekEvent>
+          ))}
+        </MonthViewWeek>
+      ))}
+    </MonthView>
+  );
+};
+```
+
+## How it fits together
+
+- **`useCalendar`** takes the same options as [`createCalendar`](/docs/core/options) and keeps one instance for the
+  component's lifetime. `view` and `date` stay in your state: actions call `onNavigate`, and you set them.
+- **`CalendarProvider`** puts the instance in context for the parts, or use the [`Calendar`](/docs/react/hooks#calendar)
+  component to do both in one step.
+- **`useCalendarSelector`** subscribes to a slice of the [state](/docs/core/layouts); a component re-renders only when
+  its slice changes.
+- **Parts** take a model from the layout (`model`, `week`, `day`, `column`, `segment`, …) and render one element each.
+  You switch on `layout.kind` and compose the parts you need.
+- **Text is yours.** Parts render your children; format dates and times with `Temporal`'s `toLocaleString`.
+
+<Callout title='Experimental'>The React API can change or be removed in any release, without notice.</Callout>

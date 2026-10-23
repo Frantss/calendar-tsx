@@ -1,0 +1,5 @@
+{
+  "title": "React",
+  "icon": "Atom",
+  "pages": ["index", "hooks", "parts", "rendering-parts", "server-rendering"]
+}
