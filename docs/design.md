@@ -460,6 +460,14 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 
 **Why:** Ark's v6 direction (chakra-ui/ark#3616, closed in favour of discussion #3997; branch `v6`, `packages/react/src/components/factory.ts`) deprecates `asChild` in favour of `render`: it makes what is rendered explicit, drops the single-child limitation, and avoids `data-scope`/`data-part` clashes when composing with another library's part. Installed Ark (5.17) predates it and `6.0.0-next.0` is only a prerelease, so the library ports v6's `withRender` locally as `cal.*` (`cal.div`, `cal.button`, …): `memo` + `forwardRef` per tag, a `state` prop the part sets and the `render` function receives, Radix-style `getRef` plus ref composition, and the same branches. With no `render` the default element renders. A function `render(props, state)` applies the props itself and only the ref is composed. An element `render={<El />}` has the part's props merged into it, with element props winning. `asChild` is not ported, since nothing depends on it. Ark merges with `@zag-js/core`'s `mergeProps`; this port does not use it. A local `props_merge` keeps the same contract (handlers called in source order, `className` joined, `style` shallow-merged, later values win), so the library has no Zag dependency. Each part is a `forwardRef` component that builds its own props, merges the consumer's on top with `props_merge`, and renders `<cal.x {...merged} state={model} ref={ref} />`. Trigger actions are merged last so a consumer `onClick` calling `preventDefault()` skips them. One consequence: handlers on a `render` **element** run after the part's, so they cannot prevent the built-in action; pass `onClick` on the part instead.
 
+### D26 — Themes ship as plain CSS in `@calendar-tsx/themes`: a positioning base plus one file per theme
+
+**Serves:** D9; C4, C9, C11
+
+**Verified:** not verified — cheap to reverse; the package is additive and experimental
+
+**Why:** Parts already expose everything a stylesheet needs: `data-scope`/`data-part`, state attributes and `--cal-*` geometry (D9). So a theme needs no JavaScript and no adapter, and any future adapter that emits the same attributes gets it for free. `base.css` turns the geometry into layout (absolutely positioned month bars, time-grid lanes, the now line, and a subgrid that shares one set of columns across the header, all-day row and body). It is theme-independent, so every theme imports it, and a consumer styling the calendar themselves can import it alone. This replaces D9's plan of a reference stylesheet in Storybook docs. `default.css` adds the visual layer. Both live in cascade layers (`calendar.base`, `calendar.theme`) and select through `:where()`, so unlayered consumer styles and utility classes win without specificity fights. Theme values are `--calendar-*` tokens: a separate prefix, because the parts own `--cal-*` geometry inline. The default theme declares them on `:root`, so overriding one on any ancestor re-themes everything below it. Colours use `light-dark()` and follow the inherited `color-scheme`: the theme never sets it, so an app opts in to dark mode with `color-scheme: light dark` and forces a mode with `light` or `dark` on any ancestor. The package ships the CSS sources with no build step. Rejected: CSS inside `@calendar-tsx/react` (it would make themes React-only and grow the adapter with each theme); CSS-in-JS (needs a build step or runtime, at odds with a headless library); a Tailwind preset (ties themes to Tailwind, though one could map onto the same tokens later); a single file per theme with no base (each theme would repeat the positioning). Known limits: the base assumes the composition the readmes show (a header, an optional all-day row and a body inside the time-grid root); the all-day row scrolls with the body rather than sticking under the header; and month bars default to 22px, below a 44px touch target (`--calendar-bar-height` raises it).
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.
@@ -545,6 +553,17 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - Parts render no text unless given children; triggers have a default `aria-label` from `Intl` and `locale`. _(D15, D20)_
 - Month root has `role="grid"`, weeks `row`, days `gridcell`; time grid and list roots are labelled regions. _(D15)_
 - Using a `*_Root` with a model of the wrong kind is a type error. _(D10)_
+
+### Themes
+
+- A timed event at `09:00`–`10:00` sits at 37.5% of its column's height and spans 1/24 of it. _(D26, D9)_
+- Overlapping events split the column's padding box into equal lanes. _(D26, C4)_
+- Time-grid column headers line up with their columns through the shared subgrid, with or without an axis. _(D26)_
+- The now line sits at the clock's offset. _(D26, C9)_
+- A month bar spans exactly the day cells it covers, minus `--calendar-bar-inset`. _(D26, D17)_
+- The overflow trigger renders below the visible bars, not under them. _(D26, D14)_
+- Today's marker takes the light or dark accent from the inherited `color-scheme`. _(D26)_
+- An unlayered consumer rule overrides the theme without `!important`. _(D26)_
 
 ## Skeleton
 
