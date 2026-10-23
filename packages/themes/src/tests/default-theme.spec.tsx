@@ -164,3 +164,17 @@ it('yields to unlayered consumer styles', async () => {
   expect(yoga && getComputedStyle(yoga).backgroundColor).toBe('rgb(1, 2, 3)');
   style.remove();
 });
+
+it('resolves derived tokens below an override', async () => {
+  const style = document.head.appendChild(document.createElement('style'));
+  style.textContent = '.brand { --calendar-text: rgb(0, 128, 0); }';
+
+  await themesSetup_render(<TimeGrid />, {
+    className: 'brand',
+    events: [themesSetup_timed('Yoga', { date: '2026-03-11', start: '09:00', end: '10:00' })],
+  });
+  const yoga = event('Yoga');
+
+  expect(yoga && getComputedStyle(yoga).color).toBe('rgb(0, 128, 0)');
+  style.remove();
+});
