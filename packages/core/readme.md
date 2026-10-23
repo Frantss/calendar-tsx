@@ -40,6 +40,16 @@ input changed).
 Until `'~mount'`, the state derives "now" from `initialNow` when given, otherwise from the clock. To render on a server
 and hydrate on the client, pass the same `initialNow` to both.
 
+## Events
+
+Events are plain objects (design D2, D7, D8). `createEvent` returns its argument unchanged; use it to type an event
+where it is written, with `data` inferring the payload type:
+
+```ts
+const yoga = createEvent({ id: 'yoga', start, end, data: { title: 'Yoga' } }); // Calendar_TimedEventInput<{ title: string }>
+const fair = createEvent<EventData>({ id: 'fair', allDay: true, start: Temporal.PlainDate.from('2026-03-11'), data });
+```
+
 ## Background events
 
 `backgroundEvents` takes ranges shaped like events (timed or all-day, optional `resourceIds`, `data`) and lays them

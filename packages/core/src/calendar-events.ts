@@ -1,6 +1,12 @@
 import { Temporal } from 'temporal-polyfill';
 
-import type { Calendar_AllDayEventInput, Calendar_Event, Calendar_EventInput, Calendar_Range } from '#calendar.types';
+import type {
+  Calendar_AllDayEventInput,
+  Calendar_Event,
+  Calendar_EventInput,
+  Calendar_Range,
+  Calendar_TimedEventInput,
+} from '#calendar.types';
 
 const MIDNIGHT = Temporal.PlainTime.from('00:00');
 
@@ -8,6 +14,16 @@ const MIDNIGHT = Temporal.PlainTime.from('00:00');
 declare const process: { env: Record<string, string | undefined> };
 
 const isDevelopment = () => typeof process === 'undefined' || process.env.NODE_ENV !== 'production';
+
+/**
+ * Returns the event unchanged. It types an event literal where it is written: `TData` is inferred from `data` (or
+ * given explicitly), and the result keeps the timed or all-day variant.
+ */
+export function createEvent<TData>(event: Calendar_AllDayEventInput<TData>): Calendar_AllDayEventInput<TData>;
+export function createEvent<TData>(event: Calendar_TimedEventInput<TData>): Calendar_TimedEventInput<TData>;
+export function createEvent<TData>(event: Calendar_EventInput<TData>): Calendar_EventInput<TData> {
+  return event;
+}
 
 export const calendarEvents_isAllDay = <TData>(
   event: Calendar_Event<TData>,

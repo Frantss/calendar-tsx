@@ -1064,6 +1064,7 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - A duplicate event id logs a development-only warning; production behaviour is unspecified and not relied on. _(D2)_
 - Replacing `events` through `setOptions` re-derives the layout with no other API calls (see-all merge, drafts). _(C5, D2, app R4.5, R11.3)_
 - `event.data` keeps its `TData` type through to the parts (type test). _(D8)_
+- `createEvent` returns its argument, infers `TData` from `data`, keeps the timed or all-day variant, and rejects a mixed shape (type test). _(D7, D8)_
 - Replacing `backgroundEvents` re-derives the layout; it is tracked by reference like `events`. _(C13, D24, D37)_
 
 ### Month layout
