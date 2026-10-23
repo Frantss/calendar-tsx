@@ -3,10 +3,20 @@
 import { expect, it } from 'vitest';
 import { cdp } from 'vitest/browser';
 
-import type { Calendar_BackgroundSegment, Calendar_DayBackground, Calendar_MonthLayout, Calendar_TimeGridLayout } from '@calendar-tsx/core';
-import { backgroundFeature, monthView, timeGridView } from '@calendar-tsx/core';
+import type {
+  Calendar_BackgroundSegment,
+  Calendar_DayBackground,
+  Calendar_ListLayout,
+  Calendar_MonthLayout,
+  Calendar_TimeGridLayout,
+} from '@calendar-tsx/core';
+import { backgroundFeature, listView, monthView, timeGridView } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
 import {
+  ListView,
+  ListViewDay,
+  ListViewDayHeader,
+  ListViewEvent,
   MonthViewDay,
   MonthViewDayBackground,
   MonthViewDayTrigger,
@@ -278,4 +288,55 @@ it('fills a month day beneath its day number', async () => {
 
   expect(background).toEqual(themesSetup_rect(day));
   expect(document.elementFromPoint(center.x + center.width / 2, center.y + center.height / 2)).toBe(trigger);
+});
+
+const List = () => {
+  const list = useCalendarSelector(state => state.layout) as Calendar_ListLayout<ThemesSetup_EventData>;
+
+  return (
+    <ListView model={list}>
+      {list.days.map(day => (
+        <ListViewDay key={day.key} day={day}>
+          <ListViewDayHeader day={day}>{day.key}</ListViewDayHeader>
+          {day.events.map(event => (
+            <ListViewEvent key={event.id} event={event}>
+              {event.data.title}
+            </ListViewEvent>
+          ))}
+        </ListViewDay>
+      ))}
+    </ListView>
+  );
+};
+
+it('stacks list events as full-width rows under a muted day header', async () => {
+  await themesSetup_render(<List />, {
+    views: { list: listView({ days: 1 }) },
+    view: 'list',
+    events: ['Yoga', 'Swim'].map(id => themesSetup_timed(id, { date: '2026-03-11', start: '09:00', end: '10:00' })),
+  });
+  const header = themesSetup_part('list-day-header')[0];
+  const [yoga, swim] = themesSetup_part('list-event').map(themesSetup_rect);
+  const root = themesSetup_rect(themesSetup_part('list-root')[0]);
+
+  expect(header && getComputedStyle(header).backgroundColor).toBe('rgb(245, 244, 241)');
+  expect(swim?.top).toBeGreaterThanOrEqual(yoga?.bottom ?? Infinity);
+  expect(yoga?.width).toBeCloseTo(root.width - 2, 0);
+});
+
+it('scrolls a long list once its height is limited', async () => {
+  const style = document.head.appendChild(document.createElement('style'));
+  style.textContent = '[data-part="list-root"] { max-block-size: 6rem; }';
+
+  await themesSetup_render(<List />, {
+    views: { list: listView({ days: 7 }) },
+    view: 'list',
+    events: ['08', '09', '10', '11', '12'].map(day => themesSetup_timed(`Day ${day}`, { date: `2026-03-${day}`, start: '09:00', end: '10:00' })),
+  });
+  const root = themesSetup_part('list-root')[0];
+
+  // `hidden` also clips and can be scrolled from script, but not by the user
+  expect(root && root.scrollHeight).toBeGreaterThan(root?.clientHeight ?? Infinity);
+  expect(root && getComputedStyle(root).overflowY).toBe('auto');
+  style.remove();
 });

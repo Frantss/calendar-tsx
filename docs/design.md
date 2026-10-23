@@ -12,7 +12,7 @@ A headless calendar library that satisfies `docs/calendar-spec.md` (R1–R11): a
 
 - **In scope:** views, navigation and visible range, event layout, resources and availability shading, overflow, now indicator, click/focus targets, geometry exposed as CSS variables and data attributes.
 - **Out of scope (consumer's job):** URL sync, header controls and selectors, data fetching, the drawer, drafts as data, colours and copy per event kind.
-- **Not supported:** drag and resize, date selection, recurrence, timeline views.
+- **Not supported:** drag and resize, date selection, recurrence. Timeline views were here until D34.
 
 ### Working assumptions (from Stage 0, unconfirmed)
 
@@ -26,7 +26,7 @@ A headless calendar library that satisfies `docs/calendar-spec.md` (R1–R11): a
 
 Library-level capabilities, each traced to the app spec. Draft; confirmed when the scope area closes.
 
-- **C1 — Views:** month grid, day/week time grid with all-day row, list day/week, resource time grid. _(app R1.1–R1.4)_
+- **C1 — Views:** month grid, week-based day grid (D35), day/week time grid with all-day row, list day/week/month/year (D36), resource time grid, resource timeline (D34). _(app R1.1–R1.4)_
 - **C2 — Navigation:** current view and date, prev/next/today, go to date, change view; visible range and period derivable synchronously after any change. _(R2.3–R2.5, R3.2–R3.5, R8.1, R11.1)_
 - **C3 — Change notification:** a single subscription that reports view/date changes, so the app can sync the URL. _(R2.1–R2.2)_
 - **C4 — Time-grid layout:** overlapping timed events laid out side by side; rows do not stretch; slot labels formattable. _(R1.2, R1.7, R1.8)_
@@ -168,6 +168,22 @@ Every part renders `data-scope="calendar"` and its `data-part`, accepts a `rende
 | `ListView_Event`                      | One event row; button                           | —    |
 | `ListView_Empty`                      | Renders only when the range has no events (D18) | —    |
 
+**Timeline** (`kind: 'timeline'`; D34, named after D30)
+
+| Part                                               | Role                                                                                                      | Owns |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ---- |
+| `TimelineView`                                     | Receives the timeline model; labelled region; sets `--cal-slots`, `--cal-min-slot-width`                  | —    |
+| `TimelineViewHeader`                               | Day and slot header rows                                                                                  | —    |
+| `TimelineViewDayHeader` / `TimelineViewDayTrigger` | One day over its slots (`--cal-col-start`, `--cal-col-span`, `data-today`); button to go to the day (D22) | —    |
+| `TimelineViewSlotLabel`                            | One slot label (`--cal-col-start`)                                                                        | —    |
+| `TimelineViewBody`                                 | The rows; positions the now indicator                                                                     | —    |
+| `TimelineViewRow`                                  | One resource, or the single row without resources; `--cal-rows`, `data-unavailable`                       | —    |
+| `TimelineViewResource`                             | The row's resource cell                                                                                   | —    |
+| `TimelineViewLane`                                 | The row's track, which positions events and shading                                                       | —    |
+| `TimelineViewEvent`                                | A bar; `--cal-start`, `--cal-span`, `--cal-row`, `data-all-day`, `data-continues-before/after`; button    | —    |
+| `TimelineViewUnavailable`                          | Shaded segment from availability (D12)                                                                    | —    |
+| `TimelineViewNowIndicator`                         | Renders only when now is in the range (D11)                                                               | —    |
+
 ## State
 
 The core owns no navigation or event state (D2, D5). Following oxform (D24), it keeps `options` as a plain value, a `persisted` store with the tracked inputs and `now` (D11), and a derived `store`. `useCalendar` creates the instance once, calls `'~mount'` once and `'~update'(options)` after every render through an isomorphic layout effect; `useCalendarSelector` reads slices through `useSelector`.
@@ -238,9 +254,11 @@ stateDiagram-v2
 
 Variation is expressed through view definitions (D4), never booleans on parts:
 
-- `monthView({ maxEventsPerDay, dayOverflow? })`: row cap per day, plus an optional per-day overflow hint for API-truncated data (D17).
+- `monthView({ maxEventsPerDay, dayOverflow?, fixedWeekCount? })`: row cap per day, plus an optional per-day overflow hint for API-truncated data (D17); `fixedWeekCount` always shows six weeks (D35).
+- `dayGridView({ weeks, maxEventsPerDay, dayOverflow? })`: a day grid of whole weeks, such as a one-week or rolling four-week grid (D35).
 - `timeGridView({ days, groupBy?: 'resource', groupOrder?: 'resource-first' | 'date-first', allDay?, slotDuration?, minColumnWidth? })`: day, week and resource views (D4, D19). `minColumnWidth` is emitted as `--cal-min-column-width` for the consumer's CSS (C11, D9).
-- `listView({ days })`: list day and list week (D18).
+- `listView({ days })` or `listView({ period: 'month' | 'year' })`: list day and list week, or a calendar month or year (D18, D36).
+- `timelineView({ days, groupBy?: 'resource', slotMinutes?, minSlotWidth? })`: day, week and resource timelines (D34). `minSlotWidth` is emitted as `--cal-min-slot-width`.
 
 ## Props boundary
 
@@ -291,7 +309,7 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 
 **Verified:** not verified — cheap to reverse or additive later
 
-**Why:** There are only three layouts: month, time grid and list. Duration and grouping are settings on them, not new views. Consumers register named views (`week: timeGridView({ days: 7 })`, `resources: timeGridView({ days: 1, groupBy: 'resource' })`), so the app's own keys (`list_week`) map one to one onto the URL `view_type`, and a weekly resource view (app Q4) needs no library change. Revisit if a fourth layout appears (for example, a timeline) that does not fit `days` plus `groupBy`.
+**Why:** There are only three layouts: month, time grid and list. Duration and grouping are settings on them, not new views. Consumers register named views (`week: timeGridView({ days: 7 })`, `resources: timeGridView({ days: 1, groupBy: 'resource' })`), so the app's own keys (`list_week`) map one to one onto the URL `view_type`, and a weekly resource view (app Q4) needs no library change. Revisit if a fourth layout appears (for example, a timeline) that does not fit `days` plus `groupBy`. **Amended by D34:** the timeline is that fourth layout. **Amended by D35:** the month builder also serves week-based day grids, through a second layout feature.
 
 ### D5 — View and date are controlled only; navigation is one call per intent
 
@@ -926,6 +944,60 @@ Time-grid fractions use the real wall-clock day length, as `unavailable` does (D
 - Whether calendar-wide and resource layers of the same `kind` combine (union) or the resource layer overrides, as a per-resource `businessHours` may in FullCalendar (its docs do not say).
 - `decorate` receives no visible range in its context; the feature derives it from the columns and days. Whether the context should carry it.
 
+### D34 — The resource timeline is a fourth layout kind with stacked rows
+
+**Serves:** C1, C7, C9; D3, D4, D29
+
+**Status:** accepted. Amends D4 (four layout kinds) and lifts timeline views from "Not supported".
+
+**Verified:** not verified — additive; no existing layout changes
+
+**Why:** A timeline puts resources on rows and time on the horizontal axis. The time-grid model does not fit it. Time-grid lanes divide a column's width (`lane`/`lanes`) and events split at every day column, while a timeline stacks overlapping events into rows whose count differs per resource, and a week timeline draws an event crossing midnight as one bar. Bending the time grid with an orientation setting would need a mode switch inside its parts, which D3 rules out. So the timeline gets its own layout feature (`timelineLayout`, the `timelineLayout` key in `Calendar_Layout_FeatureMap`), view factory and part family, built only on the D29 layout-feature API. Leaving it to consumers as a userland layout feature was rejected because the library is meant to ship it; it remains possible for other layouts.
+
+- **Settings:** `timelineView({ days, groupBy?: 'resource', slotMinutes?: 60, minSlotWidth? })`. Navigation is the time grid's: a 7-day period starts on `firstDayOfWeek`, and a step moves `days` days. Without `groupBy` the layout has one row with no resource.
+- **Positions:** every `start`/`span` is a fraction of the whole range in elapsed time, as time-grid fractions are of the day. Days and slots are integer column indices instead (`colStart`, `colSpan`; `col`), so the header lays out as a CSS grid of `days × 1440 / slotMinutes` slot columns and sizes to its content. Slots divide each day evenly, so on a 23- or 25-hour day slot labels and event positions disagree, the time grid's open DST question.
+- **Stacking:** within a row, each event takes the lowest stack row where it overlaps nothing, in core order (`eventOrder`). Touching intervals do not overlap, as in the time grid. Each row reports `rows`, its stack depth, so rows grow to fit. A cap with overflow (FullCalendar's `eventMaxStack`) is a later, additive setting.
+- **Spans:** a timed event is one segment clipped only at the range edges, with `continuesBefore`/`continuesAfter`. An all-day event is a block from the start of its first day to the start of the day after its last, in the same stack; there is no separate all-day row, and the segment carries `isAllDay`.
+- **Resources and availability:** an event appears in every row it references. Availability is clipped to the range and shaded as its complement (D12), with the same helper as the time grid. A resource with no availability in the range is `isUnavailable` and shaded throughout.
+- **Now:** one `now` fraction on the layout, present only when the clock is inside the range, drawn once across all rows.
+- **Parts:** `TimelineView`, `TimelineViewHeader`, `TimelineViewDayHeader`, `TimelineViewDayTrigger`, `TimelineViewSlotLabel`, `TimelineViewBody`, `TimelineViewRow`, `TimelineViewResource`, `TimelineViewLane`, `TimelineViewEvent`, `TimelineViewUnavailable`, `TimelineViewNowIndicator`, the same in React and Solid (D31). As in D13 there are no per-slot parts; slot lines are a theme background. Resource cells render whatever the consumer passes; nested resources and resource data columns are out of scope.
+- **Themes:** `base.css` lays the root out as a resource column (`--calendar-resource-width`) and a track whose minimum width is `--cal-slots × --cal-min-slot-width`; the header repeats those columns per slot and sticks to the top, and resource cells stick to the start. Events use the bar tokens (`--calendar-bar-height`, `--calendar-bar-gap`). `default.css` styles events as accent-tinted bars, draws slot lines from `--cal-slots` on each lane, keeps resource cells opaque so events and the now line scroll under them, and makes the day label stick beside the resource column.
+- **Packaging:** the main entries. Tree-shaking already drops layouts no view uses.
+
+Rejected: a horizontal orientation on `timeGridView` (above); a separate all-day row per resource (more model and parts for no current need); a `/timeline` subpath (no size benefit under `sideEffects: false`).
+
+### D35 — Day grids are week-based navigation over the month builder
+
+**Serves:** C1; D4, D29
+
+**Status:** accepted. Amends D4.
+
+**Verified:** not verified — additive; the month model and its parts are unchanged
+
+**Why:** FullCalendar's day-grid views (`dayGridWeek`, a custom `{ weeks: 4 }` duration, `fixedWeekCount`) differ from the month view only in which days they show. `layoutMonth_build` already lays out any range of whole weeks and marks days outside `period`, so the month layout's model, its `MonthView*` parts and the theme CSS fit them as they are; only `monthLayout`'s `period`, `range` and `step` assume a calendar month. So:
+
+- **`dayGridView({ weeks, maxEventsPerDay, dayOverflow? })`** registers `dayGridLayout`, a second layout feature over the same builder. Its period and range are `weeks × 7` days from the `firstDayOfWeek` of the week containing `date`, so no day is outside, and a step moves `weeks × 7` days. It builds the month model (`kind: 'month'`), so consumers render it with the month parts; the view's own kind is `'dayGrid'`, so `context.kind` and `eventOrder` can tell it apart. `maxEventsPerDay: Infinity` removes the cap for a tall single-week row.
+- **`monthView({ fixedWeekCount: true })`** always shows six weeks: 42 days from the start of the week containing the 1st, the extra days flagged `isOutside` like other padding days. It defaults to `false`, today's behaviour; FullCalendar defaults to `true`.
+- **Not covered:** grids of fewer than seven columns (`dayGridDay`, N-day grids) need a column count in the month model and in `base.css`, which hard-codes seven; that is an additive `dayGridView({ days })` later. `dayGridYear` waits for month- and year-length periods, which the list view also lacks. Whether FullCalendar aligns a custom week duration to the week of `date` is unverified; its docs say only that a default alignment is generated from the duration.
+
+Rejected: `weeks` on `monthView` (a one-week "month" view, and a settings bag where `weeks` and `fixedWeekCount` cannot combine); renaming the month layout, model and parts to a day grid (cleanest naming, but it touches core, both adapters, every theme and the D30 names for no behaviour change; still possible later).
+
+### D36 — List views can cover a calendar month or year
+
+**Serves:** C1; D4, D18
+
+**Status:** accepted.
+
+**Verified:** not verified — additive; the list model and its parts are unchanged
+
+**Why:** FullCalendar's `listMonth` and `listYear` differ from `listDay`/`listWeek` only in their period, and the list builder already lists whatever range it gets (D18). So `listView` takes either `days` or `period`:
+
+- **`listView({ period: 'month' })`:** the calendar month containing `date`; a step moves one month and lands on the 1st, as the month view does.
+- **`listView({ period: 'year' })`:** the calendar year containing `date`; a step moves one year and lands on 1 January.
+- Range equals period, as for the `days` form, so a list never shows padding days. The settings type is a union, so `days` and `period` cannot be combined.
+
+Rejected: `listView({ months })` (a count cannot express a calendar year, since `months: 12` would start at the month of `date`); separate `listMonthView`/`listYearView` factories (four names for one layout). The same month and year periods are what `dayGridYear` needs later (D35).
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.
@@ -979,9 +1051,27 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - An event referencing two resources appears in both columns. _(C7, app R7.3)_
 - The now indicator appears only in today's column, at the clock's offset. _(C9, D11, app R1.5)_
 
+### Day-grid views
+
+- `dayGridView({ weeks: 1 })` on Wednesday 11 March 2026 with `firstDayOfWeek: 7` shows 8–14 March as one week with no outside days; `api.next()` goes to the 18th. _(D35)_
+- `dayGridView({ weeks: 4 })` shows four weeks from the week of `date` and steps 28 days. _(D35)_
+- `monthView({ fixedWeekCount: true })` shows six weeks for February 2026, with 1–14 March outside; without it, February 2026 has four. _(D35)_
+- `context.kind` is `'dayGrid'` while the layout model is `kind: 'month'`. _(D35)_
+
+### Timeline layout
+
+- A 1-day timeline has 24 slots of 60 minutes and one day header spanning them; a 7-day timeline starts on `firstDayOfWeek`. _(D34)_
+- Overlapping events in one row stack into rows 0 and 1, and the row reports `rows: 2`; touching events share row 0. _(D34)_
+- A timed event crossing midnight in a week timeline is one segment; one starting before the range is clipped and marked `continuesBefore`. _(D34)_
+- An all-day event spans its days from midnight to midnight and carries `isAllDay`. _(D34)_
+- An event referencing two resources appears in both rows; without `groupBy` there is one row with no resource. _(C7, D34)_
+- Availability is shaded as its complement over the range; a resource with none is `isUnavailable` and shaded throughout. _(C7, D12, D34)_
+- `now` is the clock's fraction of the range, and absent when the clock is outside it. _(C9, D11, D34)_
+
 ### List layout
 
 - Only days with events appear, in order; `ListView_Empty` renders when `days` is empty. _(D18, app R1.3)_
+- `listView({ period: 'month' })` lists 1–31 March 2026 for any date in March and steps to 1 April; `listView({ period: 'year' })` lists 2026 and steps to 1 January 2027. _(D36)_
 
 ### Clock and lifecycle
 
@@ -1030,9 +1120,11 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - `material-ui.css` takes the accent, its contrast colour, the event fill and the radius from MUI's variables, and follows a dark scheme set by class, `data-dark` or `data-mui-color-scheme` on the root or on an inner element. _(D26)_
 - `compact.css` shrinks slots and text over a theme, and a token set on an ancestor still wins over it. _(D26)_
 - An accent set on an ancestor tints the events, and `--calendar-event` overrides that tint. _(D26)_
-- `high-contrast.css` outlines events in the text colour at 2px, marks today in its accent in both modes, dashes the edge where a bar continues, and still lets `--calendar-event` override the fill. _(D26)_
-- `revenuecat.css` marks today in the exact brand red with black purple numbers, tints events blue, and keeps red text off white. _(D26)_
+- `high-contrast.css` outlines events, timeline events included, in the text colour at 2px, marks today in its accent in both modes, dashes the edge where a bar continues, and still lets `--calendar-event` override the fill. _(D26)_
+- `revenuecat.css` marks today in the exact brand red with black purple numbers, tints events blue, and keeps red text off white, on time-grid and timeline headers. _(D26)_
 - `stripe.css` marks today in blurple with its contrast colour and tints events from it, in both modes. _(D26)_
+- With `default.css`, timeline events take the accent tint, today's day trigger the accent, resource cells stay opaque, unavailable time is hatched, the now line is the accent, a scrolled day label sticks beside the resource column, and forced-colors mode marks today with `Highlight`. _(D26, D34)_
+- With `base.css`, a timeline event sits at its fraction of the track, day headers line up with their slots, stacked events do not overlap, and the now line sits at the clock's offset. _(D26, D34)_
 
 ## Skeleton
 

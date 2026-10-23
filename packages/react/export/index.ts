@@ -32,5 +32,19 @@ export {
   TimeGridView,
   TimeGridViewUnavailable,
 } from '#time-grid-view';
+export {
+  TimelineViewBody,
+  TimelineViewDayHeader,
+  TimelineViewDayTrigger,
+  TimelineViewEvent,
+  TimelineViewHeader,
+  TimelineViewLane,
+  TimelineViewNowIndicator,
+  TimelineViewResource,
+  TimelineViewRow,
+  TimelineViewSlotLabel,
+  TimelineView,
+  TimelineViewUnavailable,
+} from '#timeline-view';
 export { Calendar, CalendarProvider, useCalendar, useCalendarContext, useCalendarSelector } from '#use-calendar';
 export { useCalendarEventStore } from '#use-calendar-event-store';

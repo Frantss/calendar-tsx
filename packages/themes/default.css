@@ -44,9 +44,13 @@
     line-height: 1.4;
   }
 
-  :where([data-scope='calendar'][data-part='month-root']),
-  :where([data-scope='calendar'][data-part='list-root']) {
+  :where([data-scope='calendar'][data-part='month-root']) {
     overflow: hidden;
+  }
+
+  /* Clips to the radius like `hidden`, and scrolls a long month or year list once the app limits its height */
+  :where([data-scope='calendar'][data-part='list-root']) {
+    overflow: auto;
   }
 
   /* Buttons: parts render native buttons (D15); reset them to the theme's text */
@@ -76,7 +80,8 @@
     [data-scope='calendar']:is(
       [data-part='month-week-event'],
       [data-part='time-grid-all-day-event'],
-      [data-part='time-grid-event']
+      [data-part='time-grid-event'],
+      [data-part='timeline-event']
     )
   ) {
     --_calendar-event: var(--calendar-event, color-mix(in oklab, var(--calendar-accent) 16%, var(--calendar-surface)));
@@ -86,9 +91,15 @@
     );
   }
 
-  /* Event bars: month rows and the time grid's all-day row */
+  /* Event bars: month rows, the time grid's all-day row and timeline rows */
 
-  :where([data-scope='calendar']:is([data-part='month-week-event'], [data-part='time-grid-all-day-event'])) {
+  :where(
+    [data-scope='calendar']:is(
+      [data-part='month-week-event'],
+      [data-part='time-grid-all-day-event'],
+      [data-part='timeline-event']
+    )
+  ) {
     padding-inline: 0.375rem;
     border: 1px solid var(--_calendar-event-border);
     border-radius: var(--calendar-bar-radius);
@@ -244,7 +255,7 @@
   }
 
   /* Hatched so unavailable time reads apart from muted, out-of-range surfaces */
-  :where([data-scope='calendar'][data-part='time-grid-unavailable']) {
+  :where([data-scope='calendar']:is([data-part='time-grid-unavailable'], [data-part='timeline-unavailable'])) {
     background:
       repeating-linear-gradient(
         135deg,
@@ -305,6 +316,105 @@
     background: var(--calendar-accent);
   }
 
+  /* Timeline */
+
+  :where([data-scope='calendar'][data-part='timeline-header']) {
+    background: var(--calendar-surface);
+    border-block-end: 1px solid var(--calendar-border);
+  }
+
+  /* The corner base.css pins over the resource column */
+  :where([data-scope='calendar'][data-part='timeline-header'])::before {
+    border-inline-end: 1px solid var(--calendar-border);
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-day-header']) {
+    padding: 0.375rem 0.5rem 0.125rem;
+    border-inline-start: 1px solid var(--calendar-border);
+    color: var(--calendar-text-muted);
+    font-size: var(--calendar-font-size-sm);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-day-header'][data-today]) {
+    color: var(--calendar-accent);
+  }
+
+  /* Sticks beside the resource column, so a day scrolled partly out of view keeps its label */
+  :where([data-scope='calendar'][data-part='timeline-day-trigger']) {
+    display: inline-block;
+    position: sticky;
+    inset-inline-start: calc(var(--calendar-resource-width, 10rem) + 0.5rem);
+    padding: 0.125rem 0.375rem;
+    border-radius: 999px;
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-day-trigger']):hover {
+    background: var(--calendar-surface-muted);
+  }
+
+  :where([data-scope='calendar'][data-today]) :where([data-scope='calendar'][data-part='timeline-day-trigger']) {
+    background: var(--calendar-accent);
+    color: var(--calendar-accent-contrast);
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-slot-label']) {
+    padding: 0.125rem 0.25rem 0.25rem;
+    border-inline-start: 1px solid var(--calendar-border);
+    color: var(--calendar-text-muted);
+    font-size: var(--calendar-font-size-xs);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-row'] + [data-part='timeline-row']) {
+    border-block-start: 1px solid var(--calendar-border);
+  }
+
+  /* Opaque, since events and the now line scroll under it */
+  :where([data-scope='calendar'][data-part='timeline-resource']) {
+    padding: 0.375rem 0.75rem;
+    border-inline-end: 1px solid var(--calendar-border);
+    background: var(--calendar-surface);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-resource'][data-unavailable]) {
+    background: var(--calendar-surface-muted);
+    color: var(--calendar-text-muted);
+  }
+
+  /* One line per slot, drawn from the slot count rather than one element per slot (D13) */
+  :where([data-scope='calendar'][data-part='timeline-lane']) {
+    background-image: linear-gradient(to right, var(--calendar-border) 1px, transparent 1px);
+    background-size: calc(100% / var(--cal-slots)) 100%;
+  }
+
+  /* A focused event stays under the sticky resource column and header */
+  :where([data-scope='calendar'][data-part='timeline-event']):focus-visible {
+    z-index: 1;
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-now']) {
+    border-inline-start: 2px solid var(--calendar-accent);
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-now'])::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: -5px;
+    inline-size: 8px;
+    block-size: 8px;
+    border-radius: 999px;
+    background: var(--calendar-accent);
+  }
+
   /* List */
 
   :where([data-scope='calendar'][data-part='list-day'] + [data-part='list-day']) {
@@ -355,7 +465,7 @@
       color: GrayText;
     }
 
-    :where([data-scope='calendar'][data-part='time-grid-unavailable']) {
+    :where([data-scope='calendar']:is([data-part='time-grid-unavailable'], [data-part='timeline-unavailable'])) {
       forced-color-adjust: none;
       background: repeating-linear-gradient(135deg, transparent 0 6px, GrayText 6px 7px);
     }
@@ -366,13 +476,19 @@
       background: repeating-linear-gradient(45deg, transparent 0 6px, GrayText 6px 7px);
     }
 
-    :where([data-scope='calendar'][data-part='time-grid-now']) {
+    :where([data-scope='calendar']:is([data-part='time-grid-now'], [data-part='timeline-now'])) {
       forced-color-adjust: none;
       border-color: Highlight;
     }
 
-    :where([data-scope='calendar'][data-part='time-grid-now'])::before {
+    :where([data-scope='calendar']:is([data-part='time-grid-now'], [data-part='timeline-now']))::before {
       background: Highlight;
+    }
+
+    :where([data-scope='calendar'][data-today]) :where([data-scope='calendar'][data-part='timeline-day-trigger']) {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
     }
 
     /* Slot lines on a leaf pseudo-element, under the events */
@@ -383,6 +499,16 @@
       forced-color-adjust: none;
       background-image: linear-gradient(to bottom, GrayText 1px, transparent 1px);
       background-size: 100% calc(100% / var(--cal-slots));
+      pointer-events: none;
+    }
+
+    :where([data-scope='calendar'][data-part='timeline-lane'])::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      forced-color-adjust: none;
+      background-image: linear-gradient(to right, GrayText 1px, transparent 1px);
+      background-size: calc(100% / var(--cal-slots)) 100%;
       pointer-events: none;
     }
   }

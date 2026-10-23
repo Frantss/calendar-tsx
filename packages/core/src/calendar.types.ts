@@ -122,8 +122,19 @@ export interface Calendar_TimeGridColumn_FeatureMap {
 }
 export interface Calendar_TimeGridSegment_FeatureMap {}
 export interface Calendar_ListDay_FeatureMap {}
+export interface Calendar_TimelineRow_FeatureMap {}
+export interface Calendar_TimelineSegment_FeatureMap {}
 
 export type Calendar_MonthViewSettings = {
+  maxEventsPerDay: number;
+  dayOverflow?: (date: Temporal.PlainDate) => boolean;
+  /** Always show six weeks (D35). */
+  fixedWeekCount?: boolean;
+};
+
+/** Whole weeks from the week containing the date; built as a month model (D35). */
+export type Calendar_DayGridViewSettings = {
+  weeks: number;
   maxEventsPerDay: number;
   dayOverflow?: (date: Temporal.PlainDate) => boolean;
 };
@@ -137,7 +148,15 @@ export type Calendar_TimeGridViewSettings = {
   minColumnWidth?: string;
 };
 
-export type Calendar_ListViewSettings = { days: number };
+/** A run of `days` days, or the calendar month or year containing the date (D36). */
+export type Calendar_ListViewSettings = { days: number; period?: never } | { period: 'month' | 'year'; days?: never };
+
+export type Calendar_TimelineViewSettings = {
+  days: number;
+  groupBy?: 'resource';
+  slotMinutes?: number;
+  minSlotWidth?: string;
+};
 
 export type Calendar_MonthDay<TData, TFeatures = {}> = {
   key: string;
@@ -216,11 +235,58 @@ export type Calendar_ListDay<TData, TFeatures = {}> = {
 
 export type Calendar_ListLayout<TData, TFeatures = {}> = { kind: 'list'; days: Calendar_ListDay<TData, TFeatures>[] };
 
+/** A day in the timeline header, as slot columns. */
+export type Calendar_TimelineDay = {
+  key: string;
+  date: Temporal.PlainDate;
+  isToday: boolean;
+  colStart: number;
+  colSpan: number;
+};
+
+export type Calendar_TimelineSlot = { key: string; date: Temporal.PlainDate; time: Temporal.PlainTime; col: number };
+
+export type Calendar_TimelineSegment<TData, TFeatures = {}> = {
+  key: string;
+  event: Calendar_Event<TData>;
+  /** Fractions of the range. */
+  start: number;
+  span: number;
+  /** Stack row within its timeline row. */
+  row: number;
+  isAllDay: boolean;
+  continuesBefore: boolean;
+  continuesAfter: boolean;
+} & Calendar_PickFeatures<Calendar_TimelineSegment_FeatureMap, TFeatures>;
+
+export type Calendar_TimelineRow<TData, TResourceData, TFeatures = {}> = {
+  key: string;
+  resource?: Calendar_Resource<TResourceData>;
+  isUnavailable: boolean;
+  segments: Calendar_TimelineSegment<TData, TFeatures>[];
+  /** Stack depth. */
+  rows: number;
+  /** Fractions of the range. */
+  unavailable: Calendar_UnavailableSegment[];
+} & Calendar_PickFeatures<Calendar_TimelineRow_FeatureMap, TFeatures>;
+
+export type Calendar_TimelineLayout<TData, TResourceData, TFeatures = {}> = {
+  kind: 'timeline';
+  days: Calendar_TimelineDay[];
+  slots: Calendar_TimelineSlot[];
+  rows: Calendar_TimelineRow<TData, TResourceData, TFeatures>[];
+  /** The clock's fraction of the range; absent outside it. */
+  now?: number;
+  minSlotWidth?: string;
+};
+
 /** Layout key → layout, given the features of the view it renders. Layout features extend it by declaration merging. */
 export interface Calendar_Layout_FeatureMap<TData, TResourceData, TFeatures> {
   monthLayout: Calendar_MonthLayout<TData, TFeatures>;
+  dayGridLayout: Calendar_MonthLayout<TData, TFeatures>;
   timeGridLayout: Calendar_TimeGridLayout<TData, TResourceData, TFeatures>;
   listLayout: Calendar_ListLayout<TData, TFeatures>;
+  timelineLayout: Calendar_TimelineLayout<TData, TResourceData, TFeatures>;
 }
 
 export type Calendar_LayoutKey = keyof Calendar_Layout_FeatureMap<unknown, unknown, {}>;

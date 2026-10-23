@@ -2,7 +2,8 @@ import { Temporal } from 'temporal-polyfill';
 import { expect, it } from 'vitest';
 import { page } from 'vitest/browser';
 
-import type { Calendar_ListLayout } from '@calendar-tsx/core';
+import type { Calendar_ListLayout, Calendar_Views } from '@calendar-tsx/core';
+import { listView } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_timed } from '#tests/calendar.fixtures';
 import { ListViewDay, ListViewDayHeader, ListViewEmpty, ListViewEvent, ListView } from '#list-view';
@@ -58,4 +59,20 @@ it('renders the empty part when the range has no events', async () => {
   const { ui } = await setup({ date: Temporal.PlainDate.from('2026-04-15') });
 
   await expect.element(ui.empty).toHaveAttribute('data-part', 'list-empty');
+});
+
+it('renders a calendar-month list with the list parts', async () => {
+  const views: Calendar_Views = { list_week: listView({ days: 7 }), list_month: listView({ period: 'month' }) };
+  const { ui } = await setup({
+    views,
+    view: 'list_month',
+    events: [
+      fixtures_timed('Yoga', { date: '2026-03-02', start: '09:00', end: '10:00' }),
+      fixtures_timed('Swim', { date: '2026-03-30', start: '09:00', end: '10:00' }),
+      fixtures_timed('Run', { date: '2026-04-01', start: '09:00', end: '10:00' }),
+    ],
+  });
+
+  await expect.element(ui.event('Swim')).toHaveAttribute('data-part', 'list-event');
+  expect(ui.headings.elements().map(heading => heading.textContent)).toEqual(['2026-03-02', '2026-03-30']);
 });

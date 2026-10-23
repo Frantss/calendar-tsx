@@ -17,6 +17,7 @@
     "#list-view": "./src/list-view.tsx",
     "#month-view": "./src/month-view.tsx",
     "#time-grid-view": "./src/time-grid-view.tsx",
+    "#timeline-view": "./src/timeline-view.tsx",
     "#use-calendar": "./src/use-calendar.tsx",
     "#tests/calendar-react.setup": "./src/tests/calendar-react.setup.tsx",
     "#*": "./src/*.ts"

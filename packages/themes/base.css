@@ -157,4 +157,110 @@
     z-index: 1;
     pointer-events: none;
   }
+
+  /* Timeline: a resource column and a track; the header repeats the track as one column per slot (D34) */
+
+  :where([data-scope='calendar'][data-part='timeline-root']) {
+    display: grid;
+    grid-template-columns:
+      var(--calendar-resource-width, 10rem)
+      minmax(calc(var(--cal-slots) * var(--cal-min-slot-width, 0px)), 1fr);
+    overflow: auto;
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-header']) {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns:
+      var(--calendar-resource-width, 10rem)
+      repeat(var(--cal-slots), minmax(var(--cal-min-slot-width, 0px), 1fr));
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 3;
+  }
+
+  /* The corner above the resource column; it takes the header's background so labels scroll under it */
+  :where([data-scope='calendar'][data-part='timeline-header'])::before {
+    content: '';
+    grid-row: 1 / span 2;
+    grid-column: 1;
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 1;
+    background: inherit;
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-day-header']) {
+    grid-row: 1;
+    grid-column: calc(var(--cal-col-start) + 2) / span var(--cal-col-span);
+    min-inline-size: 0;
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-slot-label']) {
+    grid-row: 2;
+    grid-column: calc(var(--cal-col-start) + 2);
+    min-inline-size: 0;
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-body']),
+  :where([data-scope='calendar'][data-part='timeline-row']) {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-body']) {
+    position: relative;
+  }
+
+  /* Above events and the now line, which scroll under it; below the header */
+  :where([data-scope='calendar'][data-part='timeline-resource']) {
+    grid-column: 1;
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 2;
+    min-inline-size: 0;
+  }
+
+  /* A minimum, so the lane and its shading stretch to a taller resource cell */
+  :where([data-scope='calendar'][data-part='timeline-lane']) {
+    grid-column: 2;
+    position: relative;
+    min-inline-size: 0;
+    min-block-size: calc(
+      max(1, var(--cal-rows)) * (var(--calendar-bar-height, 1.375rem) + var(--calendar-bar-gap, 2px)) +
+        var(--calendar-bar-gap, 2px)
+    );
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-unavailable']),
+  :where([data-scope='calendar'][data-part='timeline-event']) {
+    position: absolute;
+    inset-inline-start: calc(var(--cal-start) * 100%);
+    inline-size: calc(var(--cal-span) * 100%);
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-unavailable']) {
+    inset-block: 0;
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-event']) {
+    inset-block-start: calc(
+      var(--calendar-bar-gap, 2px) + var(--cal-row) *
+        (var(--calendar-bar-height, 1.375rem) + var(--calendar-bar-gap, 2px))
+    );
+    block-size: var(--calendar-bar-height, 1.375rem);
+    z-index: 1;
+  }
+
+  /* The body spans both columns, so the now line is offset by the resource column */
+  :where([data-scope='calendar'][data-part='timeline-now']) {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(
+      var(--calendar-resource-width, 10rem) + var(--cal-now) * (100% - var(--calendar-resource-width, 10rem))
+    );
+    z-index: 1;
+    pointer-events: none;
+  }
 }

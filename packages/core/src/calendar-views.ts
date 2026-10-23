@@ -1,5 +1,6 @@
-import { listLayout, monthLayout, timeGridLayout } from '#calendar-layouts';
+import { dayGridLayout, listLayout, monthLayout, timeGridLayout, timelineLayout } from '#calendar-layouts';
 import type {
+  Calendar_DayGridViewSettings,
   Calendar_Features,
   Calendar_FeaturesOf,
   Calendar_LayoutKey,
@@ -7,6 +8,7 @@ import type {
   Calendar_MonthViewSettings,
   Calendar_PickFeatures,
   Calendar_TimeGridViewSettings,
+  Calendar_TimelineViewSettings,
   Calendar_View,
   Calendar_ViewFeatureSettings,
   Calendar_ViewSettings_FeatureMap,
@@ -43,6 +45,18 @@ export const monthView = <const TFeatures extends Calendar_Features = {}>(
     typeof monthLayout
   >;
 
+/** A day grid of whole weeks; it builds the month model, so the month parts render it (D35). */
+export const dayGridView = <const TFeatures extends Calendar_Features = {}>(
+  settings: Calendar_DayGridViewSettings & Calendar_ViewFeatureSettings<TFeatures>,
+) =>
+  view_create('dayGrid', 'dayGridLayout', dayGridLayout, settings) as unknown as ViewOf<
+    'dayGridLayout',
+    'dayGrid',
+    Calendar_DayGridViewSettings,
+    TFeatures,
+    typeof dayGridLayout
+  >;
+
 export const timeGridView = <const TFeatures extends Calendar_Features = {}>(
   settings: Calendar_TimeGridViewSettings & Calendar_ViewFeatureSettings<TFeatures>,
 ) =>
@@ -63,6 +77,17 @@ export const listView = <const TFeatures extends Calendar_Features = {}>(
     Calendar_ListViewSettings,
     TFeatures,
     typeof listLayout
+  >;
+
+export const timelineView = <const TFeatures extends Calendar_Features = {}>(
+  settings: Calendar_TimelineViewSettings & Calendar_ViewFeatureSettings<TFeatures>,
+) =>
+  view_create('timeline', 'timelineLayout', timelineLayout, settings) as unknown as ViewOf<
+    'timelineLayout',
+    'timeline',
+    Calendar_TimelineViewSettings,
+    TFeatures,
+    typeof timelineLayout
   >;
 
 /** The views, plus every feature they use, to spread into the calendar's `features` (D29). */
