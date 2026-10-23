@@ -1,0 +1,26 @@
+/*
+ * The default theme with its tokens read from Material UI's CSS theme variables (`cssVariables: true`, default `mui`
+ * prefix), so the calendar takes the app's palette and shape. MUI redefines those variables per color scheme, so dark
+ * mode follows it without `color-scheme`. The mapping is repeated on each of MUI's built-in color-scheme selectors
+ * (`class`, `data` and `data-mui-color-scheme`) because a custom property resolves its `var()` where it is declared:
+ * on `:root` alone, a scheme set below the root would not reach it.
+ */
+@import './default.css';
+
+@layer calendar.base, calendar.theme, calendar.density;
+
+@layer calendar.theme {
+  :where(:root, .light, .dark, [data-light], [data-dark], [data-mui-color-scheme]) {
+    --calendar-surface: var(--mui-palette-background-paper);
+    /* Translucent, as MUI's hover is: it always sits on the opaque surface */
+    --calendar-surface-muted: var(--mui-palette-action-hover);
+    --calendar-text: var(--mui-palette-text-primary);
+    --calendar-text-muted: var(--mui-palette-text-secondary);
+    --calendar-border: var(--mui-palette-divider);
+    --calendar-accent: var(--mui-palette-primary-main);
+    --calendar-accent-contrast: var(--mui-palette-primary-contrastText);
+    /* Events are left to the default theme's accent tint, so they follow the primary color */
+    --calendar-radius: var(--mui-shape-borderRadius);
+    --calendar-bar-radius: var(--mui-shape-borderRadius);
+  }
+}
