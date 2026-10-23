@@ -26,7 +26,7 @@ A headless calendar library that satisfies `docs/calendar-spec.md` (R1–R11): a
 
 Library-level capabilities, each traced to the app spec. Draft; confirmed when the scope area closes.
 
-- **C1 — Views:** month grid, day/week time grid with all-day row, list day/week, resource time grid, resource timeline (D33). _(app R1.1–R1.4)_
+- **C1 — Views:** month grid, week-based day grid (D34), day/week time grid with all-day row, list day/week, resource time grid, resource timeline (D33). _(app R1.1–R1.4)_
 - **C2 — Navigation:** current view and date, prev/next/today, go to date, change view; visible range and period derivable synchronously after any change. _(R2.3–R2.5, R3.2–R3.5, R8.1, R11.1)_
 - **C3 — Change notification:** a single subscription that reports view/date changes, so the app can sync the URL. _(R2.1–R2.2)_
 - **C4 — Time-grid layout:** overlapping timed events laid out side by side; rows do not stretch; slot labels formattable. _(R1.2, R1.7, R1.8)_
@@ -254,7 +254,8 @@ stateDiagram-v2
 
 Variation is expressed through view definitions (D4), never booleans on parts:
 
-- `monthView({ maxEventsPerDay, dayOverflow? })`: row cap per day, plus an optional per-day overflow hint for API-truncated data (D17).
+- `monthView({ maxEventsPerDay, dayOverflow?, fixedWeekCount? })`: row cap per day, plus an optional per-day overflow hint for API-truncated data (D17); `fixedWeekCount` always shows six weeks (D34).
+- `dayGridView({ weeks, maxEventsPerDay, dayOverflow? })`: a day grid of whole weeks, such as a one-week or rolling four-week grid (D34).
 - `timeGridView({ days, groupBy?: 'resource', groupOrder?: 'resource-first' | 'date-first', allDay?, slotDuration?, minColumnWidth? })`: day, week and resource views (D4, D19). `minColumnWidth` is emitted as `--cal-min-column-width` for the consumer's CSS (C11, D9).
 - `listView({ days })`: list day and list week (D18).
 - `timelineView({ days, groupBy?: 'resource', slotMinutes?, minSlotWidth? })`: day, week and resource timelines (D33). `minSlotWidth` is emitted as `--cal-min-slot-width`.
@@ -308,7 +309,7 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 
 **Verified:** not verified — cheap to reverse or additive later
 
-**Why:** There are only three layouts: month, time grid and list. Duration and grouping are settings on them, not new views. Consumers register named views (`week: timeGridView({ days: 7 })`, `resources: timeGridView({ days: 1, groupBy: 'resource' })`), so the app's own keys (`list_week`) map one to one onto the URL `view_type`, and a weekly resource view (app Q4) needs no library change. Revisit if a fourth layout appears (for example, a timeline) that does not fit `days` plus `groupBy`. **Amended by D33:** the timeline is that fourth layout.
+**Why:** There are only three layouts: month, time grid and list. Duration and grouping are settings on them, not new views. Consumers register named views (`week: timeGridView({ days: 7 })`, `resources: timeGridView({ days: 1, groupBy: 'resource' })`), so the app's own keys (`list_week`) map one to one onto the URL `view_type`, and a weekly resource view (app Q4) needs no library change. Revisit if a fourth layout appears (for example, a timeline) that does not fit `days` plus `groupBy`. **Amended by D33:** the timeline is that fourth layout. **Amended by D34:** the month builder also serves week-based day grids, through a second layout feature.
 
 ### D5 — View and date are controlled only; navigation is one call per intent
 
@@ -887,6 +888,22 @@ Rejected:
 
 Rejected: a horizontal orientation on `timeGridView` (above); a separate all-day row per resource (more model and parts for no current need); a `/timeline` subpath (no size benefit under `sideEffects: false`).
 
+### D34 — Day grids are week-based navigation over the month builder
+
+**Serves:** C1; D4, D29
+
+**Status:** accepted. Amends D4.
+
+**Verified:** not verified — additive; the month model and its parts are unchanged
+
+**Why:** FullCalendar's day-grid views (`dayGridWeek`, a custom `{ weeks: 4 }` duration, `fixedWeekCount`) differ from the month view only in which days they show. `layoutMonth_build` already lays out any range of whole weeks and marks days outside `period`, so the month layout's model, its `MonthView*` parts and the theme CSS fit them as they are; only `monthLayout`'s `period`, `range` and `step` assume a calendar month. So:
+
+- **`dayGridView({ weeks, maxEventsPerDay, dayOverflow? })`** registers `dayGridLayout`, a second layout feature over the same builder. Its period and range are `weeks × 7` days from the `firstDayOfWeek` of the week containing `date`, so no day is outside, and a step moves `weeks × 7` days. It builds the month model (`kind: 'month'`), so consumers render it with the month parts; the view's own kind is `'dayGrid'`, so `context.kind` and `eventOrder` can tell it apart. `maxEventsPerDay: Infinity` removes the cap for a tall single-week row.
+- **`monthView({ fixedWeekCount: true })`** always shows six weeks: 42 days from the start of the week containing the 1st, the extra days flagged `isOutside` like other padding days. It defaults to `false`, today's behaviour; FullCalendar defaults to `true`.
+- **Not covered:** grids of fewer than seven columns (`dayGridDay`, N-day grids) need a column count in the month model and in `base.css`, which hard-codes seven; that is an additive `dayGridView({ days })` later. `dayGridYear` waits for month- and year-length periods, which the list view also lacks. Whether FullCalendar aligns a custom week duration to the week of `date` is unverified; its docs say only that a default alignment is generated from the duration.
+
+Rejected: `weeks` on `monthView` (a one-week "month" view, and a settings bag where `weeks` and `fixedWeekCount` cannot combine); renaming the month layout, model and parts to a day grid (cleanest naming, but it touches core, both adapters, every theme and the D30 names for no behaviour change; still possible later).
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.
@@ -939,6 +956,13 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - A period crossing midnight shades correctly on both days. _(D12)_
 - An event referencing two resources appears in both columns. _(C7, app R7.3)_
 - The now indicator appears only in today's column, at the clock's offset. _(C9, D11, app R1.5)_
+
+### Day-grid views
+
+- `dayGridView({ weeks: 1 })` on Wednesday 11 March 2026 with `firstDayOfWeek: 7` shows 8–14 March as one week with no outside days; `api.next()` goes to the 18th. _(D34)_
+- `dayGridView({ weeks: 4 })` shows four weeks from the week of `date` and steps 28 days. _(D34)_
+- `monthView({ fixedWeekCount: true })` shows six weeks for February 2026, with 1–14 March outside; without it, February 2026 has four. _(D34)_
+- `context.kind` is `'dayGrid'` while the layout model is `kind: 'month'`. _(D34)_
 
 ### Timeline layout
 
