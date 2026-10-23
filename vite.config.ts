@@ -3,7 +3,7 @@ import { defineConfig } from 'vite-plus';
 
 export const base = defineConfig({
   lint: {
-    ignorePatterns: ['dist/**', 'node_modules/**'],
+    ignorePatterns: ['dist/**', 'node_modules/**', '**/routeTree.gen.ts'],
     plugins: ['oxc', 'typescript', 'import', 'promise', 'react', 'react-perf'],
     env: {
       browser: true,
@@ -17,6 +17,7 @@ export const base = defineConfig({
     },
   },
   fmt: {
+    ignorePatterns: ['**/routeTree.gen.ts'],
     arrowParens: 'avoid' as const,
     singleQuote: true,
     jsxSingleQuote: true,

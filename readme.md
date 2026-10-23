@@ -26,7 +26,9 @@ parts.
 | [`@calendar-tsx/core`](packages/core)     | Framework-agnostic calendar engine.                  | [readme](packages/core/readme.md)   |
 | [`@calendar-tsx/themes`](packages/themes) | Stylesheets: a positioning base and a default theme. | [readme](packages/themes/readme.md) |
 
-The design, requirements and decision log live in [docs/design.md](docs/design.md).
+The design, requirements and decision log live in [docs/design.md](docs/design.md). The documentation site is a
+[Fumadocs](https://fumadocs.dev) app on TanStack Start in [apps/docs](apps/docs); write pages in
+`apps/docs/content/docs`.
 
 ## Development
 
@@ -35,4 +37,5 @@ pnpm install
 pnpm run build
 pnpm run check:all
 pnpm run test
+pnpm --filter @calendar-tsx/docs run dev
 ```
