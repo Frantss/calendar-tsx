@@ -185,6 +185,7 @@ type Calendar_Options<TData, TResourceData, TViews extends Record<string, Calend
   eventOrder?: (a: Calendar_Event<TData>, b: Calendar_Event<TData>, context: Calendar_ViewContext<TViews>) => number; // D16
   firstDayOfWeek?: 1 | 2 | 3 | 4 | 5 | 6 | 7; // ISO; 7 = Sunday
   clock?: Calendar_Clock; // D11
+  initialNow?: Temporal.Instant; // first derivation only, for hydration (D27)
 };
 
 type Calendar_Navigation<TViews> = {
@@ -468,6 +469,14 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 
 **Why:** Parts already expose everything a stylesheet needs: `data-scope`/`data-part`, state attributes and `--cal-*` geometry (D9). So a theme needs no JavaScript and no adapter, and any future adapter that emits the same attributes gets it for free. `base.css` turns the geometry into layout (absolutely positioned month bars, time-grid lanes, the now line, and a subgrid that shares one set of columns across the header, all-day row and body). It is theme-independent, so every theme imports it, and a consumer styling the calendar themselves can import it alone. This replaces D9's plan of a reference stylesheet in Storybook docs. `default.css` adds the visual layer. Both live in cascade layers (`calendar.base`, `calendar.theme`) and select through `:where()`, so unlayered consumer styles and utility classes win without specificity fights. Theme values are `--calendar-*` tokens: a separate prefix, because the parts own `--cal-*` geometry inline. The default theme declares them on `:root`, so overriding one on any ancestor re-themes everything below it. Colours use `light-dark()` and follow the inherited `color-scheme`: the theme never sets it, so an app opts in to dark mode with `color-scheme: light dark` and forces a mode with `light` or `dark` on any ancestor. The package ships the CSS sources with no build step. Rejected: CSS inside `@calendar-tsx/react` (it would make themes React-only and grow the adapter with each theme); CSS-in-JS (needs a build step or runtime, at odds with a headless library); a Tailwind preset (ties themes to Tailwind, though one could map onto the same tokens later); a single file per theme with no base (each theme would repeat the positioning). Known limits: the base assumes the composition the readmes show (a header, an optional all-day row and a body inside the time-grid root); the all-day row scrolls with the body rather than sticking under the header; and month bars default to 22px, below a 44px touch target (`--calendar-bar-height` raises it).
 
+### D27 — Server rendering: a seeded first "now" and a client-module entry
+
+**Serves:** D11, D24; C9, C10
+
+**Verified:** not verified — additive; cheap to reverse
+
+**Why:** The parts already render on the server: effects are skipped, `useSelector` passes its snapshot as the server snapshot, and layout never reads the host zone (D7). What breaks is hydration. `calendar_create` read the clock when it was created, so the server and the client derived different "now" values: `--cal-now` on the now indicator never matched, and near midnight `data-today` moved to another column. `initialNow?: Temporal.Instant` is the instant used for the first derivation. The app picks it once per request, serialises it (`instant.toString()`), and passes the same value on both sides. `'~mount'` already ticks the clock straight away, so the client moves to the real "now" right after hydration. The option is read once at creation and is not tracked. The React entry starts with `'use client'` (a build banner), so React Server Components can import the parts. The options themselves (`Temporal` values, `views`, `onNavigate`) cannot cross the server/client boundary as props, so the calendar lives in a client component that parses strings. Rejected: rendering the now indicator and `isToday` only after mount, because the server HTML would lose the now line and `data-today` would still move at midnight; asking apps to pass `calendarClock_fixed` on the server, because the client still needs the same instant, which is `initialNow` with worse ergonomics. Known gap: the hydration test runs the server render in the browser, so ICU differences between Node and the browser in the default accessible labels (D20) are not covered.
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.
@@ -530,6 +539,7 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - `clock_interval` starts on mount, stops on unmount, and each tick re-derives `now`. _(D11, chart: mount, unmount, tick)_
 - With `clock_fixed`, `now` never changes. _(D11)_
 - Remounting resumes ticking. _(chart: Unmounted → Mounted)_
+- With `initialNow`, the first state derives from it, and `'~mount'` replaces it with the clock's instant. _(D27)_
 
 ### Managed event store
 
@@ -553,6 +563,7 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - Parts render no text unless given children; triggers have a default `aria-label` from `Intl` and `locale`. _(D15, D20)_
 - Month root has `role="grid"`, weeks `row`, days `gridcell`; time grid and list roots are labelled regions. _(D15)_
 - Using a `*_Root` with a model of the wrong kind is a type error. _(D10)_
+- Markup rendered with `renderToString` on one clock hydrates on a later clock across midnight without mismatches when both sides pass the same `initialNow`, and reports a mismatch without it. _(D27)_
 
 ### Themes
 

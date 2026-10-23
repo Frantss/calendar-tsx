@@ -58,3 +58,18 @@ const App = () => {
 Parts render no styles: position them with CSS reading `--cal-*` custom properties (for example
 `left: calc(var(--cal-col-start) / 7 * 100%)`). Every part accepts `render={<El />}` or
 `render={(props, state) => …}` to swap its element.
+
+## Server rendering
+
+The parts render with `renderToString` and stream like any other component. For the markup to hydrate, the server and
+the client must derive the same "now": pick an instant once per request, send it to the client as a string, and pass it
+as `initialNow` on both sides. After mounting, the calendar reads its clock as usual.
+
+```tsx
+// server: const now = Temporal.Now.instant().toString(), sent with the page data
+const calendar = useCalendar({ ...options, initialNow: Temporal.Instant.from(now) });
+```
+
+The entry is marked `'use client'`, so Server Components can import the parts, but options cannot cross that boundary
+as props (`Temporal` values, `views`, `onNavigate`). Create the calendar inside a client component and pass it
+strings to parse.
