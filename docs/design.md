@@ -848,6 +848,79 @@ Rejected:
 
 **Why:** The parts contain no DOM templates: every element renders through `<Dynamic>`, so the compiled package only calls `createComponent` and `mergeProps` and imports `solid-js/web`. The DOM and SSR compiles produce the same code, and `solid-js/web`'s own export conditions (`node`, `worker`, `deno` versus `browser`) pick the server or client runtime, which owns the hydration keys. On the server, `onMount` never runs, so the clock is not started; `createRenderEffect` runs `'~update'` once; and `renderToString` disposes the root, so `useSelector`'s store subscription is released. D27's `initialNow` already keeps the first derivation identical on both sides. Without it, Solid's `hydrate` throws `Hydration Mismatch` when the now indicator lands in another column. Solid has no Server Components, so there is no `'use client'` banner. Rejected: `tsup-preset-solid`'s layout (a `solid` condition with preserved JSX plus separate `server` and hydratable DOM builds). It was built and diffed: all three builds were the same code, so it would only add files and export conditions, and a `solid` condition would make `vite-plugin-solid` bundle the package into SSR output instead of externalising it. Revisit if a part ever renders a literal element instead of `<Dynamic>`, because templates differ between DOM and SSR compiles. The test renders on Node through a Vitest browser command (`ssrLoadModule`, so the parts are compiled with `generate: 'ssr'`) and hydrates in the browser.
 
+### D33 — Background layers shade time ranges through a feature, alongside D12's availability
+
+**Serves:** C7, D12, D29; FullCalendar parity for background events, inverse background events and business hours; future constraints for selection, drag and resize (D29)
+
+**Status:** proposed. Additive to D12: `availability`, `column.isUnavailable` and `column.unavailable` are unchanged. Folding D12 into this decision is a separate, later decision.
+
+**Verified:** not verified — design only; FullCalendar behaviour checked against the v7 docs (Background Events, Business Hours, `businessHours` per resource), nothing prototyped
+
+**Why:** The time grid shades only resource columns, from absolute intervals (D12). A week or day view without resources cannot shade anything, the month view has no shaded days, and there is no equivalent of FullCalendar's `display: 'background'` or `'inverse-background'` events or of its `businessHours`. One mechanism covers all three: named layers of time ranges, each optionally inverted and optionally limited to resources, which the core clips to each column or day.
+
+**Input.** A calendar option from the feature, separate from `events`:
+
+```ts
+type Calendar_BackgroundRange =
+  | { start: Temporal.ZonedDateTime; end: Temporal.ZonedDateTime }
+  | { allDay: true; start: Temporal.PlainDate; end?: Temporal.PlainDate }; // inclusive, as all-day events
+
+type Calendar_BackgroundLayer<TKind extends string = string> = {
+  id: string;
+  kind: TKind; // emitted as data-kind; themes and consumers style by it
+  inverse?: boolean; // shade what the ranges do not cover
+  resourceIds?: string[]; // omitted: every column
+  ranges: Calendar_BackgroundRange[] | ((range: Calendar_Range) => Calendar_BackgroundRange[]);
+};
+
+/** Identity: returns its argument, typed, with `kind` kept as a literal. */
+declare const createBackgroundLayer: <const TKind extends string>(
+  layer: Calendar_BackgroundLayer<TKind>,
+) => Calendar_BackgroundLayer<TKind>;
+
+// module scope, so references stay stable (D24)
+const backgrounds = [
+  createBackgroundLayer({ id: 'business-hours', kind: 'closed', inverse: true, ranges: weekdays9to5 }),
+  createBackgroundLayer({ id: 'holidays', kind: 'holiday', ranges: holidays }),
+];
+
+createCalendar({ …, features: { backgroundFeature, ...views.features }, backgrounds });
+```
+
+- **`createBackgroundLayer`** is an identity function. It takes `create*` although D30 keeps that prefix for instances, because the consumer reads it as building the layer, as `createCalendarViews` builds the views record. It gives an object literal its type at the point it is written, so a typo in a range or a misplaced `inverse` errors on the layer rather than on `createCalendar`, and layers can be declared apart from the calendar without annotating them. `const TKind` keeps `kind` as a literal (`'closed' | 'holiday'` above). Whether that union then flows into `background.kind` in the model needs the feature's option and model maps to take a kind generic; until then the model types `kind` as `string`.
+- **Layers, not a flat list.** A layer exists even with no ranges, which is how an inverse layer shades a whole column: the same rule as D12's empty `availability`.
+- **The function form** receives the visible range and runs when the layout derives. Business hours are then a helper that returns such a function from weekly rules (`{ daysOfWeek, startTime, endTime }[]`), so recurrence stays out of the core, as D12 requires. Timed ranges are converted to `timeZone` (D7).
+- **Tracked by reference,** like `events` (D24): `backgrounds` and each function form must be stable, or every update rederives.
+
+**Output.** `backgroundFeature` adds fields in `decorate`, for the views that list it, through the existing column and day feature maps:
+
+| Layout    | Field                                                               | Part                                                                              |
+| --------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Time grid | `column.backgrounds: { key, layer, kind, start, span }[]`           | `TimeGridViewBackground`: `aria-hidden`, `--cal-start`, `--cal-span`, `data-kind` |
+| Month     | `day.backgrounds: { key, layer, kind }[]`, from all-day ranges only | `MonthViewDayBackground`, or the consumer reads the field                         |
+| List      | none                                                                | —                                                                                 |
+
+Time-grid fractions use the real wall-clock day length, as `unavailable` does (D12; the DST open question applies). Overlapping ranges within a layer are merged so nothing is shaded twice; layers stack in input order. Inverse layers reuse the complement that D12's `unavailable` already computes. Any meaning beyond shading (a "Closed" label) is the consumer's text (D20). `base.css` positions the part as it positions `time-grid-unavailable`; `default.css` adds one fill token.
+
+**Considered and rejected:**
+
+- **A `display: 'background'` flag on events, as FullCalendar does.** Background entries would then pass through `eventOrder`, lane assignment, month bars, `hiddenCount`, the list view and the event store, each of which would have to filter them out, and `data: TData` would type two unrelated things.
+- **A dedicated `businessHoursFeature` with weekly rules in the core.** Narrower: it shades business hours only, leaves background events missing, and puts recurrence in the core against D12.
+- **A weekly-rules helper plus a calendar-wide `availability` option only.** Smallest, but the consumer recomputes on every navigation, month view gets nothing, and background events stay missing.
+- **Replacing D12 now.** `availability` would become a `kind: 'unavailable'` inverse layer per resource, and `Calendar_Resource.availability` would stop being required. Deferred until background layers are proven: it is a breaking change to the time-grid model.
+
+**Cost:** one core feature (clip, merge, complement), one or two parts in each of React and Solid, theme CSS, and layout and part tests. Roughly twice a business-hours-only feature.
+
+**Open questions:**
+
+- Timed ranges in the month view: ignored (FullCalendar renders timed background events only in the time grid), a `partial` flag on the day, or a covered fraction?
+- The time grid's all-day row: do all-day ranges shade `TimeGridViewAllDayCell` too? FullCalendar's behaviour there was not checked.
+- Layers without `resourceIds` in resource columns: shade every column, or only columns without a resource? FullCalendar's behaviour was not checked.
+- Whether resource-scoped layers belong on the resource (`resource.backgrounds`) instead of `resourceIds` on the layer, which needs a resource feature map.
+- Weekly rules: hours past midnight (FullCalendar's time strings may allow `'26:00'`; unverified), the day numbering (ISO `1`–`7` to match `firstDayOfWeek`, rather than FullCalendar's Sunday-zero), and how a boundary that falls in a DST gap resolves.
+- Whether calendar-wide and resource layers of the same `kind` combine (union) or the resource layer overrides, as a per-resource `businessHours` may in FullCalendar (its docs do not say).
+- `decorate` receives no visible range in its context; the feature derives it from the columns and days. Whether the context should carry it.
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.
