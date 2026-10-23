@@ -51,10 +51,68 @@ The theme sets no font family; the calendar inherits the page's.
 `color-scheme: light dark` on the page to follow the system, or `light`/`dark` on any ancestor to force a mode.
 
 **Overriding rules.** Both files use cascade layers (`calendar.base`, `calendar.theme`) and zero-specificity
-selectors, so your own unlayered CSS and utility classes win without `!important`.
+selectors. Unlayered CSS always wins over them without `!important`. Layered CSS wins only if its layer comes later:
+CSS that declares its own layers after importing the theme beats it, and anything earlier loses. Tailwind is
+layered, so see [Tailwind](#tailwind).
 
 **Scrolling.** `TimeGridView_Root` scrolls, with a sticky header. Give it a height (`max-block-size: 40rem`) to
 scroll inside the page rather than show all 24 hours.
+
+## Tailwind
+
+Tailwind v4 is supported. Earlier versions are not: v3's preflight is unlayered, so it beats the theme and strips
+the parts' button backgrounds and borders.
+
+Import the theme into Tailwind's `components` layer:
+
+```css
+@import 'tailwindcss';
+@import '@calendar-tsx/themes/default.css' layer(components);
+```
+
+Tailwind's layers run `theme`, `base`, `components`, `utilities`, so the theme lands between preflight and your
+utilities:
+
+- It beats preflight, whose button reset (`background-color: transparent`, `border-radius: 0`) would otherwise strip
+  every event, trigger and overflow, since parts render native buttons.
+- Utilities beat it: `<MonthView_WeekEvent className='bg-sky-600 text-white'>` overrides the theme.
+
+Imported without `layer(components)`, the theme's layers come after `utilities` and override every utility class on
+a part.
+
+**Tokens.** Point the tokens at Tailwind's theme variables so the calendar follows your palette:
+
+```css
+:root {
+  --calendar-accent: light-dark(var(--color-indigo-600), var(--color-indigo-400));
+  --calendar-border: light-dark(var(--color-zinc-200), var(--color-zinc-800));
+  --calendar-radius: var(--radius-lg);
+}
+```
+
+**Dark mode.** The theme follows `color-scheme`, not the `dark:` variant, so pair them. With the default
+`prefers-color-scheme` strategy, put `scheme-light-dark` on `<html>`; with a `.dark` class, use `class='dark scheme-dark'`.
+
+**Utilities only.** To style every part yourself, import `base.css` alone in the same layer and use the parts' state
+attributes as variants. Boolean attributes (`data-today`, `data-outside`, `data-overlap`, `data-unavailable`,
+`data-continues-before`, `data-continues-after`) match `data-*:`, and descendants of a part reach them with `in-data-*:`:
+
+```css
+@import 'tailwindcss';
+@import '@calendar-tsx/themes/base.css' layer(components);
+```
+
+```tsx
+<MonthView_Day day={day} className='p-1 data-outside:bg-zinc-50 data-outside:text-zinc-500'>
+  <MonthView_DayTrigger
+    day={day}
+    view='day'
+    className='size-7 rounded-full in-data-today:bg-indigo-600 in-data-today:text-white'
+  >
+    {day.date.day}
+  </MonthView_DayTrigger>
+</MonthView_Day>
+```
 
 ## Expected composition
 
