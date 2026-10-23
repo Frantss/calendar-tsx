@@ -1,0 +1,23 @@
+<section id='members'>
+
+| Member    | Description                                                                          |
+| --------- | ------------------------------------------------------------------------------------ |
+| `store`   | Read-only [TanStack Store](https://tanstack.com/store) of the [state](state).        |
+| `api`     | Navigation actions, plus actions from registered features.                           |
+| `options` | The options most recently passed in.                                                 |
+| `~mount`  | Starts the clock and returns its cleanup. Called for you.                            |
+| `~update` | Replaces the options; re-derives only when a tracked option changed. Called for you. |
+
+## `api`
+
+| Action                     | Effect                                                                |
+| -------------------------- | --------------------------------------------------------------------- |
+| `next()`, `prev()`         | Calls `onNavigate` with the next or previous period.                  |
+| `today()`                  | Calls `onNavigate` with today in `timeZone`.                          |
+| `goTo(date)`               | Calls `onNavigate` with the same view on `date`.                      |
+| `setView(view, date?)`     | Calls `onNavigate` with `view`, keeping the date unless one is given. |
+| `navigate({ view, date })` | Calls `onNavigate` with either or both.                               |
+
+No action changes the calendar by itself. See [navigation](../features/navigation).
+
+</section>

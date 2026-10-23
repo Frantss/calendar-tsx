@@ -1,0 +1,24 @@
+<section id='intro'>
+
+"Now" decides which day is today and where the now indicator sits. It comes from a clock:
+
+| Where             | Field                                                               |
+| ----------------- | ------------------------------------------------------------------- |
+| Month days        | `isToday`, rendered as `data-today`                                 |
+| Time-grid columns | `isToday`, and `now`: the fraction of the day for the now indicator |
+| State             | `state.now`, a `Temporal.ZonedDateTime` in `timeZone`               |
+| Navigation        | `today()` goes to today in `timeZone`                               |
+
+## Clock
+
+Without a `clock` option, the calendar ticks every minute. Each tick re-derives the state only when "now" changed.
+Two clocks are built in:
+
+<include lang='ts'>../../../examples/core/clock.ts#clock</include>
+
+`fixedClock(instant)` never ticks, for tests, stories and screenshots. A clock is any `{ now, subscribe }`.
+
+The clock starts when the calendar mounts and stops when it unmounts. Before that, "now" comes from `initialNow` if
+given; see [server rendering](server-rendering).
+
+</section>

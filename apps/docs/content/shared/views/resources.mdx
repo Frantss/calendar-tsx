@@ -1,0 +1,51 @@
+<section id='setup'>
+
+A time grid with one column per resource, such as rooms or people, with the time outside each resource's availability
+shaded.
+
+```ts
+import { timeGridView } from '@calendar-tsx/core';
+
+timeGridView({ days: 1, groupBy: 'resource' });
+```
+
+Pass the resources to the calendar, in the order their columns should appear:
+
+<include lang='ts'>../../../examples/core/setup.ts#resources</include>
+
+| Resource field | Description                                                        |
+| -------------- | ------------------------------------------------------------------ |
+| `id`           | Matched against events' `resourceIds`.                             |
+| `title`        | For your headers.                                                  |
+| `availability` | Absolute intervals the resource is available; the gaps are shaded. |
+| `data`         | Your payload, typed as `TResourceData`.                            |
+
+- An event appears in every column whose resource id is in its `resourceIds`. Events without `resourceIds` appear in no
+  resource column.
+- With `days` above 1, `groupOrder: 'resource-first'` (the default) keeps each resource's days together, so all-day bars
+  can span them. `'date-first'` groups by day instead, and splits all-day bars per column.
+
+</section>
+
+<section id='reference'>
+
+## Model
+
+Resource columns are [time-grid columns](week-and-day-view#model) with three more fields:
+
+| Column field    | Description                                                                   |
+| --------------- | ----------------------------------------------------------------------------- |
+| `resource`      | The column's resource.                                                        |
+| `unavailable`   | `{ key, start, span }` segments between availability intervals, as fractions. |
+| `isUnavailable` | The resource has no availability on this day; the whole day is shaded.        |
+
+## Parts
+
+<section id='parts-table'>
+
+The [time-grid parts](week-and-day-view#parts), plus `TimeGridViewUnavailable`, which takes an unavailable `segment`,
+renders an `aria-hidden` `div` and shades its span. `TimeGridViewColumnHeader` adds `data-resource-id`.
+
+</section>
+
+</section>

@@ -1,0 +1,51 @@
+<section id='intro'>
+
+`view` and `date` are controlled. The navigation actions never change the calendar: each computes the next view and
+date and calls `onNavigate` with them, and the calendar moves when you pass them back in.
+
+## Actions
+
+| Action                     | Next view and date                                         |
+| -------------------------- | ---------------------------------------------------------- |
+| `next()`, `prev()`         | One period forward or back: a month, or the view's `days`. |
+| `today()`                  | Today in `timeZone`, from the clock.                       |
+| `goTo(date)`               | Same view, `date`.                                         |
+| `setView(view, date?)`     | `view`, keeping the current date unless one is given.      |
+| `navigate({ view, date })` | Either or both; omitted fields keep their current value.   |
+
+`onNavigate` receives `{ view, date, range, period }`. Because the next range arrives with the call, you can update the
+URL or start fetching events for it before the calendar re-renders.
+
+</section>
+
+<section id='range'>
+
+## Range and period
+
+Every view and date resolve to two inclusive date ranges, available as `state.context.range` and
+`state.context.period`:
+
+- **`period`** is the nominal span: the month, or `days` days. Use it for titles.
+- **`range`** is what is visible. For a month it extends to whole weeks; otherwise it equals `period`. Fetch events for it.
+
+| View                         | Period                              | Range                |
+| ---------------------------- | ----------------------------------- | -------------------- |
+| Month                        | First to last day of `date`'s month | Padded to full weeks |
+| Time grid or list, `days: 7` | The week containing `date`          | Same as period       |
+| Time grid or list, other     | `days` days starting at `date`      | Same as period       |
+
+Weeks start on the `firstDayOfWeek` option, from `1` (Monday) to `7` (Sunday, the default). Only events overlapping the
+range are laid out.
+
+To get the range for any view and date without a calendar, for example to fetch on the server, use
+`getCalendarNavigation`:
+
+```ts
+import { getCalendarNavigation } from '@calendar-tsx/core';
+
+const { range, period } = getCalendarNavigation(views.views, 'month', Temporal.PlainDate.from('2026-03-11'), {
+  firstDayOfWeek: 1,
+});
+```
+
+</section>

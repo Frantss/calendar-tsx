@@ -1,0 +1,27 @@
+<section id='intro'>
+
+A month day fits `maxEventsPerDay` rows of bars. Bars in further rows are hidden, and each day they cross counts them:
+
+| Day field     | Description                                                     |
+| ------------- | --------------------------------------------------------------- |
+| `hiddenCount` | Hidden bars crossing this day.                                  |
+| `hasMore`     | `hiddenCount > 0`, or the view's `dayOverflow` returned `true`. |
+| `events`      | Every event on the day, including hidden ones, in order.        |
+
+`MonthViewOverflow` renders a button only when `hasMore` is true. It does nothing by itself: open a popover, a drawer
+or the day view from its click. The calendar has no built-in popover.
+
+</section>
+
+<section id='hint'>
+
+## More than you loaded
+
+If you load a limited number of events per day, the calendar cannot count the rest. Mark those days with
+`dayOverflow`, and `hasMore` turns on even when nothing is hidden:
+
+<include lang='ts'>../../../examples/core/day-overflow.ts#hint</include>
+
+`hiddenCount` then stays `0`, so label the button without a number for those days.
+
+</section>

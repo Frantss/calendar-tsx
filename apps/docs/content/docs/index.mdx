@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: A headless, framework-agnostic calendar library on TanStack Store and Temporal, with React bindings.
+description: A headless, framework-agnostic calendar library on TanStack Store and Temporal.
 icon: CalendarDays
 ---
 
@@ -10,12 +10,22 @@ icon: CalendarDays
 
 The core computes a render-ready view model — month grids with spanning bars, time grids with overlap lanes and
 resource columns, lists — on [TanStack Store](https://tanstack.com/store) and
-[Temporal](https://tc39.es/proposal-temporal/docs/). The React bindings render it as unstyled, composable parts.
+[Temporal](https://tc39.es/proposal-temporal/docs/). Framework bindings render it as unstyled, composable parts, and
+optional themes style them.
+
+## Choose your framework
+
+<Cards>
+  <Card title='React' href='/docs/react' description='Hooks and parts for React 18 and 19.' />
+  <Card title='Solid' href='/docs/solid' description='Primitives and parts for Solid 1.x.' />
+  <Card title='Core' href='/docs/core' description='The engine, for other frameworks and adapter authors.' />
+</Cards>
 
 ## Packages
 
-| Package                | Description                                          |
-| ---------------------- | ---------------------------------------------------- |
-| `@calendar-tsx/react`  | React bindings — hooks and parts.                    |
-| `@calendar-tsx/core`   | Framework-agnostic calendar engine.                  |
-| `@calendar-tsx/themes` | Stylesheets: a positioning base and a default theme. |
+| Package                | Description                                            |
+| ---------------------- | ------------------------------------------------------ |
+| `@calendar-tsx/react`  | React bindings: hooks and parts.                       |
+| `@calendar-tsx/solid`  | Solid bindings: primitives and parts.                  |
+| `@calendar-tsx/core`   | Framework-agnostic calendar engine.                    |
+| `@calendar-tsx/themes` | Stylesheets: a positioning base, themes and a density. |

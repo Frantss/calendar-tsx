@@ -1,0 +1,93 @@
+`base.css` positions everything: month bars, time-grid columns, lanes and the now line. A custom theme imports it and
+adds only the look.
+
+```css
+@import '@calendar-tsx/themes/base.css';
+
+@layer calendar.theme {
+  :where([data-scope='calendar'][data-part='time-grid-event']) {
+    background: var(--brand-event);
+    border-radius: 4px;
+  }
+}
+```
+
+Writing into `calendar.theme` keeps your rules in the same place as a built-in theme's, so `compact.css` and unlayered
+overrides still apply on top. Use `:where()` to keep specificity at zero.
+
+The size tokens (`--calendar-slot-height`, `--calendar-bar-height`, `--calendar-axis-width`, …) drive positioning in
+`base.css` too; set them to resize the layout. See [tokens](customizing#tokens).
+
+## Parts
+
+Every part renders `data-scope='calendar'` and one `data-part`. Boolean state attributes are present (`data-x=""`)
+when true and absent otherwise.
+
+### Month
+
+| `data-part`         | Component             | Attributes                                      |
+| ------------------- | --------------------- | ----------------------------------------------- |
+| `month-root`        | `MonthView`           |                                                 |
+| `month-header`      | `MonthViewHeader`     |                                                 |
+| `month-header-cell` | `MonthViewHeaderCell` | `data-weekday` (1–7, Monday–Sunday)             |
+| `month-week`        | `MonthViewWeek`       |                                                 |
+| `month-day`         | `MonthViewDay`        | `data-today`, `data-outside`, `data-date`       |
+| `month-day-trigger` | `MonthViewDayTrigger` |                                                 |
+| `month-week-event`  | `MonthViewWeekEvent`  | `data-continues-before`, `data-continues-after` |
+| `month-overflow`    | `MonthViewOverflow`   | `data-hidden-count`                             |
+
+### Time grid
+
+| `data-part`                | Component                   | Attributes                                                      |
+| -------------------------- | --------------------------- | --------------------------------------------------------------- |
+| `time-grid-root`           | `TimeGridView`              |                                                                 |
+| `time-grid-header`         | `TimeGridViewHeader`        |                                                                 |
+| `time-grid-column-header`  | `TimeGridViewColumnHeader`  | `data-today`, `data-unavailable`, `data-resource-id`            |
+| `time-grid-column-trigger` | `TimeGridViewColumnTrigger` |                                                                 |
+| `time-grid-all-day`        | `TimeGridViewAllDay`        |                                                                 |
+| `time-grid-all-day-event`  | `TimeGridViewAllDayEvent`   | `data-continues-before`, `data-continues-after`                 |
+| `time-grid-body`           | `TimeGridViewBody`          |                                                                 |
+| `time-grid-axis`           | `TimeGridViewAxis`          |                                                                 |
+| `time-grid-axis-label`     | `TimeGridViewAxisLabel`     |                                                                 |
+| `time-grid-column`         | `TimeGridViewColumn`        | `data-today`, `data-unavailable`                                |
+| `time-grid-unavailable`    | `TimeGridViewUnavailable`   |                                                                 |
+| `time-grid-event`          | `TimeGridViewEvent`         | `data-overlap`, `data-continues-before`, `data-continues-after` |
+| `time-grid-now`            | `TimeGridViewNowIndicator`  |                                                                 |
+
+`data-overlap` marks an event whose overlap cluster needs more than one lane, so it sits beside other events.
+
+### List
+
+| `data-part`       | Component           | Attributes  |
+| ----------------- | ------------------- | ----------- |
+| `list-root`       | `ListView`          |             |
+| `list-day`        | `ListViewDay`       | `data-date` |
+| `list-day-header` | `ListViewDayHeader` |             |
+| `list-event`      | `ListViewEvent`     |             |
+| `list-empty`      | `ListViewEmpty`     |             |
+
+## Geometry
+
+Parts emit their layout as unitless `--cal-*` custom properties on their own element, which `base.css` reads.
+
+| Part                                          | Variables                                                                       |
+| --------------------------------------------- | ------------------------------------------------------------------------------- |
+| `month-week`                                  | `--cal-rows`: bar rows shown                                                    |
+| `month-week-event`, `time-grid-all-day-event` | `--cal-col-start`, `--cal-col-span`, `--cal-row` (zero-based)                   |
+| `time-grid-root`                              | `--cal-columns`, `--cal-slots`, `--cal-all-day-rows`                            |
+| `time-grid-body`                              | `--cal-slots`, `--cal-min-column-width`                                         |
+| `time-grid-event`                             | `--cal-start`, `--cal-span` (fractions of the day), `--cal-lane`, `--cal-lanes` |
+| `time-grid-unavailable`                       | `--cal-start`, `--cal-span`                                                     |
+| `time-grid-now`                               | `--cal-now` (fraction of the day)                                               |
+
+For example, `base.css` places a timed event with:
+
+```css
+:where([data-scope='calendar'][data-part='time-grid-event']) {
+  position: absolute;
+  inset-block-start: calc(var(--cal-start) * 100%);
+  block-size: calc(var(--cal-span) * 100%);
+  inset-inline-start: calc(var(--cal-lane) / var(--cal-lanes) * 100%);
+  inline-size: calc(100% / var(--cal-lanes));
+}
+```

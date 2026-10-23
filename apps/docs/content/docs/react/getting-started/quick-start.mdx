@@ -1,0 +1,28 @@
+---
+title: Quick start
+description: A month calendar with navigation, in one component.
+---
+
+<include lang='tsx' meta='title="App.tsx"'>
+  ../../../../examples/react/quick-start.tsx#app
+</include>
+
+## What it does
+
+1. **Views** are defined once at module scope with `createCalendarViews`, and passed as `views` and `features`.
+2. **`view` and `date`** live in React state. The buttons call `calendar.api`, which reports the next view and date to
+   `onNavigate`; setting them moves the calendar.
+3. **`CalendarProvider`** makes the calendar available to the parts.
+4. **`Month`** selects the layout, checks its kind and renders the month parts. The selector's state type is annotated,
+   because the context does not carry the calendar's types.
+
+<Callout type='warn' title='Let the types infer'>
+  Don't pass type arguments such as `useCalendar<Booking>(…)`: TypeScript then stops inferring the rest, and `view`
+  and `onNavigate` widen to `string`. Type `events` instead, for example as `Calendar_EventInput<Booking>[]`.
+</Callout>
+
+## Next
+
+- Add the [week and day view](/docs/react/views/week-and-day-view).
+- Build a [toolbar](/docs/react/features/navigation) with a title and a view switcher.
+- Handle [overflow](/docs/react/features/overflow) when a day has more events than fit.

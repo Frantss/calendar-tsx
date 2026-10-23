@@ -1,0 +1,20 @@
+<section id='intro'>
+
+The parts render semantic elements with roles and labels. Events, triggers and overflow are native buttons, so they
+are focusable and work with the keyboard. There is no roving focus between days.
+
+| Part                      | Semantics                                         |
+| ------------------------- | ------------------------------------------------- |
+| `MonthView`               | `grid`, with `row`, `columnheader` and `gridcell` |
+| `TimeGridView`            | `region`, labelled "Time grid"                    |
+| `ListView`                | `region`, labelled "Event list"                   |
+| `ListViewDayHeader`       | `h3`                                              |
+| Unavailable and now parts | `aria-hidden`                                     |
+
+The built-in labels are in English, except the triggers' dates, which use the provider's `locale`. Pass `aria-label`
+to any part to replace its label.
+
+Under `forced-colors: active`, the themes keep today's marker, the now line and unavailable time visible with system
+colors. See [customizing](../styling/customizing#forced-colors).
+
+</section>

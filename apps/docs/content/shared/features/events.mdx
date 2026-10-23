@@ -1,0 +1,52 @@
+<section id='input'>
+
+An event is timed or all-day. Both carry a unique `id` and a `data` payload of your own type.
+
+<include lang='ts'>../../../examples/core/setup.ts#events</include>
+
+| Field         | Timed                    | All-day                                              |
+| ------------- | ------------------------ | ---------------------------------------------------- |
+| `id`          | `string`, unique         | `string`, unique                                     |
+| `allDay`      | —                        | `true`                                               |
+| `start`       | `Temporal.ZonedDateTime` | `Temporal.PlainDate`                                 |
+| `end`         | `Temporal.ZonedDateTime` | `Temporal.PlainDate`, inclusive; defaults to `start` |
+| `resourceIds` | `string[]`, optional     | `string[]`, optional                                 |
+| `data`        | `TData`                  | `TData`                                              |
+
+- **Time zones.** Timed events may be in any zone. They are converted to the calendar's `timeZone`, and the model
+  holds the converted copies.
+- **Midnight ends.** A timed event ending exactly at midnight ends on the previous day, so 22:00–00:00 stays on one day.
+- **Unique ids.** Duplicates log an error in development. Ids also key the model's segments.
+- **Changes.** Pass a new array to change events; the calendar compares the array by reference.
+
+## Hiding events
+
+There is no hidden flag: filter the array. Memoize the result, so the calendar only re-derives when it changes.
+
+</section>
+
+<section id='order'>
+
+## Order
+
+Events in the visible range are sorted before layout, which decides bar rows and lanes. The default order is:
+
+1. Earlier start date first.
+2. Longer date spans first.
+3. All-day before timed.
+4. Earlier start time first.
+
+Pass `eventOrder(a, b, context)` to replace it. `context` carries the view key and `kind`, so the order can differ per
+view. It is read when the layout derives: changing it alone does not re-order until a tracked option changes.
+
+</section>
+
+<section id='store'>
+
+## Event store
+
+If you have no data cache of your own, the event store keeps the list for you. `add` upserts by id; `update`, `remove`
+and `reset` do what they say. Every change produces a new array. Don't use it to mirror another store; pass that
+store's data directly.
+
+</section>

@@ -1,0 +1,39 @@
+## Controlled view and date
+
+`view` and `date` are options you own, usually in component state or the URL. Navigation actions such as `next()`
+compute the next view and date and pass them to `onNavigate`; the calendar only changes when you pass them back in. See
+[navigation](../features/navigation).
+
+## Events are input
+
+The calendar never stores or mutates events. Pass a new array to change them, filter the array to hide some, or use
+the optional [event store](../features/events#event-store).
+
+## One time zone
+
+Every timed event is converted to the calendar's `timeZone` and laid out there, whatever the host's zone. All dates
+and times are [Temporal](https://tc39.es/proposal-temporal/docs/) values.
+
+## Derived state
+
+The calendar derives a render model from its options: the view `context` (view, date, visible range), the `layout`
+for the active view and `now`. Components select the slice they need from it. The state re-derives only when a tracked
+option changes by reference, or the clock ticks, so keep `views`, `features`, `events` and `resources` stable between
+renders: define views at module scope and memoize arrays.
+
+## Views and layouts
+
+A view is a key of your own (`month`, `week`, `rooms`, …) bound to one of three layouts: month, time grid or list.
+Several views can share a layout with different settings. You switch on `layout.kind` and render that layout's parts.
+
+## Unstyled parts
+
+Parts render one element each, with `data-*` state attributes and their geometry as `--cal-*` custom properties.
+Style them with a [theme](../styling/themes) or your own CSS. You format all visible text: the model carries Temporal
+values, never strings.
+
+## Features
+
+Behavior beyond navigation and layout comes from [features](../extending/features), which add options, state, actions
+and model fields to the views that list them. The layouts themselves are features, which is why every calendar takes
+`features: { ...views.features }`.

@@ -1,0 +1,39 @@
+<section id='setup'>
+
+An agenda: the days that have events, each with its events in order.
+
+```ts
+import { listView } from '@calendar-tsx/core';
+
+listView({ days: 7 });
+```
+
+| Setting | Type     | Description                                                           |
+| ------- | -------- | --------------------------------------------------------------------- |
+| `days`  | `number` | Days covered. `7` starts on `firstDayOfWeek`; others start on `date`. |
+
+Only days with at least one event are listed, so a quiet range has no days; render an empty state for it.
+
+</section>
+
+<section id='reference'>
+
+## Model
+
+`layout` is `{ kind: 'list', days }`. Each day is `{ key, date, events }`.
+
+## Parts
+
+<section id='parts-table'>
+
+| Part                | Model prop | Element   | Notes                                   |
+| ------------------- | ---------- | --------- | --------------------------------------- |
+| `ListView`          | `model`    | `div`     | `role='region'`, labelled "Event list". |
+| `ListViewDay`       | `day`      | `section` | `data-date`.                            |
+| `ListViewDayHeader` | `day`      | `h3`      |                                         |
+| `ListViewEvent`     | `event`    | `button`  |                                         |
+| `ListViewEmpty`     | —          | `div`     | Renders only when the list has no days. |
+
+</section>
+
+</section>

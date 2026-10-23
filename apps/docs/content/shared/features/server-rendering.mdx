@@ -1,0 +1,15 @@
+<section id='hydration'>
+
+## Hydration
+
+Today's highlight and the now indicator depend on "now". If the server and the client derive different ones, for
+example across midnight, the markup doesn't match. Derive the same one on both sides:
+
+1. Pick an instant once per request, on the server.
+2. Send it to the client as a string, with the page's data.
+3. Pass it as `initialNow` on both sides.
+
+`initialNow` is read once, when the calendar is created. After mounting, the client reads its clock and catches up to
+the real time. On the server the clock never starts.
+
+</section>

@@ -1,0 +1,10 @@
+<section id='intro'>
+
+`MonthViewDayTrigger` and `TimeGridViewColumnTrigger` jump from a day to another view. Give them a `view` key, and a
+click navigates to that view on the trigger's date, through `onNavigate`.
+
+- Your own `onClick` runs first. Call `event.preventDefault()` in it to skip the navigation.
+- The default accessible name is "Go to" followed by the full date, in the provider's `locale`. Pass `aria-label` to
+  replace it.
+
+</section>

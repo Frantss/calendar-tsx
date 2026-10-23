@@ -1,5 +1,21 @@
 {
   "title": "React",
+  "description": "@calendar-tsx/react",
   "icon": "Atom",
-  "pages": ["index", "hooks", "parts", "rendering-parts", "server-rendering"]
+  "root": true,
+  "pages": [
+    "index",
+    "---Getting started---",
+    "...getting-started",
+    "---Views---",
+    "...views",
+    "---Features---",
+    "...features",
+    "---Styling---",
+    "...styling",
+    "---Extending---",
+    "...extending",
+    "---Reference---",
+    "...reference"
+  ]
 }

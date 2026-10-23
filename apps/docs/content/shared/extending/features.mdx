@@ -1,0 +1,115 @@
+<section id='intro'>
+
+Everything beyond navigation, the event pipeline and the clock comes from features. A feature is a constant object:
+it takes no arguments, and its configuration lives in calendar options and view settings. Layouts are features too:
+`monthLayout`, `timeGridLayout` and `listLayout` are added by the view factories.
+
+</section>
+
+<section id='registering'>
+
+A feature runs in a view when that view lists it, or when no view lists it and it is in `features`.
+
+Leaving out a feature that a view uses is a type error. To replace an implementation everywhere, override its key
+after the spread: `{ ...views.features, listLayout: myListLayout }`. The replacement must be type-compatible.
+
+</section>
+
+<section id='rest'>
+
+## Settings
+
+A feature reads its settings with `context.settings(key, defaults)`. For the active view they resolve as:
+
+1. the feature's defaults,
+2. the calendar option `key`,
+3. the view's setting `key`,
+
+each layer shallow-merged over the one before. In the example above, `day` filters to the highlighted event and `week`
+does not.
+
+## State
+
+A feature declares state slices with `getInitialState`. They appear on `calendar.store.state`, and each slice lives in
+one of three places:
+
+| Ownership    | How                                            | Writes through `setState`                     |
+| ------------ | ---------------------------------------------- | --------------------------------------------- |
+| Uncontrolled | Default; the calendar keeps it.                | Update the slice.                             |
+| Controlled   | Pass the value in `state: { slice }`.          | Ignored; the slice changes only with `state`. |
+| External     | Pass a store in `atoms: { slice }`, read once. | Update the store.                             |
+
+An atom is any `{ state, setState(updater) }`, so a TanStack Store fits. A controlled slice reports nothing by itself:
+a feature that supports control calls its own `on…Change` option.
+
+## Writing a feature
+
+<include lang='ts'>../../../examples/features/highlight-feature.ts#feature</include>
+
+Every member is optional:
+
+| Member            | Description                                                     |
+| ----------------- | --------------------------------------------------------------- |
+| `getInitialState` | Returns the initial value of each state slice the feature owns. |
+| `constructApi`    | Returns actions, merged onto `calendar.api`.                    |
+| `events`          | A stage over the events after the core sort, before layout.     |
+| `decorate`        | A stage over the built layout; adds the feature's model fields. |
+
+A stage is `{ deps?, run }`. It reruns only when its input or one of its `deps` changes, so list everything `run`
+reads in `deps`. Stages run in the order of the keys in `features`.
+
+The hooks receive a context:
+
+| Member                    | Description                                      |
+| ------------------------- | ------------------------------------------------ |
+| `options`                 | The calendar's current options.                  |
+| `view`                    | The active view, with its settings.              |
+| `api`                     | The calendar's API.                              |
+| `getState(key)`           | A state slice, from wherever it lives.           |
+| `setState(key, updater)`  | Writes a state slice; see [state](#state).       |
+| `settings(key, defaults)` | The layered settings; see [settings](#settings). |
+
+## Typing a feature
+
+Contributions are typed by declaration merging into feature maps, keyed by the feature's export name. A calendar or
+view sees an entry only when it registers that key.
+
+<include lang='ts'>../../../examples/features/highlight-feature.ts#types</include>
+
+| Map                                   | Adds                                               |
+| ------------------------------------- | -------------------------------------------------- |
+| `Calendar_Options_FeatureMap`         | Calendar options                                   |
+| `Calendar_ViewSettings_FeatureMap`    | Settings on views that list the feature            |
+| `Calendar_State_FeatureMap`           | State slices, also accepted by `state` and `atoms` |
+| `Calendar_Api_FeatureMap`             | Actions on `api`                                   |
+| `Calendar_MonthDay_FeatureMap`        | Fields on month days                               |
+| `Calendar_BarSegment_FeatureMap`      | Fields on bar segments                             |
+| `Calendar_TimeGridColumn_FeatureMap`  | Fields on time-grid columns                        |
+| `Calendar_TimeGridSegment_FeatureMap` | Fields on time-grid segments                       |
+| `Calendar_ListDay_FeatureMap`         | Fields on list days                                |
+
+Model fields appear only in the layouts of views that list the feature.
+
+<Callout type='warn' title='Known issue'>
+  Once a feature merges a state slice into `Calendar_State_FeatureMap`, `CalendarProvider` and `Calendar` reject every
+  calendar that does not register that feature: the provider's types expect every merged slice. Register the feature on
+  every calendar in the program, or keep the merged types out of programs that don't use it.
+</Callout>
+
+## Layout features
+
+A layout feature is a feature that also supplies a view kind:
+
+| Member   | Description                                                  |
+| -------- | ------------------------------------------------------------ |
+| `kind`   | The layout's `kind`.                                         |
+| `period` | `(date, settings, { firstDayOfWeek })` → the nominal period. |
+| `range`  | `(period, settings, { firstDayOfWeek })` → the visible days. |
+| `step`   | `(date, settings, direction)` → the date one period away.    |
+| `build`  | `(input, settings)` → the layout model.                      |
+
+`build` receives the visible `range` and `period`, the `events` after the event pipeline, `resources`, `timeZone` and
+`now`; `settings` is the view itself. A new kind also needs an entry in `Calendar_Layout_FeatureMap`, keyed by the
+feature's name, for the layout type.
+
+</section>

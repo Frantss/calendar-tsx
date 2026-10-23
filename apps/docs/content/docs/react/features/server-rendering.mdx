@@ -1,0 +1,18 @@
+---
+title: Server rendering
+description: Render on the server, hydrate, and use the parts from Server Components.
+---
+
+The parts render with `renderToString` and stream like any other component.
+
+<include>../../../shared/features/server-rendering.mdx#hydration</include>
+
+## React Server Components
+
+The package entry is marked `'use client'`, so Server Components can import and render the parts. The options cannot
+cross that boundary as props: `Temporal` values, `views` and `onNavigate` are not serializable. Create the calendar in
+a client component, and pass it only strings to parse:
+
+<include lang='tsx' meta='title="schedule.tsx"'>
+  ../../../../examples/react/server-rendering.tsx#client
+</include>

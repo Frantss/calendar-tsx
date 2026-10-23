@@ -1,0 +1,18 @@
+---
+title: Writing features
+description: Add state, options, actions and model fields to the views that use them.
+---
+
+<include>../../../shared/extending/features.mdx#intro</include>
+
+## Registering features
+
+A view lists the features it takes part in. `createCalendarViews` collects them, and the calendar's `features` option
+holds them all, together with calendar-wide features that no view lists. Registered features add their options to
+`useCalendar`, their actions to `calendar.api` and their state to the selector's state:
+
+<include lang='tsx'>../../../../examples/features/react.tsx#register</include>
+
+<include>../../../shared/extending/features.mdx#registering</include>
+
+<include>../../../shared/extending/features.mdx#rest</include>

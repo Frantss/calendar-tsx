@@ -9,5 +9,7 @@
     "layouts",
     "features",
     "clock-and-server-rendering"
-  ]
+  ],
+  "root": true,
+  "description": "@calendar-tsx/core"
 }

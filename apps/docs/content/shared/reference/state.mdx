@@ -1,0 +1,29 @@
+<section id='state'>
+
+| Field     | Type                     | Description                                                       |
+| --------- | ------------------------ | ----------------------------------------------------------------- |
+| `context` | `Calendar_ViewContext`   | `view`, `kind`, `date`, `range` and `period` of the current view. |
+| `layout`  | `Calendar_Layout`        | The render model for the active view; switch on `layout.kind`.    |
+| `now`     | `Temporal.ZonedDateTime` | The clock's current time in `timeZone`.                           |
+
+Registered [features](../extending/features#state) add their state slices next to these.
+
+`layout` is typed as the union of the layouts your views use, so only those cases need handling. Each layout's model is
+documented with its view:
+
+| `layout.kind` | Model                                                                                                |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| `'month'`     | [Month view](../views/month-view#model)                                                              |
+| `'timeGrid'`  | [Week and day view](../views/week-and-day-view#model), [resource view](../views/resource-view#model) |
+| `'list'`      | [List view](../views/list-view#model)                                                                |
+
+Every item in a model has a `key` that is stable across derivations, for use as a list key.
+
+## Types
+
+`Calendar_StateOf<typeof calendar>` is the state type of an instance. Where the instance is not in scope, build it from
+your views: `Calendar_State<TData, TResourceData, typeof views.views>`.
+
+<include lang='ts'>../../../examples/core/setup.ts#state</include>
+
+</section>
