@@ -1,6 +1,6 @@
 ---
 title: Customizing
-description: Tokens, dark mode, high contrast and how to override the themes' rules.
+description: Tokens, the accent, dark mode, forced colors and how to override the themes' rules.
 ---
 
 ## Tokens
@@ -10,31 +10,46 @@ Override any `--calendar-*` token on an element around the calendar, or on `:roo
 ```css
 .schedule {
   --calendar-accent: light-dark(#1f5f8b, #7cb7e0);
+  --calendar-accent-contrast: light-dark(#ffffff, #0b1a24);
   --calendar-slot-height: 2.5rem;
 }
 ```
 
 Defaults from `default.css`, light then dark:
 
-| Token                                                                                      | Default                                     |
-| ------------------------------------------------------------------------------------------ | ------------------------------------------- |
-| `--calendar-surface`, `--calendar-surface-muted`                                           | `#ffffff` `#f5f4f1`, `#171615` `#201f1d`    |
-| `--calendar-text`, `--calendar-text-muted`                                                 | `#1c1b19` `#5f5c56`, `#f2efe9` `#a9a49b`    |
-| `--calendar-border`                                                                        | `#dedbd4`, `#34322e`                        |
-| `--calendar-accent`, `--calendar-accent-contrast`                                          | `#b4441e` `#ffffff`, `#f08a5d` `#1a0d07`    |
-| `--calendar-event`, `--calendar-event-border`                                              | `#ebe6dc` `#d3ccbf`, `#2e2b27` `#45413b`    |
-| `--calendar-event-text`, `--calendar-focus-ring`                                           | unset: fall back to the text and the accent |
-| `--calendar-radius`, `--calendar-bar-radius`                                               | `0.375rem`, `0.25rem`                       |
-| `--calendar-font-size`, `--calendar-font-size-sm`, `--calendar-font-size-xs`               | `0.875rem`, `0.75rem`, `0.6875rem`          |
-| `--calendar-slot-height`, `--calendar-axis-width`                                          | `3rem`, `4rem`                              |
-| `--calendar-bar-height`, `--calendar-bar-gap`, `--calendar-bar-inset`                      | `1.375rem`, `2px`, `2px`                    |
-| `--calendar-day-header-height`, `--calendar-overflow-height`, `--calendar-week-min-height` | `2rem`, `1.5rem`, `6rem`                    |
+| Token                                                                                      | Default                                              |
+| ------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| `--calendar-surface`, `--calendar-surface-muted`                                           | `#ffffff` `#f5f4f1`, `#171615` `#201f1d`             |
+| `--calendar-text`, `--calendar-text-muted`                                                 | `#1c1b19` `#5f5c56`, `#f2efe9` `#a9a49b`             |
+| `--calendar-border`                                                                        | `#dedbd4`, `#34322e`                                 |
+| `--calendar-accent`, `--calendar-accent-contrast`                                          | `#b4441e` `#ffffff`, `#f08a5d` `#1a0d07`             |
+| `--calendar-event`, `--calendar-event-border`                                              | unset: the accent mixed 16% and 24% into the surface |
+| `--calendar-event-text`, `--calendar-focus-ring`                                           | unset: fall back to the text and the accent          |
+| `--calendar-radius`, `--calendar-bar-radius`                                               | `0.375rem`, `0.25rem`                                |
+| `--calendar-font-size`, `--calendar-font-size-sm`, `--calendar-font-size-xs`               | `0.875rem`, `0.75rem`, `0.6875rem`                   |
+| `--calendar-slot-height`, `--calendar-axis-width`                                          | `3rem`, `4rem`                                       |
+| `--calendar-bar-height`, `--calendar-bar-gap`, `--calendar-bar-inset`                      | `1.375rem`, `2px`, `2px`                             |
+| `--calendar-day-header-height`, `--calendar-overflow-height`, `--calendar-week-min-height` | `2.25rem`, `1.5rem`, `6rem`                          |
 
-`--calendar-event-text` and `--calendar-focus-ring` are unset on purpose. A custom property declared as `var(--other)`
+The event tokens and `--calendar-focus-ring` are unset on purpose. A custom property declared as `var(--other)`
 resolves where it is declared, so a default on `:root` would ignore an override of the token it points to further
 down.
 
-The size tokens also drive layout in `base.css`, which falls back to the same defaults when no theme is loaded.
+The size tokens also drive layout in `base.css`, which falls back to the same defaults when no theme is loaded,
+except `--calendar-day-header-height`, which falls back to `2rem`.
+
+## Accent
+
+`--calendar-accent` recolors the calendar on its own:
+
+- today's marker, the now line and today's column tint;
+- the focus ring, unless `--calendar-focus-ring` is set;
+- the events, which are the accent mixed into the surface (16% for the fill, 24% for the border), unless
+  `--calendar-event` and `--calendar-event-border` are set.
+
+Set `--calendar-accent-contrast` with it, for the numbers on today's marker, and use a `light-dark()` pair so each mode
+gets a fitting shade. The tints are resolved on each event, so an accent set on any element around the calendar
+reaches them.
 
 ## Dark mode
 
@@ -52,13 +67,16 @@ Colors use `light-dark()`, so they follow the inherited `color-scheme`. The them
 
 The shadcn/ui theme is the exception: it follows shadcn's `.dark` class instead.
 
-## High contrast
+## Forced colors
 
 Under `forced-colors: active` (Windows High Contrast), the browser drops fills. Events keep their borders, and the
 default theme restores state that fills carried, with system colors:
 
 - today's marker and the now line in `Highlight`;
 - slot lines, unavailable hatching and outside-month dates in `GrayText`.
+
+Every theme inherits these rules. For more contrast without forced colors, use the
+[high contrast theme](/docs/themes/built-in-themes#high-contrast).
 
 ## Overriding rules
 
