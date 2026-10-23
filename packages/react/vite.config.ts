@@ -9,6 +9,8 @@ export default defineConfig({
     include: [
       'react',
       'react-dom',
+      'react-dom/client',
+      'react-dom/server',
       'react/jsx-runtime',
       'react/jsx-dev-runtime',
       // late discovery reloads the browser mid-run and duplicates React
