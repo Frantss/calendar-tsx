@@ -5,9 +5,9 @@ import { tests_withDefault } from '#tests/utils/with-default';
 
 import { iife } from '#tests/utils/iife';
 
-import { calendar_create } from '#calendar';
-import { calendarClock_fixed } from '#calendar-clock';
-import { calendarView_list, calendarView_month, calendarView_timeGrid, calendarViews_create } from '#calendar-views';
+import { createCalendar } from '#calendar';
+import { fixedClock } from '#calendar-clock';
+import { listView, monthView, timeGridView, createCalendarViews } from '#calendar-views';
 import type {
   Calendar_Clock,
   Calendar_EventInput,
@@ -20,11 +20,11 @@ import { fixtures_timeZone } from '#tests/calendar.fixtures';
 
 export const calendarSetup_defaults = iife(() => {
   const views = {
-    month: calendarView_month({ maxEventsPerDay: 4 }),
-    week: calendarView_timeGrid({ days: 7 }),
-    day: calendarView_timeGrid({ days: 1 }),
-    resources: calendarView_timeGrid({ days: 1, groupBy: 'resource', allDay: false }),
-    list_week: calendarView_list({ days: 7 }),
+    month: monthView({ maxEventsPerDay: 4 }),
+    week: timeGridView({ days: 7 }),
+    day: timeGridView({ days: 1 }),
+    resources: timeGridView({ days: 1, groupBy: 'resource', allDay: false }),
+    list_week: listView({ days: 7 }),
   } satisfies Calendar_Views;
 
   return {
@@ -51,7 +51,7 @@ export const calendarSetup_create = async (overrides: CalendarSetup_Overrides = 
   const onNavigate: Mock<Calendar_Options<Fixtures_EventData, null, Calendar_Views>['onNavigate']> = vi.fn();
   const now = tests_withDefault(overrides, 'now', calendarSetup_defaults.now);
 
-  const views = calendarViews_create(tests_withDefault(overrides, 'views', calendarSetup_defaults.views));
+  const views = createCalendarViews(tests_withDefault(overrides, 'views', calendarSetup_defaults.views));
 
   const options: Calendar_Options<Fixtures_EventData, null, Calendar_Views> = {
     timeZone: tests_withDefault(overrides, 'timeZone', calendarSetup_defaults.timeZone),
@@ -63,12 +63,12 @@ export const calendarSetup_create = async (overrides: CalendarSetup_Overrides = 
     resources: tests_withDefault(overrides, 'resources', calendarSetup_defaults.resources),
     firstDayOfWeek: tests_withDefault(overrides, 'firstDayOfWeek', calendarSetup_defaults.firstDayOfWeek),
     eventOrder: tests_withDefault(overrides, 'eventOrder', calendarSetup_defaults.eventOrder),
-    clock: tests_withDefault(overrides, 'clock', calendarSetup_defaults.clock) ?? calendarClock_fixed(now),
+    clock: tests_withDefault(overrides, 'clock', calendarSetup_defaults.clock) ?? fixedClock(now),
     initialNow: tests_withDefault(overrides, 'initialNow', calendarSetup_defaults.initialNow),
     onNavigate,
   };
 
-  const instance = calendar_create(options);
+  const instance = createCalendar(options);
 
   return {
     instance,

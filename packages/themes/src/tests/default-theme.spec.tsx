@@ -5,19 +5,19 @@ import { cdp } from 'vitest/browser';
 
 import type { Calendar_MonthLayout, Calendar_TimeGridLayout } from '@calendar-tsx/core';
 import {
-  MonthView_Day,
-  MonthView_DayTrigger,
-  MonthView_Overflow,
-  MonthView_Root,
-  MonthView_Week,
-  MonthView_WeekEvent,
-  TimeGridView_Body,
-  TimeGridView_Column,
-  TimeGridView_ColumnHeader,
-  TimeGridView_Event,
-  TimeGridView_Header,
-  TimeGridView_NowIndicator,
-  TimeGridView_Root,
+  MonthViewDay,
+  MonthViewDayTrigger,
+  MonthViewOverflow,
+  MonthView,
+  MonthViewWeek,
+  MonthViewWeekEvent,
+  TimeGridViewBody,
+  TimeGridViewColumn,
+  TimeGridViewColumnHeader,
+  TimeGridViewEvent,
+  TimeGridViewHeader,
+  TimeGridViewNowIndicator,
+  TimeGridView,
   useCalendarSelector,
 } from '@calendar-tsx/react';
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
@@ -29,27 +29,27 @@ const TimeGrid = ({ eventClassName }: { eventClassName?: string }) => {
   const grid = useCalendarSelector(state => state.layout) as Calendar_TimeGridLayout<ThemesSetup_EventData, null>;
 
   return (
-    <TimeGridView_Root model={grid}>
-      <TimeGridView_Header>
+    <TimeGridView model={grid}>
+      <TimeGridViewHeader>
         {grid.columns.map(column => (
-          <TimeGridView_ColumnHeader key={column.key} column={column}>
+          <TimeGridViewColumnHeader key={column.key} column={column}>
             {column.date.day}
-          </TimeGridView_ColumnHeader>
+          </TimeGridViewColumnHeader>
         ))}
-      </TimeGridView_Header>
-      <TimeGridView_Body model={grid}>
+      </TimeGridViewHeader>
+      <TimeGridViewBody model={grid}>
         {grid.columns.map(column => (
-          <TimeGridView_Column key={column.key} column={column}>
+          <TimeGridViewColumn key={column.key} column={column}>
             {column.segments.map(segment => (
-              <TimeGridView_Event key={segment.key} segment={segment} className={eventClassName}>
+              <TimeGridViewEvent key={segment.key} segment={segment} className={eventClassName}>
                 {segment.event.data.title}
-              </TimeGridView_Event>
+              </TimeGridViewEvent>
             ))}
-            <TimeGridView_NowIndicator column={column} />
-          </TimeGridView_Column>
+            <TimeGridViewNowIndicator column={column} />
+          </TimeGridViewColumn>
         ))}
-      </TimeGridView_Body>
-    </TimeGridView_Root>
+      </TimeGridViewBody>
+    </TimeGridView>
   );
 };
 
@@ -57,25 +57,25 @@ const Month = () => {
   const month = useCalendarSelector(state => state.layout) as Calendar_MonthLayout<ThemesSetup_EventData>;
 
   return (
-    <MonthView_Root model={month}>
+    <MonthView model={month}>
       {month.weeks.map(week => (
-        <MonthView_Week key={week.key} week={week}>
+        <MonthViewWeek key={week.key} week={week}>
           {week.days.map(day => (
-            <MonthView_Day key={day.key} day={day}>
-              <MonthView_DayTrigger day={day} view='day'>
+            <MonthViewDay key={day.key} day={day}>
+              <MonthViewDayTrigger day={day} view='day'>
                 {day.date.day}
-              </MonthView_DayTrigger>
-              <MonthView_Overflow day={day}>more</MonthView_Overflow>
-            </MonthView_Day>
+              </MonthViewDayTrigger>
+              <MonthViewOverflow day={day}>more</MonthViewOverflow>
+            </MonthViewDay>
           ))}
           {week.segments.map(segment => (
-            <MonthView_WeekEvent key={segment.key} segment={segment}>
+            <MonthViewWeekEvent key={segment.key} segment={segment}>
               {segment.event.data.title}
-            </MonthView_WeekEvent>
+            </MonthViewWeekEvent>
           ))}
-        </MonthView_Week>
+        </MonthViewWeek>
       ))}
-    </MonthView_Root>
+    </MonthView>
   );
 };
 

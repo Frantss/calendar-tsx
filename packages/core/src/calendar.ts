@@ -1,7 +1,7 @@
 import { createStore } from '@tanstack/store';
 import { Temporal } from 'temporal-polyfill';
 
-import { calendarClock_interval } from '#calendar-clock';
+import { intervalClock } from '#calendar-clock';
 import { calendarEvents_defaultOrder, calendarEvents_normalize, calendarEvents_overlaps } from '#calendar-events';
 import { calendarNavigation_resolve, calendarNavigation_view } from '#calendar-navigation';
 import type {
@@ -25,7 +25,7 @@ import type {
   Calendar_Views,
 } from '#calendar.types';
 
-const defaultClock = calendarClock_interval({ every: Temporal.Duration.from({ minutes: 1 }) });
+const defaultClock = intervalClock({ every: Temporal.Duration.from({ minutes: 1 }) });
 
 type AnyOptions = Calendar_Options<any, any, Calendar_Views, Calendar_Features>;
 
@@ -84,7 +84,7 @@ const features_active = (all: Calendar_Features, views: Calendar_Views, view: Ca
 const deps_equal = (a: unknown[] | undefined, b: unknown[] | undefined) =>
   a === b || (!!a && !!b && a.length === b.length && a.every((dep, index) => dep === b[index]));
 
-export const calendar_create = <
+export const createCalendar = <
   TData,
   TResourceData = unknown,
   const TViews extends Calendar_Views = Calendar_Views,

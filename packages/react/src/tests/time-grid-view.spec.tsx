@@ -5,19 +5,19 @@ import type { Calendar_TimeGridLayout } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_allDay, fixtures_resource, fixtures_timed } from '#tests/calendar.fixtures';
 import {
-  TimeGridView_AllDay,
-  TimeGridView_AllDayEvent,
-  TimeGridView_Axis,
-  TimeGridView_AxisLabel,
-  TimeGridView_Body,
-  TimeGridView_Column,
-  TimeGridView_ColumnHeader,
-  TimeGridView_ColumnTrigger,
-  TimeGridView_Event,
-  TimeGridView_Header,
-  TimeGridView_NowIndicator,
-  TimeGridView_Root,
-  TimeGridView_Unavailable,
+  TimeGridViewAllDay,
+  TimeGridViewAllDayEvent,
+  TimeGridViewAxis,
+  TimeGridViewAxisLabel,
+  TimeGridViewBody,
+  TimeGridViewColumn,
+  TimeGridViewColumnHeader,
+  TimeGridViewColumnTrigger,
+  TimeGridViewEvent,
+  TimeGridViewHeader,
+  TimeGridViewNowIndicator,
+  TimeGridView,
+  TimeGridViewUnavailable,
 } from '#time-grid-view';
 import { useCalendarSelector } from '#use-calendar';
 import type { CalendarReactSetup_Overrides } from '#tests/calendar-react.setup';
@@ -27,45 +27,45 @@ const TimeGridBody = () => {
   const grid = useCalendarSelector(state => state.layout) as Calendar_TimeGridLayout<Fixtures_EventData, null>;
 
   return (
-    <TimeGridView_Root model={grid}>
-      <TimeGridView_Header>
+    <TimeGridView model={grid}>
+      <TimeGridViewHeader>
         {grid.columns.map(column => (
-          <TimeGridView_ColumnHeader key={column.key} column={column}>
+          <TimeGridViewColumnHeader key={column.key} column={column}>
             {column.resource?.title}
-            <TimeGridView_ColumnTrigger column={column} view='day' />
-          </TimeGridView_ColumnHeader>
+            <TimeGridViewColumnTrigger column={column} view='day' />
+          </TimeGridViewColumnHeader>
         ))}
-      </TimeGridView_Header>
+      </TimeGridViewHeader>
       {grid.allDay && (
-        <TimeGridView_AllDay>
+        <TimeGridViewAllDay>
           {grid.allDay.segments.map(segment => (
-            <TimeGridView_AllDayEvent key={segment.key} segment={segment}>
+            <TimeGridViewAllDayEvent key={segment.key} segment={segment}>
               {segment.event.data.title}
-            </TimeGridView_AllDayEvent>
+            </TimeGridViewAllDayEvent>
           ))}
-        </TimeGridView_AllDay>
+        </TimeGridViewAllDay>
       )}
-      <TimeGridView_Body model={grid}>
-        <TimeGridView_Axis>
+      <TimeGridViewBody model={grid}>
+        <TimeGridViewAxis>
           {grid.slots.map(slot => (
-            <TimeGridView_AxisLabel key={slot.key} slot={slot} />
+            <TimeGridViewAxisLabel key={slot.key} slot={slot} />
           ))}
-        </TimeGridView_Axis>
+        </TimeGridViewAxis>
         {grid.columns.map(column => (
-          <TimeGridView_Column key={column.key} column={column}>
+          <TimeGridViewColumn key={column.key} column={column}>
             {column.unavailable.map(segment => (
-              <TimeGridView_Unavailable key={segment.key} segment={segment} />
+              <TimeGridViewUnavailable key={segment.key} segment={segment} />
             ))}
             {column.segments.map(segment => (
-              <TimeGridView_Event key={segment.key} segment={segment}>
+              <TimeGridViewEvent key={segment.key} segment={segment}>
                 {segment.event.data.title}
-              </TimeGridView_Event>
+              </TimeGridViewEvent>
             ))}
-            <TimeGridView_NowIndicator column={column} />
-          </TimeGridView_Column>
+            <TimeGridViewNowIndicator column={column} />
+          </TimeGridViewColumn>
         ))}
-      </TimeGridView_Body>
-    </TimeGridView_Root>
+      </TimeGridViewBody>
+    </TimeGridView>
   );
 };
 

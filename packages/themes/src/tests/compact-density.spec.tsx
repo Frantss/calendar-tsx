@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 
 import type { Calendar_TimeGridLayout } from '@calendar-tsx/core';
-import { TimeGridView_Body, TimeGridView_Column, TimeGridView_Root, useCalendarSelector } from '@calendar-tsx/react';
+import { TimeGridViewBody, TimeGridViewColumn, TimeGridView, useCalendarSelector } from '@calendar-tsx/react';
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
 import '../../default.css';
 import '../../compact.css';
@@ -12,13 +12,13 @@ const TimeGrid = () => {
   const grid = useCalendarSelector(state => state.layout) as Calendar_TimeGridLayout<ThemesSetup_EventData, null>;
 
   return (
-    <TimeGridView_Root model={grid}>
-      <TimeGridView_Body model={grid}>
+    <TimeGridView model={grid}>
+      <TimeGridViewBody model={grid}>
         {grid.columns.map(column => (
-          <TimeGridView_Column key={column.key} column={column} />
+          <TimeGridViewColumn key={column.key} column={column} />
         ))}
-      </TimeGridView_Body>
-    </TimeGridView_Root>
+      </TimeGridViewBody>
+    </TimeGridView>
   );
 };
 

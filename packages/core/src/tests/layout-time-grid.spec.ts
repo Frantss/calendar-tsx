@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 
-import { calendarView_timeGrid } from '#calendar-views';
+import { timeGridView } from '#calendar-views';
 import type { Calendar_TimeGridLayout } from '#calendar.types';
 import { fixtures_resource, fixtures_timed } from '#tests/calendar.fixtures';
 import type { CalendarSetup_Overrides } from '#tests/calendar.setup';
@@ -95,7 +95,7 @@ it('clips availability that crosses midnight to each day', async () => {
   const resource = fixtures_resource('ana', [{ date: '2026-03-11', start: '22:00', end: '02:00', endDate: '2026-03-12' }]);
   const views = {
     ...calendarSetup_defaults.views,
-    resources_week: calendarView_timeGrid({ days: 7, groupBy: 'resource' }),
+    resources_week: timeGridView({ days: 7, groupBy: 'resource' }),
   };
   const utils = await setup({ view: 'resources_week', views, resources: [resource] });
 
@@ -120,8 +120,8 @@ it('orders grouped columns resource-first by default and date-first on request',
   const resources = [fixtures_resource('ana'), fixtures_resource('room')];
   const views = {
     ...calendarSetup_defaults.views,
-    resource_first: calendarView_timeGrid({ days: 2, groupBy: 'resource' }),
-    date_first: calendarView_timeGrid({ days: 2, groupBy: 'resource', groupOrder: 'date-first' }),
+    resource_first: timeGridView({ days: 2, groupBy: 'resource' }),
+    date_first: timeGridView({ days: 2, groupBy: 'resource', groupOrder: 'date-first' }),
   };
 
   const resourceFirst = await setup({ view: 'resource_first', views, resources });
@@ -146,7 +146,7 @@ it("places the now indicator only in today's column", async () => {
 });
 
 it('emits half-hour slots and the minimum column width', async () => {
-  const views = { ...calendarSetup_defaults.views, week: calendarView_timeGrid({ days: 7, minColumnWidth: '110px' }) };
+  const views = { ...calendarSetup_defaults.views, week: timeGridView({ days: 7, minColumnWidth: '110px' }) };
   const utils = await setup({ view: 'week', views });
 
   expect(utils.layout.slots).toHaveLength(48);

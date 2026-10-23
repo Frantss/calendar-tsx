@@ -1,7 +1,7 @@
 import { Temporal } from 'temporal-polyfill';
 import { expect, it } from 'vitest';
 
-import { calendarView_month } from '#calendar-views';
+import { monthView } from '#calendar-views';
 import type { Calendar_MonthLayout } from '#calendar.types';
 import { fixtures_allDay, fixtures_timed } from '#tests/calendar.fixtures';
 import type { CalendarSetup_Overrides } from '#tests/calendar.setup';
@@ -72,7 +72,7 @@ it('counts a hidden bar on every day it crosses', async () => {
 it('raises hasMore from the dayOverflow hint without changing the local count', async () => {
   const views = {
     ...calendarSetup_defaults.views,
-    month: calendarView_month({ maxEventsPerDay: 4, dayOverflow: date => date.day === 25 }),
+    month: monthView({ maxEventsPerDay: 4, dayOverflow: date => date.day === 25 }),
   };
   const utils = await setup({ views, events: busyDay(2) });
 

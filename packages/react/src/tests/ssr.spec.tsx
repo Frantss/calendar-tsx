@@ -4,25 +4,25 @@ import type { Temporal } from 'temporal-polyfill';
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest';
 
 import type { Calendar_EventInput, Calendar_TimeGridLayout } from '@calendar-tsx/core';
-import { calendarClock_fixed, calendarView_timeGrid, calendarViews_create } from '@calendar-tsx/core';
+import { fixedClock, timeGridView, createCalendarViews } from '@calendar-tsx/core';
 import { fixtures_at, fixtures_timeZone } from '#tests/calendar.fixtures';
 import {
-  TimeGridView_Body,
-  TimeGridView_Column,
-  TimeGridView_ColumnHeader,
-  TimeGridView_ColumnTrigger,
-  TimeGridView_Header,
-  TimeGridView_NowIndicator,
-  TimeGridView_Root,
+  TimeGridViewBody,
+  TimeGridViewColumn,
+  TimeGridViewColumnHeader,
+  TimeGridViewColumnTrigger,
+  TimeGridViewHeader,
+  TimeGridViewNowIndicator,
+  TimeGridView,
 } from '#time-grid-view';
-import { Calendar_Root, useCalendarSelector } from '#use-calendar';
+import { Calendar, useCalendarSelector } from '#use-calendar';
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
 const defaults = {
-  views: calendarViews_create({ week: calendarView_timeGrid({ days: 7 }) }),
+  views: createCalendarViews({ week: timeGridView({ days: 7 }) }),
   date: fixtures_at('2026-03-11', '12:00').toPlainDate(),
   events: [] as Calendar_EventInput<null>[],
   // the request is served just before midnight and hydrates just after it
@@ -34,27 +34,27 @@ const Week = () => {
   const grid = useCalendarSelector(state => state.layout) as Calendar_TimeGridLayout<null, unknown>;
 
   return (
-    <TimeGridView_Root model={grid}>
-      <TimeGridView_Header>
+    <TimeGridView model={grid}>
+      <TimeGridViewHeader>
         {grid.columns.map(column => (
-          <TimeGridView_ColumnHeader key={column.key} column={column}>
-            <TimeGridView_ColumnTrigger column={column} view='week' />
-          </TimeGridView_ColumnHeader>
+          <TimeGridViewColumnHeader key={column.key} column={column}>
+            <TimeGridViewColumnTrigger column={column} view='week' />
+          </TimeGridViewColumnHeader>
         ))}
-      </TimeGridView_Header>
-      <TimeGridView_Body model={grid}>
+      </TimeGridViewHeader>
+      <TimeGridViewBody model={grid}>
         {grid.columns.map(column => (
-          <TimeGridView_Column key={column.key} column={column}>
-            <TimeGridView_NowIndicator column={column} />
-          </TimeGridView_Column>
+          <TimeGridViewColumn key={column.key} column={column}>
+            <TimeGridViewNowIndicator column={column} />
+          </TimeGridViewColumn>
         ))}
-      </TimeGridView_Body>
-    </TimeGridView_Root>
+      </TimeGridViewBody>
+    </TimeGridView>
   );
 };
 
 const App = ({ now, initialNow }: { now: Temporal.Instant; initialNow?: Temporal.Instant }) => (
-  <Calendar_Root
+  <Calendar
     timeZone={fixtures_timeZone}
     views={defaults.views.views}
     features={defaults.views.features}
@@ -62,11 +62,11 @@ const App = ({ now, initialNow }: { now: Temporal.Instant; initialNow?: Temporal
     date={defaults.date}
     events={defaults.events}
     onNavigate={() => {}}
-    clock={calendarClock_fixed(now)}
+    clock={fixedClock(now)}
     initialNow={initialNow}
   >
     <Week />
-  </Calendar_Root>
+  </Calendar>
 );
 
 /** Renders on a "server" clock, then hydrates the markup on a later "client" clock. */

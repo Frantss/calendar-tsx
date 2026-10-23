@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it } from 'vitest';
 
 import type { Calendar_MonthLayout } from '@calendar-tsx/core';
-import { MonthView_Day, MonthView_DayTrigger, MonthView_Root, MonthView_Week, MonthView_WeekEvent, useCalendarSelector } from '@calendar-tsx/react';
+import { MonthViewDay, MonthViewDayTrigger, MonthView, MonthViewWeek, MonthViewWeekEvent, useCalendarSelector } from '@calendar-tsx/react';
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
 import '../../shadcn.css';
 
@@ -11,24 +11,24 @@ const Month = () => {
   const month = useCalendarSelector(state => state.layout) as Calendar_MonthLayout<ThemesSetup_EventData>;
 
   return (
-    <MonthView_Root model={month}>
+    <MonthView model={month}>
       {month.weeks.map(week => (
-        <MonthView_Week key={week.key} week={week}>
+        <MonthViewWeek key={week.key} week={week}>
           {week.days.map(day => (
-            <MonthView_Day key={day.key} day={day}>
-              <MonthView_DayTrigger day={day} view='month'>
+            <MonthViewDay key={day.key} day={day}>
+              <MonthViewDayTrigger day={day} view='month'>
                 {day.date.day}
-              </MonthView_DayTrigger>
-            </MonthView_Day>
+              </MonthViewDayTrigger>
+            </MonthViewDay>
           ))}
           {week.segments.map(segment => (
-            <MonthView_WeekEvent key={segment.key} segment={segment}>
+            <MonthViewWeekEvent key={segment.key} segment={segment}>
               {segment.event.data.title}
-            </MonthView_WeekEvent>
+            </MonthViewWeekEvent>
           ))}
-        </MonthView_Week>
+        </MonthViewWeek>
       ))}
-    </MonthView_Root>
+    </MonthView>
   );
 };
 

@@ -608,41 +608,41 @@ Rejected:
   - API;
   - an event-pipeline stage;
   - fields on the layout model.
-- **Layout feature:** a feature that also supplies a view kind. It provides `kind`, `period`, `range`, `step` and `build`, plus optional capabilities such as `locate` (layout position → slot). Built in: `calendarLayout_month`, `calendarLayout_timeGrid`, `calendarLayout_list`.
+- **Layout feature:** a feature that also supplies a view kind. It provides `kind`, `period`, `range`, `step` and `build`, plus optional capabilities such as `locate` (layout position → slot). Built in: `monthLayout`, `timeGridLayout`, `listLayout`.
 - **Core features:** navigation, the event pipeline (normalise → clip → sort) and the clock. They are always on and never listed.
 - **View:** plain settings plus `'~features'`, the features the view uses. Its factory adds the view's layout feature. A feature runs in a view only if that view lists it. A feature listed only in the calendar's `features` runs in every view.
-- **`calendarViews_create(views)`:** returns `{ views, features }`, where `features` is the merge of every view's `'~features'`.
+- **`createCalendarViews(views)`:** returns `{ views, features }`, where `features` is the merge of every view's `'~features'`.
 
 **Consumer**
 
 ```ts
 // module scope, so references stay stable (D24)
-const views = calendarViews_create({
-  week: calendarView_timeGrid({ days: 7, features: { calendarFeature_eventDrag } }),
-  day: calendarView_timeGrid({ days: 1, features: { calendarFeature_eventDrag }, drag: { snap: { minutes: 5 } } }),
-  resources: calendarView_timeGrid({ days: 1, groupBy: 'resource' }),
-  list_week: calendarView_list({ days: 7 }),
+const views = createCalendarViews({
+  week: timeGridView({ days: 7, features: { eventDragFeature } }),
+  day: timeGridView({ days: 1, features: { eventDragFeature }, drag: { snap: { minutes: 5 } } }),
+  resources: timeGridView({ days: 1, groupBy: 'resource' }),
+  list_week: listView({ days: 7 }),
 });
 
-const calendar = calendar_create<EventData>({
+const calendar = createCalendar<EventData>({
   views: views.views,
-  features: { calendarFeature_focus, ...views.features },
+  features: { focusFeature, ...views.features },
   view,
   date,
   onNavigate,
   events,
   timeZone, // core, controlled only (D5)
-  drag: { snap: { minutes: 15 } }, // calendar-wide setting from calendarFeature_eventDrag
+  drag: { snap: { minutes: 15 } }, // calendar-wide setting from eventDragFeature
   onEventDrop: ({ event, slot }) => moveEntry(event.id, slot),
 });
 
 calendar.store.state.layout; // TimeGrid | List: the kinds the views register
-calendar.api.drag.cancel(); // exists because calendarFeature_eventDrag is registered
+calendar.api.drag.cancel(); // exists because eventDragFeature is registered
 ```
 
-**Configuration.** Features take no arguments. Settings resolve for the active view as feature defaults, then calendar options, then view settings, with a shallow merge per layer. In the example, `week` snaps to 15 minutes, `day` to 5, and `resources` has no drag. Every view that lists a feature lists the same constant, so instances cannot conflict. Defaults shared by several views of one kind start as plain JS (`const timeGrid = s => calendarView_timeGrid({ slotMinutes: 30, ...s })`). A calendar-level layout option is added only if consumers keep writing that wrapper.
+**Configuration.** Features take no arguments. Settings resolve for the active view as feature defaults, then calendar options, then view settings, with a shallow merge per layer. In the example, `week` snaps to 15 minutes, `day` to 5, and `resources` has no drag. Every view that lists a feature lists the same constant, so instances cannot conflict. Defaults shared by several views of one kind start as plain JS (`const timeGrid = s => timeGridView({ slotMinutes: 30, ...s })`). A calendar-level layout option is added only if consumers keep writing that wrapper.
 
-**Replacing an implementation.** The calendar's `features` object is the source of truth at runtime. Views declare which keys they use and supply defaults; the calendar resolves each key from `options.features`. So spread order replaces one implementation everywhere: `{ ...views.features, calendarFeature_eventDrag: myDrag }`. Types require the replacement to be assignable to the declared feature.
+**Replacing an implementation.** The calendar's `features` object is the source of truth at runtime. Views declare which keys they use and supply defaults; the calendar resolves each key from `options.features`. So spread order replaces one implementation everywhere: `{ ...views.features, eventDragFeature: myDrag }`. Types require the replacement to be assignable to the declared feature.
 
 **Feature interface**
 
@@ -674,26 +674,26 @@ type Calendar_LayoutFeature<TKind extends string, TSettings> = Calendar_Feature 
 
 ```ts
 interface Calendar_Options_FeatureMap<TData> {
-  calendarFeature_eventDrag: { drag?: Calendar_DragSettings; onEventDrop: (drop: Calendar_Drop<TData>) => void };
+  eventDragFeature: { drag?: Calendar_DragSettings; onEventDrop: (drop: Calendar_Drop<TData>) => void };
 }
-interface Calendar_ViewSettings_FeatureMap { calendarFeature_eventDrag: { drag?: Calendar_DragSettings } }
-interface Calendar_State_FeatureMap { calendarFeature_eventDrag: { drag: Calendar_DragState | null } }
-interface Calendar_Api_FeatureMap { calendarFeature_eventDrag: { drag: { start; move; nudge; drop; cancel } } }
-interface Calendar_Segment_FeatureMap { calendarFeature_eventDrag: { isDragging: boolean; isPreview: boolean } }
+interface Calendar_ViewSettings_FeatureMap { eventDragFeature: { drag?: Calendar_DragSettings } }
+interface Calendar_State_FeatureMap { eventDragFeature: { drag: Calendar_DragState | null } }
+interface Calendar_Api_FeatureMap { eventDragFeature: { drag: { start; move; nudge; drop; cancel } } }
+interface Calendar_Segment_FeatureMap { eventDragFeature: { isDragging: boolean; isPreview: boolean } }
 interface Calendar_Layout_FeatureMap<TData, TResourceData, TViewFeatures> {
-  calendarLayout_month: Calendar_MonthLayout<TData, TViewFeatures>;
-  calendarLayout_timeGrid: Calendar_TimeGridLayout<TData, TResourceData, TViewFeatures>;
-  calendarLayout_list: Calendar_ListLayout<TData, TViewFeatures>;
+  monthLayout: Calendar_MonthLayout<TData, TViewFeatures>;
+  timeGridLayout: Calendar_TimeGridLayout<TData, TResourceData, TViewFeatures>;
+  listLayout: Calendar_ListLayout<TData, TViewFeatures>;
 }
 
 type Calendar_PickFeatures<TMap, TFeatures> = UnionToIntersectionOrEmpty<TMap[Extract<keyof TFeatures, keyof TMap>]>;
 
 // Views: settings gain the per-view settings of the features they list.
-// NoInfer is required: without it, views nested in calendarViews_create infer their features from the
+// NoInfer is required: without it, views nested in createCalendarViews infer their features from the
 // surrounding Record constraint, and a string index leaks into `keyof views.features`.
-declare const calendarView_timeGrid: <const TFeatures extends Calendar_Features = {}>(
+declare const timeGridView: <const TFeatures extends Calendar_Features = {}>(
   settings: Calendar_TimeGridSettings & { features?: TFeatures } & Calendar_PickFeatures<Calendar_ViewSettings_FeatureMap, TFeatures>,
-) => Calendar_View<'timeGrid', …, NoInfer<TFeatures> & { calendarLayout_timeGrid: typeof calendarLayout_timeGrid }>;
+) => Calendar_View<'timeGrid', …, NoInfer<TFeatures> & { timeGridLayout: typeof timeGridLayout }>;
 
 type Calendar_FeaturesOf<TViews> = UnionToIntersection<TViews[keyof TViews]['~features']>;
 
@@ -702,7 +702,7 @@ type Calendar_Layout<TData, TResourceData, TViews> = {
   [K in keyof TViews]: Calendar_Layout_FeatureMap<TData, TResourceData, TViews[K]['~features']>[LayoutKeyOf<TViews[K]>];
 }[keyof TViews];
 
-// calendar_create: options and API from the registered features; `features` must cover every view's features
+// createCalendar: options and API from the registered features; `features` must cover every view's features
 // with compatible implementations, or it becomes a template-literal error type.
 type Calendar_Options<TData, TResourceData, TViews, TFeatures> = Calendar_CoreOptions<TData, TResourceData, TViews> &
   Calendar_PickFeatures<Calendar_Options_FeatureMap<TData>, TFeatures> & { features: ValidateFeatures<TViews, TFeatures> };
@@ -759,7 +759,7 @@ const store = createStore(() => {
 
 - **D28 alone:** extends layouts only, with nowhere for cross-cutting features to go.
 - **Layouts registered in `features` and named by views:** two sources of truth, plus a "view needs a missing layout" error that model B (views bring their layout) removes.
-- **`calendar_create({ views })` merging features implicitly:** removes the forgotten-spread error but hides the active feature set; the explicit object follows v9's `tableFeatures`.
+- **`createCalendar({ views })` merging features implicitly:** removes the forgotten-spread error but hides the active feature set; the explicit object follows v9's `tableFeatures`.
 - **Config on feature instances:** which view's instance wins would depend on key order in `views`.
 - **Per-view feature instances:** they would split calendar-wide state, since only one drag can happen at a time.
 - **Deep-merging settings:** shallow merges per layer are predictable.
@@ -784,14 +784,53 @@ const store = createStore(() => {
 
 **Implementation** (`packages/core/src/calendar.ts`, `calendar-views.ts`, `calendar-layouts.ts`, `calendar.types.ts`; tests in `src/tests/calendar-features.spec.ts`). Where it differs from the sketch above:
 
-- **Core features are not feature objects.** Navigation, the event pipeline and the clock stay built into `calendar_create`; nothing could replace or reorder them, so wrapping them added no capability.
+- **Core features are not feature objects.** Navigation, the event pipeline and the clock stay built into `createCalendar`; nothing could replace or reorder them, so wrapping them added no capability.
 - **No `locate` capability yet.** No feature consumes it; it belongs to whichever decision brings drag or selection into scope.
 - **Feature hooks receive a context, not the instance.** It holds `options`, the active `view`, `api`, `getState`, `setState`, and `settings(key, defaults)`, which applies the defaults → calendar → view layering. `constructApi` returns its actions instead of mutating `api`.
 - **Controlled slices report nothing by themselves.** `setState` writes an uncontrolled slice or an external atom and leaves a controlled one alone. A feature calls its own `onXChange` option, as the test feature does.
 - **`useCalendarSelector` is typed by annotating its selector** (`(state: Calendar_StateOf<typeof calendar>) => …`). An explicit `useCalendarSelector<typeof calendar>` would disable inference of the selected type, because TypeScript has no partial type-argument inference.
 - **`features` and `atoms` are read once, at creation.** That is when state slices and actions are registered. A view that declares a feature the `features` object lacks still gets the view's own implementation at runtime, but the types reject it.
-- **`calendar_navigation` (the instance-free helper) uses each view's own layout feature**, not a replacement passed to a calendar.
+- **`getCalendarNavigation` (the instance-free helper) uses each view's own layout feature**, not a replacement passed to a calendar.
 - **Model fields follow the active view's features.** Code that reads a field across views narrows with `'field' in model`. The React parts keep their core model types and accept the extended models structurally.
+
+### D30 — Exports are verb-first functions, noun-suffixed constants and shadcn-style components
+
+**Serves:** D29
+
+**Verified:** not verified — a rename; cheap to reverse while the packages are experimental
+
+**Why:** The scope-prefix names (`calendar_create`, `calendarView_month`, `MonthView_Root`) came from guildara-frontend's naming rule. This repository does not enforce that rule. Under D29 the names also became feature-map keys, because features are passed with shorthand properties, so `calendarLayout_month` turned into a long key. The exports now follow the conventions of the libraries the API is modelled on:
+
+- **TanStack-style functions and constants in core.** Instances come from `create*`, a pure query is `get*`, a factory is named after what it returns, and a feature constant ends in `Feature`, like v9's `rowSortingFeature`.
+- **shadcn-style components in React.** A root part takes the component's name, subparts concatenate onto it (shadcn's `Card`, `CardHeader`), and the provider is `CalendarProvider` (shadcn's `SidebarProvider`).
+
+| Before                                         | After                                                                       |
+| ---------------------------------------------- | --------------------------------------------------------------------------- |
+| `calendar_create`                              | `createCalendar`                                                            |
+| `calendarViews_create`                         | `createCalendarViews`                                                       |
+| `calendarView_month` / `_timeGrid` / `_list`   | `monthView` / `timeGridView` / `listView`                                   |
+| `calendarLayout_month` / `_timeGrid` / `_list` | `monthLayout` / `timeGridLayout` / `listLayout` (also the feature-map keys) |
+| `calendarFeature_<x>`                          | `<x>Feature`                                                                |
+| `calendar_navigation`                          | `getCalendarNavigation`                                                     |
+| `calendarClock_fixed` / `_interval`            | `fixedClock` / `intervalClock`                                              |
+| `calendarEventStore_create`                    | `createEventStore`                                                          |
+| `Calendar_Root` / `Calendar_RootProvider`      | `Calendar` / `CalendarProvider`                                             |
+| `MonthView_Root`, `MonthView_Week`, …          | `MonthView`, `MonthViewWeek`, … (same for `TimeGridView*`, `ListView*`)     |
+
+What stays:
+
+- **Types:** they keep the `Calendar_*` prefix, including the feature maps and `Calendar_HTMLProps`.
+- **React hooks:** they were already verb-first.
+- **Internal helpers:** `calendarNavigation_days`, `layoutMonth_build` and `calendarProps_merge` are not exported, so they are unchanged.
+- **Rendering:** `data-scope`/`data-part` are untouched. shadcn's `data-slot` attributes were not adopted.
+
+Decisions before D29 keep the names they were written with.
+
+Rejected:
+
+- **`createMonthView`:** too wordy for something written once per view.
+- **`createViews`:** too generic for auto-import.
+- **Renaming the types in the same pass:** about 60 renames with no gain at runtime. That is still open.
 
 ## Test cases
 

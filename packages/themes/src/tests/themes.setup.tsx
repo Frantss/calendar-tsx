@@ -5,13 +5,8 @@ import { render } from 'vitest-browser-react';
 import { iife } from '#tests/utils/iife';
 
 import type { Calendar_AllDayEventInput, Calendar_TimedEventInput, Calendar_Views } from '@calendar-tsx/core';
-import {
-  calendarClock_fixed,
-  calendarView_month,
-  calendarView_timeGrid,
-  calendarViews_create,
-} from '@calendar-tsx/core';
-import { Calendar_RootProvider, useCalendar } from '@calendar-tsx/react';
+import { fixedClock, monthView, timeGridView, createCalendarViews } from '@calendar-tsx/core';
+import { CalendarProvider, useCalendar } from '@calendar-tsx/react';
 
 export type ThemesSetup_EventData = { title: string };
 
@@ -23,9 +18,9 @@ const themesSetup_timeZone = 'America/New_York';
 
 const themesSetup_defaults = iife(() => ({
   views: {
-    month: calendarView_month({ maxEventsPerDay: 3 }),
-    week: calendarView_timeGrid({ days: 7 }),
-    day: calendarView_timeGrid({ days: 1 }),
+    month: monthView({ maxEventsPerDay: 3 }),
+    week: timeGridView({ days: 7 }),
+    day: timeGridView({ days: 1 }),
   } as Calendar_Views,
   view: 'day',
   events: [] as ThemesSetup_Event[],
@@ -51,7 +46,7 @@ export const themesSetup_allDay = (id: string, { start, end }: { start: string; 
 /** Renders `children` at a fixed width so geometry is deterministic; each spec imports the stylesheets it tests. */
 export const themesSetup_render = async (children: ReactNode, overrides: Partial<typeof themesSetup_defaults> = {}) => {
   const { view, events, colorScheme, className, ...rest } = { ...themesSetup_defaults, ...overrides };
-  const views = calendarViews_create(rest.views);
+  const views = createCalendarViews(rest.views);
 
   const Harness = () => {
     const calendar = useCalendar<ThemesSetup_EventData, null>({
@@ -62,13 +57,13 @@ export const themesSetup_render = async (children: ReactNode, overrides: Partial
       date: Temporal.PlainDate.from('2026-03-11'),
       timeZone: themesSetup_timeZone,
       firstDayOfWeek: 7,
-      clock: calendarClock_fixed(Temporal.ZonedDateTime.from(`2026-03-11T10:40[${themesSetup_timeZone}]`).toInstant()),
+      clock: fixedClock(Temporal.ZonedDateTime.from(`2026-03-11T10:40[${themesSetup_timeZone}]`).toInstant()),
       onNavigate: () => {},
     });
 
     return (
       <div className={className} style={{ inlineSize: 700, colorScheme }}>
-        <Calendar_RootProvider value={calendar}>{children}</Calendar_RootProvider>
+        <CalendarProvider value={calendar}>{children}</CalendarProvider>
       </div>
     );
   };

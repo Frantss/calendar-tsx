@@ -2,13 +2,13 @@ import { expect, it } from 'vitest';
 
 import type { Calendar_TimeGridLayout } from '@calendar-tsx/core';
 import {
-  TimeGridView_Body,
-  TimeGridView_Column,
-  TimeGridView_ColumnHeader,
-  TimeGridView_ColumnTrigger,
-  TimeGridView_Event,
-  TimeGridView_Header,
-  TimeGridView_Root,
+  TimeGridViewBody,
+  TimeGridViewColumn,
+  TimeGridViewColumnHeader,
+  TimeGridViewColumnTrigger,
+  TimeGridViewEvent,
+  TimeGridViewHeader,
+  TimeGridView,
   useCalendarSelector,
 } from '@calendar-tsx/react';
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
@@ -20,29 +20,29 @@ const TimeGrid = () => {
   const grid = useCalendarSelector(state => state.layout) as Calendar_TimeGridLayout<ThemesSetup_EventData, null>;
 
   return (
-    <TimeGridView_Root model={grid}>
-      <TimeGridView_Header>
+    <TimeGridView model={grid}>
+      <TimeGridViewHeader>
         {grid.columns.map(column => (
-          <TimeGridView_ColumnHeader key={column.key} column={column}>
+          <TimeGridViewColumnHeader key={column.key} column={column}>
             Wed
-            <TimeGridView_ColumnTrigger column={column} view='day'>
+            <TimeGridViewColumnTrigger column={column} view='day'>
               {column.date.day}
-            </TimeGridView_ColumnTrigger>
-          </TimeGridView_ColumnHeader>
+            </TimeGridViewColumnTrigger>
+          </TimeGridViewColumnHeader>
         ))}
-      </TimeGridView_Header>
-      <TimeGridView_Body model={grid}>
+      </TimeGridViewHeader>
+      <TimeGridViewBody model={grid}>
         {grid.columns.map(column => (
-          <TimeGridView_Column key={column.key} column={column}>
+          <TimeGridViewColumn key={column.key} column={column}>
             {column.segments.map(segment => (
-              <TimeGridView_Event key={segment.key} segment={segment}>
+              <TimeGridViewEvent key={segment.key} segment={segment}>
                 {segment.event.data.title}
-              </TimeGridView_Event>
+              </TimeGridViewEvent>
             ))}
-          </TimeGridView_Column>
+          </TimeGridViewColumn>
         ))}
-      </TimeGridView_Body>
-    </TimeGridView_Root>
+      </TimeGridViewBody>
+    </TimeGridView>
   );
 };
 

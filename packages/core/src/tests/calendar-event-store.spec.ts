@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 
-import { calendarEventStore_create } from '#calendar-event-store';
+import { createEventStore } from '#calendar-event-store';
 import { fixtures_timed } from '#tests/calendar.fixtures';
 import { calendarSetup_create } from '#tests/calendar.setup';
 
@@ -9,7 +9,7 @@ const defaults = {
 };
 
 const setup = async () => {
-  const store = calendarEventStore_create(defaults.initial);
+  const store = createEventStore(defaults.initial);
 
   return { store, ids: () => store.store.state.events.map(event => event.id) };
 };

@@ -1,4 +1,4 @@
-import { calendarLayout_list, calendarLayout_month, calendarLayout_timeGrid } from '#calendar-layouts';
+import { listLayout, monthLayout, timeGridLayout } from '#calendar-layouts';
 import type {
   Calendar_Features,
   Calendar_FeaturesOf,
@@ -29,44 +29,44 @@ const view_create = (
   { features, ...settings }: { features?: Calendar_Features },
 ) => ({ ...settings, kind, '~layout': layoutKey, '~features': { ...features, [layoutKey]: layout } });
 
-// `NoInfer` keeps views nested in `calendarViews_create` from inferring their features from its constraint, which
+// `NoInfer` keeps views nested in `createCalendarViews` from inferring their features from its constraint, which
 // would leak a string index into `keyof views.features` (D29).
 
-export const calendarView_month = <const TFeatures extends Calendar_Features = {}>(
+export const monthView = <const TFeatures extends Calendar_Features = {}>(
   settings: Calendar_MonthViewSettings & Calendar_ViewFeatureSettings<TFeatures>,
 ) =>
-  view_create('month', 'calendarLayout_month', calendarLayout_month, settings) as unknown as ViewOf<
-    'calendarLayout_month',
+  view_create('month', 'monthLayout', monthLayout, settings) as unknown as ViewOf<
+    'monthLayout',
     'month',
     Calendar_MonthViewSettings,
     TFeatures,
-    typeof calendarLayout_month
+    typeof monthLayout
   >;
 
-export const calendarView_timeGrid = <const TFeatures extends Calendar_Features = {}>(
+export const timeGridView = <const TFeatures extends Calendar_Features = {}>(
   settings: Calendar_TimeGridViewSettings & Calendar_ViewFeatureSettings<TFeatures>,
 ) =>
-  view_create('timeGrid', 'calendarLayout_timeGrid', calendarLayout_timeGrid, settings) as unknown as ViewOf<
-    'calendarLayout_timeGrid',
+  view_create('timeGrid', 'timeGridLayout', timeGridLayout, settings) as unknown as ViewOf<
+    'timeGridLayout',
     'timeGrid',
     Calendar_TimeGridViewSettings,
     TFeatures,
-    typeof calendarLayout_timeGrid
+    typeof timeGridLayout
   >;
 
-export const calendarView_list = <const TFeatures extends Calendar_Features = {}>(
+export const listView = <const TFeatures extends Calendar_Features = {}>(
   settings: Calendar_ListViewSettings & Calendar_ViewFeatureSettings<TFeatures>,
 ) =>
-  view_create('list', 'calendarLayout_list', calendarLayout_list, settings) as unknown as ViewOf<
-    'calendarLayout_list',
+  view_create('list', 'listLayout', listLayout, settings) as unknown as ViewOf<
+    'listLayout',
     'list',
     Calendar_ListViewSettings,
     TFeatures,
-    typeof calendarLayout_list
+    typeof listLayout
   >;
 
 /** The views, plus every feature they use, to spread into the calendar's `features` (D29). */
-export const calendarViews_create = <
+export const createCalendarViews = <
   const TViews extends Record<string, { kind: string; '~layout': Calendar_LayoutKey; '~features': object }>,
 >(
   views: TViews,

@@ -5,14 +5,14 @@ import { render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 
 import type { Calendar_Clock } from '@calendar-tsx/core';
-import { calendarView_list, calendarViews_create } from '@calendar-tsx/core';
+import { listView, createCalendarViews } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_timeZone, fixtures_timed } from '#tests/calendar.fixtures';
-import { Calendar_Root, Calendar_RootProvider, useCalendar, useCalendarContext, useCalendarSelector } from '#use-calendar';
+import { Calendar, CalendarProvider, useCalendar, useCalendarContext, useCalendarSelector } from '#use-calendar';
 import { useCalendarEventStore } from '#use-calendar-event-store';
 
 const defaults = {
-  views: calendarViews_create({ list_week: calendarView_list({ days: 7 }) }),
+  views: createCalendarViews({ list_week: listView({ days: 7 }) }),
   date: Temporal.PlainDate.from('2026-03-11'),
   yoga: fixtures_timed('Yoga', { date: '2026-03-11', start: '09:00', end: '10:00' }),
   swim: fixtures_timed('Swim', { date: '2026-03-12', start: '14:00', end: '15:00' }),
@@ -59,13 +59,13 @@ const setup = async ({ clock }: { clock?: Calendar_Clock } = {}) => {
     });
 
     return (
-      <Calendar_RootProvider value={calendar}>
+      <CalendarProvider value={calendar}>
         <button type='button' onClick={() => setEvents(current => [...current, defaults.swim])}>
           add
         </button>
         <Period />
         <CountedTitles />
-      </Calendar_RootProvider>
+      </CalendarProvider>
     );
   };
 
@@ -102,7 +102,7 @@ it('mounts the clock with the component and stops it on unmount', async () => {
   const unsubscribe = vi.fn();
   const clock: Calendar_Clock = { now: () => defaults.now, subscribe: vi.fn(() => unsubscribe) };
   const screen = await render(
-    <Calendar_Root
+    <Calendar
       timeZone={fixtures_timeZone}
       views={defaults.views.views}
       features={defaults.views.features}
@@ -113,7 +113,7 @@ it('mounts the clock with the component and stops it on unmount', async () => {
       clock={clock}
     >
       <Titles />
-    </Calendar_Root>,
+    </Calendar>,
   );
 
   expect(clock.subscribe).toHaveBeenCalledOnce();
@@ -121,7 +121,7 @@ it('mounts the clock with the component and stops it on unmount', async () => {
   expect(unsubscribe).toHaveBeenCalledOnce();
 });
 
-it('provides the same instance through Calendar_Root and Calendar_RootProvider', async () => {
+it('provides the same instance through Calendar and CalendarProvider', async () => {
   const seen: unknown[] = [];
   const Probe = () => {
     seen.push(useCalendarContext().instance);
@@ -142,9 +142,9 @@ it('provides the same instance through Calendar_Root and Calendar_RootProvider',
     seen.push(calendar);
 
     return (
-      <Calendar_RootProvider value={calendar}>
+      <CalendarProvider value={calendar}>
         <Probe />
-      </Calendar_RootProvider>
+      </CalendarProvider>
     );
   };
 
@@ -156,7 +156,7 @@ it('provides the same instance through Calendar_Root and Calendar_RootProvider',
 it('throws when a part is rendered outside a root', async () => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
 
-  await expect(render(<Titles />)).rejects.toThrow('parts must be rendered inside Calendar_Root or Calendar_RootProvider');
+  await expect(render(<Titles />)).rejects.toThrow('parts must be rendered inside Calendar or CalendarProvider');
 });
 
 it('feeds managed events into the calendar', async () => {
@@ -173,12 +173,12 @@ it('feeds managed events into the calendar', async () => {
     });
 
     return (
-      <Calendar_RootProvider value={calendar}>
+      <CalendarProvider value={calendar}>
         <button type='button' onClick={() => eventStore.add([defaults.swim])}>
           add
         </button>
         <Titles />
-      </Calendar_RootProvider>
+      </CalendarProvider>
     );
   };
 

@@ -19,20 +19,20 @@ import {
 } from '#calendar-parts';
 import { useCalendarContext } from '#use-calendar';
 
-type MonthView_RootProps<TData> = { model: Calendar_MonthLayout<TData> } & Calendar_HTMLProps<
+type MonthViewProps<TData> = { model: Calendar_MonthLayout<TData> } & Calendar_HTMLProps<
   'div',
   Calendar_MonthLayout<TData>
 >;
 
-export const MonthView_Root = forwardRef<HTMLDivElement, MonthView_RootProps<unknown>>(({ model, ...props }, ref) => (
+export const MonthView = forwardRef<HTMLDivElement, MonthViewProps<unknown>>(({ model, ...props }, ref) => (
   <calendar.div {...calendarProps_merge({ role: 'grid', ...part('month-root') }, props)} state={model} ref={ref} />
-)) as <TData>(props: MonthView_RootProps<TData> & RefAttributes<HTMLDivElement>) => ReactElement | null;
+)) as <TData>(props: MonthViewProps<TData> & RefAttributes<HTMLDivElement>) => ReactElement | null;
 
-export const MonthView_Header = forwardRef<HTMLDivElement, Calendar_HTMLProps<'div'>>((props, ref) => (
+export const MonthViewHeader = forwardRef<HTMLDivElement, Calendar_HTMLProps<'div'>>((props, ref) => (
   <calendar.div {...calendarProps_merge({ role: 'row', ...part('month-header') }, props)} ref={ref} />
 ));
 
-export const MonthView_HeaderCell = forwardRef<
+export const MonthViewHeaderCell = forwardRef<
   HTMLDivElement,
   { weekday: Temporal.PlainDate } & Calendar_HTMLProps<'div', Temporal.PlainDate>
 >(({ weekday, ...props }, ref) => (
@@ -46,25 +46,22 @@ export const MonthView_HeaderCell = forwardRef<
   />
 ));
 
-type MonthView_WeekProps<TData> = { week: Calendar_MonthWeek<TData> } & Calendar_HTMLProps<
+type MonthViewWeekProps<TData> = { week: Calendar_MonthWeek<TData> } & Calendar_HTMLProps<
   'div',
   Calendar_MonthWeek<TData>
 >;
 
-export const MonthView_Week = forwardRef<HTMLDivElement, MonthView_WeekProps<unknown>>(({ week, ...props }, ref) => (
+export const MonthViewWeek = forwardRef<HTMLDivElement, MonthViewWeekProps<unknown>>(({ week, ...props }, ref) => (
   <calendar.div
     {...calendarProps_merge({ role: 'row', style: vars({ rows: week.rows }), ...part('month-week') }, props)}
     state={week}
     ref={ref}
   />
-)) as <TData>(props: MonthView_WeekProps<TData> & RefAttributes<HTMLDivElement>) => ReactElement | null;
+)) as <TData>(props: MonthViewWeekProps<TData> & RefAttributes<HTMLDivElement>) => ReactElement | null;
 
-type MonthView_DayProps<TData> = { day: Calendar_MonthDay<TData> } & Calendar_HTMLProps<
-  'div',
-  Calendar_MonthDay<TData>
->;
+type MonthViewDayProps<TData> = { day: Calendar_MonthDay<TData> } & Calendar_HTMLProps<'div', Calendar_MonthDay<TData>>;
 
-export const MonthView_Day = forwardRef<HTMLDivElement, MonthView_DayProps<unknown>>(({ day, ...props }, ref) => (
+export const MonthViewDay = forwardRef<HTMLDivElement, MonthViewDayProps<unknown>>(({ day, ...props }, ref) => (
   <calendar.div
     {...calendarProps_merge(
       {
@@ -79,14 +76,14 @@ export const MonthView_Day = forwardRef<HTMLDivElement, MonthView_DayProps<unkno
     state={day}
     ref={ref}
   />
-)) as <TData>(props: MonthView_DayProps<TData> & RefAttributes<HTMLDivElement>) => ReactElement | null;
+)) as <TData>(props: MonthViewDayProps<TData> & RefAttributes<HTMLDivElement>) => ReactElement | null;
 
-type MonthView_DayTriggerProps<TData> = { day: Calendar_MonthDay<TData>; view: string } & Calendar_HTMLProps<
+type MonthViewDayTriggerProps<TData> = { day: Calendar_MonthDay<TData>; view: string } & Calendar_HTMLProps<
   'button',
   Calendar_MonthDay<TData>
 >;
 
-export const MonthView_DayTrigger = forwardRef<HTMLButtonElement, MonthView_DayTriggerProps<unknown>>(
+export const MonthViewDayTrigger = forwardRef<HTMLButtonElement, MonthViewDayTriggerProps<unknown>>(
   ({ day, view, ...props }, ref) => {
     const { locale } = useCalendarContext();
     const navigate = useCalendarParts_NavigateTrigger(view, day.date);
@@ -107,14 +104,14 @@ export const MonthView_DayTrigger = forwardRef<HTMLButtonElement, MonthView_DayT
       />
     );
   },
-) as <TData>(props: MonthView_DayTriggerProps<TData> & RefAttributes<HTMLButtonElement>) => ReactElement | null;
+) as <TData>(props: MonthViewDayTriggerProps<TData> & RefAttributes<HTMLButtonElement>) => ReactElement | null;
 
-type MonthView_WeekEventProps<TData> = { segment: Calendar_BarSegment<TData> } & Calendar_HTMLProps<
+type MonthViewWeekEventProps<TData> = { segment: Calendar_BarSegment<TData> } & Calendar_HTMLProps<
   'button',
   Calendar_BarSegment<TData>
 >;
 
-export const MonthView_WeekEvent = forwardRef<HTMLButtonElement, MonthView_WeekEventProps<unknown>>(
+export const MonthViewWeekEvent = forwardRef<HTMLButtonElement, MonthViewWeekEventProps<unknown>>(
   ({ segment, ...props }, ref) => (
     <calendar.button
       {...calendarProps_merge(
@@ -131,15 +128,15 @@ export const MonthView_WeekEvent = forwardRef<HTMLButtonElement, MonthView_WeekE
       ref={ref}
     />
   ),
-) as <TData>(props: MonthView_WeekEventProps<TData> & RefAttributes<HTMLButtonElement>) => ReactElement | null;
+) as <TData>(props: MonthViewWeekEventProps<TData> & RefAttributes<HTMLButtonElement>) => ReactElement | null;
 
-type MonthView_OverflowProps<TData> = { day: Calendar_MonthDay<TData> } & Calendar_HTMLProps<
+type MonthViewOverflowProps<TData> = { day: Calendar_MonthDay<TData> } & Calendar_HTMLProps<
   'button',
   Calendar_MonthDay<TData>
 >;
 
 /** Renders only when the day has more than it shows (D14, D17). */
-export const MonthView_Overflow = forwardRef<HTMLButtonElement, MonthView_OverflowProps<unknown>>(
+export const MonthViewOverflow = forwardRef<HTMLButtonElement, MonthViewOverflowProps<unknown>>(
   ({ day, ...props }, ref) => {
     if (!day.hasMore) return null;
 
@@ -154,4 +151,4 @@ export const MonthView_Overflow = forwardRef<HTMLButtonElement, MonthView_Overfl
       />
     );
   },
-) as <TData>(props: MonthView_OverflowProps<TData> & RefAttributes<HTMLButtonElement>) => ReactElement | null;
+) as <TData>(props: MonthViewOverflowProps<TData> & RefAttributes<HTMLButtonElement>) => ReactElement | null;

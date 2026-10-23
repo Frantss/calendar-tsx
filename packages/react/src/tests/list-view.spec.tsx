@@ -5,7 +5,7 @@ import { page } from 'vitest/browser';
 import type { Calendar_ListLayout } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_timed } from '#tests/calendar.fixtures';
-import { ListView_Day, ListView_DayHeader, ListView_Empty, ListView_Event, ListView_Root } from '#list-view';
+import { ListViewDay, ListViewDayHeader, ListViewEmpty, ListViewEvent, ListView } from '#list-view';
 import { useCalendarSelector } from '#use-calendar';
 import type { CalendarReactSetup_Overrides } from '#tests/calendar-react.setup';
 import { calendarReactSetup_render } from '#tests/calendar-react.setup';
@@ -14,19 +14,19 @@ const ListBody = () => {
   const list = useCalendarSelector(state => state.layout) as Calendar_ListLayout<Fixtures_EventData>;
 
   return (
-    <ListView_Root model={list}>
+    <ListView model={list}>
       {list.days.map(day => (
-        <ListView_Day key={day.key} day={day}>
-          <ListView_DayHeader day={day}>{day.key}</ListView_DayHeader>
+        <ListViewDay key={day.key} day={day}>
+          <ListViewDayHeader day={day}>{day.key}</ListViewDayHeader>
           {day.events.map(event => (
-            <ListView_Event key={event.id} event={event}>
+            <ListViewEvent key={event.id} event={event}>
               {event.data.title}
-            </ListView_Event>
+            </ListViewEvent>
           ))}
-        </ListView_Day>
+        </ListViewDay>
       ))}
-      <ListView_Empty>Nothing scheduled</ListView_Empty>
-    </ListView_Root>
+      <ListViewEmpty>Nothing scheduled</ListViewEmpty>
+    </ListView>
   );
 };
 

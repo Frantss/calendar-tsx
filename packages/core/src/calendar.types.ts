@@ -178,9 +178,9 @@ export type Calendar_ListLayout<TData, TFeatures = {}> = { kind: 'list'; days: C
 
 /** Layout key → layout, given the features of the view it renders. Layout features extend it by declaration merging. */
 export interface Calendar_Layout_FeatureMap<TData, TResourceData, TFeatures> {
-  calendarLayout_month: Calendar_MonthLayout<TData, TFeatures>;
-  calendarLayout_timeGrid: Calendar_TimeGridLayout<TData, TResourceData, TFeatures>;
-  calendarLayout_list: Calendar_ListLayout<TData, TFeatures>;
+  monthLayout: Calendar_MonthLayout<TData, TFeatures>;
+  timeGridLayout: Calendar_TimeGridLayout<TData, TResourceData, TFeatures>;
+  listLayout: Calendar_ListLayout<TData, TFeatures>;
 }
 
 export type Calendar_LayoutKey = keyof Calendar_Layout_FeatureMap<unknown, unknown, {}>;
@@ -245,7 +245,7 @@ export type Calendar_LayoutFeature<TKind extends string = string, TSettings = an
 
 export type Calendar_Features = Record<string, Calendar_Feature>;
 
-/** A view: its settings plus the layout and features it uses. Create views with the `calendarView_*` factories. */
+/** A view: its settings plus the layout and features it uses. Create views with the `*View` factories (`monthView`, …). */
 export type Calendar_View<
   TLayout extends Calendar_LayoutKey = Calendar_LayoutKey,
   TKind extends string = string,
@@ -316,7 +316,7 @@ export type Calendar_Options<
 > = {
   timeZone: string;
   locale?: string;
-  /** Usually `calendarViews_create(…).views`; tracked by reference. */
+  /** Usually `createCalendarViews(…).views`; tracked by reference. */
   views: TViews;
   /** Usually `{ ...views.features }` plus calendar-wide features. Read once at creation. */
   features: TFeatures;

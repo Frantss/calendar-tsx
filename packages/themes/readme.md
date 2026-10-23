@@ -69,7 +69,7 @@ zero-specificity selectors. Unlayered CSS always wins over them without `!import
 CSS that declares its own layers after importing the theme beats it, and anything earlier loses. Tailwind is
 layered, so see [Tailwind](#tailwind).
 
-**Scrolling.** `TimeGridView_Root` scrolls, with a sticky header. Give it a height (`max-block-size: 40rem`) to
+**Scrolling.** `TimeGridView` scrolls, with a sticky header. Give it a height (`max-block-size: 40rem`) to
 scroll inside the page rather than show all 24 hours.
 
 ## shadcn/ui
@@ -113,7 +113,7 @@ utilities:
 
 - It beats preflight, whose button reset (`background-color: transparent`, `border-radius: 0`) would otherwise strip
   every event, trigger and overflow, since parts render native buttons.
-- Utilities beat it: `<MonthView_WeekEvent className='bg-sky-600 text-white'>` overrides the theme.
+- Utilities beat it: `<MonthViewWeekEvent className='bg-sky-600 text-white'>` overrides the theme.
 
 Imported without `layer(components)`, the theme's layers come after `utilities` and override every utility class on
 a part.
@@ -141,23 +141,23 @@ attributes as variants. Boolean attributes (`data-today`, `data-outside`, `data-
 ```
 
 ```tsx
-<MonthView_Day day={day} className='p-1 data-outside:bg-zinc-50 data-outside:text-zinc-500'>
-  <MonthView_DayTrigger
+<MonthViewDay day={day} className='p-1 data-outside:bg-zinc-50 data-outside:text-zinc-500'>
+  <MonthViewDayTrigger
     day={day}
     view='day'
     className='size-7 rounded-full in-data-today:bg-indigo-600 in-data-today:text-white'
   >
     {day.date.day}
-  </MonthView_DayTrigger>
-</MonthView_Day>
+  </MonthViewDayTrigger>
+</MonthViewDay>
 ```
 
 ## Expected composition
 
-The layout assumes the part nesting shown in the [React readme](../react/readme.md): `MonthView_Week` holds its
-`MonthView_Day` cells and `MonthView_WeekEvent` bars; `TimeGridView_Root` holds `TimeGridView_Header`, an optional
-`TimeGridView_AllDay` and `TimeGridView_Body`, and the body holds an optional `TimeGridView_Axis` and the
-`TimeGridView_Column`s.
+The layout assumes the part nesting shown in the [React readme](../react/readme.md): `MonthViewWeek` holds its
+`MonthViewDay` cells and `MonthViewWeekEvent` bars; `TimeGridView` holds `TimeGridViewHeader`, an optional
+`TimeGridViewAllDay` and `TimeGridViewBody`, and the body holds an optional `TimeGridViewAxis` and the
+`TimeGridViewColumn`s.
 
 ## Known limits
 

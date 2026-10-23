@@ -8,24 +8,18 @@ import { tests_withDefault } from '#tests/utils/with-default';
 import { iife } from '#tests/utils/iife';
 
 import type { Calendar_EventInput, Calendar_Options, Calendar_Resource, Calendar_Views } from '@calendar-tsx/core';
-import {
-  calendarClock_fixed,
-  calendarView_list,
-  calendarView_month,
-  calendarView_timeGrid,
-  calendarViews_create,
-} from '@calendar-tsx/core';
+import { fixedClock, listView, monthView, timeGridView, createCalendarViews } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_timeZone } from '#tests/calendar.fixtures';
-import { Calendar_RootProvider, useCalendar } from '#use-calendar';
+import { CalendarProvider, useCalendar } from '#use-calendar';
 
 const calendarReactSetup_defaults = iife(() => ({
   views: {
-    month: calendarView_month({ maxEventsPerDay: 2 }),
-    week: calendarView_timeGrid({ days: 7 }),
-    day: calendarView_timeGrid({ days: 1 }),
-    resources: calendarView_timeGrid({ days: 1, groupBy: 'resource', allDay: false }),
-    list_week: calendarView_list({ days: 7 }),
+    month: monthView({ maxEventsPerDay: 2 }),
+    week: timeGridView({ days: 7 }),
+    day: timeGridView({ days: 1 }),
+    resources: timeGridView({ days: 1, groupBy: 'resource', allDay: false }),
+    list_week: listView({ days: 7 }),
   } as Calendar_Views,
   view: 'month',
   date: Temporal.PlainDate.from('2026-03-11'),
@@ -43,7 +37,7 @@ export type CalendarReactSetup_Overrides = Partial<typeof calendarReactSetup_def
  */
 export const calendarReactSetup_render = async (children: ReactNode, overrides: CalendarReactSetup_Overrides = {}) => {
   const onNavigate: Mock<Calendar_Options<Fixtures_EventData, null, Calendar_Views>['onNavigate']> = vi.fn();
-  const views = calendarViews_create(tests_withDefault(overrides, 'views', calendarReactSetup_defaults.views));
+  const views = createCalendarViews(tests_withDefault(overrides, 'views', calendarReactSetup_defaults.views));
   const resolved = {
     views: views.views,
     features: views.features,
@@ -52,7 +46,7 @@ export const calendarReactSetup_render = async (children: ReactNode, overrides: 
     events: tests_withDefault(overrides, 'events', calendarReactSetup_defaults.events),
     resources: tests_withDefault(overrides, 'resources', calendarReactSetup_defaults.resources),
     locale: tests_withDefault(overrides, 'locale', calendarReactSetup_defaults.locale),
-    clock: calendarClock_fixed(tests_withDefault(overrides, 'now', calendarReactSetup_defaults.now)),
+    clock: fixedClock(tests_withDefault(overrides, 'now', calendarReactSetup_defaults.now)),
   };
 
   const Harness = () => {
@@ -64,9 +58,9 @@ export const calendarReactSetup_render = async (children: ReactNode, overrides: 
     });
 
     return (
-      <Calendar_RootProvider value={calendar} locale={resolved.locale}>
+      <CalendarProvider value={calendar} locale={resolved.locale}>
         {children}
-      </Calendar_RootProvider>
+      </CalendarProvider>
     );
   };
 

@@ -9,16 +9,16 @@ list layouts from controlled view/date options and event input, in a single time
 ## Quick example
 
 ```ts
-import { calendarView_month, calendarView_timeGrid, calendarViews_create, calendar_create } from '@calendar-tsx/core';
+import { monthView, timeGridView, createCalendarViews, createCalendar } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
 
 // module scope: views and features are compared by reference
-const views = calendarViews_create({
-  month: calendarView_month({ maxEventsPerDay: 4 }),
-  week: calendarView_timeGrid({ days: 7 }),
+const views = createCalendarViews({
+  month: monthView({ maxEventsPerDay: 4 }),
+  week: timeGridView({ days: 7 }),
 });
 
-const calendar = calendar_create({
+const calendar = createCalendar({
   timeZone: 'America/New_York',
   views: views.views,
   features: { ...views.features },
@@ -43,16 +43,16 @@ and hydrate on the client, pass the same `initialNow` to both.
 ## Features
 
 Functionality beyond navigation and layout is added through features (design D29). A feature is a constant object; a
-view lists the features it uses, and `calendarViews_create` collects them for the calendar's `features`. A feature
+view lists the features it uses, and `createCalendarViews` collects them for the calendar's `features`. A feature
 listed only in `features` runs in every view.
 
 ```ts
-const views = calendarViews_create({
-  week: calendarView_timeGrid({ days: 7, features: { calendarFeature_x }, x: { perView: true } }),
-  day: calendarView_timeGrid({ days: 1 }), // calendarFeature_x does not run here
+const views = createCalendarViews({
+  week: timeGridView({ days: 7, features: { xFeature }, x: { perView: true } }),
+  day: timeGridView({ days: 1 }), // xFeature does not run here
 });
 
-calendar_create({ ...options, views: views.views, features: { ...views.features }, x: { calendarWide: true } });
+createCalendar({ ...options, views: views.views, features: { ...views.features }, x: { calendarWide: true } });
 ```
 
 - **Hooks:** `getInitialState`, `constructApi`, an `events` stage after the core sort, and a `decorate` pass that adds
@@ -61,6 +61,6 @@ calendar_create({ ...options, views: views.views, features: { ...views.features 
 - **State:** each slice is uncontrolled, controlled through `state`, or kept in an external store through `atoms`.
 - **Types:** features extend the `Calendar_*_FeatureMap` interfaces by declaration merging, keyed by their export name.
   Options, view settings, state, API and model fields then exist only where the feature is registered.
-- **Replacing an implementation:** `{ ...views.features, calendarLayout_list: myList }` replaces it in every view.
-- **Layouts are features too:** `calendarLayout_month`, `calendarLayout_timeGrid` and `calendarLayout_list` supply
+- **Replacing an implementation:** `{ ...views.features, listLayout: myList }` replaces it in every view.
+- **Layouts are features too:** `monthLayout`, `timeGridLayout` and `listLayout` supply
   navigation and `build`; a new view kind is a layout feature plus a `Calendar_Layout_FeatureMap` entry.

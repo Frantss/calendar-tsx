@@ -23,12 +23,12 @@ import { useCalendarContext } from '#use-calendar';
 type Grid<TData, TResourceData> = Calendar_TimeGridLayout<TData, TResourceData>;
 type Column<TData, TResourceData> = Calendar_TimeGridColumn<TData, TResourceData>;
 
-type TimeGridView_RootProps<TData, TResourceData> = { model: Grid<TData, TResourceData> } & Calendar_HTMLProps<
+type TimeGridViewProps<TData, TResourceData> = { model: Grid<TData, TResourceData> } & Calendar_HTMLProps<
   'div',
   Grid<TData, TResourceData>
 >;
 
-export const TimeGridView_Root = forwardRef<HTMLDivElement, TimeGridView_RootProps<unknown, unknown>>(
+export const TimeGridView = forwardRef<HTMLDivElement, TimeGridViewProps<unknown, unknown>>(
   ({ model, ...props }, ref) => (
     <calendar.div
       {...calendarProps_merge(
@@ -45,10 +45,10 @@ export const TimeGridView_Root = forwardRef<HTMLDivElement, TimeGridView_RootPro
     />
   ),
 ) as <TData, TResourceData>(
-  props: TimeGridView_RootProps<TData, TResourceData> & RefAttributes<HTMLDivElement>,
+  props: TimeGridViewProps<TData, TResourceData> & RefAttributes<HTMLDivElement>,
 ) => ReactElement | null;
 
-export const TimeGridView_Header = forwardRef<HTMLDivElement, Calendar_HTMLProps<'div'>>((props, ref) => (
+export const TimeGridViewHeader = forwardRef<HTMLDivElement, Calendar_HTMLProps<'div'>>((props, ref) => (
   <calendar.div {...calendarProps_merge(part('time-grid-header'), props)} ref={ref} />
 ));
 
@@ -57,7 +57,7 @@ type ColumnProps<TData, TResourceData> = { column: Column<TData, TResourceData> 
   Column<TData, TResourceData>
 >;
 
-export const TimeGridView_ColumnHeader = forwardRef<HTMLDivElement, ColumnProps<unknown, unknown>>(
+export const TimeGridViewColumnHeader = forwardRef<HTMLDivElement, ColumnProps<unknown, unknown>>(
   ({ column, ...props }, ref) => (
     <calendar.div
       {...calendarProps_merge(
@@ -77,14 +77,14 @@ export const TimeGridView_ColumnHeader = forwardRef<HTMLDivElement, ColumnProps<
   props: ColumnProps<TData, TResourceData> & RefAttributes<HTMLDivElement>,
 ) => ReactElement | null;
 
-type TimeGridView_ColumnTriggerProps<TData, TResourceData> = {
+type TimeGridViewColumnTriggerProps<TData, TResourceData> = {
   column: Column<TData, TResourceData>;
   view: string;
 } & Calendar_HTMLProps<'button', Column<TData, TResourceData>>;
 
-export const TimeGridView_ColumnTrigger = forwardRef<
+export const TimeGridViewColumnTrigger = forwardRef<
   HTMLButtonElement,
-  TimeGridView_ColumnTriggerProps<unknown, unknown>
+  TimeGridViewColumnTriggerProps<unknown, unknown>
 >(({ column, view, ...props }, ref) => {
   const { locale } = useCalendarContext();
   const navigate = useCalendarParts_NavigateTrigger(view, column.date);
@@ -105,19 +105,19 @@ export const TimeGridView_ColumnTrigger = forwardRef<
     />
   );
 }) as <TData, TResourceData>(
-  props: TimeGridView_ColumnTriggerProps<TData, TResourceData> & RefAttributes<HTMLButtonElement>,
+  props: TimeGridViewColumnTriggerProps<TData, TResourceData> & RefAttributes<HTMLButtonElement>,
 ) => ReactElement | null;
 
-export const TimeGridView_AllDay = forwardRef<HTMLDivElement, Calendar_HTMLProps<'div'>>((props, ref) => (
+export const TimeGridViewAllDay = forwardRef<HTMLDivElement, Calendar_HTMLProps<'div'>>((props, ref) => (
   <calendar.div {...calendarProps_merge(part('time-grid-all-day'), props)} ref={ref} />
 ));
 
-type TimeGridView_AllDayEventProps<TData> = { segment: Calendar_BarSegment<TData> } & Calendar_HTMLProps<
+type TimeGridViewAllDayEventProps<TData> = { segment: Calendar_BarSegment<TData> } & Calendar_HTMLProps<
   'button',
   Calendar_BarSegment<TData>
 >;
 
-export const TimeGridView_AllDayEvent = forwardRef<HTMLButtonElement, TimeGridView_AllDayEventProps<unknown>>(
+export const TimeGridViewAllDayEvent = forwardRef<HTMLButtonElement, TimeGridViewAllDayEventProps<unknown>>(
   ({ segment, ...props }, ref) => (
     <calendar.button
       {...calendarProps_merge(
@@ -134,9 +134,9 @@ export const TimeGridView_AllDayEvent = forwardRef<HTMLButtonElement, TimeGridVi
       ref={ref}
     />
   ),
-) as <TData>(props: TimeGridView_AllDayEventProps<TData> & RefAttributes<HTMLButtonElement>) => ReactElement | null;
+) as <TData>(props: TimeGridViewAllDayEventProps<TData> & RefAttributes<HTMLButtonElement>) => ReactElement | null;
 
-export const TimeGridView_Body = forwardRef<HTMLDivElement, TimeGridView_RootProps<unknown, unknown>>(
+export const TimeGridViewBody = forwardRef<HTMLDivElement, TimeGridViewProps<unknown, unknown>>(
   ({ model, ...props }, ref) => (
     <calendar.div
       {...calendarProps_merge(
@@ -151,22 +151,22 @@ export const TimeGridView_Body = forwardRef<HTMLDivElement, TimeGridView_RootPro
     />
   ),
 ) as <TData, TResourceData>(
-  props: TimeGridView_RootProps<TData, TResourceData> & RefAttributes<HTMLDivElement>,
+  props: TimeGridViewProps<TData, TResourceData> & RefAttributes<HTMLDivElement>,
 ) => ReactElement | null;
 
-export const TimeGridView_Axis = forwardRef<HTMLDivElement, Calendar_HTMLProps<'div'>>((props, ref) => (
+export const TimeGridViewAxis = forwardRef<HTMLDivElement, Calendar_HTMLProps<'div'>>((props, ref) => (
   <calendar.div {...calendarProps_merge(part('time-grid-axis'), props)} ref={ref} />
 ));
 
 /** `slot` is the axis row's model (one time slot), not the native HTML attribute. */
-export const TimeGridView_AxisLabel = forwardRef<
+export const TimeGridViewAxisLabel = forwardRef<
   HTMLDivElement,
   { slot: Calendar_TimeGridSlot } & Calendar_HTMLProps<'div', Calendar_TimeGridSlot>
 >(({ slot, ...props }, ref) => (
   <calendar.div {...calendarProps_merge(part('time-grid-axis-label'), props)} state={slot} ref={ref} />
 ));
 
-export const TimeGridView_Column = forwardRef<HTMLDivElement, ColumnProps<unknown, unknown>>(
+export const TimeGridViewColumn = forwardRef<HTMLDivElement, ColumnProps<unknown, unknown>>(
   ({ column, ...props }, ref) => (
     <calendar.div
       {...calendarProps_merge(
@@ -185,7 +185,7 @@ export const TimeGridView_Column = forwardRef<HTMLDivElement, ColumnProps<unknow
   props: ColumnProps<TData, TResourceData> & RefAttributes<HTMLDivElement>,
 ) => ReactElement | null;
 
-export const TimeGridView_Unavailable = forwardRef<
+export const TimeGridViewUnavailable = forwardRef<
   HTMLDivElement,
   { segment: Calendar_UnavailableSegment } & Calendar_HTMLProps<'div', Calendar_UnavailableSegment>
 >(({ segment, ...props }, ref) => (
@@ -203,12 +203,12 @@ export const TimeGridView_Unavailable = forwardRef<
   />
 ));
 
-type TimeGridView_EventProps<TData> = { segment: Calendar_TimeGridSegment<TData> } & Calendar_HTMLProps<
+type TimeGridViewEventProps<TData> = { segment: Calendar_TimeGridSegment<TData> } & Calendar_HTMLProps<
   'button',
   Calendar_TimeGridSegment<TData>
 >;
 
-export const TimeGridView_Event = forwardRef<HTMLButtonElement, TimeGridView_EventProps<unknown>>(
+export const TimeGridViewEvent = forwardRef<HTMLButtonElement, TimeGridViewEventProps<unknown>>(
   ({ segment, ...props }, ref) => (
     <calendar.button
       {...calendarProps_merge(
@@ -226,10 +226,10 @@ export const TimeGridView_Event = forwardRef<HTMLButtonElement, TimeGridView_Eve
       ref={ref}
     />
   ),
-) as <TData>(props: TimeGridView_EventProps<TData> & RefAttributes<HTMLButtonElement>) => ReactElement | null;
+) as <TData>(props: TimeGridViewEventProps<TData> & RefAttributes<HTMLButtonElement>) => ReactElement | null;
 
 /** Renders only in today's column (D11). */
-export const TimeGridView_NowIndicator = forwardRef<HTMLDivElement, ColumnProps<unknown, unknown>>(
+export const TimeGridViewNowIndicator = forwardRef<HTMLDivElement, ColumnProps<unknown, unknown>>(
   ({ column, ...props }, ref) => {
     if (column.now === undefined) return null;
 

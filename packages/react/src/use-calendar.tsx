@@ -10,7 +10,7 @@ import type {
   Calendar_ValidateFeatures,
   Calendar_Views,
 } from '@calendar-tsx/core';
-import { calendar_create } from '@calendar-tsx/core';
+import { createCalendar } from '@calendar-tsx/core';
 
 /** Any instance: the parts only navigate and read the store, so view keys and feature types are erased. */
 type AnyInstance = {
@@ -37,7 +37,7 @@ export const useCalendar = <
 >(
   options: Calendar_Options<TData, TResourceData, TViews, TFeatures> & Calendar_ValidateFeatures<TViews, TFeatures>,
 ) => {
-  const [instance] = useState(() => calendar_create<TData, TResourceData, TViews, TFeatures>(options));
+  const [instance] = useState(() => createCalendar<TData, TResourceData, TViews, TFeatures>(options));
 
   useIsomorphicLayoutEffect(instance['~mount'], [instance]);
   useIsomorphicLayoutEffect(() => {
@@ -50,7 +50,7 @@ export const useCalendar = <
 export const useCalendarContext = () => {
   const context = useContext(CalendarContext);
 
-  if (!context) throw new Error('[calendar] parts must be rendered inside Calendar_Root or Calendar_RootProvider');
+  if (!context) throw new Error('[calendar] parts must be rendered inside Calendar or CalendarProvider');
 
   return context;
 };
@@ -67,7 +67,7 @@ export const useCalendarSelector = <TState = Calendar_State<unknown, unknown, Ca
   return useSelector(instance.store, state => selector(state as TState));
 };
 
-export const Calendar_RootProvider = ({
+export const CalendarProvider = ({
   value,
   locale = 'en-US',
   children,
@@ -83,7 +83,7 @@ export const Calendar_RootProvider = ({
   return <CalendarContext.Provider value={context}>{children}</CalendarContext.Provider>;
 };
 
-export const Calendar_Root = <
+export const Calendar = <
   TData,
   TResourceData = unknown,
   const TViews extends Calendar_Views = Calendar_Views,
@@ -98,8 +98,8 @@ export const Calendar_Root = <
   );
 
   return (
-    <Calendar_RootProvider value={instance} locale={options.locale}>
+    <CalendarProvider value={instance} locale={options.locale}>
       {children}
-    </Calendar_RootProvider>
+    </CalendarProvider>
   );
 };

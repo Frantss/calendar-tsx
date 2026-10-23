@@ -53,7 +53,7 @@ export const calendarNavigation_resolve = (
 };
 
 /** Range and period for any view and date, without an instance (app R2.5). */
-export const calendar_navigation = <TViews extends Calendar_Views>(
+export const getCalendarNavigation = <TViews extends Calendar_Views>(
   views: TViews,
   view: keyof TViews & string,
   date: Temporal.PlainDate,

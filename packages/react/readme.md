@@ -3,18 +3,18 @@
 > [!WARNING]
 > **Experimental.** `@calendar-tsx/react` is an experiment. Its API can change or be removed in any release, without notice.
 
-React bindings for [`@calendar-tsx/core`](../core): `useCalendar`, `Calendar_RootProvider`, and unstyled parts for the
-month (`MonthView_*`), time-grid (`TimeGridView_*`) and list (`ListView_*`) layouts.
+React bindings for [`@calendar-tsx/core`](../core): `useCalendar`, `CalendarProvider`, and unstyled parts for the
+month (`MonthView*`), time-grid (`TimeGridView*`) and list (`ListView*`) layouts.
 
 ## Quick example
 
 ```tsx
 import {
-  MonthView_Day,
-  MonthView_Root,
-  MonthView_Week,
-  MonthView_WeekEvent,
-  Calendar_RootProvider,
+  MonthViewDay,
+  MonthView,
+  MonthViewWeek,
+  MonthViewWeekEvent,
+  CalendarProvider,
   useCalendar,
   useCalendarSelector,
 } from '@calendar-tsx/react';
@@ -25,32 +25,32 @@ const Month = () => {
   if (layout.kind !== 'month') return null;
 
   return (
-    <MonthView_Root model={layout}>
+    <MonthView model={layout}>
       {layout.weeks.map(week => (
-        <MonthView_Week key={week.key} week={week}>
+        <MonthViewWeek key={week.key} week={week}>
           {week.days.map(day => (
-            <MonthView_Day key={day.key} day={day}>
+            <MonthViewDay key={day.key} day={day}>
               {day.date.day}
-            </MonthView_Day>
+            </MonthViewDay>
           ))}
           {week.segments.map(segment => (
-            <MonthView_WeekEvent key={segment.key} segment={segment}>
+            <MonthViewWeekEvent key={segment.key} segment={segment}>
               {segment.event.id}
-            </MonthView_WeekEvent>
+            </MonthViewWeekEvent>
           ))}
-        </MonthView_Week>
+        </MonthViewWeek>
       ))}
-    </MonthView_Root>
+    </MonthView>
   );
 };
 
 const App = () => {
-  const calendar = useCalendar({/* same options as calendar_create, including views.views and features */});
+  const calendar = useCalendar({/* same options as createCalendar, including views.views and features */});
 
   return (
-    <Calendar_RootProvider value={calendar}>
+    <CalendarProvider value={calendar}>
       <Month />
-    </Calendar_RootProvider>
+    </CalendarProvider>
   );
 };
 ```

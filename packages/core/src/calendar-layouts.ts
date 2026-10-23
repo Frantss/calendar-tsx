@@ -18,7 +18,7 @@ const days_period = (date: Temporal.PlainDate, days: number, firstDayOfWeek: num
   return { start, end: start.add({ days: days - 1 }) };
 };
 
-export const calendarLayout_month: Calendar_LayoutFeature<'month', Calendar_MonthViewSettings> = {
+export const monthLayout: Calendar_LayoutFeature<'month', Calendar_MonthViewSettings> = {
   kind: 'month',
   period: date => ({ start: date.with({ day: 1 }), end: date.with({ day: date.daysInMonth }) }),
   range: (period, _settings, { firstDayOfWeek }) => ({
@@ -36,7 +36,7 @@ export const calendarLayout_month: Calendar_LayoutFeature<'month', Calendar_Mont
     }),
 };
 
-export const calendarLayout_timeGrid: Calendar_LayoutFeature<'timeGrid', Calendar_TimeGridViewSettings> = {
+export const timeGridLayout: Calendar_LayoutFeature<'timeGrid', Calendar_TimeGridViewSettings> = {
   kind: 'timeGrid',
   period: (date, settings, { firstDayOfWeek }) => days_period(date, settings.days, firstDayOfWeek),
   range: period => period,
@@ -52,7 +52,7 @@ export const calendarLayout_timeGrid: Calendar_LayoutFeature<'timeGrid', Calenda
     }),
 };
 
-export const calendarLayout_list: Calendar_LayoutFeature<'list', Calendar_ListViewSettings> = {
+export const listLayout: Calendar_LayoutFeature<'list', Calendar_ListViewSettings> = {
   kind: 'list',
   period: (date, settings, { firstDayOfWeek }) => days_period(date, settings.days, firstDayOfWeek),
   range: period => period,

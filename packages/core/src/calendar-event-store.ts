@@ -6,7 +6,7 @@ import type { Calendar_EventInput } from '#calendar.types';
  * Opt-in managed events for consumers without their own cache (D2). Its `events` are passed to
  * the calendar as ordinary input; it is not meant to mirror another store.
  */
-export const calendarEventStore_create = <TData>(initial: Calendar_EventInput<TData>[] = []) => {
+export const createEventStore = <TData>(initial: Calendar_EventInput<TData>[] = []) => {
   const store = createStore({ events: initial });
 
   return {

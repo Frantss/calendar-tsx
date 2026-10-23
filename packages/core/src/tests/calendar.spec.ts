@@ -1,7 +1,7 @@
 import { Temporal } from 'temporal-polyfill';
 import { afterEach, expect, it, vi } from 'vitest';
 
-import { calendarClock_interval } from '#calendar-clock';
+import { intervalClock } from '#calendar-clock';
 import type { Calendar_Clock } from '#calendar.types';
 import { fixtures_allDay, fixtures_at, fixtures_timed } from '#tests/calendar.fixtures';
 import { calendarSetup_create, calendarSetup_defaults } from '#tests/calendar.setup';
@@ -161,7 +161,7 @@ it('reports duplicate event ids in development', async () => {
 it('ticks now while mounted and stops after unmount', async () => {
   vi.useFakeTimers();
   let now = calendarSetup_defaults.now;
-  const interval = calendarClock_interval({ every: Temporal.Duration.from({ minutes: 1 }) });
+  const interval = intervalClock({ every: Temporal.Duration.from({ minutes: 1 }) });
   const clock: Calendar_Clock = { now: () => now, subscribe: interval.subscribe };
   const utils = await calendarSetup_create({ clock });
 

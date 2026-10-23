@@ -5,14 +5,14 @@ import type { Calendar_MonthLayout } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_allDay, fixtures_timed } from '#tests/calendar.fixtures';
 import {
-  MonthView_Day,
-  MonthView_DayTrigger,
-  MonthView_Header,
-  MonthView_HeaderCell,
-  MonthView_Overflow,
-  MonthView_Root,
-  MonthView_Week,
-  MonthView_WeekEvent,
+  MonthViewDay,
+  MonthViewDayTrigger,
+  MonthViewHeader,
+  MonthViewHeaderCell,
+  MonthViewOverflow,
+  MonthView,
+  MonthViewWeek,
+  MonthViewWeekEvent,
 } from '#month-view';
 import { useCalendarSelector } from '#use-calendar';
 import type { CalendarReactSetup_Overrides } from '#tests/calendar-react.setup';
@@ -22,30 +22,30 @@ const MonthBody = ({ onTriggerClick }: { onTriggerClick?: (event: React.MouseEve
   const month = useCalendarSelector(state => state.layout) as Calendar_MonthLayout<Fixtures_EventData>;
 
   return (
-    <MonthView_Root model={month}>
-      <MonthView_Header>
+    <MonthView model={month}>
+      <MonthViewHeader>
         {month.weekdays.map(weekday => (
-          <MonthView_HeaderCell key={weekday.dayOfWeek} weekday={weekday} />
+          <MonthViewHeaderCell key={weekday.dayOfWeek} weekday={weekday} />
         ))}
-      </MonthView_Header>
+      </MonthViewHeader>
       {month.weeks.map(week => (
-        <MonthView_Week key={week.key} week={week}>
+        <MonthViewWeek key={week.key} week={week}>
           {week.days.map(day => (
-            <MonthView_Day key={day.key} day={day}>
-              <MonthView_DayTrigger day={day} view='day' onClick={onTriggerClick}>
+            <MonthViewDay key={day.key} day={day}>
+              <MonthViewDayTrigger day={day} view='day' onClick={onTriggerClick}>
                 {day.date.day}
-              </MonthView_DayTrigger>
-              <MonthView_Overflow day={day}>see all</MonthView_Overflow>
-            </MonthView_Day>
+              </MonthViewDayTrigger>
+              <MonthViewOverflow day={day}>see all</MonthViewOverflow>
+            </MonthViewDay>
           ))}
           {week.segments.map(segment => (
-            <MonthView_WeekEvent key={segment.key} segment={segment}>
+            <MonthViewWeekEvent key={segment.key} segment={segment}>
               {segment.event.data.title}
-            </MonthView_WeekEvent>
+            </MonthViewWeekEvent>
           ))}
-        </MonthView_Week>
+        </MonthViewWeek>
       ))}
-    </MonthView_Root>
+    </MonthView>
   );
 };
 
