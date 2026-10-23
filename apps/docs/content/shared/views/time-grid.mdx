@@ -14,11 +14,11 @@ timeGridView({ days: 1 }); // a day
 
 | Setting          | Type                               | Default            | Description                                                          |
 | ---------------- | ---------------------------------- | ------------------ | -------------------------------------------------------------------- |
-| `days`           | `number`                           | —                  | Days shown. `7` starts on `firstDayOfWeek`; others start on `date`.  |
+| `days`           | `number`                           | required           | Days shown. `7` starts on `firstDayOfWeek`; others start on `date`.  |
 | `allDay`         | `boolean`                          | `true`             | `false` drops the all-day row from the layout.                       |
 | `slotMinutes`    | `number`                           | `30`               | Length of each time slot; should divide a day evenly.                |
-| `minColumnWidth` | `string`                           | —                  | Passed through for horizontal scrolling, for example `'8rem'`.       |
-| `groupBy`        | `'resource'`                       | —                  | One column per resource and day. See [resource view](resource-view). |
+| `minColumnWidth` | `string`                           | none               | Passed through for horizontal scrolling, for example `'8rem'`.       |
+| `groupBy`        | `'resource'`                       | none               | One column per resource and day. See [resource view](resource-view). |
 | `groupOrder`     | `'resource-first' \| 'date-first'` | `'resource-first'` | Column order when grouped.                                           |
 
 `next()` and `prev()` move by `days` days.
@@ -68,13 +68,13 @@ the cluster shares the cluster's lane count. Events that only touch do not overl
 | Part                        | Model prop       | Element  | Notes                                                         |
 | --------------------------- | ---------------- | -------- | ------------------------------------------------------------- |
 | `TimeGridView`              | `model`          | `div`    | `role='region'`, labelled "Time grid". Scrolls.               |
-| `TimeGridViewHeader`        | —                | `div`    | Sticky column headers.                                        |
+| `TimeGridViewHeader`        | none             | `div`    | Sticky column headers.                                        |
 | `TimeGridViewColumnHeader`  | `column`         | `div`    | `data-today`, `data-unavailable`, `data-resource-id`.         |
 | `TimeGridViewColumnTrigger` | `column`, `view` | `button` | Navigates to `view` on the column's date.                     |
-| `TimeGridViewAllDay`        | —                | `div`    | Render it only when `allDay` is set.                          |
+| `TimeGridViewAllDay`        | none             | `div`    | Render it only when `allDay` is set.                          |
 | `TimeGridViewAllDayEvent`   | `segment`        | `button` | A bar segment.                                                |
 | `TimeGridViewBody`          | `model`          | `div`    | Holds the axis and the columns.                               |
-| `TimeGridViewAxis`          | —                | `div`    | Optional.                                                     |
+| `TimeGridViewAxis`          | none             | `div`    | Optional.                                                     |
 | `TimeGridViewAxisLabel`     | `slot`           | `div`    | `slot` is the time slot, not the HTML attribute.              |
 | `TimeGridViewColumn`        | `column`         | `div`    | `data-today`, `data-unavailable`.                             |
 | `TimeGridViewEvent`         | `segment`        | `button` | Placed by time and lane; `data-overlap` when it shares lanes. |

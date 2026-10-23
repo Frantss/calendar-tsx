@@ -9,11 +9,11 @@ description: A month calendar with navigation, in one component.
 
 ## What it does
 
-1. **Views** are defined once at module scope with `createCalendarViews`, and passed as `views` and `features`.
-2. **`view` and `date`** live in React state. The buttons call `calendar.api`, which reports the next view and date to
+1. Views are defined once at module scope with `createCalendarViews`, and passed as `views` and `features`.
+2. `view` and `date` live in React state. The buttons call `calendar.api`, which reports the next view and date to
    `onNavigate`; setting them moves the calendar.
-3. **`CalendarProvider`** makes the calendar available to the parts.
-4. **`Month`** selects the layout, checks its kind and renders the month parts. The selector's state type is annotated,
+3. `CalendarProvider` makes the calendar available to the parts.
+4. `Month` selects the layout, checks its kind and renders the month parts. The selector's state type is annotated,
    because the context does not carry the calendar's types.
 
 <Callout type='warn' title='Let the types infer'>

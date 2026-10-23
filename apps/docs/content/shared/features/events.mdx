@@ -7,17 +7,17 @@ An event is timed or all-day. Both carry a unique `id` and a `data` payload of y
 | Field         | Timed                    | All-day                                              |
 | ------------- | ------------------------ | ---------------------------------------------------- |
 | `id`          | `string`, unique         | `string`, unique                                     |
-| `allDay`      | —                        | `true`                                               |
+| `allDay`      | omitted                  | `true`                                               |
 | `start`       | `Temporal.ZonedDateTime` | `Temporal.PlainDate`                                 |
 | `end`         | `Temporal.ZonedDateTime` | `Temporal.PlainDate`, inclusive; defaults to `start` |
 | `resourceIds` | `string[]`, optional     | `string[]`, optional                                 |
 | `data`        | `TData`                  | `TData`                                              |
 
-- **Time zones.** Timed events may be in any zone. They are converted to the calendar's `timeZone`, and the model
-  holds the converted copies.
-- **Midnight ends.** A timed event ending exactly at midnight ends on the previous day, so 22:00–00:00 stays on one day.
-- **Unique ids.** Duplicates log an error in development. Ids also key the model's segments.
-- **Changes.** Pass a new array to change events; the calendar compares the array by reference.
+- Timed events may be in any zone. The calendar converts them to its `timeZone`, and the model holds the converted
+  copies.
+- A timed event ending exactly at midnight ends on the previous day, so 22:00–00:00 stays on one day.
+- Duplicate ids log an error in development. Ids also key the model's segments.
+- Pass a new array to change events; the calendar compares the array by reference.
 
 ## Hiding events
 
@@ -29,7 +29,7 @@ There is no hidden flag: filter the array. Memoize the result, so the calendar o
 
 ## Order
 
-Events in the visible range are sorted before layout, which decides bar rows and lanes. The default order is:
+The calendar sorts the events in the visible range before layout, and the order sets bar rows and lanes. The default order is:
 
 1. Earlier start date first.
 2. Longer date spans first.

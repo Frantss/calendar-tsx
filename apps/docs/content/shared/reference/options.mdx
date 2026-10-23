@@ -11,21 +11,21 @@ the others, and view keys widen to `string`. Type `events` as `Calendar_EventInp
 
 | Option           | Type                                     | Default         | Tracked        |
 | ---------------- | ---------------------------------------- | --------------- | -------------- |
-| `timeZone`       | `string` (IANA zone)                     | —               | Yes            |
-| `views`          | `createCalendarViews(…).views`           | —               | Yes            |
-| `features`       | `{ ...views.features, …calendarWide }`   | —               | Read once      |
-| `view`           | `keyof TViews`                           | —               | Yes            |
-| `date`           | `Temporal.PlainDate`                     | —               | Yes            |
-| `onNavigate`     | `(next: Calendar_Navigation) => void`    | —               | No             |
-| `events`         | `Calendar_EventInput<TData>[]`           | —               | Yes            |
+| `timeZone`       | `string` (IANA zone)                     | required        | Yes            |
+| `views`          | `createCalendarViews(…).views`           | required        | Yes            |
+| `features`       | `{ ...views.features, …calendarWide }`   | required        | Read once      |
+| `view`           | `keyof TViews`                           | required        | Yes            |
+| `date`           | `Temporal.PlainDate`                     | required        | Yes            |
+| `onNavigate`     | `(next: Calendar_Navigation) => void`    | required        | No             |
+| `events`         | `Calendar_EventInput<TData>[]`           | required        | Yes            |
 | `resources`      | `Calendar_Resource<TResourceData>[]`     | `[]`            | Yes            |
 | `firstDayOfWeek` | `1`–`7` (Monday–Sunday)                  | `7` (Sunday)    | Yes            |
 | `eventOrder`     | `(a, b, context) => number`              | see below       | No             |
 | `clock`          | `Calendar_Clock`                         | one-minute tick | No             |
 | `initialNow`     | `Temporal.Instant`                       | clock's `now()` | No             |
-| `locale`         | `string`                                 | —               | No             |
-| `state`          | Controlled feature state slices          | —               | Yes, per slice |
-| `atoms`          | External stores for feature state slices | —               | Read once      |
+| `locale`         | `string`                                 | none            | No             |
+| `state`          | Controlled feature state slices          | none            | Yes, per slice |
+| `atoms`          | External stores for feature state slices | none            | Read once      |
 
 **Tracked** options re-derive the layout when they change through `~update`. Others are read when needed: changing
 `eventOrder` alone does not re-order until a tracked input changes. **Read once** options are read at creation and
@@ -38,8 +38,8 @@ keep the same reference otherwise, or every update re-derives.
 
 ## `timeZone`
 
-The IANA zone every timed event is converted to and laid out in, for example `'Europe/Paris'`. It also decides which
-day is "today".
+The IANA zone every timed event is converted to and laid out in, for example `'Europe/Paris'`. It also sets which day
+counts as today.
 
 ## `views`, `view` and `date`
 

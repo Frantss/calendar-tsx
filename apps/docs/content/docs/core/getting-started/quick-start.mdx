@@ -9,11 +9,11 @@ description: A month calendar rendered to the DOM, without a framework.
 
 ## What it does
 
-1. **`createCalendar`** derives the state from the options. `view` and `date` are controlled, so `onNavigate` passes
+1. `createCalendar` derives the state from the options. `view` and `date` are controlled, so `onNavigate` passes
    the next ones back in through `~update`.
-2. **`~mount`** starts the clock; the returned function stops it.
-3. **`store.subscribe`** re-renders when the state changes. `store.state.layout` is the model for the active view.
-4. **The renderer** writes `data-scope`, `data-part`, state attributes and `--cal-*` custom properties, the contract the
+2. `~mount` starts the clock; the returned function stops it.
+3. `store.subscribe` re-renders when the state changes. `store.state.layout` is the model for the active view.
+4. The renderer writes `data-scope`, `data-part`, state attributes and `--cal-*` custom properties, the contract the
    [themes](/docs/core/styling/custom-themes) read, so the default theme lays it out.
 
 <Callout type='warn' title='Let the types infer'>
