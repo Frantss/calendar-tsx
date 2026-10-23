@@ -1001,8 +1001,8 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - `material-ui.css` takes the accent, its contrast colour, the event fill and the radius from MUI's variables, and follows a dark scheme set by class, `data-dark` or `data-mui-color-scheme` on the root or on an inner element. _(D26)_
 - `compact.css` shrinks slots and text over a theme, and a token set on an ancestor still wins over it. _(D26)_
 - An accent set on an ancestor tints the events, and `--calendar-event` overrides that tint. _(D26)_
-- `high-contrast.css` outlines events in the text colour at 2px, marks today in its accent in both modes, dashes the edge where a bar continues, and still lets `--calendar-event` override the fill. _(D26)_
-- `revenuecat.css` marks today in the exact brand red with black purple numbers, tints events blue, and keeps red text off white. _(D26)_
+- `high-contrast.css` outlines events, timeline events included, in the text colour at 2px, marks today in its accent in both modes, dashes the edge where a bar continues, and still lets `--calendar-event` override the fill. _(D26)_
+- `revenuecat.css` marks today in the exact brand red with black purple numbers, tints events blue, and keeps red text off white, on time-grid and timeline headers. _(D26)_
 - `stripe.css` marks today in blurple with its contrast colour and tints events from it, in both modes. _(D26)_
 - With `default.css`, timeline events take the accent tint, today's day trigger the accent, resource cells stay opaque, unavailable time is hatched, the now line is the accent, a scrolled day label sticks beside the resource column, and forced-colors mode marks today with `Highlight`. _(D26, D33)_
 - With `base.css`, a timeline event sits at its fraction of the track, day headers line up with their slots, stacked events do not overlap, and the now line sits at the clock's offset. _(D26, D33)_

@@ -23,7 +23,9 @@
   }
 
   /* The default theme writes today's header in the accent; on white the brand red is too light for small text */
-  :where([data-scope='calendar'][data-part='time-grid-column-header'][data-today]) {
+  :where(
+    [data-scope='calendar']:is([data-part='time-grid-column-header'], [data-part='timeline-day-header'])[data-today]
+  ) {
     color: light-dark(var(--calendar-text), var(--calendar-accent));
   }
 }

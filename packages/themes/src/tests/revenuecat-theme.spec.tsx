@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 
-import type { Calendar_TimeGridLayout } from '@calendar-tsx/core';
+import type { Calendar_TimeGridLayout, Calendar_TimelineLayout, Calendar_Views } from '@calendar-tsx/core';
+import { timelineView } from '@calendar-tsx/core';
 import {
   TimeGridViewBody,
   TimeGridViewColumn,
@@ -9,6 +10,9 @@ import {
   TimeGridViewEvent,
   TimeGridViewHeader,
   TimeGridView,
+  TimelineView,
+  TimelineViewDayHeader,
+  TimelineViewHeader,
   useCalendarSelector,
 } from '@calendar-tsx/react';
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
@@ -46,6 +50,24 @@ const TimeGrid = () => {
   );
 };
 
+const Timeline = () => {
+  const timeline = useCalendarSelector(state => state.layout) as Calendar_TimelineLayout<ThemesSetup_EventData, null>;
+
+  return (
+    <TimelineView model={timeline}>
+      <TimelineViewHeader>
+        {timeline.days.map(day => (
+          <TimelineViewDayHeader key={day.key} day={day}>
+            Wed
+          </TimelineViewDayHeader>
+        ))}
+      </TimelineViewHeader>
+    </TimelineView>
+  );
+};
+
+const timelineViews: Calendar_Views = { timeline: timelineView({ days: 1 }) };
+
 const events = [themesSetup_timed('Yoga', { date: '2026-03-11', start: '09:00', end: '10:00' })];
 const style = (part: string, property: 'backgroundColor' | 'color') => {
   const element = themesSetup_part(part)[0];
@@ -68,4 +90,13 @@ it.each([
 
   expect(style('time-grid-event', 'backgroundColor')).toBe(event);
   expect(style('time-grid-column-header', 'color')).toBe(header);
+});
+
+it.each([
+  ['light', 'rgb(31, 31, 71)'],
+  ['dark', 'rgb(242, 84, 91)'],
+] as const)("keeps today's timeline day header off brand red on white in %s mode", async (colorScheme, header) => {
+  await themesSetup_render(<Timeline />, { views: timelineViews, view: 'timeline', colorScheme });
+
+  expect(style('timeline-day-header', 'color')).toBe(header);
 });

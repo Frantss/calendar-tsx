@@ -26,7 +26,8 @@
     [data-scope='calendar']:is(
       [data-part='month-week-event'],
       [data-part='time-grid-all-day-event'],
-      [data-part='time-grid-event']
+      [data-part='time-grid-event'],
+      [data-part='timeline-event']
     )
   ) {
     --_calendar-event: var(--calendar-event, var(--calendar-surface));
@@ -35,15 +36,22 @@
     font-weight: 600;
   }
 
-  :where([data-scope='calendar']:is([data-part='month-week-event'], [data-part='time-grid-all-day-event'])) {
+  :where(
+    [data-scope='calendar']:is(
+      [data-part='month-week-event'],
+      [data-part='time-grid-all-day-event'],
+      [data-part='timeline-event']
+    )
+  ) {
     line-height: calc(var(--calendar-bar-height) - 4px);
   }
 
-  /* Bars continue across week edges; time-grid events continue across midnight */
+  /* Bars continue across week and range edges; time-grid events continue across midnight */
   :where(
     [data-scope='calendar'][data-continues-before]:is(
         [data-part='month-week-event'],
-        [data-part='time-grid-all-day-event']
+        [data-part='time-grid-all-day-event'],
+        [data-part='timeline-event']
       )
   ) {
     border-inline-start-style: dashed;
@@ -52,7 +60,8 @@
   :where(
     [data-scope='calendar'][data-continues-after]:is(
         [data-part='month-week-event'],
-        [data-part='time-grid-all-day-event']
+        [data-part='time-grid-all-day-event'],
+        [data-part='timeline-event']
       )
   ) {
     border-inline-end-style: dashed;
