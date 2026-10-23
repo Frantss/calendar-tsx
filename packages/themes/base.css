@@ -142,7 +142,7 @@
     pointer-events: none;
   }
 
-  /* Timeline: a resource column and a track; the header repeats the track as one column per slot (D33) */
+  /* Timeline: a resource column and a track; the header repeats the track as one column per slot (D34) */
 
   :where([data-scope='calendar'][data-part='timeline-root']) {
     display: grid;

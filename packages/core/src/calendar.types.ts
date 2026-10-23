@@ -88,11 +88,11 @@ export interface Calendar_TimelineSegment_FeatureMap {}
 export type Calendar_MonthViewSettings = {
   maxEventsPerDay: number;
   dayOverflow?: (date: Temporal.PlainDate) => boolean;
-  /** Always show six weeks (D34). */
+  /** Always show six weeks (D35). */
   fixedWeekCount?: boolean;
 };
 
-/** Whole weeks from the week containing the date; built as a month model (D34). */
+/** Whole weeks from the week containing the date; built as a month model (D35). */
 export type Calendar_DayGridViewSettings = {
   weeks: number;
   maxEventsPerDay: number;
@@ -108,7 +108,7 @@ export type Calendar_TimeGridViewSettings = {
   minColumnWidth?: string;
 };
 
-/** A run of `days` days, or the calendar month or year containing the date (D35). */
+/** A run of `days` days, or the calendar month or year containing the date (D36). */
 export type Calendar_ListViewSettings = { days: number; period?: never } | { period: 'month' | 'year'; days?: never };
 
 export type Calendar_TimelineViewSettings = {

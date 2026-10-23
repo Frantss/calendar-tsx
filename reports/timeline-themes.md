@@ -1,6 +1,6 @@
 # Timeline coverage in the themes built on default.css
 
-Found while adding the timeline look to `packages/themes/default.css` (D33). Themes that import `default.css` inherit
+Found while adding the timeline look to `packages/themes/default.css` (D34). Themes that import `default.css` inherit
 the timeline look; these two override event or header rules by listing part names, and the lists predate the timeline.
 
 ## Finding 1 — `high-contrast.css` does not outline timeline events

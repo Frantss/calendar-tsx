@@ -220,7 +220,7 @@ export const TimelineViewUnavailable = (
   );
 };
 
-/** Renders only when now is inside the range (D11, D33). */
+/** Renders only when now is inside the range (D11, D34). */
 export const TimelineViewNowIndicator = <TData, TResourceData>(props: TimelineViewProps<TData, TResourceData>) => {
   const [local, rest] = splitProps(props, ['model']);
 

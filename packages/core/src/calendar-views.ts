@@ -45,7 +45,7 @@ export const monthView = <const TFeatures extends Calendar_Features = {}>(
     typeof monthLayout
   >;
 
-/** A day grid of whole weeks; it builds the month model, so the month parts render it (D34). */
+/** A day grid of whole weeks; it builds the month model, so the month parts render it (D35). */
 export const dayGridView = <const TFeatures extends Calendar_Features = {}>(
   settings: Calendar_DayGridViewSettings & Calendar_ViewFeatureSettings<TFeatures>,
 ) =>

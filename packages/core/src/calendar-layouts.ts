@@ -45,7 +45,7 @@ export const monthLayout: Calendar_LayoutFeature<'month', Calendar_MonthViewSett
     }),
 };
 
-/** Whole weeks from the week containing the date, built as a month model (D34). */
+/** Whole weeks from the week containing the date, built as a month model (D35). */
 export const dayGridLayout: Calendar_LayoutFeature<'dayGrid', Calendar_DayGridViewSettings> = {
   kind: 'dayGrid',
   period: (date, settings, { firstDayOfWeek }) => {

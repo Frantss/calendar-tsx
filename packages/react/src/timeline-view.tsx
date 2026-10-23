@@ -207,7 +207,7 @@ export const TimelineViewUnavailable = forwardRef<
   />
 ));
 
-/** Renders only when now is inside the range (D11, D33). */
+/** Renders only when now is inside the range (D11, D34). */
 export const TimelineViewNowIndicator = forwardRef<HTMLDivElement, TimelineViewProps<unknown, unknown>>(
   ({ model, ...props }, ref) => {
     if (model.now === undefined) return null;

@@ -22,7 +22,7 @@ const MINUTES_PER_DAY = 24 * 60;
 
 const startOfDay = (date: Temporal.PlainDate, timeZone: string) => date.toZonedDateTime({ timeZone }).epochMilliseconds;
 
-/** Each item takes the lowest stack row where it overlaps nothing; touching intervals do not overlap (D33). */
+/** Each item takes the lowest stack row where it overlaps nothing; touching intervals do not overlap (D34). */
 const stack = <T extends Interval>(items: T[]) => {
   const rows: Interval[][] = [];
 
