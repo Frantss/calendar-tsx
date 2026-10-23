@@ -27,8 +27,9 @@ parts.
 | [`@calendar-tsx/themes`](packages/themes) | Stylesheets: a positioning base and a default theme. | [readme](packages/themes/readme.md) |
 
 The design, requirements and decision log live in [docs/design.md](docs/design.md). The documentation site is a
-[Fumadocs](https://fumadocs.dev) app on TanStack Start in [apps/docs](apps/docs); write pages in
-`apps/docs/content/docs`.
+[Fumadocs](https://fumadocs.dev) app on TanStack Start in [apps/docs](apps/docs), with one root per framework. Pages
+in `apps/docs/content/docs` include shared text from `apps/docs/content/shared` and code from `apps/docs/examples`,
+which `check:types` compiles.
 
 ## Development
 

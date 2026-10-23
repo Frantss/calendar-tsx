@@ -1,15 +1,23 @@
 {
   "title": "Core",
+  "description": "@calendar-tsx/core",
   "icon": "Cpu",
+  "root": true,
   "pages": [
     "index",
-    "options",
-    "views-and-navigation",
-    "events-and-resources",
-    "layouts",
-    "features",
-    "clock-and-server-rendering"
-  ],
-  "root": true,
-  "description": "@calendar-tsx/core"
+    "---Getting started---",
+    "...getting-started",
+    "---Views---",
+    "...views",
+    "---Features---",
+    "...features",
+    "---Styling---",
+    "...styling",
+    "---Extending---",
+    "...extending",
+    "---Adapters---",
+    "...adapters",
+    "---Reference---",
+    "...reference"
+  ]
 }

@@ -22,6 +22,8 @@ The view shows the month containing `date`, padded to whole weeks that start on 
 
 <section id='reference'>
 
+<section id='model'>
+
 ## Model
 
 `layout` is `{ kind: 'month', weekdays, weeks }`. `weekdays` holds the first week's seven dates, for column headers.
@@ -43,6 +45,8 @@ Each week holds `days`, its bar `segments` and `rows`, the number of bar rows sh
 | `colStart`, `colSpan`               | First column (zero-based) and the number of columns it covers.  |
 | `row`                               | Zero-based row; each bar takes the lowest row free on its days. |
 | `continuesBefore`, `continuesAfter` | The event extends past the week's first or last day.            |
+
+</section>
 
 ## Parts
 

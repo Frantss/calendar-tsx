@@ -10,7 +10,7 @@
     "dev": "vp dev",
     "build": "vp build",
     "preview": "vp preview",
-    "check:types": "vp exec tsc --noEmit && vp exec tsc --noEmit -p examples/react && vp exec tsc --noEmit -p examples/solid && vp exec tsc --noEmit -p examples/features && vp exec tsc --noEmit -p examples/features/solid"
+    "check:types": "vp exec tsc --noEmit && vp exec tsc --noEmit -p examples/core && vp exec tsc --noEmit -p examples/react && vp exec tsc --noEmit -p examples/solid && vp exec tsc --noEmit -p examples/features && vp exec tsc --noEmit -p examples/features/solid"
   },
   "dependencies": {
     "@tanstack/react-router": "1.170.45",

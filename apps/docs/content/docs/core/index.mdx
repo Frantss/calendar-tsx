@@ -1,76 +1,19 @@
 ---
 title: Overview
-description: The framework-agnostic calendar engine behind the React bindings.
+description: The framework-agnostic calendar engine.
 ---
 
-`@calendar-tsx/core` turns a view, a date and a list of events into a render-ready layout: month grids with spanning
-bars, time grids with overlap lanes and resource columns, and day lists. It owns no DOM and no styles. Framework
-bindings such as `@calendar-tsx/react` read its state and render it.
+`@calendar-tsx/core` turns a view, a date and a list of events into a render-ready model: month grids with spanning
+bars, time grids with overlap lanes and resource columns, and day lists. It owns no DOM and no styles. Use it directly
+from plain TypeScript or a framework without bindings, or to write bindings of your own.
 
-## Install
+If you use React or Solid, start with their bindings instead; they use this package for you.
 
-```npm
-npm i @calendar-tsx/core temporal-polyfill
-```
+<Cards>
+  <Card title='Quick start' href='/docs/core/getting-started/quick-start' />
+  <Card title='Concepts' href='/docs/core/getting-started/concepts' />
+  <Card title='Writing an adapter' href='/docs/core/adapters/writing-an-adapter' />
+  <Card title='Writing features' href='/docs/core/extending/features' />
+</Cards>
 
-Every date and time the core accepts or returns is a [Temporal](https://tc39.es/proposal-temporal/docs/) value. Import
-`Temporal` from `temporal-polyfill` until your runtimes ship it natively.
-
-## Quick start
-
-```ts
-import { createCalendar, createCalendarViews, monthView, timeGridView } from '@calendar-tsx/core';
-import { Temporal } from 'temporal-polyfill';
-
-// module scope: views and features are compared by reference
-const views = createCalendarViews({
-  month: monthView({ maxEventsPerDay: 4 }),
-  week: timeGridView({ days: 7 }),
-});
-
-const calendar = createCalendar({
-  timeZone: 'America/New_York',
-  views: views.views,
-  features: { ...views.features },
-  view: 'week',
-  date: Temporal.PlainDate.from('2026-03-11'),
-  events: [],
-  onNavigate: next => {
-    // store next.view and next.date, then pass them back in through `~update`
-  },
-});
-
-calendar.store.state.layout; // month or time grid: the layouts the views use
-calendar.api.next(); // calls onNavigate; never writes state
-```
-
-## How it works
-
-- **Controlled view and date.** `view` and `date` are options you own. Navigation actions such as `api.next()` compute
-  the next view and date and pass them to `onNavigate`; the calendar changes only when you pass them back in.
-- **Events are input.** The calendar never stores or mutates events. Pass a new array to change them, or use the
-  optional [event store](/docs/core/events-and-resources#managed-event-store).
-- **One time zone.** Every timed event is converted to the calendar's `timeZone` and laid out there, independent of
-  the host's zone.
-- **Derived state.** `calendar.store` is a read-only [TanStack Store](https://tanstack.com/store) holding the view
-  context, the layout and the current time. It re-derives when a tracked option changes or the clock ticks.
-- **You format text.** The layout carries Temporal values, never formatted strings.
-- **Features.** Each view brings its layout as a feature, and further [features](/docs/core/features) add state,
-  options, actions and layout fields to the views that list them.
-
-## The instance
-
-`createCalendar(options)` returns:
-
-| Member    | Description                                                                                |
-| --------- | ------------------------------------------------------------------------------------------ |
-| `store`   | Read-only store of [`{ context, layout, now }`](/docs/core/layouts) plus feature state.    |
-| `api`     | [Navigation actions](/docs/core/views-and-navigation#actions), plus actions from features. |
-| `options` | The options most recently passed in.                                                       |
-| `~mount`  | Starts the clock and returns its cleanup.                                                  |
-| `~update` | Replaces the options; re-derives only when a tracked input changed.                        |
-
-The `~`-prefixed members are for framework adapters. See
-[clock and server rendering](/docs/core/clock-and-server-rendering) for how an adapter drives them.
-
-<Callout title='Experimental'>The core API can change or be removed in any release, without notice.</Callout>
+<Callout title='Experimental'>The API can change or be removed in any release, without notice.</Callout>

@@ -1,0 +1,18 @@
+---
+title: Navigation
+description: Move between views and dates with controlled view and date.
+---
+
+<include>../../../shared/features/navigation.mdx#intro</include>
+
+## Applying navigation
+
+Keep `view` and `date` where your app keeps state, and pass them back in through `~update`:
+
+<include lang='ts'>../../../../examples/core/navigation.ts#controlled</include>
+
+Read the title and the current view from the state's context:
+
+<include lang='ts'>../../../../examples/core/navigation.ts#title</include>
+
+<include>../../../shared/features/navigation.mdx#range</include>

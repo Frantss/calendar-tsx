@@ -1,5 +1,0 @@
-{
-  "title": "Themes",
-  "icon": "Palette",
-  "pages": ["index", "built-in-themes", "customizing", "tailwind", "custom-themes"]
-}

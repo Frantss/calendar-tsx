@@ -1,0 +1,15 @@
+---
+title: Server rendering
+description: Fetch on the server and keep "now" identical on the server and the client.
+---
+
+<include>../../../shared/features/server-rendering.mdx#hydration</include>
+
+<include lang='ts'>../../../../examples/core/server.ts#initial-now</include>
+
+## Fetching on the server
+
+`getCalendarNavigation` gives the visible range for any view and date without creating a calendar, so the server can
+fetch the events to render:
+
+<include lang='ts'>../../../../examples/core/navigation.ts#range</include>

@@ -1,0 +1,45 @@
+---
+title: Writing an adapter
+description: Bind the core to a framework or a renderer.
+---
+
+An adapter does three things: keeps one instance per component, syncs the options on every render, and re-renders
+when the state changes. The React and Solid bindings are built this way.
+
+<include lang='ts' meta='title="bind-calendar.ts"'>
+  ../../../../examples/core/adapter.ts#adapter
+</include>
+
+## Lifecycle
+
+| Member               | When                      | What it does                                                                                           |
+| -------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `createCalendar`     | Once, on creation         | Derives the first state, with "now" from `initialNow` or the clock.                                    |
+| `'~update'(options)` | On every render           | Replaces the options. Writes the store only when a tracked option changed, so it's cheap to call.      |
+| `'~mount'()`         | When the component mounts | Reads the clock and subscribes to its ticks. Returns the cleanup.                                      |
+| `store.subscribe`    | While mounted             | Notifies on every state change. TanStack Store's adapters (`@tanstack/react-store`, …) select from it. |
+
+- **Create once.** Creating a calendar per render loses feature state and subscriptions.
+- **Don't mount on the server.** Without `~mount`, the clock never starts, so server rendering leaves no timer behind.
+- **Type your options with `Calendar_ValidateFeatures`**, as the example does. Without it, forgetting
+  `...views.features` stops being a type error for your users.
+
+## Context
+
+Your parts need the instance. The bindings put it in context with its types erased, because a context cannot be
+generic, and let users get the types back by annotating selectors with `Calendar_StateOf`.
+
+<Callout type='warn' title='Known issue'>
+  Typing the context's instance with the wide `Calendar_Features` breaks once any feature merges a state slice: every
+  calendar without that feature stops being assignable. The React and Solid providers have this issue today.
+</Callout>
+
+## Parts
+
+To reuse the [themes](/docs/core/styling/themes), render the same attributes and custom properties as the bindings'
+parts: `data-scope='calendar'`, a `data-part` name, boolean state attributes as `data-x=""`, and the geometry as
+unitless `--cal-*` properties. [Custom themes](/docs/core/styling/custom-themes#parts) lists every part and the
+variables it carries.
+
+Use native buttons for events, triggers and overflow, and the roles the bindings use, so keyboard and screen reader
+behavior matches.

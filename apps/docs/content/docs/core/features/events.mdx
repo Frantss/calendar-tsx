@@ -1,0 +1,17 @@
+---
+title: Events
+description: Event input, time zones, ordering, hiding and the event store.
+---
+
+<include>../../../shared/features/events.mdx#input</include>
+
+<include>../../../shared/features/events.mdx#order</include>
+
+<include lang='ts'>../../../../examples/core/event-order.ts#order</include>
+
+<include>../../../shared/features/events.mdx#store</include>
+
+`createEventStore` returns a TanStack Store holding `{ events }`, and the `add`, `update`, `remove` and `reset` actions.
+Pass its events to the calendar, and again whenever they change:
+
+<include lang='ts'>../../../../examples/core/event-store.ts#store</include>
