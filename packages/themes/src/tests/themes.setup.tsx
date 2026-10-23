@@ -5,7 +5,12 @@ import { render } from 'vitest-browser-react';
 import { iife } from '#tests/utils/iife';
 
 import type { Calendar_AllDayEventInput, Calendar_TimedEventInput, Calendar_Views } from '@calendar-tsx/core';
-import { calendarClock_fixed, calendarView_month, calendarView_timeGrid } from '@calendar-tsx/core';
+import {
+  calendarClock_fixed,
+  calendarView_month,
+  calendarView_timeGrid,
+  calendarViews_create,
+} from '@calendar-tsx/core';
 import { Calendar_RootProvider, useCalendar } from '@calendar-tsx/react';
 
 export type ThemesSetup_EventData = { title: string };
@@ -45,11 +50,13 @@ export const themesSetup_allDay = (id: string, { start, end }: { start: string; 
 
 /** Renders `children` at a fixed width so geometry is deterministic; each spec imports the stylesheets it tests. */
 export const themesSetup_render = async (children: ReactNode, overrides: Partial<typeof themesSetup_defaults> = {}) => {
-  const { views, view, events, colorScheme, className } = { ...themesSetup_defaults, ...overrides };
+  const { view, events, colorScheme, className, ...rest } = { ...themesSetup_defaults, ...overrides };
+  const views = calendarViews_create(rest.views);
 
   const Harness = () => {
     const calendar = useCalendar<ThemesSetup_EventData, null>({
-      views,
+      views: views.views,
+      features: views.features,
       view,
       events,
       date: Temporal.PlainDate.from('2026-03-11'),

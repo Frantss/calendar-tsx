@@ -479,11 +479,11 @@ Themes vary along two axes that combine. A look (`default.css`, `shadcn.css`) se
 
 **Why:** The parts already render on the server: effects are skipped, `useSelector` passes its snapshot as the server snapshot, and layout never reads the host zone (D7). What breaks is hydration. `calendar_create` read the clock when it was created, so the server and the client derived different "now" values: `--cal-now` on the now indicator never matched, and near midnight `data-today` moved to another column. `initialNow?: Temporal.Instant` is the instant used for the first derivation. The app picks it once per request, serialises it (`instant.toString()`), and passes the same value on both sides. `'~mount'` already ticks the clock straight away, so the client moves to the real "now" right after hydration. The option is read once at creation and is not tracked. The React entry starts with `'use client'` (a build banner), so React Server Components can import the parts. The options themselves (`Temporal` values, `views`, `onNavigate`) cannot cross the server/client boundary as props, so the calendar lives in a client component that parses strings. Rejected: rendering the now indicator and `isToday` only after mount, because the server HTML would lose the now line and `data-today` would still move at midnight; asking apps to pass `calendarClock_fixed` on the server, because the client still needs the same instant, which is `initialNow` with worse ergonomics. Known gap: the hydration test runs the server render in the browser, so ICU differences between Node and the browser in the default accessible labels (D20) are not covered.
 
-### D28 — View definitions carry their own navigation and layout builder; `layout` is inferred from `views` (proposed)
+### D28 — View definitions carry their own navigation and layout builder; `layout` is inferred from `views` (superseded)
 
 **Serves:** D1, D4, D10; C1
 
-**Status:** proposed, not implemented; superseded by D29 if D29 is accepted. Accepting it amends D1 (who can add a layout kind), D4 (the set of kinds), and the `Calendar_State` and `Calendar_ViewContext` types in [State](#state).
+**Status:** superseded by D29, which implements its layout ownership and `layout` inference. Accepting it amends D1 (who can add a layout kind), D4 (the set of kinds), and the `Calendar_State` and `Calendar_ViewContext` types in [State](#state).
 
 **Verified:** not verified — touches the public types; reversible while the packages are experimental
 
@@ -586,11 +586,11 @@ Rejected:
 - **A full feature map for state, options and APIs, as in v9 `features`.** No stateful feature is in scope, and it would reopen D5.
 - **Leaving kinds closed and only narrowing `layout`.** That fixes the types but neither bundling nor extension.
 
-### D29 — Functionality is added through a feature map; views declare the features they use (proposed)
+### D29 — Functionality is added through a feature map; views declare the features they use
 
 **Serves:** D1, D4, D10, D28; C1; future stateful features (D15's focus, drag, resize, selection)
 
-**Status:** proposed, not implemented. Supersedes D28 if accepted: it keeps D28's per-view layout ownership and `layout` inference, and adds features beyond layouts. Amends D1, D4, D5 (for feature state only), D24 and the [State](#state) types. It is a mechanism only. Drag and resize stay under "Not supported" until a separate decision moves them; drag appears below only as the worked example.
+**Status:** accepted and implemented (see **Implementation** at the end). Supersedes D28: it keeps D28's per-view layout ownership and `layout` inference, and adds features beyond layouts. Amends D1, D4, D5 (for feature state only), D24 and the [State](#state) types. It is a mechanism only. Drag and resize stay under "Not supported" until a separate decision moves them; drag appears below only as the worked example.
 
 **Verified:** type sketch compiled with TypeScript 7.0.2 against stand-in types (checks listed at the end); runtime not prototyped
 
@@ -781,6 +781,17 @@ const store = createStore(() => {
 - prerequisite checks between features;
 - state-slice ownership types;
 - the React parts' generics.
+
+**Implementation** (`packages/core/src/calendar.ts`, `calendar-views.ts`, `calendar-layouts.ts`, `calendar.types.ts`; tests in `src/tests/calendar-features.spec.ts`). Where it differs from the sketch above:
+
+- **Core features are not feature objects.** Navigation, the event pipeline and the clock stay built into `calendar_create`; nothing could replace or reorder them, so wrapping them added no capability.
+- **No `locate` capability yet.** No feature consumes it; it belongs to whichever decision brings drag or selection into scope.
+- **Feature hooks receive a context, not the instance.** It holds `options`, the active `view`, `api`, `getState`, `setState`, and `settings(key, defaults)`, which applies the defaults → calendar → view layering. `constructApi` returns its actions instead of mutating `api`.
+- **Controlled slices report nothing by themselves.** `setState` writes an uncontrolled slice or an external atom and leaves a controlled one alone. A feature calls its own `onXChange` option, as the test feature does.
+- **`useCalendarSelector` is typed by annotating its selector** (`(state: Calendar_StateOf<typeof calendar>) => …`). An explicit `useCalendarSelector<typeof calendar>` would disable inference of the selected type, because TypeScript has no partial type-argument inference.
+- **`features` and `atoms` are read once, at creation.** That is when state slices and actions are registered. A view that declares a feature the `features` object lacks still gets the view's own implementation at runtime, but the types reject it.
+- **`calendar_navigation` (the instance-free helper) uses each view's own layout feature**, not a replacement passed to a calendar.
+- **Model fields follow the active view's features.** Code that reads a field across views narrows with `'field' in model`. The React parts keep their core model types and accept the extended models structurally.
 
 ## Test cases
 

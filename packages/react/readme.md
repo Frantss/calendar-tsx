@@ -45,7 +45,7 @@ const Month = () => {
 };
 
 const App = () => {
-  const calendar = useCalendar({/* same options as calendar_create */});
+  const calendar = useCalendar({/* same options as calendar_create, including views.views and features */});
 
   return (
     <Calendar_RootProvider value={calendar}>
@@ -54,6 +54,9 @@ const App = () => {
   );
 };
 ```
+
+The context does not carry the instance's types, so `useCalendarSelector` returns the widest state. To narrow it to
+your views and features, annotate the selector with `Calendar_StateOf` from `@calendar-tsx/core`: `useCalendarSelector((state: Calendar_StateOf<typeof calendar>) => …)`.
 
 Parts render no styles: position them with CSS reading `--cal-*` custom properties (for example
 `left: calc(var(--cal-col-start) / 7 * 100%)`). Every part accepts `render={<El />}` or

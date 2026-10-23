@@ -9,7 +9,7 @@ import type {
   Calendar_Resource,
   Calendar_TimeGridColumn,
   Calendar_TimeGridLayout,
-  Calendar_TimeGridViewDefinition,
+  Calendar_TimeGridViewSettings,
 } from '#calendar.types';
 import { layoutBars_build, layoutBars_rows } from '#layout/layout-bars';
 import { layoutLanes_assign } from '#layout/layout-lanes';
@@ -164,7 +164,7 @@ export const layoutTimeGrid_build = <TData, TResourceData>({
   timeZone,
   now,
 }: {
-  definition: Calendar_TimeGridViewDefinition;
+  definition: Calendar_TimeGridViewSettings;
   range: Calendar_Range;
   events: Calendar_Event<TData>[];
   resources: Calendar_Resource<TResourceData>[];

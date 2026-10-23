@@ -8,7 +8,13 @@ import { tests_withDefault } from '#tests/utils/with-default';
 import { iife } from '#tests/utils/iife';
 
 import type { Calendar_EventInput, Calendar_Options, Calendar_Resource, Calendar_Views } from '@calendar-tsx/core';
-import { calendarClock_fixed, calendarView_list, calendarView_month, calendarView_timeGrid } from '@calendar-tsx/core';
+import {
+  calendarClock_fixed,
+  calendarView_list,
+  calendarView_month,
+  calendarView_timeGrid,
+  calendarViews_create,
+} from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_timeZone } from '#tests/calendar.fixtures';
 import { Calendar_RootProvider, useCalendar } from '#use-calendar';
@@ -37,8 +43,10 @@ export type CalendarReactSetup_Overrides = Partial<typeof calendarReactSetup_def
  */
 export const calendarReactSetup_render = async (children: ReactNode, overrides: CalendarReactSetup_Overrides = {}) => {
   const onNavigate: Mock<Calendar_Options<Fixtures_EventData, null, Calendar_Views>['onNavigate']> = vi.fn();
+  const views = calendarViews_create(tests_withDefault(overrides, 'views', calendarReactSetup_defaults.views));
   const resolved = {
-    views: tests_withDefault(overrides, 'views', calendarReactSetup_defaults.views),
+    views: views.views,
+    features: views.features,
     view: tests_withDefault(overrides, 'view', calendarReactSetup_defaults.view),
     date: tests_withDefault(overrides, 'date', calendarReactSetup_defaults.date),
     events: tests_withDefault(overrides, 'events', calendarReactSetup_defaults.events),

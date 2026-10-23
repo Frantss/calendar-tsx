@@ -5,7 +5,7 @@ import { calendarNavigation_contains, calendarNavigation_days } from '#calendar-
 import type {
   Calendar_Event,
   Calendar_MonthLayout,
-  Calendar_MonthViewDefinition,
+  Calendar_MonthViewSettings,
   Calendar_MonthWeek,
   Calendar_Range,
 } from '#calendar.types';
@@ -18,7 +18,7 @@ export const layoutMonth_build = <TData>({
   events,
   today,
 }: {
-  definition: Calendar_MonthViewDefinition;
+  definition: Calendar_MonthViewSettings;
   range: Calendar_Range;
   period: Calendar_Range;
   events: Calendar_Event<TData>[];

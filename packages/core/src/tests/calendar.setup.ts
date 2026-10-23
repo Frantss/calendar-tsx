@@ -7,7 +7,7 @@ import { iife } from '#tests/utils/iife';
 
 import { calendar_create } from '#calendar';
 import { calendarClock_fixed } from '#calendar-clock';
-import { calendarView_list, calendarView_month, calendarView_timeGrid } from '#calendar-views';
+import { calendarView_list, calendarView_month, calendarView_timeGrid, calendarViews_create } from '#calendar-views';
 import type {
   Calendar_Clock,
   Calendar_EventInput,
@@ -51,9 +51,12 @@ export const calendarSetup_create = async (overrides: CalendarSetup_Overrides = 
   const onNavigate: Mock<Calendar_Options<Fixtures_EventData, null, Calendar_Views>['onNavigate']> = vi.fn();
   const now = tests_withDefault(overrides, 'now', calendarSetup_defaults.now);
 
+  const views = calendarViews_create(tests_withDefault(overrides, 'views', calendarSetup_defaults.views));
+
   const options: Calendar_Options<Fixtures_EventData, null, Calendar_Views> = {
     timeZone: tests_withDefault(overrides, 'timeZone', calendarSetup_defaults.timeZone),
-    views: tests_withDefault(overrides, 'views', calendarSetup_defaults.views),
+    views: views.views,
+    features: views.features,
     view: tests_withDefault(overrides, 'view', calendarSetup_defaults.view),
     date: tests_withDefault(overrides, 'date', calendarSetup_defaults.date),
     events: tests_withDefault(overrides, 'events', calendarSetup_defaults.events),

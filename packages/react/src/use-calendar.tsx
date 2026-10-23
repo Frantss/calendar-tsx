@@ -2,10 +2,24 @@ import { useSelector } from '@tanstack/react-store';
 import type { ReactNode } from 'react';
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
-import type { Calendar_Instance, Calendar_Options, Calendar_State, Calendar_Views } from '@calendar-tsx/core';
+import type {
+  Calendar_Features,
+  Calendar_Instance,
+  Calendar_Options,
+  Calendar_State,
+  Calendar_ValidateFeatures,
+  Calendar_Views,
+} from '@calendar-tsx/core';
 import { calendar_create } from '@calendar-tsx/core';
 
-type AnyInstance = Calendar_Instance<any, any, any>;
+/** Any instance: the parts only navigate and read the store, so view keys and feature types are erased. */
+type AnyInstance = {
+  readonly options: unknown;
+  store: Calendar_Instance<unknown, unknown, Calendar_Views>['store'];
+  api: Pick<Calendar_Instance<unknown, unknown, Calendar_Views>['api'], 'navigate'>;
+  '~mount': () => () => void;
+  '~update': (options: never) => void;
+};
 
 const CalendarContext = createContext<{ instance: AnyInstance; locale: string } | null>(null);
 
@@ -15,10 +29,15 @@ const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffec
  * Creates the instance once, mounts it once, and pushes every render's options through `~update`,
  * which writes the store only when a tracked input changed (D24, after oxform's `useForm`).
  */
-export const useCalendar = <TData, TResourceData = unknown, TViews extends Calendar_Views = Calendar_Views>(
-  options: Calendar_Options<TData, TResourceData, TViews>,
+export const useCalendar = <
+  TData,
+  TResourceData = unknown,
+  const TViews extends Calendar_Views = Calendar_Views,
+  const TFeatures extends Calendar_Features = Calendar_Features,
+>(
+  options: Calendar_Options<TData, TResourceData, TViews, TFeatures> & Calendar_ValidateFeatures<TViews, TFeatures>,
 ) => {
-  const [instance] = useState(() => calendar_create(options));
+  const [instance] = useState(() => calendar_create<TData, TResourceData, TViews, TFeatures>(options));
 
   useIsomorphicLayoutEffect(instance['~mount'], [instance]);
   useIsomorphicLayoutEffect(() => {
@@ -36,17 +55,16 @@ export const useCalendarContext = () => {
   return context;
 };
 
-export const useCalendarSelector = <
-  TSelected,
-  TData = unknown,
-  TResourceData = unknown,
-  TViews extends Calendar_Views = Calendar_Views,
->(
-  selector: (state: Calendar_State<TData, TResourceData, TViews>) => TSelected,
+/**
+ * Context loses the instance's types; annotate the selector to get them back:
+ * `useCalendarSelector((state: Calendar_StateOf<typeof calendar>) => state.layout)` (D29).
+ */
+export const useCalendarSelector = <TState = Calendar_State<unknown, unknown, Calendar_Views>, TSelected = unknown>(
+  selector: (state: TState) => TSelected,
 ) => {
   const { instance } = useCalendarContext();
 
-  return useSelector(instance.store as Calendar_Instance<TData, TResourceData, TViews>['store'], selector);
+  return useSelector(instance.store, state => selector(state as TState));
 };
 
 export const Calendar_RootProvider = ({
@@ -65,11 +83,19 @@ export const Calendar_RootProvider = ({
   return <CalendarContext.Provider value={context}>{children}</CalendarContext.Provider>;
 };
 
-export const Calendar_Root = <TData, TResourceData = unknown, TViews extends Calendar_Views = Calendar_Views>({
+export const Calendar_Root = <
+  TData,
+  TResourceData = unknown,
+  const TViews extends Calendar_Views = Calendar_Views,
+  const TFeatures extends Calendar_Features = Calendar_Features,
+>({
   children,
   ...options
-}: Calendar_Options<TData, TResourceData, TViews> & { children: ReactNode }) => {
-  const instance = useCalendar(options);
+}: Calendar_Options<TData, TResourceData, TViews, TFeatures> &
+  Calendar_ValidateFeatures<TViews, TFeatures> & { children: ReactNode }) => {
+  const instance = useCalendar<TData, TResourceData, TViews, TFeatures>(
+    options as Calendar_Options<TData, TResourceData, TViews, TFeatures> & Calendar_ValidateFeatures<TViews, TFeatures>,
+  );
 
   return (
     <Calendar_RootProvider value={instance} locale={options.locale}>
