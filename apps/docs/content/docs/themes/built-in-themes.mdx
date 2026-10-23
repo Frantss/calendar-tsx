@@ -1,0 +1,83 @@
+---
+title: Built-in themes
+description: The default theme, shadcn/ui, RevenueCat and the compact density.
+---
+
+Each theme imports `base.css` itself, so import exactly one of them.
+
+## Default
+
+```ts
+import '@calendar-tsx/themes/default.css';
+```
+
+A neutral look with a rust accent. Colors follow the inherited `color-scheme` through `light-dark()`, and every
+value is a [token](/docs/themes/customizing#tokens) you can override. It sets no font family; the calendar inherits
+the page's.
+
+## shadcn/ui
+
+```css
+@import 'tailwindcss';
+@import '@calendar-tsx/themes/shadcn.css' layer(components);
+```
+
+`shadcn.css` replaces `default.css`. It maps the calendar tokens onto shadcn/ui's variables, so the calendar follows
+the app's palette, radius and dark mode with no further setup:
+
+| Calendar token                                    | shadcn/ui variable                                |
+| ------------------------------------------------- | ------------------------------------------------- |
+| `--calendar-surface`, `--calendar-surface-muted`  | `--background`, `--muted`                         |
+| `--calendar-text`, `--calendar-text-muted`        | `--foreground`, `--muted-foreground`              |
+| `--calendar-border`                               | `--border`                                        |
+| `--calendar-accent`, `--calendar-accent-contrast` | `--primary`, `--primary-foreground`               |
+| `--calendar-event`, `--calendar-event-border`     | `--primary` mixed 16% and 24% into `--background` |
+| `--calendar-event-text`                           | `--foreground`                                    |
+| `--calendar-focus-ring`                           | `--ring`                                          |
+| `--calendar-radius`, `--calendar-bar-radius`      | `--radius`, `--radius` × 0.6                      |
+
+- Events are tinted with `--primary` because shadcn's `--secondary`, `--muted` and `--accent` sit almost on the
+  background in light mode.
+- It expects the Tailwind v4 variable naming: full `oklch()` colors, not the v3 HSL channels.
+- Dark mode follows shadcn's `.dark` class, on `<html>` or on any element around the calendar. `color-scheme` is not
+  needed.
+
+## RevenueCat
+
+```ts
+import '@calendar-tsx/themes/revenuecat.css';
+```
+
+`revenuecat.css` replaces `default.css` with RevenueCat's press-kit colors: monochrome black purple (`#1f1f47`) with
+the brand colors as accents.
+
+- The brand red (`#f2545b`) marks today and the now line, with black purple numbers on it.
+- Royal blue (`#576cdb`) tints events and draws the focus ring.
+- Dark mode uses black purple as the surface.
+- On white the brand red has a 3.39:1 contrast ratio, too low for small text, so the theme keeps it to fills and lines.
+  In light mode today's time-grid header uses the text color instead.
+
+## Compact density
+
+```ts
+import '@calendar-tsx/themes/default.css';
+import '@calendar-tsx/themes/compact.css';
+```
+
+`compact.css` sets size tokens only, for dashboards, sidebars and wide resource grids. It works with any theme.
+
+| Token                          | Default     | Compact     |
+| ------------------------------ | ----------- | ----------- |
+| `--calendar-font-size`         | `0.875rem`  | `0.75rem`   |
+| `--calendar-font-size-sm`      | `0.75rem`   | `0.6875rem` |
+| `--calendar-font-size-xs`      | `0.6875rem` | `0.625rem`  |
+| `--calendar-day-header-height` | `2rem`      | `1.5rem`    |
+| `--calendar-bar-height`        | `1.375rem`  | `1.125rem`  |
+| `--calendar-bar-gap`           | `2px`       | `1px`       |
+| `--calendar-overflow-height`   | `1.5rem`    | `1.125rem`  |
+| `--calendar-week-min-height`   | `6rem`      | `4.5rem`    |
+| `--calendar-slot-height`       | `3rem`      | `2rem`      |
+| `--calendar-axis-width`        | `4rem`      | `3.25rem`   |
+
+The density sets these tokens on `:root` in a later layer. A token you set on an element around the calendar still
+wins, because the element is closer than `:root`.
