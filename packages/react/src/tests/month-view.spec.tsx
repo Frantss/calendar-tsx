@@ -1,7 +1,8 @@
 import { expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 
-import type { Calendar_MonthLayout } from '@calendar-tsx/core';
+import type { Calendar_MonthLayout, Calendar_Views } from '@calendar-tsx/core';
+import { dayGridView, monthView, timeGridView } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_allDay, fixtures_timed } from '#tests/calendar.fixtures';
 import {
@@ -132,4 +133,40 @@ it('labels triggers in the configured locale', async () => {
   const { ui } = await setup({ locale: 'es-ES' });
 
   await expect.element(ui.dayTrigger('Go to sábado, 14 de marzo de 2026')).toBeInTheDocument();
+});
+
+const dayGridViews: Calendar_Views = {
+  day: timeGridView({ days: 1 }),
+  day_grid_week: dayGridView({ weeks: 1, maxEventsPerDay: 2 }),
+  day_grid_four_weeks: dayGridView({ weeks: 4, maxEventsPerDay: 2 }),
+  fixed_month: monthView({ maxEventsPerDay: 2, fixedWeekCount: true }),
+};
+
+it('renders a one-week day grid with the month parts', async () => {
+  const { ui } = await setup({
+    views: dayGridViews,
+    view: 'day_grid_week',
+    events: [fixtures_allDay('Fair', { start: '2026-03-10', end: '2026-03-12' })],
+  });
+
+  await expect.element(ui.grid).toHaveAttribute('data-part', 'month-root');
+  // header row + 1 week
+  expect(ui.rows.elements()).toHaveLength(2);
+  expect(ui.cells.elements()).toHaveLength(7);
+  expect(ui.cells.elements().some(cell => cell.hasAttribute('data-outside'))).toBe(false);
+  expect(ui.event('Fair').element().getAttribute('style')).toBe('--cal-col-start: 2; --cal-col-span: 3; --cal-row: 0;');
+});
+
+it('renders a rolling four-week day grid and a fixed six-week month', async () => {
+  const fourWeeks = await setup({ views: dayGridViews, view: 'day_grid_four_weeks' });
+
+  await expect.element(fourWeeks.ui.grid).toBeInTheDocument();
+  expect(fourWeeks.ui.rows.elements()).toHaveLength(5);
+  await fourWeeks.screen.unmount();
+
+  const fixed = await setup({ views: dayGridViews, view: 'fixed_month' });
+
+  await expect.element(fixed.ui.grid).toBeInTheDocument();
+  expect(fixed.ui.rows.elements()).toHaveLength(7);
+  expect(fixed.ui.cells.elements()).toHaveLength(42);
 });
