@@ -11,33 +11,16 @@ import type {
   Calendar_TimeGridLayout,
   Calendar_TimeGridViewSettings,
 } from '#calendar.types';
+import {
+  layoutAvailability_clip,
+  layoutAvailability_complement,
+  layoutAvailability_matches as matchesResource,
+} from '#layout/layout-availability';
 import { layoutBars_build, layoutBars_rows } from '#layout/layout-bars';
 import { layoutLanes_assign } from '#layout/layout-lanes';
 
 const DEFAULT_SLOT_MINUTES = 30;
 const MINUTES_PER_DAY = 24 * 60;
-
-type Interval = { startMs: number; endMs: number };
-
-const matchesResource = <TData, TResourceData>(
-  event: Calendar_Event<TData>,
-  resource?: Calendar_Resource<TResourceData>,
-) => !resource || (event.resourceIds ?? []).includes(resource.id);
-
-/** Gaps between the day's availability intervals; a resource with none is unavailable all day (D12). */
-const complement = (intervals: Interval[], day: Interval) => {
-  const gaps: Interval[] = [];
-  let cursor = day.startMs;
-
-  for (const interval of intervals) {
-    if (interval.startMs > cursor) gaps.push({ startMs: cursor, endMs: interval.startMs });
-    cursor = Math.max(cursor, interval.endMs);
-  }
-
-  if (cursor < day.endMs) gaps.push({ startMs: cursor, endMs: day.endMs });
-
-  return gaps;
-};
 
 const buildColumn = <TData, TResourceData>({
   date,
@@ -80,13 +63,7 @@ const buildColumn = <TData, TResourceData>({
     ];
   });
 
-  const availability = (resource?.availability ?? [])
-    .map(period => ({
-      startMs: Math.max(period.start.epochMilliseconds, day.startMs),
-      endMs: Math.min(period.end.epochMilliseconds, day.endMs),
-    }))
-    .filter(period => period.endMs > period.startMs)
-    .sort((a, b) => a.startMs - b.startMs);
+  const availability = layoutAvailability_clip(resource, day);
 
   const isToday = date.equals(now.toPlainDate());
 
@@ -107,7 +84,7 @@ const buildColumn = <TData, TResourceData>({
       continuesAfter: item.continuesAfter,
     })),
     unavailable: resource
-      ? complement(availability, day).map(gap => ({
+      ? layoutAvailability_complement(availability, day).map(gap => ({
           key: `${key}:unavailable:${gap.startMs}`,
           start: fraction(gap.startMs),
           span: (gap.endMs - gap.startMs) / length,
