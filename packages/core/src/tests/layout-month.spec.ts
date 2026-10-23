@@ -93,3 +93,17 @@ it('marks padding days and today', async () => {
   expect(utils.day('2026-03-11')).toMatchObject({ isToday: true, isOutside: false });
   expect(utils.layout.weekdays.map(weekday => weekday.dayOfWeek)).toEqual([7, 1, 2, 3, 4, 5, 6]);
 });
+
+it('shows six weeks with fixedWeekCount and pads them as outside days', async () => {
+  const views = { ...calendarSetup_defaults.views, fixed: monthView({ maxEventsPerDay: 4, fixedWeekCount: true }) };
+  const february = Temporal.PlainDate.from('2026-02-11');
+  const variable = await setup({ date: february });
+  const fixed = await setup({ view: 'fixed', views, date: february });
+
+  expect(variable.layout.weeks).toHaveLength(4);
+  expect(fixed.layout.weeks).toHaveLength(6);
+  expect(fixed.state().context.range).toMatchObject({ start: Temporal.PlainDate.from('2026-02-01'), end: Temporal.PlainDate.from('2026-03-14') });
+  expect(fixed.day('2026-02-28')?.isOutside).toBe(false);
+  expect(fixed.day('2026-03-01')?.isOutside).toBe(true);
+  expect(fixed.day('2026-03-14')?.isOutside).toBe(true);
+});

@@ -88,6 +88,15 @@ export interface Calendar_TimelineSegment_FeatureMap {}
 export type Calendar_MonthViewSettings = {
   maxEventsPerDay: number;
   dayOverflow?: (date: Temporal.PlainDate) => boolean;
+  /** Always show six weeks (D34). */
+  fixedWeekCount?: boolean;
+};
+
+/** Whole weeks from the week containing the date; built as a month model (D34). */
+export type Calendar_DayGridViewSettings = {
+  weeks: number;
+  maxEventsPerDay: number;
+  dayOverflow?: (date: Temporal.PlainDate) => boolean;
 };
 
 export type Calendar_TimeGridViewSettings = {
@@ -233,6 +242,7 @@ export type Calendar_TimelineLayout<TData, TResourceData, TFeatures = {}> = {
 /** Layout key → layout, given the features of the view it renders. Layout features extend it by declaration merging. */
 export interface Calendar_Layout_FeatureMap<TData, TResourceData, TFeatures> {
   monthLayout: Calendar_MonthLayout<TData, TFeatures>;
+  dayGridLayout: Calendar_MonthLayout<TData, TFeatures>;
   timeGridLayout: Calendar_TimeGridLayout<TData, TResourceData, TFeatures>;
   listLayout: Calendar_ListLayout<TData, TFeatures>;
   timelineLayout: Calendar_TimelineLayout<TData, TResourceData, TFeatures>;

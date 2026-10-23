@@ -2,6 +2,7 @@ import type { Temporal } from 'temporal-polyfill';
 
 import { calendarNavigation_startOfWeek } from '#calendar-navigation';
 import type {
+  Calendar_DayGridViewSettings,
   Calendar_LayoutFeature,
   Calendar_ListViewSettings,
   Calendar_MonthViewSettings,
@@ -23,11 +24,37 @@ const days_period = (date: Temporal.PlainDate, days: number, firstDayOfWeek: num
 export const monthLayout: Calendar_LayoutFeature<'month', Calendar_MonthViewSettings> = {
   kind: 'month',
   period: date => ({ start: date.with({ day: 1 }), end: date.with({ day: date.daysInMonth }) }),
-  range: (period, _settings, { firstDayOfWeek }) => ({
-    start: calendarNavigation_startOfWeek(period.start, firstDayOfWeek),
-    end: calendarNavigation_startOfWeek(period.end, firstDayOfWeek).add({ days: 6 }),
-  }),
+  range: (period, settings, { firstDayOfWeek }) => {
+    const start = calendarNavigation_startOfWeek(period.start, firstDayOfWeek);
+
+    return {
+      start,
+      end: settings.fixedWeekCount
+        ? start.add({ days: 6 * 7 - 1 })
+        : calendarNavigation_startOfWeek(period.end, firstDayOfWeek).add({ days: 6 }),
+    };
+  },
   step: (date, _settings, direction) => date.with({ day: 1 }).add({ months: direction }),
+  build: (input, settings) =>
+    layoutMonth_build({
+      definition: settings,
+      range: input.range,
+      period: input.period,
+      events: input.events,
+      today: input.now.toPlainDate(),
+    }),
+};
+
+/** Whole weeks from the week containing the date, built as a month model (D34). */
+export const dayGridLayout: Calendar_LayoutFeature<'dayGrid', Calendar_DayGridViewSettings> = {
+  kind: 'dayGrid',
+  period: (date, settings, { firstDayOfWeek }) => {
+    const start = calendarNavigation_startOfWeek(date, firstDayOfWeek);
+
+    return { start, end: start.add({ days: settings.weeks * 7 - 1 }) };
+  },
+  range: period => period,
+  step: (date, settings, direction) => date.add({ weeks: settings.weeks * direction }),
   build: (input, settings) =>
     layoutMonth_build({
       definition: settings,

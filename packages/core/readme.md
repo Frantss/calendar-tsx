@@ -62,5 +62,5 @@ createCalendar({ ...options, views: views.views, features: { ...views.features }
 - **Types:** features extend the `Calendar_*_FeatureMap` interfaces by declaration merging, keyed by their export name.
   Options, view settings, state, API and model fields then exist only where the feature is registered.
 - **Replacing an implementation:** `{ ...views.features, listLayout: myList }` replaces it in every view.
-- **Layouts are features too:** `monthLayout`, `timeGridLayout`, `listLayout` and `timelineLayout` supply
+- **Layouts are features too:** `monthLayout`, `dayGridLayout`, `timeGridLayout`, `listLayout` and `timelineLayout` supply
   navigation and `build`; a new view kind is a layout feature plus a `Calendar_Layout_FeatureMap` entry.
