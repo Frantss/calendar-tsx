@@ -44,9 +44,13 @@
     line-height: 1.4;
   }
 
-  :where([data-scope='calendar'][data-part='month-root']),
-  :where([data-scope='calendar'][data-part='list-root']) {
+  :where([data-scope='calendar'][data-part='month-root']) {
     overflow: hidden;
+  }
+
+  /* Clips to the radius like `hidden`, and scrolls a long month or year list once the app limits its height */
+  :where([data-scope='calendar'][data-part='list-root']) {
+    overflow: auto;
   }
 
   /* Buttons: parts render native buttons (D15); reset them to the theme's text */

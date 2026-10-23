@@ -264,3 +264,20 @@ it('stacks list events as full-width rows under a muted day header', async () =>
   expect(swim?.top).toBeGreaterThanOrEqual(yoga?.bottom ?? Infinity);
   expect(yoga?.width).toBeCloseTo(root.width - 2, 0);
 });
+
+it('scrolls a long list once its height is limited', async () => {
+  const style = document.head.appendChild(document.createElement('style'));
+  style.textContent = '[data-part="list-root"] { max-block-size: 6rem; }';
+
+  await themesSetup_render(<List />, {
+    views: { list: listView({ days: 7 }) },
+    view: 'list',
+    events: ['08', '09', '10', '11', '12'].map(day => themesSetup_timed(`Day ${day}`, { date: `2026-03-${day}`, start: '09:00', end: '10:00' })),
+  });
+  const root = themesSetup_part('list-root')[0];
+
+  // `hidden` also clips and can be scrolled from script, but not by the user
+  expect(root && root.scrollHeight).toBeGreaterThan(root?.clientHeight ?? Infinity);
+  expect(root && getComputedStyle(root).overflowY).toBe('auto');
+  style.remove();
+});
