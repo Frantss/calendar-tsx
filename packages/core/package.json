@@ -1,6 +1,6 @@
 {
   "name": "@calendar-tsx/core",
-  "version": "0.0.0",
+  "version": "0.0.1-experimental.0",
   "description": "Headless, framework-agnostic calendar engine on TanStack Store and Temporal.",
   "license": "MIT",
   "author": "Frantss <frantss.bongiovanni@gmail.com>",
