@@ -1,0 +1,42 @@
+{
+  "name": "calendar-tsx-root",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A headless, framework-agnostic calendar library on TanStack Store and Temporal, with React bindings.",
+  "license": "MIT",
+  "author": "Frantss <frantss.bongiovanni@gmail.com>",
+  "type": "module",
+  "scripts": {
+    "build": "vp run -r build",
+    "build:dev": "vp run -r build --watch",
+    "postbuild": "vp fmt --write",
+    "test": "vp run @calendar-tsx/core#test && vp run @calendar-tsx/react#test",
+    "check:package": "vp run @calendar-tsx/core#check:package && vp run @calendar-tsx/react#check:package",
+    "check:types": "vp run -r check:types",
+    "check:rules": "vp lint --type-aware",
+    "check:format": "vp fmt --check",
+    "check": "vp lint --type-aware && vp fmt --check && vp run -r check:types",
+    "check:all": "vp run -w check && vp run -w check:package",
+    "fix:rules": "vp lint --fix --fix-suggestions",
+    "fix:format": "vp fmt --write",
+    "fix:all": "vp lint --fix --fix-suggestions && vp fmt --write",
+    "version:add": "changeset add",
+    "version:bump": "changeset version",
+    "publish": "changeset publish",
+    "prepublish": "vp run -w build && vp run -w check:all"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^3.0.3",
+    "@vitest/browser-playwright": "5.0.1",
+    "@vitest/coverage-v8": "5.0.1",
+    "playwright": "1.63.0",
+    "typescript": "^7.0.2",
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",
+    "vite-plus": "1.0.0",
+    "vitest": "5.0.1"
+  },
+  "engines": {
+    "node": "^22.18.0 || ^24.11.0 || >=26.0.0"
+  },
+  "packageManager": "pnpm@12.5.1"
+}
