@@ -6,10 +6,12 @@ import type {
   Calendar_ListViewSettings,
   Calendar_MonthViewSettings,
   Calendar_TimeGridViewSettings,
+  Calendar_TimelineViewSettings,
 } from '#calendar.types';
 import { layoutList_build } from '#layout/layout-list';
 import { layoutMonth_build } from '#layout/layout-month';
 import { layoutTimeGrid_build } from '#layout/layout-time-grid';
+import { layoutTimeline_build } from '#layout/layout-timeline';
 
 /** A run of `days` days; a 7-day run starts on `firstDayOfWeek`. */
 const days_period = (date: Temporal.PlainDate, days: number, firstDayOfWeek: number) => {
@@ -58,4 +60,20 @@ export const listLayout: Calendar_LayoutFeature<'list', Calendar_ListViewSetting
   range: period => period,
   step: (date, settings, direction) => date.add({ days: settings.days * direction }),
   build: input => layoutList_build({ range: input.range, events: input.events }),
+};
+
+export const timelineLayout: Calendar_LayoutFeature<'timeline', Calendar_TimelineViewSettings> = {
+  kind: 'timeline',
+  period: (date, settings, { firstDayOfWeek }) => days_period(date, settings.days, firstDayOfWeek),
+  range: period => period,
+  step: (date, settings, direction) => date.add({ days: settings.days * direction }),
+  build: (input, settings) =>
+    layoutTimeline_build({
+      definition: settings,
+      range: input.range,
+      events: input.events,
+      resources: input.resources,
+      timeZone: input.timeZone,
+      now: input.now,
+    }),
 };

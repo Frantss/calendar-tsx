@@ -3,8 +3,8 @@
 > [!WARNING]
 > **Experimental.** `@calendar-tsx/core` is an experiment. Its API can change or be removed in any release, without notice.
 
-Framework-agnostic calendar engine that powers [`@calendar-tsx/react`](../react). It derives month, time-grid and
-list layouts from controlled view/date options and event input, in a single time zone.
+Framework-agnostic calendar engine that powers [`@calendar-tsx/react`](../react). It derives month, time-grid,
+list and timeline layouts from controlled view/date options and event input, in a single time zone.
 
 ## Quick example
 
@@ -62,5 +62,5 @@ createCalendar({ ...options, views: views.views, features: { ...views.features }
 - **Types:** features extend the `Calendar_*_FeatureMap` interfaces by declaration merging, keyed by their export name.
   Options, view settings, state, API and model fields then exist only where the feature is registered.
 - **Replacing an implementation:** `{ ...views.features, listLayout: myList }` replaces it in every view.
-- **Layouts are features too:** `monthLayout`, `timeGridLayout` and `listLayout` supply
+- **Layouts are features too:** `monthLayout`, `timeGridLayout`, `listLayout` and `timelineLayout` supply
   navigation and `build`; a new view kind is a layout feature plus a `Calendar_Layout_FeatureMap` entry.
