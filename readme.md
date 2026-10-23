@@ -13,15 +13,16 @@ and [Temporal](https://tc39.es/proposal-temporal/docs/). The React bindings rend
 - Controlled view and date: navigation actions only emit `onNavigate`
 - Events are input; the core never owns them
 - Strict Temporal types, laid out in one `timeZone`
-- Unstyled: geometry arrives as `--cal-*` custom properties and `data-*` attributes
+- Unstyled: geometry arrives as `--cal-*` custom properties and `data-*` attributes; optional themes style it
 - Composable parts with a `render` prop (element or function), after Ark v6
 
 ## Packages
 
-| Package                                 | Description                         | Docs                               |
-| --------------------------------------- | ----------------------------------- | ---------------------------------- |
-| [`@calendar-tsx/react`](packages/react) | React bindings — hooks and parts.   | [readme](packages/react/readme.md) |
-| [`@calendar-tsx/core`](packages/core)   | Framework-agnostic calendar engine. | [readme](packages/core/readme.md)  |
+| Package                                   | Description                                          | Docs                                |
+| ----------------------------------------- | ---------------------------------------------------- | ----------------------------------- |
+| [`@calendar-tsx/react`](packages/react)   | React bindings — hooks and parts.                    | [readme](packages/react/readme.md)  |
+| [`@calendar-tsx/core`](packages/core)     | Framework-agnostic calendar engine.                  | [readme](packages/core/readme.md)   |
+| [`@calendar-tsx/themes`](packages/themes) | Stylesheets: a positioning base and a default theme. | [readme](packages/themes/readme.md) |
 
 The design, requirements and decision log live in [docs/design.md](docs/design.md).
 
