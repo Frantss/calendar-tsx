@@ -479,6 +479,309 @@ Themes vary along two axes that combine. A look (`default.css`, `shadcn.css`) se
 
 **Why:** The parts already render on the server: effects are skipped, `useSelector` passes its snapshot as the server snapshot, and layout never reads the host zone (D7). What breaks is hydration. `calendar_create` read the clock when it was created, so the server and the client derived different "now" values: `--cal-now` on the now indicator never matched, and near midnight `data-today` moved to another column. `initialNow?: Temporal.Instant` is the instant used for the first derivation. The app picks it once per request, serialises it (`instant.toString()`), and passes the same value on both sides. `'~mount'` already ticks the clock straight away, so the client moves to the real "now" right after hydration. The option is read once at creation and is not tracked. The React entry starts with `'use client'` (a build banner), so React Server Components can import the parts. The options themselves (`Temporal` values, `views`, `onNavigate`) cannot cross the server/client boundary as props, so the calendar lives in a client component that parses strings. Rejected: rendering the now indicator and `isToday` only after mount, because the server HTML would lose the now line and `data-today` would still move at midnight; asking apps to pass `calendarClock_fixed` on the server, because the client still needs the same instant, which is `initialNow` with worse ergonomics. Known gap: the hydration test runs the server render in the browser, so ICU differences between Node and the browser in the default accessible labels (D20) are not covered.
 
+### D28 — View definitions carry their own navigation and layout builder; `layout` is inferred from `views` (proposed)
+
+**Serves:** D1, D4, D10; C1
+
+**Status:** proposed, not implemented; superseded by D29 if D29 is accepted. Accepting it amends D1 (who can add a layout kind), D4 (the set of kinds), and the `Calendar_State` and `Calendar_ViewContext` types in [State](#state).
+
+**Verified:** not verified — touches the public types; reversible while the packages are experimental
+
+**Why:** Today the core decides how each kind of view behaves. `calendar_create` imports all three builders and picks one by `definition.kind` (`packages/core/src/calendar.ts:17-19`, `:79-96`). `calendar_navigation` and `calendarNavigation_step` branch on `kind` the same way (`packages/core/src/calendar-navigation.ts:34`, `:56`). This causes three problems:
+
+- Every layout is bundled, even for a consumer that registers only list views.
+- A fourth kind means editing the core. That includes the timeline that D4 names as its revisit trigger. D1 calls `layout` an open union, but nobody outside the core can add a member.
+- `state.layout` is always the full three-way union, whatever `views` holds.
+
+This is the shape TanStack Table v8 had. Its v9 rewrite moved to a "features" object the consumer passes in, so a feature is bundled and typed only when registered ([comparison](../reports/tanstack-table-comparison.md)).
+
+The `views` record is already our equivalent of that object: its keys become typed literals (D22). So the proposal makes each view definition the unit of extension, with no separate feature registry:
+
+- `calendarView_month(settings)` returns its `kind` and settings, plus four functions:
+  - `period(date, { firstDayOfWeek })`, the nominal period around `date`;
+  - `range(period, { firstDayOfWeek })`, the visible days, padding included;
+  - `step(date, direction)`, the date one period before or after;
+  - `build(input)`, the layout.
+- `calendar_create` and `calendar_navigation` call these functions and contain no per-kind branches.
+- The event pipeline (normalise, clip to `range`, sort with `eventOrder`) stays in the core, because every layout needs it (D16). `build` receives the result.
+
+Types are where this gets hard. `build` must be generic in `TData` and `TResourceData`, because definitions are created before the calendar and know nothing about its data (D8). The return type of a generic function cannot be read back with a concrete `TData`, so `ReturnType` inference does not work. Instead, a kind-to-layout interface maps each kind to its layout type, applied to the calendar's own generics. `TViews` then selects from the map. This is v9's feature-map pattern (`Table_FeatureMap` keyed by feature name, filtered by `keyof TFeatures`):
+
+```ts
+/** Kind → layout. Third-party kinds extend it by declaration merging. */
+interface Calendar_LayoutMap<TData, TResourceData> {
+  month: Calendar_MonthLayout<TData>;
+  timeGrid: Calendar_TimeGridLayout<TData, TResourceData>;
+  list: Calendar_ListLayout<TData>;
+}
+
+type Calendar_ViewKind = keyof Calendar_LayoutMap<unknown, unknown>;
+
+type Calendar_LayoutInput<TData, TResourceData> = {
+  range: Calendar_Range;
+  period: Calendar_Range;
+  /** Normalised to `timeZone`, clipped to `range`, sorted by `eventOrder`. */
+  events: Calendar_Event<TData>[];
+  resources: Calendar_Resource<TResourceData>[];
+  timeZone: string;
+  now: Temporal.ZonedDateTime;
+};
+
+type Calendar_ViewDefinition<TKind extends Calendar_ViewKind = Calendar_ViewKind> = {
+  kind: TKind;
+  period: (date: Temporal.PlainDate, options: { firstDayOfWeek: Calendar_FirstDayOfWeek }) => Calendar_Range;
+  range: (period: Calendar_Range, options: { firstDayOfWeek: Calendar_FirstDayOfWeek }) => Calendar_Range;
+  step: (date: Temporal.PlainDate, direction: 1 | -1) => Temporal.PlainDate;
+  build: <TData, TResourceData>(
+    input: Calendar_LayoutInput<TData, TResourceData>,
+  ) => Calendar_LayoutMap<TData, TResourceData>[TKind];
+};
+
+type Calendar_Views = Record<string, Calendar_ViewDefinition>;
+
+/** The kinds `views` actually registers; with the default `Calendar_Views`, every kind. */
+type Calendar_ViewsKind<TViews extends Calendar_Views> = TViews[keyof TViews]['kind'];
+
+type Calendar_LayoutOf<TData, TResourceData, TViews extends Calendar_Views> = Calendar_LayoutMap<
+  TData,
+  TResourceData
+>[Calendar_ViewsKind<TViews>];
+
+type Calendar_State<TData, TResourceData, TViews extends Calendar_Views> = {
+  context: Calendar_ViewContext<TViews>; // `kind: Calendar_ViewsKind<TViews>`
+  layout: Calendar_LayoutOf<TData, TResourceData, TViews>;
+  now: Temporal.ZonedDateTime;
+};
+
+// The settings stay readable on the definition; `build` closes over them.
+const calendarView_month = (
+  settings: Calendar_MonthViewSettings,
+): Calendar_ViewDefinition<'month'> & Calendar_MonthViewSettings => ({
+  kind: 'month',
+  ...settings,
+  period: monthNavigation_period,
+  range: monthNavigation_range,
+  step: monthNavigation_step,
+  build: input => layoutMonth_build({ settings, ...input, today: input.now.toPlainDate() }),
+});
+```
+
+With `views: { list_day: calendarView_list({ days: 1 }), list_week: calendarView_list({ days: 7 }) }`, `state.layout` is `Calendar_ListLayout<TData>`. The D10 switch then needs no other branches, and `.otherwise()` is still the documented default.
+
+Builders stay `layoutMonth_build` and the others, imported only by their own `calendarView_*` factory. A consumer that never calls `calendarView_month` therefore does not bundle the month layout. That also depends on the core entry being side-effect free, and on the export map. Neither is verified.
+
+A third-party kind is a new factory plus one declaration merge into `Calendar_LayoutMap`. The merge is global, but it is keyed by kind and filtered by `TViews`. So the new layout only shows up in the types of calendars that register it, which matches v9 behaviour. The React view roots keep their concrete `model` types. A third-party kind brings its own parts (D3).
+
+Consequences:
+
+- View definitions hold functions and are no longer plain data. D24 already compares `views` by reference and requires it memoised, so the sync rule does not change.
+- A hand-written definition literal (`{ kind: 'month', maxEventsPerDay: 4 }`) stops type-checking. The factories become the only supported way to create a definition.
+- Week alignment moves out of the core into the `timeGrid` and `list` navigation functions. Today the core aligns a `days: 7` view to `firstDayOfWeek`.
+- `useCalendarSelector` defaults `TViews` to `Calendar_Views`, which keeps the full union. Narrowing reaches consumers only when they pass `TViews` or read from a typed instance.
+
+Rejected:
+
+- **`ReturnType<TViews[K]['build']>`.** It loses `TData` because `build` is generic.
+- **A higher-kinded "phantom type" carried on each definition.** It avoids declaration merging, but every kind author would need a type-level encoding the codebase does not use elsewhere.
+- **A full feature map for state, options and APIs, as in v9 `features`.** No stateful feature is in scope, and it would reopen D5.
+- **Leaving kinds closed and only narrowing `layout`.** That fixes the types but neither bundling nor extension.
+
+### D29 — Functionality is added through a feature map; views declare the features they use (proposed)
+
+**Serves:** D1, D4, D10, D28; C1; future stateful features (D15's focus, drag, resize, selection)
+
+**Status:** proposed, not implemented. Supersedes D28 if accepted: it keeps D28's per-view layout ownership and `layout` inference, and adds features beyond layouts. Amends D1, D4, D5 (for feature state only), D24 and the [State](#state) types. It is a mechanism only. Drag and resize stay under "Not supported" until a separate decision moves them; drag appears below only as the worked example.
+
+**Verified:** type sketch compiled with TypeScript 7.0.2 against stand-in types (checks listed at the end); runtime not prototyped
+
+**Why:** D28 makes layouts pluggable, but anything that cuts across views has nowhere to go. That includes interaction state, options, actions, extra model fields and parts. TanStack Table hit the same limit and moved, in v9, to a `features` object that the consumer passes in. Each feature is bundled and typed only when registered ([comparison](../reports/tanstack-table-comparison.md)). This decision adopts that model, with three changes for a calendar:
+
+- Layouts arrive with the views that use them.
+- Features are constants, and all configuration lives in options.
+- Each view declares which features it takes part in.
+
+**Concepts**
+
+- **Feature:** a constant object with no arguments. It can contribute:
+  - state slices;
+  - calendar options and per-view settings;
+  - API;
+  - an event-pipeline stage;
+  - fields on the layout model.
+- **Layout feature:** a feature that also supplies a view kind. It provides `kind`, `period`, `range`, `step` and `build`, plus optional capabilities such as `locate` (layout position → slot). Built in: `calendarLayout_month`, `calendarLayout_timeGrid`, `calendarLayout_list`.
+- **Core features:** navigation, the event pipeline (normalise → clip → sort) and the clock. They are always on and never listed.
+- **View:** plain settings plus `'~features'`, the features the view uses. Its factory adds the view's layout feature. A feature runs in a view only if that view lists it. A feature listed only in the calendar's `features` runs in every view.
+- **`calendarViews_create(views)`:** returns `{ views, features }`, where `features` is the merge of every view's `'~features'`.
+
+**Consumer**
+
+```ts
+// module scope, so references stay stable (D24)
+const views = calendarViews_create({
+  week: calendarView_timeGrid({ days: 7, features: { calendarFeature_eventDrag } }),
+  day: calendarView_timeGrid({ days: 1, features: { calendarFeature_eventDrag }, drag: { snap: { minutes: 5 } } }),
+  resources: calendarView_timeGrid({ days: 1, groupBy: 'resource' }),
+  list_week: calendarView_list({ days: 7 }),
+});
+
+const calendar = calendar_create<EventData>({
+  views: views.views,
+  features: { calendarFeature_focus, ...views.features },
+  view,
+  date,
+  onNavigate,
+  events,
+  timeZone, // core, controlled only (D5)
+  drag: { snap: { minutes: 15 } }, // calendar-wide setting from calendarFeature_eventDrag
+  onEventDrop: ({ event, slot }) => moveEntry(event.id, slot),
+});
+
+calendar.store.state.layout; // TimeGrid | List: the kinds the views register
+calendar.api.drag.cancel(); // exists because calendarFeature_eventDrag is registered
+```
+
+**Configuration.** Features take no arguments. Settings resolve for the active view as feature defaults, then calendar options, then view settings, with a shallow merge per layer. In the example, `week` snaps to 15 minutes, `day` to 5, and `resources` has no drag. Every view that lists a feature lists the same constant, so instances cannot conflict. Defaults shared by several views of one kind start as plain JS (`const timeGrid = s => calendarView_timeGrid({ slotMinutes: 30, ...s })`). A calendar-level layout option is added only if consumers keep writing that wrapper.
+
+**Replacing an implementation.** The calendar's `features` object is the source of truth at runtime. Views declare which keys they use and supply defaults; the calendar resolves each key from `options.features`. So spread order replaces one implementation everywhere: `{ ...views.features, calendarFeature_eventDrag: myDrag }`. Types require the replacement to be assignable to the declared feature.
+
+**Feature interface**
+
+```ts
+type Calendar_Feature = {
+  /** State slices. Each resolves as options.atoms[key] ?? options.state[key] ?? an internal atom, as in v9. */
+  getInitialState?: (initial) => Partial<Calendar_FeatureState>;
+  getDefaultOptions?: (instance) => Partial<Calendar_FeatureOptions>;
+  /** Merged onto `instance.api`. */
+  constructApi?: (instance) => void;
+  /** Runs after the core sort, in registration order, only in views that list the feature. */
+  events?: { deps: (instance) => unknown[]; run: (events, instance) => typeof events };
+  /** Adds the feature's model fields to the built layout, only in views that list the feature. */
+  decorate?: { deps: (instance) => unknown[]; run: (layout, instance) => typeof layout };
+};
+
+type Calendar_LayoutFeature<TKind extends string, TSettings> = Calendar_Feature & {
+  kind: TKind;
+  period: (date, settings: TSettings, options) => Calendar_Range;
+  range: (period, settings: TSettings, options) => Calendar_Range;
+  step: (date, settings: TSettings, direction: 1 | -1) => Temporal.PlainDate;
+  build: <TData, TResourceData>(input: Calendar_LayoutInput<TData, TResourceData>, settings: TSettings) => unknown;
+  /** Capability that cross-cutting features call through stubs; a kind without it makes them no-ops. */
+  locate?: (layout, point: Calendar_LayoutPoint) => Calendar_Slot | undefined;
+};
+```
+
+**Types.** Contributions are typed through feature maps keyed by the feature's export name. Each map is filtered by the registered keys, as in v9. Third-party features extend the maps by declaration merging.
+
+```ts
+interface Calendar_Options_FeatureMap<TData> {
+  calendarFeature_eventDrag: { drag?: Calendar_DragSettings; onEventDrop: (drop: Calendar_Drop<TData>) => void };
+}
+interface Calendar_ViewSettings_FeatureMap { calendarFeature_eventDrag: { drag?: Calendar_DragSettings } }
+interface Calendar_State_FeatureMap { calendarFeature_eventDrag: { drag: Calendar_DragState | null } }
+interface Calendar_Api_FeatureMap { calendarFeature_eventDrag: { drag: { start; move; nudge; drop; cancel } } }
+interface Calendar_Segment_FeatureMap { calendarFeature_eventDrag: { isDragging: boolean; isPreview: boolean } }
+interface Calendar_Layout_FeatureMap<TData, TResourceData, TViewFeatures> {
+  calendarLayout_month: Calendar_MonthLayout<TData, TViewFeatures>;
+  calendarLayout_timeGrid: Calendar_TimeGridLayout<TData, TResourceData, TViewFeatures>;
+  calendarLayout_list: Calendar_ListLayout<TData, TViewFeatures>;
+}
+
+type Calendar_PickFeatures<TMap, TFeatures> = UnionToIntersectionOrEmpty<TMap[Extract<keyof TFeatures, keyof TMap>]>;
+
+// Views: settings gain the per-view settings of the features they list.
+// NoInfer is required: without it, views nested in calendarViews_create infer their features from the
+// surrounding Record constraint, and a string index leaks into `keyof views.features`.
+declare const calendarView_timeGrid: <const TFeatures extends Calendar_Features = {}>(
+  settings: Calendar_TimeGridSettings & { features?: TFeatures } & Calendar_PickFeatures<Calendar_ViewSettings_FeatureMap, TFeatures>,
+) => Calendar_View<'timeGrid', …, NoInfer<TFeatures> & { calendarLayout_timeGrid: typeof calendarLayout_timeGrid }>;
+
+type Calendar_FeaturesOf<TViews> = UnionToIntersection<TViews[keyof TViews]['~features']>;
+
+// Layout: one entry per view, each shaped by that view's own features
+type Calendar_Layout<TData, TResourceData, TViews> = {
+  [K in keyof TViews]: Calendar_Layout_FeatureMap<TData, TResourceData, TViews[K]['~features']>[LayoutKeyOf<TViews[K]>];
+}[keyof TViews];
+
+// calendar_create: options and API from the registered features; `features` must cover every view's features
+// with compatible implementations, or it becomes a template-literal error type.
+type Calendar_Options<TData, TResourceData, TViews, TFeatures> = Calendar_CoreOptions<TData, TResourceData, TViews> &
+  Calendar_PickFeatures<Calendar_Options_FeatureMap<TData>, TFeatures> & { features: ValidateFeatures<TViews, TFeatures> };
+type Calendar_Api<TViews, TFeatures> = Calendar_CoreApi<TViews> & Calendar_PickFeatures<Calendar_Api_FeatureMap, TFeatures>;
+```
+
+**Runtime**
+
+```ts
+const features = { ...coreFeatures, ...options.features }; // keys resolved here, so replacements apply everywhere
+for (const feature of Object.values(features)) {
+  feature.getInitialState && registerAtoms(instance, feature.getInitialState(options.initialState));
+  feature.constructApi?.(instance);
+}
+
+const store = createStore(() => {
+  const view = options.views[options.view];
+  const active = activeFeatures(features, view); // the view's '~features' plus calendar-only features
+  const layout = active.layout;
+  const { period, range } = navigate(layout, view, options);
+
+  let events = coreEvents(input, range, options.eventOrder);
+  for (const f of active.list) if (f.events) events = memo(f.events)(events, instance);
+
+  let model = layout.build({ range, period, events, resources, timeZone, now }, view);
+  for (const f of active.list) if (f.decorate) model = memo(f.decorate)(model, instance);
+
+  return { context, layout: model, now, ...featureState(instance) };
+});
+```
+
+**React.** `useCalendar(options)` is unchanged. `useCalendarSelector` cannot recover the feature types from context, so it takes the instance type: `useCalendarSelector<typeof calendar>(state => state.layout)`. Features that need parts ship them from their own entry point (for example `@calendar-tsx/react/event-drag`). They compose through `render` (D25) and read their API from context. View roots keep their concrete `model` types, now generic over the view's features.
+
+**Bundling.** Each layout and feature lives in its own module, and only the views and features a consumer imports are bundled. This assumes a core entry with no side effects and a matching export map. That is not verified.
+
+**Effect on other decisions**
+
+- **D1:** `layout` becomes genuinely open, because any layout feature adds a kind.
+- **D4:** kinds come from layout features. Settings remain composable view definitions.
+- **D5:** unchanged for `view` and `date`. A feature's own state slices may be uncontrolled, controlled (`state` + `onXChange`) or external (`atoms`). This is the first state the core owns. Pointer-rate state (drag) defaults to uncontrolled, because controlling it from the app at that rate is impractical.
+- **D10:** the switch is unchanged and narrower. `.otherwise()` stays the default.
+- **D24:** tracked inputs become the core inputs plus each feature's state slices and `deps`. `views.views` and `features` are tracked by reference and must be stable.
+- **D28:** superseded. Layout ownership per view and the inference of `layout` from `views` carry over.
+
+**Costs**
+
+- `TFeatures` and per-view feature types thread through every model type, every part and the selector. v9 notes this as a type-check hot spot.
+- Feature order matters for event stages and `decorate` passes. Prerequisites need type-level checks.
+- Forgetting `...views.features` is guarded only by the type error.
+- Hand-written view literals and the current `views` shape break, which is acceptable while the packages are experimental.
+- More entry points to publish.
+
+**Rejected**
+
+- **D28 alone:** extends layouts only, with nowhere for cross-cutting features to go.
+- **Layouts registered in `features` and named by views:** two sources of truth, plus a "view needs a missing layout" error that model B (views bring their layout) removes.
+- **`calendar_create({ views })` merging features implicitly:** removes the forgotten-spread error but hides the active feature set; the explicit object follows v9's `tableFeatures`.
+- **Config on feature instances:** which view's instance wins would depend on key order in `views`.
+- **Per-view feature instances:** they would split calendar-wide state, since only one drag can happen at a time.
+- **Deep-merging settings:** shallow merges per layer are predictable.
+- **Typing feature fields per view kind through capabilities** (no `isDragging` on list layouts): heavy for little gain. Fields follow the features the view lists.
+- **A higher-kinded "phantom type" carried on views:** an encoding the codebase does not use elsewhere.
+
+**Verified in the type sketch:**
+
+- a view setting such as `drag` requires the view to list the feature;
+- calendar options such as `drag` and `onEventDrop` exist, and are required, only once the feature is registered;
+- `api.drag` is absent without the feature;
+- `layout` is the union of the registered views' kinds, and an unregistered kind is an error;
+- segments carry `isDragging` only in views that list drag;
+- forgetting `...views.features` is a template-literal error;
+- replacing an implementation under a declared key requires a compatible one.
+
+**Not yet sketched:**
+
+- prerequisite checks between features;
+- state-slice ownership types;
+- the React parts' generics.
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.
