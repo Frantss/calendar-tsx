@@ -13,14 +13,15 @@ JavaScript.
 import '@calendar-tsx/themes/default.css';
 ```
 
-| File             | Contents                                                                                      |
-| ---------------- | --------------------------------------------------------------------------------------------- |
-| `base.css`       | Positioning only: month bars, time-grid columns and lanes, the now line. Every theme uses it. |
-| `default.css`    | `base.css` plus the default look.                                                             |
-| `shadcn.css`     | The default look with its tokens read from shadcn/ui's variables. See [shadcn/ui](#shadcnui). |
-| `revenuecat.css` | The default layout in RevenueCat's brand colors. See [RevenueCat](#revenuecat).               |
-| `stripe.css`     | The default layout in Stripe's colors. See [Stripe](#stripe).                                 |
-| `compact.css`    | Density only: smaller slots, bars and text. Import it after any theme.                        |
+| File                | Contents                                                                                                        |
+| ------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `base.css`          | Positioning only: month bars, time-grid columns and lanes, the now line. Every theme uses it.                   |
+| `default.css`       | `base.css` plus the default look.                                                                               |
+| `high-contrast.css` | Black on white and white on black at WCAG AAA, with outlined events. See [High contrast](#high-contrast-theme). |
+| `shadcn.css`        | The default look with its tokens read from shadcn/ui's variables. See [shadcn/ui](#shadcnui).                   |
+| `revenuecat.css`    | The default layout in RevenueCat's brand colors. See [RevenueCat](#revenuecat).                                 |
+| `stripe.css`        | The default layout in Stripe's colors. See [Stripe](#stripe).                                                   |
+| `compact.css`       | Density only: smaller slots, bars and text. Import it after any theme.                                          |
 
 Import `base.css` alone to write your own look on top of working layout.
 
@@ -66,7 +67,7 @@ would ignore an override of the token it points to.
 **Dark mode.** Colors use `light-dark()`, so they follow the inherited `color-scheme`. The theme never sets it: declare
 `color-scheme: light dark` on the page to follow the system, or `light`/`dark` on any ancestor to force a mode.
 
-**High contrast.** Under `forced-colors: active` (Windows High Contrast), the browser drops fills. Events keep their
+**Forced colors.** Under `forced-colors: active` (Windows High Contrast), the browser drops fills. Events keep their
 borders, and the default theme restores today's marker, the now line, slot lines, unavailable hatching and
 outside-month dates with system colors.
 
@@ -77,6 +78,17 @@ layered, so see [Tailwind](#tailwind).
 
 **Scrolling.** `TimeGridView` scrolls, with a sticky header. Give it a height (`max-block-size: 40rem`) to
 scroll inside the page rather than show all 24 hours.
+
+## High contrast theme
+
+`high-contrast.css` replaces `default.css` for people who choose more contrast. Every text pairing meets WCAG AAA
+(9:1 or more) and every boundary is 5:1 or more. Events are outlined with a 2px border in the text color instead of
+tinted, focus rings are 3px, and a bar that continues past a week edge (or a time-grid event past midnight) gets a
+dashed edge, so continuation does not depend on a missing corner radius. The accent is deep blue in light mode and
+yellow in dark mode. `--calendar-event` and `--calendar-event-border` still override the outline.
+
+This is separate from Windows High Contrast: under `forced-colors: active` the browser chooses the colors, and every
+theme falls back to the default theme's forced-colors rules.
 
 ## shadcn/ui
 
