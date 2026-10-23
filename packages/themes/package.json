@@ -7,6 +7,7 @@
   "files": [
     "base.css",
     "default.css",
+    "high-contrast.css",
     "shadcn.css",
     "revenuecat.css",
     "stripe.css",
@@ -23,6 +24,7 @@
   "exports": {
     "./base.css": "./base.css",
     "./default.css": "./default.css",
+    "./high-contrast.css": "./high-contrast.css",
     "./shadcn.css": "./shadcn.css",
     "./revenuecat.css": "./revenuecat.css",
     "./stripe.css": "./stripe.css",

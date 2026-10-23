@@ -1,0 +1,72 @@
+/*
+ * High contrast: black on white and white on black, every text pairing at WCAG AAA (7:1 or more) and every boundary
+ * at 5:1 or more. Events are outlined in the text color rather than tinted, borders and focus rings are thicker,
+ * and bars that continue past a week edge get a dashed edge so continuation does not rely on a corner radius.
+ * For people who choose more contrast; Windows High Contrast (forced colors) is handled by the default theme.
+ */
+@import './default.css';
+
+@layer calendar.base, calendar.theme, calendar.density;
+
+@layer calendar.theme {
+  :where(:root) {
+    --calendar-surface: light-dark(#ffffff, #000000);
+    --calendar-surface-muted: light-dark(#ebebeb, #242424);
+    --calendar-text: light-dark(#000000, #ffffff);
+    --calendar-text-muted: light-dark(#3d3d3d, #c7c7c7);
+    --calendar-border: light-dark(#6b6b6b, #949494);
+    --calendar-accent: light-dark(#0035a8, #ffd500);
+    --calendar-accent-contrast: light-dark(#ffffff, #000000);
+    --calendar-radius: 0.25rem;
+    --calendar-bar-radius: 0.125rem;
+  }
+
+  /* Outlined events: the surface with a text-colored border, unless the app sets the event tokens */
+  :where(
+    [data-scope='calendar']:is(
+      [data-part='month-week-event'],
+      [data-part='time-grid-all-day-event'],
+      [data-part='time-grid-event']
+    )
+  ) {
+    --_calendar-event: var(--calendar-event, var(--calendar-surface));
+    --_calendar-event-border: var(--calendar-event-border, var(--calendar-text));
+    border-width: 2px;
+    font-weight: 600;
+  }
+
+  :where([data-scope='calendar']:is([data-part='month-week-event'], [data-part='time-grid-all-day-event'])) {
+    line-height: calc(var(--calendar-bar-height) - 4px);
+  }
+
+  /* Bars continue across week edges; time-grid events continue across midnight */
+  :where(
+    [data-scope='calendar'][data-continues-before]:is(
+        [data-part='month-week-event'],
+        [data-part='time-grid-all-day-event']
+      )
+  ) {
+    border-inline-start-style: dashed;
+  }
+
+  :where(
+    [data-scope='calendar'][data-continues-after]:is(
+        [data-part='month-week-event'],
+        [data-part='time-grid-all-day-event']
+      )
+  ) {
+    border-inline-end-style: dashed;
+  }
+
+  :where([data-scope='calendar'][data-part='time-grid-event'][data-continues-before]) {
+    border-block-start-style: dashed;
+  }
+
+  :where([data-scope='calendar'][data-part='time-grid-event'][data-continues-after]) {
+    border-block-end-style: dashed;
+  }
+
+  :where([data-scope='calendar']:is(button)):focus-visible {
+    outline-width: 3px;
+  }
+}
