@@ -23,8 +23,13 @@ import {
   MonthViewOverflow,
   MonthView,
   MonthViewWeek,
+  MonthViewWeekBackgroundEvent,
   MonthViewWeekEvent,
+  TimeGridViewAllDay,
+  TimeGridViewAllDayBackgroundEvent,
+  TimeGridViewAllDayEvent,
   TimeGridViewBackground,
+  TimeGridViewBackgroundEvent,
   TimeGridViewBody,
   TimeGridViewColumn,
   TimeGridViewColumnHeader,
@@ -51,11 +56,26 @@ const TimeGrid = ({ eventClassName }: { eventClassName?: string }) => {
           </TimeGridViewColumnHeader>
         ))}
       </TimeGridViewHeader>
+      {grid.allDay && (
+        <TimeGridViewAllDay>
+          {grid.allDay.backgroundEvents.map(segment => (
+            <TimeGridViewAllDayBackgroundEvent key={segment.key} segment={segment} />
+          ))}
+          {grid.allDay.segments.map(segment => (
+            <TimeGridViewAllDayEvent key={segment.key} segment={segment}>
+              {segment.event.data.title}
+            </TimeGridViewAllDayEvent>
+          ))}
+        </TimeGridViewAllDay>
+      )}
       <TimeGridViewBody model={grid}>
         {grid.columns.map(column => (
           <TimeGridViewColumn key={column.key} column={column}>
             {(column as { backgrounds?: Calendar_BackgroundSegment[] }).backgrounds?.map(background => (
               <TimeGridViewBackground key={background.key} background={background} />
+            ))}
+            {column.backgroundEvents.map(segment => (
+              <TimeGridViewBackgroundEvent key={segment.key} segment={segment} />
             ))}
             {column.segments.map(segment => (
               <TimeGridViewEvent key={segment.key} segment={segment} className={eventClassName}>
@@ -87,6 +107,9 @@ const Month = () => {
               </MonthViewDayTrigger>
               <MonthViewOverflow day={day}>more</MonthViewOverflow>
             </MonthViewDay>
+          ))}
+          {week.backgroundEvents.map(segment => (
+            <MonthViewWeekBackgroundEvent key={segment.key} segment={segment} />
           ))}
           {week.segments.map(segment => (
             <MonthViewWeekEvent key={segment.key} segment={segment}>
@@ -339,4 +362,52 @@ it('scrolls a long list once its height is limited', async () => {
   expect(root && root.scrollHeight).toBeGreaterThan(root?.clientHeight ?? Infinity);
   expect(root && getComputedStyle(root).overflowY).toBe('auto');
   style.remove();
+});
+
+it('shades a timed background event under the events it overlaps', async () => {
+  await themesSetup_render(<TimeGrid />, {
+    events: [themesSetup_timed('Yoga', { date: '2026-03-11', start: '12:00', end: '13:00' })],
+    backgroundEvents: [themesSetup_timed('Closed', { date: '2026-03-11', start: '12:00', end: '18:00' })],
+  });
+  event('Yoga')?.scrollIntoView({ block: 'center' });
+  const column = themesSetup_rect(themesSetup_part('time-grid-column')[0]);
+  const shade = themesSetup_rect(themesSetup_part('time-grid-background-event')[0]);
+  const yoga = themesSetup_rect(event('Yoga'));
+
+  expect(shade.top - column.top).toBeCloseTo(column.height * 0.5, 0);
+  expect(shade.height).toBeCloseTo(column.height * 0.25, 0);
+  expect(document.elementFromPoint(yoga.left + yoga.width / 2, yoga.top + yoga.height / 2)?.textContent).toBe('Yoga');
+});
+
+it('spans an all-day background event over every bar row of the all-day section', async () => {
+  await themesSetup_render(<TimeGrid />, {
+    view: 'week',
+    events: ['A', 'B'].map(id => themesSetup_allDay(id, { start: '2026-03-11', end: '2026-03-11' })),
+    backgroundEvents: [themesSetup_allDay('Break', { start: '2026-03-11', end: '2026-03-12' })],
+  });
+  const shade = themesSetup_rect(themesSetup_part('time-grid-all-day-background-event')[0]);
+  const bars = themesSetup_part('time-grid-all-day-event').map(bar => themesSetup_rect(bar));
+  const headers = themesSetup_part('time-grid-column-header').map(header => themesSetup_rect(header));
+
+  expect(shade.left).toBeCloseTo(headers[3]?.left ?? 0, 0);
+  expect(shade.right).toBeCloseTo(headers[4]?.right ?? 0, 0);
+  expect(shade.top).toBeLessThanOrEqual(Math.min(...bars.map(bar => bar.top)));
+  expect(shade.bottom).toBeGreaterThanOrEqual(Math.max(...bars.map(bar => bar.bottom)));
+});
+
+it('tints month days under an all-day background event and keeps their triggers clickable', async () => {
+  await themesSetup_render(<Month />, {
+    view: 'month',
+    backgroundEvents: [themesSetup_allDay('Break', { start: '2026-03-10', end: '2026-03-12' })],
+  });
+  const first = themesSetup_rect(themesSetup_part('month-day', '[data-date="2026-03-10"]')[0]);
+  const last = themesSetup_rect(themesSetup_part('month-day', '[data-date="2026-03-12"]')[0]);
+  const shade = themesSetup_rect(themesSetup_part('month-week-background-event')[0]);
+  const trigger = themesSetup_part('month-day', '[data-date="2026-03-11"]')[0]?.querySelector('[data-part="month-day-trigger"]');
+  const target = themesSetup_rect(trigger ?? undefined);
+
+  expect(shade.left).toBeCloseTo(first.left, 0);
+  expect(shade.right).toBeCloseTo(last.right, 0);
+  expect(shade.height).toBeCloseTo(first.height, 0);
+  expect(document.elementFromPoint(target.left + target.width / 2, target.top + target.height / 2)).toBe(trigger);
 });

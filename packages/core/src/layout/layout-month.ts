@@ -1,6 +1,6 @@
 import type { Temporal } from 'temporal-polyfill';
 
-import { calendarEvents_overlaps } from '#calendar-events';
+import { calendarEvents_isAllDay, calendarEvents_overlaps } from '#calendar-events';
 import { calendarNavigation_contains, calendarNavigation_days } from '#calendar-navigation';
 import type {
   Calendar_Event,
@@ -9,23 +9,27 @@ import type {
   Calendar_MonthWeek,
   Calendar_Range,
 } from '#calendar.types';
-import { layoutBars_build, layoutBars_rows } from '#layout/layout-bars';
+import { layoutBars_background, layoutBars_build, layoutBars_rows } from '#layout/layout-bars';
 
 export const layoutMonth_build = <TData>({
   definition,
   range,
   period,
   events,
+  backgroundEvents,
   today,
 }: {
   definition: Calendar_MonthViewSettings;
   range: Calendar_Range;
   period: Calendar_Range;
   events: Calendar_Event<TData>[];
+  backgroundEvents: Calendar_Event<TData>[];
   today: Temporal.PlainDate;
 }): Calendar_MonthLayout<TData> => {
   const days = calendarNavigation_days(range);
   const weeks: Calendar_MonthWeek<TData>[] = [];
+  // A timed background would tint a whole day for part of it, so the month shows all-day ones only (D37).
+  const allDayBackground = backgroundEvents.filter(calendarEvents_isAllDay);
 
   for (let index = 0; index < days.length; index += 7) {
     const weekDays = days.slice(index, index + 7);
@@ -41,6 +45,11 @@ export const layoutMonth_build = <TData>({
     weeks.push({
       key: first.toString(),
       segments: segments.filter(segment => !isHidden(segment)),
+      backgroundEvents: layoutBars_background(
+        allDayBackground.filter(event => calendarEvents_overlaps(event, { start: first, end: last })),
+        weekDays,
+        first.toString(),
+      ),
       rows: Math.min(definition.maxEventsPerDay, layoutBars_rows(segments)),
       days: weekDays.map((date, col) => {
         const hiddenCount = segments.filter(

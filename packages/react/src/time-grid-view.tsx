@@ -3,6 +3,8 @@ import { forwardRef } from 'react';
 
 import type {
   Calendar_BackgroundSegment,
+  Calendar_BackgroundEventSegment,
+  Calendar_BackgroundEventSpan,
   Calendar_BarSegment,
   Calendar_TimeGridColumn,
   Calendar_TimeGridLayout,
@@ -137,6 +139,33 @@ export const TimeGridViewAllDayEvent = forwardRef<HTMLButtonElement, TimeGridVie
   ),
 ) as <TData>(props: TimeGridViewAllDayEventProps<TData> & RefAttributes<HTMLButtonElement>) => ReactElement | null;
 
+type TimeGridViewAllDayBackgroundEventProps<TData> = {
+  segment: Calendar_BackgroundEventSpan<TData>;
+} & Calendar_HTMLProps<'div', Calendar_BackgroundEventSpan<TData>>;
+
+/** An all-day background event across the all-day row, under the bars; not interactive (D37). */
+export const TimeGridViewAllDayBackgroundEvent = forwardRef<
+  HTMLDivElement,
+  TimeGridViewAllDayBackgroundEventProps<unknown>
+>(({ segment, ...props }, ref) => (
+  <calendar.div
+    {...calendarProps_merge(
+      {
+        'aria-hidden': true,
+        'data-continues-before': flag(segment.continuesBefore),
+        'data-continues-after': flag(segment.continuesAfter),
+        style: vars({ 'col-start': segment.colStart, 'col-span': segment.colSpan }),
+        ...part('time-grid-all-day-background-event'),
+      },
+      props,
+    )}
+    state={segment}
+    ref={ref}
+  />
+)) as <TData>(
+  props: TimeGridViewAllDayBackgroundEventProps<TData> & RefAttributes<HTMLDivElement>,
+) => ReactElement | null;
+
 export const TimeGridViewBody = forwardRef<HTMLDivElement, TimeGridViewProps<unknown, unknown>>(
   ({ model, ...props }, ref) => (
     <calendar.div
@@ -224,6 +253,31 @@ export const TimeGridViewBackground = forwardRef<
     ref={ref}
   />
 ));
+
+type TimeGridViewBackgroundEventProps<TData> = { segment: Calendar_BackgroundEventSegment<TData> } & Calendar_HTMLProps<
+  'div',
+  Calendar_BackgroundEventSegment<TData>
+>;
+
+/** A background event in a column, under the events; not interactive (D37). */
+export const TimeGridViewBackgroundEvent = forwardRef<HTMLDivElement, TimeGridViewBackgroundEventProps<unknown>>(
+  ({ segment, ...props }, ref) => (
+    <calendar.div
+      {...calendarProps_merge(
+        {
+          'aria-hidden': true,
+          'data-continues-before': flag(segment.continuesBefore),
+          'data-continues-after': flag(segment.continuesAfter),
+          style: vars({ start: segment.start, span: segment.span }),
+          ...part('time-grid-background-event'),
+        },
+        props,
+      )}
+      state={segment}
+      ref={ref}
+    />
+  ),
+) as <TData>(props: TimeGridViewBackgroundEventProps<TData> & RefAttributes<HTMLDivElement>) => ReactElement | null;
 
 type TimeGridViewEventProps<TData> = { segment: Calendar_TimeGridSegment<TData> } & Calendar_HTMLProps<
   'button',

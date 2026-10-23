@@ -15,14 +15,17 @@ export {
   MonthViewOverflow,
   MonthView,
   MonthViewWeek,
+  MonthViewWeekBackgroundEvent,
   MonthViewWeekEvent,
 } from '#month-view';
 export {
   TimeGridViewAllDay,
+  TimeGridViewAllDayBackgroundEvent,
   TimeGridViewAllDayEvent,
   TimeGridViewAxis,
   TimeGridViewAxisLabel,
   TimeGridViewBackground,
+  TimeGridViewBackgroundEvent,
   TimeGridViewBody,
   TimeGridViewColumn,
   TimeGridViewColumnHeader,

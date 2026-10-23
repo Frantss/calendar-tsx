@@ -14,6 +14,7 @@ import {
   MonthViewOverflow,
   MonthView,
   MonthViewWeek,
+  MonthViewWeekBackgroundEvent,
   MonthViewWeekEvent,
 } from '#month-view';
 import { useCalendarSelector } from '#use-calendar';
@@ -41,6 +42,7 @@ const MonthBody = (props: { onTriggerClick?: (event: MouseEvent) => void }) => {
                 </MonthViewDay>
               )}
             </For>
+            <For each={week.backgroundEvents}>{segment => <MonthViewWeekBackgroundEvent segment={segment} />}</For>
             <For each={week.segments}>{segment => <MonthViewWeekEvent segment={segment}>{segment.event.data.title}</MonthViewWeekEvent>}</For>
           </MonthViewWeek>
         )}
@@ -168,4 +170,14 @@ it('renders a rolling four-week day grid and a fixed six-week month', async () =
   await expect.element(fixed.ui.grid).toBeInTheDocument();
   expect(fixed.ui.rows.elements()).toHaveLength(7);
   expect(fixed.ui.cells.elements()).toHaveLength(42);
+});
+
+it('positions all-day background events across the week row', async () => {
+  await setup({ backgroundEvents: [fixtures_allDay('Break', { start: '2026-03-06', end: '2026-03-09' })] });
+  const [first, second] = document.querySelectorAll('[data-part="month-week-background-event"]');
+
+  expect(first?.getAttribute('style')).toBe('--cal-col-start: 5; --cal-col-span: 2;');
+  expect(first?.getAttribute('aria-hidden')).toBe('true');
+  expect(first?.hasAttribute('data-continues-after')).toBe(true);
+  expect(second?.hasAttribute('data-continues-before')).toBe(true);
 });

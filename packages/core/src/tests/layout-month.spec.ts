@@ -107,3 +107,22 @@ it('shows six weeks with fixedWeekCount and pads them as outside days', async ()
   expect(fixed.day('2026-03-01')?.isOutside).toBe(true);
   expect(fixed.day('2026-03-14')?.isOutside).toBe(true);
 });
+
+it('spans all-day background events across week rows without taking rows', async () => {
+  const utils = await setup({
+    events: busyDay(6),
+    backgroundEvents: [
+      fixtures_allDay('break', { start: '2026-03-20', end: '2026-03-25' }),
+      fixtures_timed('closed', { date: '2026-03-25', start: '12:00', end: '13:00' }),
+    ],
+  });
+
+  expect(utils.week('2026-03-20')?.backgroundEvents).toEqual([
+    expect.objectContaining({ colStart: 5, colSpan: 2, continuesBefore: false, continuesAfter: true }),
+  ]);
+  expect(utils.week('2026-03-25')?.backgroundEvents).toEqual([
+    expect.objectContaining({ colStart: 0, colSpan: 4, continuesBefore: true, continuesAfter: false }),
+  ]);
+  expect(utils.week('2026-03-25')?.rows).toBe(4);
+  expect(utils.day('2026-03-25')?.hiddenCount).toBe(2);
+});

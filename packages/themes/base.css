@@ -66,6 +66,15 @@
     block-size: var(--calendar-bar-height, 1.375rem);
   }
 
+  /* Positioned above the in-flow day cells, so it must let clicks through to their triggers; later bars paint over it */
+  :where([data-scope='calendar'][data-part='month-week-background-event']) {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(var(--cal-col-start) / 7 * 100%);
+    inline-size: calc(var(--cal-col-span) / 7 * 100%);
+    pointer-events: none;
+  }
+
   /* Time grid: header, all-day row and body share the root's columns through subgrid */
 
   :where([data-scope='calendar'][data-part='time-grid-root']) {
@@ -110,6 +119,13 @@
     grid-row: calc(var(--cal-row) + 1);
   }
 
+  /* Every bar row of the all-day section, or the one implicit row when it has no bars */
+  :where([data-scope='calendar'][data-part='time-grid-all-day-background-event']) {
+    grid-column: calc(var(--cal-col-start) + 2) / span var(--cal-col-span);
+    grid-row: 1 / span max(1, var(--cal-all-day-rows, 1));
+    pointer-events: none;
+  }
+
   :where([data-scope='calendar'][data-part='time-grid-body']) {
     block-size: calc(var(--cal-slots) * var(--calendar-slot-height, 3rem));
   }
@@ -129,6 +145,7 @@
 
   :where([data-scope='calendar'][data-part='time-grid-unavailable']),
   :where([data-scope='calendar'][data-part='time-grid-background']),
+  :where([data-scope='calendar'][data-part='time-grid-background-event']),
   :where([data-scope='calendar'][data-part='time-grid-event']) {
     position: absolute;
     inset-block-start: calc(var(--cal-start) * 100%);
@@ -136,11 +153,13 @@
   }
 
   :where([data-scope='calendar'][data-part='time-grid-unavailable']),
-  :where([data-scope='calendar'][data-part='time-grid-background']) {
+  :where([data-scope='calendar'][data-part='time-grid-background']),
+  :where([data-scope='calendar'][data-part='time-grid-background-event']) {
     inset-inline: 0;
   }
 
-  :where([data-scope='calendar'][data-part='time-grid-background']) {
+  :where([data-scope='calendar'][data-part='time-grid-background']),
+  :where([data-scope='calendar'][data-part='time-grid-background-event']) {
     pointer-events: none;
   }
 

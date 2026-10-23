@@ -40,6 +40,28 @@ input changed).
 Until `'~mount'`, the state derives "now" from `initialNow` when given, otherwise from the clock. To render on a server
 and hydrate on the client, pass the same `initialNow` to both.
 
+## Background events
+
+`backgroundEvents` takes ranges shaped like events (timed or all-day, optional `resourceIds`, `data`) and lays them
+out under the events, without lanes or rows (design D37). Use them for dated items from your data; use background
+layers for rules such as business hours:
+
+```ts
+createCalendar({
+  ...options,
+  backgroundEvents: [
+    { id: 'holiday', allDay: true, start: Temporal.PlainDate.from('2026-03-17'), data: { kind: 'holiday' } },
+    { id: 'lunch', start: lunchStart, end: lunchEnd, data: { kind: 'closed' } },
+  ],
+});
+```
+
+- Time grid: `column.backgroundEvents` segments (all-day ones cover the whole column) and `allDay.backgroundEvents`
+  spans.
+- Month: `week.backgroundEvents` spans, for all-day background events only.
+- List: ignored.
+- Without `resourceIds`, a background event shades every resource column.
+
 ## Features
 
 Functionality beyond navigation and layout is added through features (design D29). A feature is a constant object; a

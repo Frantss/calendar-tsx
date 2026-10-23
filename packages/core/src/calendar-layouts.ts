@@ -41,6 +41,7 @@ export const monthLayout: Calendar_LayoutFeature<'month', Calendar_MonthViewSett
       range: input.range,
       period: input.period,
       events: input.events,
+      backgroundEvents: input.backgroundEvents,
       today: input.now.toPlainDate(),
     }),
 };
@@ -61,6 +62,7 @@ export const dayGridLayout: Calendar_LayoutFeature<'dayGrid', Calendar_DayGridVi
       range: input.range,
       period: input.period,
       events: input.events,
+      backgroundEvents: input.backgroundEvents,
       today: input.now.toPlainDate(),
     }),
 };
@@ -75,6 +77,7 @@ export const timeGridLayout: Calendar_LayoutFeature<'timeGrid', Calendar_TimeGri
       definition: settings,
       range: input.range,
       events: input.events,
+      backgroundEvents: input.backgroundEvents,
       resources: input.resources,
       timeZone: input.timeZone,
       now: input.now,

@@ -6,9 +6,11 @@ import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_allDay, fixtures_resource, fixtures_timed } from '#tests/calendar.fixtures';
 import {
   TimeGridViewAllDay,
+  TimeGridViewAllDayBackgroundEvent,
   TimeGridViewAllDayEvent,
   TimeGridViewAxis,
   TimeGridViewAxisLabel,
+  TimeGridViewBackgroundEvent,
   TimeGridViewBody,
   TimeGridViewColumn,
   TimeGridViewColumnHeader,
@@ -38,6 +40,9 @@ const TimeGridBody = () => {
       </TimeGridViewHeader>
       {grid.allDay && (
         <TimeGridViewAllDay>
+          {grid.allDay.backgroundEvents.map(segment => (
+            <TimeGridViewAllDayBackgroundEvent key={segment.key} segment={segment} />
+          ))}
           {grid.allDay.segments.map(segment => (
             <TimeGridViewAllDayEvent key={segment.key} segment={segment}>
               {segment.event.data.title}
@@ -53,6 +58,9 @@ const TimeGridBody = () => {
         </TimeGridViewAxis>
         {grid.columns.map(column => (
           <TimeGridViewColumn key={column.key} column={column}>
+            {column.backgroundEvents.map(segment => (
+              <TimeGridViewBackgroundEvent key={segment.key} segment={segment} />
+            ))}
             {column.unavailable.map(segment => (
               <TimeGridViewUnavailable key={segment.key} segment={segment} />
             ))}
@@ -138,4 +146,25 @@ it('navigates from a column trigger', async () => {
 
   expect(mocks.onNavigate.mock.calls[0]?.[0]).toMatchObject({ view: 'day' });
   expect(mocks.onNavigate.mock.calls[0]?.[0].date.toString()).toBe('2026-03-13');
+});
+
+it('renders background events as inert shades under the events', async () => {
+  const { ui } = await setup({
+    view: 'week',
+    backgroundEvents: [
+      fixtures_timed('Closed', { date: '2026-03-11', start: '12:00', end: '18:00' }),
+      fixtures_allDay('Break', { start: '2026-03-12', end: '2026-03-13' }),
+    ],
+  });
+  const [allDay] = ui.part('time-grid-all-day-background-event');
+  const shades = ui.part('time-grid-background-event');
+
+  expect(allDay?.getAttribute('style')).toBe('--cal-col-start: 4; --cal-col-span: 2;');
+  expect(shades.map(shade => shade.getAttribute('style'))).toEqual([
+    '--cal-start: 0.5; --cal-span: 0.25;',
+    '--cal-start: 0; --cal-span: 1;',
+    '--cal-start: 0; --cal-span: 1;',
+  ]);
+  expect(shades[1]?.hasAttribute('data-continues-after')).toBe(true);
+  expect([allDay, ...shades].every(shade => shade?.getAttribute('aria-hidden') === 'true')).toBe(true);
 });

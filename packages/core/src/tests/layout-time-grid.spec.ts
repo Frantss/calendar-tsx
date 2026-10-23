@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 
 import { timeGridView } from '#calendar-views';
 import type { Calendar_TimeGridLayout } from '#calendar.types';
-import { fixtures_resource, fixtures_timed } from '#tests/calendar.fixtures';
+import { fixtures_allDay, fixtures_resource, fixtures_timed } from '#tests/calendar.fixtures';
 import type { CalendarSetup_Overrides } from '#tests/calendar.setup';
 import { calendarSetup_create, calendarSetup_defaults } from '#tests/calendar.setup';
 
@@ -152,4 +152,60 @@ it('emits half-hour slots and the minimum column width', async () => {
   expect(utils.layout.slots).toHaveLength(48);
   expect(utils.layout.slots[19]?.time.toString()).toBe('09:30:00');
   expect(utils.layout.minColumnWidth).toBe('110px');
+});
+
+it('shades a timed background event under the events without taking a lane', async () => {
+  const utils = await setup({
+    events: [fixtures_timed('yoga', { date: '2026-03-11', start: '09:00', end: '10:00' })],
+    backgroundEvents: [
+      fixtures_timed('closed', { date: '2026-03-11', start: '09:00', end: '12:00' }),
+      fixtures_timed('elsewhere', { date: '2026-03-20', start: '09:00', end: '12:00' }),
+    ],
+  });
+  const background = utils.column('all:2026-03-11')?.backgroundEvents;
+
+  expect(utils.lanes('all:2026-03-11')).toEqual(['yoga:0/1']);
+  expect(background?.map(segment => segment.key)).toEqual(['all:2026-03-11:background:closed']);
+  expect(background?.[0]?.start).toBeCloseTo(9 / 24);
+  expect(background?.[0]?.span).toBeCloseTo(3 / 24);
+});
+
+it('splits a background event crossing midnight across columns', async () => {
+  const utils = await setup({
+    view: 'week',
+    backgroundEvents: [fixtures_timed('night', { date: '2026-03-12', start: '22:00', end: '06:00', endDate: '2026-03-13' })],
+  });
+
+  expect(utils.column('all:2026-03-12')?.backgroundEvents[0]).toMatchObject({ continuesBefore: false, continuesAfter: true });
+  expect(utils.column('all:2026-03-13')?.backgroundEvents[0]).toMatchObject({ start: 0, continuesBefore: true, continuesAfter: false });
+});
+
+it('shades every resource column unless the background event names resources', async () => {
+  const utils = await setup({
+    view: 'resources',
+    resources: [fixtures_resource('ana'), fixtures_resource('room')],
+    backgroundEvents: [
+      fixtures_timed('closed', { date: '2026-03-11', start: '12:00', end: '13:00' }),
+      fixtures_timed('cleaning', { date: '2026-03-11', start: '08:00', end: '09:00', resourceIds: ['room'] }),
+    ],
+  });
+
+  expect(utils.column('ana:2026-03-11')?.backgroundEvents.map(segment => segment.event.id)).toEqual(['closed']);
+  expect(utils.column('room:2026-03-11')?.backgroundEvents.map(segment => segment.event.id)).toEqual(['closed', 'cleaning']);
+});
+
+it('spans an all-day background event across the all-day row and shades each whole column', async () => {
+  const utils = await setup({
+    view: 'week',
+    events: [fixtures_allDay('fair', { start: '2026-03-12' })],
+    backgroundEvents: [fixtures_allDay('break', { start: '2026-03-12', end: '2026-03-13' })],
+  });
+
+  expect(utils.layout.allDay?.backgroundEvents).toEqual([
+    expect.objectContaining({ colStart: 4, colSpan: 2, continuesBefore: false, continuesAfter: false }),
+  ]);
+  expect(utils.layout.allDay?.rows).toBe(1);
+  expect(utils.column('all:2026-03-12')?.backgroundEvents[0]).toMatchObject({ start: 0, span: 1, continuesAfter: true });
+  expect(utils.column('all:2026-03-13')?.backgroundEvents[0]).toMatchObject({ continuesBefore: true, continuesAfter: false });
+  expect(utils.column('all:2026-03-14')?.backgroundEvents).toEqual([]);
 });

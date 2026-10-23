@@ -179,10 +179,22 @@ export type Calendar_BarSegment<TData, TFeatures = {}> = {
   continuesAfter: boolean;
 } & Calendar_PickFeatures<Calendar_BarSegment_FeatureMap, TFeatures>;
 
+/** A background event clipped to a run of day columns. It takes no row and sits under the bars (D37). */
+export type Calendar_BackgroundEventSpan<TData> = {
+  key: string;
+  event: Calendar_Event<TData>;
+  colStart: number;
+  colSpan: number;
+  continuesBefore: boolean;
+  continuesAfter: boolean;
+};
+
 export type Calendar_MonthWeek<TData, TFeatures = {}> = {
   key: string;
   days: Calendar_MonthDay<TData, TFeatures>[];
   segments: Calendar_BarSegment<TData, TFeatures>[];
+  /** All-day background events only; timed ones shade time-grid columns (D37). */
+  backgroundEvents: Calendar_BackgroundEventSpan<TData>[];
   rows: number;
 };
 
@@ -206,6 +218,16 @@ export type Calendar_TimeGridSegment<TData, TFeatures = {}> = {
 
 export type Calendar_UnavailableSegment = { key: string; start: number; span: number };
 
+/** A background event clipped to one time-grid column, as fractions of the column's day (D37). */
+export type Calendar_BackgroundEventSegment<TData> = {
+  key: string;
+  event: Calendar_Event<TData>;
+  start: number;
+  span: number;
+  continuesBefore: boolean;
+  continuesAfter: boolean;
+};
+
 export type Calendar_TimeGridColumn<TData, TResourceData, TFeatures = {}> = {
   key: string;
   date: Temporal.PlainDate;
@@ -213,6 +235,8 @@ export type Calendar_TimeGridColumn<TData, TResourceData, TFeatures = {}> = {
   isToday: boolean;
   isUnavailable: boolean;
   segments: Calendar_TimeGridSegment<TData, TFeatures>[];
+  /** Timed background events, plus all-day ones covering the whole day (D37). */
+  backgroundEvents: Calendar_BackgroundEventSegment<TData>[];
   unavailable: Calendar_UnavailableSegment[];
   now?: number;
 } & Calendar_PickFeatures<Calendar_TimeGridColumn_FeatureMap, TFeatures>;
@@ -223,7 +247,11 @@ export type Calendar_TimeGridLayout<TData, TResourceData, TFeatures = {}> = {
   kind: 'timeGrid';
   slots: Calendar_TimeGridSlot[];
   columns: Calendar_TimeGridColumn<TData, TResourceData, TFeatures>[];
-  allDay?: { segments: Calendar_BarSegment<TData, TFeatures>[]; rows: number };
+  allDay?: {
+    segments: Calendar_BarSegment<TData, TFeatures>[];
+    backgroundEvents: Calendar_BackgroundEventSpan<TData>[];
+    rows: number;
+  };
   minColumnWidth?: string;
 };
 
@@ -297,6 +325,8 @@ export type Calendar_LayoutInput<TData, TResourceData> = {
   period: Calendar_Range;
   /** Normalised to `timeZone`, clipped to `range`, sorted by `eventOrder`. */
   events: Calendar_Event<TData>[];
+  /** Normalised to `timeZone`, clipped to `range`, in input order (D37). */
+  backgroundEvents: Calendar_Event<TData>[];
   resources: Calendar_Resource<TResourceData>[];
   timeZone: string;
   now: Temporal.ZonedDateTime;
@@ -433,6 +463,11 @@ export type Calendar_Options<
   onNavigate: (next: Calendar_Navigation<TViews>) => void;
   /** Ids must be unique; tracked by reference. */
   events: Calendar_EventInput<TData>[];
+  /**
+   * Shaded ranges under the events (D37): no lanes or rows, no `eventOrder`, not counted by `maxEventsPerDay`. Without
+   * `resourceIds` they cover every resource column. Ids must be unique; tracked by reference.
+   */
+  backgroundEvents?: Calendar_EventInput<TData>[];
   /** Tracked by reference. */
   resources?: Calendar_Resource<TResourceData>[];
   /** Read when the layout derives; changing it alone does not re-derive. */

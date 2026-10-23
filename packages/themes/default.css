@@ -2,8 +2,8 @@
  * The default calendar theme (D26). Override any `--calendar-*` token on an ancestor of the
  * calendar; colors follow the inherited `color-scheme` through `light-dark()`.
  * Tokens that default to another token (`--calendar-event`, `--calendar-event-border`, `--calendar-event-text`,
- * `--calendar-focus-ring`, `--calendar-background`) are left undeclared and fall back at the point of use: declared
- * on `:root`, they would resolve there and ignore overrides further down.
+ * `--calendar-focus-ring`, `--calendar-background`, `--calendar-background-event`) are left undeclared and fall back at
+ * the point of use: declared on `:root`, they would resolve there and ignore overrides further down.
  */
 @import './base.css';
 
@@ -89,6 +89,17 @@
       --calendar-event-border,
       color-mix(in oklab, var(--calendar-accent) 24%, var(--calendar-surface))
     );
+  }
+
+  /* Background events: a light accent wash, translucent so day numbers and slot lines show through */
+  :where(
+    [data-scope='calendar']:is(
+      [data-part='month-week-background-event'],
+      [data-part='time-grid-all-day-background-event'],
+      [data-part='time-grid-background-event']
+    )
+  ) {
+    background: var(--calendar-background-event, color-mix(in oklab, var(--calendar-accent) 10%, transparent));
   }
 
   /* Event bars: month rows, the time grid's all-day row and timeline rows */
@@ -474,6 +485,18 @@
     :where([data-scope='calendar']:is([data-part='time-grid-background'], [data-part='month-day-background'])) {
       forced-color-adjust: none;
       background: repeating-linear-gradient(45deg, transparent 0 6px, GrayText 6px 7px);
+    }
+
+    /* Background events: hatched like layers, in the highlight color so the two stay apart */
+    :where(
+      [data-scope='calendar']:is(
+        [data-part='month-week-background-event'],
+        [data-part='time-grid-all-day-background-event'],
+        [data-part='time-grid-background-event']
+      )
+    ) {
+      forced-color-adjust: none;
+      background: repeating-linear-gradient(45deg, transparent 0 6px, Highlight 6px 7px);
     }
 
     :where([data-scope='calendar']:is([data-part='time-grid-now'], [data-part='timeline-now'])) {

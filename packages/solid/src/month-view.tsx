@@ -2,6 +2,7 @@ import { Show, splitProps } from 'solid-js';
 import type { Temporal } from 'temporal-polyfill';
 
 import type {
+  Calendar_BackgroundEventSpan,
   Calendar_BarSegment,
   Calendar_DayBackground,
   Calendar_MonthDay,
@@ -163,6 +164,32 @@ export const MonthViewWeekEvent = <TData,>(props: MonthViewWeekEventProps<TData>
             row: local.segment.row,
           }),
           ...part('month-week-event'),
+        }),
+        rest,
+      )}
+      state={local.segment}
+    />
+  );
+};
+
+type MonthViewWeekBackgroundEventProps<TData> = { segment: Calendar_BackgroundEventSpan<TData> } & Calendar_HTMLProps<
+  'div',
+  Calendar_BackgroundEventSpan<TData>
+>;
+
+/** An all-day background event across the week row, under the bars; not interactive (D37). */
+export const MonthViewWeekBackgroundEvent = <TData,>(props: MonthViewWeekBackgroundEventProps<TData>) => {
+  const [local, rest] = splitProps(props, ['segment']);
+
+  return (
+    <calendar.div
+      {...calendarProps_merge(
+        () => ({
+          'aria-hidden': true,
+          'data-continues-before': flag(local.segment.continuesBefore),
+          'data-continues-after': flag(local.segment.continuesAfter),
+          style: vars({ 'col-start': local.segment.colStart, 'col-span': local.segment.colSpan }),
+          ...part('month-week-background-event'),
         }),
         rest,
       )}

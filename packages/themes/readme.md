@@ -56,6 +56,7 @@ with it for the numbers on today's marker. Use a `light-dark()` pair so each mod
 | `--calendar-event`, `--calendar-event-border`                                              | unset: the accent tinted 16% and 24% into the surface |
 | `--calendar-event-text`, `--calendar-focus-ring`                                           | unset: fall back to the text and the accent           |
 | `--calendar-background`                                                                    | unset: the text at 6% over the surface                |
+| `--calendar-background-event`                                                              | unset: the accent at 10% over transparent             |
 | `--calendar-radius`, `--calendar-bar-radius`                                               | `0.375rem`, `0.25rem`                                 |
 | `--calendar-font-size`, `--calendar-font-size-sm`, `--calendar-font-size-xs`               | `0.875rem`, `0.75rem`, `0.6875rem`                    |
 | `--calendar-slot-height`, `--calendar-axis-width`                                          | `3rem`, `4rem`                                        |

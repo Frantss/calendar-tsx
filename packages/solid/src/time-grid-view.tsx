@@ -2,6 +2,8 @@ import { Show, splitProps } from 'solid-js';
 
 import type {
   Calendar_BackgroundSegment,
+  Calendar_BackgroundEventSegment,
+  Calendar_BackgroundEventSpan,
   Calendar_BarSegment,
   Calendar_TimeGridColumn,
   Calendar_TimeGridLayout,
@@ -143,6 +145,31 @@ export const TimeGridViewAllDayEvent = <TData,>(props: TimeGridViewAllDayEventPr
   );
 };
 
+type TimeGridViewAllDayBackgroundEventProps<TData> = {
+  segment: Calendar_BackgroundEventSpan<TData>;
+} & Calendar_HTMLProps<'div', Calendar_BackgroundEventSpan<TData>>;
+
+/** An all-day background event across the all-day row, under the bars; not interactive (D37). */
+export const TimeGridViewAllDayBackgroundEvent = <TData,>(props: TimeGridViewAllDayBackgroundEventProps<TData>) => {
+  const [local, rest] = splitProps(props, ['segment']);
+
+  return (
+    <calendar.div
+      {...calendarProps_merge(
+        () => ({
+          'aria-hidden': true,
+          'data-continues-before': flag(local.segment.continuesBefore),
+          'data-continues-after': flag(local.segment.continuesAfter),
+          style: vars({ 'col-start': local.segment.colStart, 'col-span': local.segment.colSpan }),
+          ...part('time-grid-all-day-background-event'),
+        }),
+        rest,
+      )}
+      state={local.segment}
+    />
+  );
+};
+
 export const TimeGridViewBody = <TData, TResourceData>(props: TimeGridViewProps<TData, TResourceData>) => {
   const [local, rest] = splitProps(props, ['model']);
 
@@ -230,6 +257,32 @@ export const TimeGridViewBackground = (
         rest,
       )}
       state={local.background}
+    />
+  );
+};
+
+type TimeGridViewBackgroundEventProps<TData> = { segment: Calendar_BackgroundEventSegment<TData> } & Calendar_HTMLProps<
+  'div',
+  Calendar_BackgroundEventSegment<TData>
+>;
+
+/** A background event in a column, under the events; not interactive (D37). */
+export const TimeGridViewBackgroundEvent = <TData,>(props: TimeGridViewBackgroundEventProps<TData>) => {
+  const [local, rest] = splitProps(props, ['segment']);
+
+  return (
+    <calendar.div
+      {...calendarProps_merge(
+        () => ({
+          'aria-hidden': true,
+          'data-continues-before': flag(local.segment.continuesBefore),
+          'data-continues-after': flag(local.segment.continuesAfter),
+          style: vars({ start: local.segment.start, span: local.segment.span }),
+          ...part('time-grid-background-event'),
+        }),
+        rest,
+      )}
+      state={local.segment}
     />
   );
 };

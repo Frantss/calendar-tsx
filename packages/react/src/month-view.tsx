@@ -3,6 +3,7 @@ import { forwardRef } from 'react';
 import type { Temporal } from 'temporal-polyfill';
 
 import type {
+  Calendar_BackgroundEventSpan,
   Calendar_BarSegment,
   Calendar_DayBackground,
   Calendar_MonthDay,
@@ -150,6 +151,31 @@ export const MonthViewWeekEvent = forwardRef<HTMLButtonElement, MonthViewWeekEve
     />
   ),
 ) as <TData>(props: MonthViewWeekEventProps<TData> & RefAttributes<HTMLButtonElement>) => ReactElement | null;
+
+type MonthViewWeekBackgroundEventProps<TData> = { segment: Calendar_BackgroundEventSpan<TData> } & Calendar_HTMLProps<
+  'div',
+  Calendar_BackgroundEventSpan<TData>
+>;
+
+/** An all-day background event across the week row, under the bars; not interactive (D37). */
+export const MonthViewWeekBackgroundEvent = forwardRef<HTMLDivElement, MonthViewWeekBackgroundEventProps<unknown>>(
+  ({ segment, ...props }, ref) => (
+    <calendar.div
+      {...calendarProps_merge(
+        {
+          'aria-hidden': true,
+          'data-continues-before': flag(segment.continuesBefore),
+          'data-continues-after': flag(segment.continuesAfter),
+          style: vars({ 'col-start': segment.colStart, 'col-span': segment.colSpan }),
+          ...part('month-week-background-event'),
+        },
+        props,
+      )}
+      state={segment}
+      ref={ref}
+    />
+  ),
+) as <TData>(props: MonthViewWeekBackgroundEventProps<TData> & RefAttributes<HTMLDivElement>) => ReactElement | null;
 
 type MonthViewOverflowProps<TData> = { day: Calendar_MonthDay<TData> } & Calendar_HTMLProps<
   'button',

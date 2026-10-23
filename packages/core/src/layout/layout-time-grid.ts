@@ -1,8 +1,10 @@
 import { Temporal } from 'temporal-polyfill';
 
-import { calendarEvents_isAllDay, calendarEvents_overlaps } from '#calendar-events';
+import { calendarEvents_dateSpan, calendarEvents_isAllDay, calendarEvents_overlaps } from '#calendar-events';
 import { calendarNavigation_days } from '#calendar-navigation';
 import type {
+  Calendar_BackgroundEventSegment,
+  Calendar_BackgroundEventSpan,
   Calendar_BarSegment,
   Calendar_Event,
   Calendar_Range,
@@ -11,7 +13,7 @@ import type {
   Calendar_TimeGridLayout,
   Calendar_TimeGridViewSettings,
 } from '#calendar.types';
-import { layoutBars_build, layoutBars_rows } from '#layout/layout-bars';
+import { layoutBars_background, layoutBars_build, layoutBars_rows } from '#layout/layout-bars';
 import { layoutIntervals_clip, layoutIntervals_complement, layoutIntervals_day } from '#layout/layout-intervals';
 import { layoutLanes_assign } from '#layout/layout-lanes';
 
@@ -23,16 +25,24 @@ const matchesResource = <TData, TResourceData>(
   resource?: Calendar_Resource<TResourceData>,
 ) => !resource || (event.resourceIds ?? []).includes(resource.id);
 
+/** Unlike events, a background event without `resourceIds` covers every resource column (D37). */
+const matchesBackgroundResource = <TData, TResourceData>(
+  event: Calendar_Event<TData>,
+  resource?: Calendar_Resource<TResourceData>,
+) => !resource || !event.resourceIds || event.resourceIds.includes(resource.id);
+
 const buildColumn = <TData, TResourceData>({
   date,
   resource,
   events,
+  backgroundEvents,
   timeZone,
   now,
 }: {
   date: Temporal.PlainDate;
   resource?: Calendar_Resource<TResourceData>;
   events: Calendar_Event<TData>[];
+  backgroundEvents: Calendar_Event<TData>[];
   timeZone: string;
   now: Temporal.ZonedDateTime;
 }): Calendar_TimeGridColumn<TData, TResourceData> => {
@@ -55,6 +65,45 @@ const buildColumn = <TData, TResourceData>({
         event,
         startMs: Math.max(startMs, day.startMs),
         endMs: Math.min(endMs, day.endMs),
+        continuesBefore: startMs < day.startMs,
+        continuesAfter: endMs > day.endMs,
+      },
+    ];
+  });
+
+  const backgroundSegments = backgroundEvents.flatMap((event): Calendar_BackgroundEventSegment<TData>[] => {
+    if (!matchesBackgroundResource(event, resource)) return [];
+
+    if (calendarEvents_isAllDay(event)) {
+      if (!calendarEvents_overlaps(event, { start: date, end: date })) return [];
+
+      const span = calendarEvents_dateSpan(event);
+
+      return [
+        {
+          key: `${key}:background:${event.id}`,
+          event,
+          start: 0,
+          span: 1,
+          continuesBefore: Temporal.PlainDate.compare(span.start, date) < 0,
+          continuesAfter: Temporal.PlainDate.compare(span.end, date) > 0,
+        },
+      ];
+    }
+
+    const startMs = event.start.epochMilliseconds;
+    const endMs = event.end.epochMilliseconds;
+
+    if (endMs <= day.startMs || startMs >= day.endMs) return [];
+
+    const clippedStart = Math.max(startMs, day.startMs);
+
+    return [
+      {
+        key: `${key}:background:${event.id}`,
+        event,
+        start: fraction(clippedStart),
+        span: (Math.min(endMs, day.endMs) - clippedStart) / length,
         continuesBefore: startMs < day.startMs,
         continuesAfter: endMs > day.endMs,
       },
@@ -88,6 +137,7 @@ const buildColumn = <TData, TResourceData>({
       continuesBefore: item.continuesBefore,
       continuesAfter: item.continuesAfter,
     })),
+    backgroundEvents: backgroundSegments,
     unavailable: resource
       ? layoutIntervals_complement(availability, day).map(gap => ({
           key: `${key}:unavailable:${gap.startMs}`,
@@ -100,48 +150,70 @@ const buildColumn = <TData, TResourceData>({
 };
 
 /**
- * All-day bars span contiguous columns of the same resource. Resource-first order keeps a
- * resource's days adjacent (D19); otherwise each column gets its own single-day bars.
+ * Places all-day spans per resource group. Resource-first order keeps a resource's days adjacent
+ * (D19), so a span crosses them; otherwise each column gets its own single-day spans.
  */
-const buildAllDay = <TData, TResourceData>(
+const placeAllDay = <TData, TResourceData, TSpan extends { colStart: number }>(
   columns: Calendar_TimeGridColumn<TData, TResourceData>[],
   groups: (Calendar_Resource<TResourceData> | undefined)[],
-  events: Calendar_Event<TData>[],
-) => {
-  const allDayEvents = events.filter(calendarEvents_isAllDay);
-
-  const segments = groups.flatMap((resource): Calendar_BarSegment<TData>[] => {
+  eventsOf: (resource?: Calendar_Resource<TResourceData>) => Calendar_Event<TData>[],
+  place: (events: Calendar_Event<TData>[], dates: Temporal.PlainDate[], keyPrefix: string) => TSpan[],
+) =>
+  groups.flatMap(resource => {
     const groupColumns = columns
       .map((column, index) => ({ column, index }))
       .filter(({ column }) => column.resource === resource);
     const offset = groupColumns[0]?.index ?? 0;
     const isContiguous = groupColumns.every(({ index }, position) => index === offset + position);
-    const groupEvents = allDayEvents.filter(event => matchesResource(event, resource));
+    const groupEvents = eventsOf(resource);
 
     if (isContiguous) {
-      return layoutBars_build(
+      return place(
         groupEvents,
         groupColumns.map(({ column }) => column.date),
         `all-day:${resource?.id ?? 'all'}`,
-      ).map(segment => ({ ...segment, colStart: segment.colStart + offset }));
+      ).map(span => ({ ...span, colStart: span.colStart + offset }));
     }
 
     return groupColumns.flatMap(({ column, index }) =>
-      layoutBars_build(
+      place(
         groupEvents.filter(event => calendarEvents_overlaps(event, { start: column.date, end: column.date })),
         [column.date],
         `all-day:${column.key}`,
-      ).map(segment => ({ ...segment, colStart: index })),
+      ).map(span => ({ ...span, colStart: index })),
     );
   });
 
-  return { segments, rows: layoutBars_rows(segments) };
+const buildAllDay = <TData, TResourceData>(
+  columns: Calendar_TimeGridColumn<TData, TResourceData>[],
+  groups: (Calendar_Resource<TResourceData> | undefined)[],
+  events: Calendar_Event<TData>[],
+  backgroundEvents: Calendar_Event<TData>[],
+) => {
+  const allDayEvents = events.filter(calendarEvents_isAllDay);
+  const allDayBackground = backgroundEvents.filter(calendarEvents_isAllDay);
+
+  const segments: Calendar_BarSegment<TData>[] = placeAllDay(
+    columns,
+    groups,
+    resource => allDayEvents.filter(event => matchesResource(event, resource)),
+    layoutBars_build,
+  );
+  const backgroundSpans: Calendar_BackgroundEventSpan<TData>[] = placeAllDay(
+    columns,
+    groups,
+    resource => allDayBackground.filter(event => matchesBackgroundResource(event, resource)),
+    layoutBars_background,
+  );
+
+  return { segments, backgroundEvents: backgroundSpans, rows: layoutBars_rows(segments) };
 };
 
 export const layoutTimeGrid_build = <TData, TResourceData>({
   definition,
   range,
   events,
+  backgroundEvents,
   resources,
   timeZone,
   now,
@@ -149,6 +221,7 @@ export const layoutTimeGrid_build = <TData, TResourceData>({
   definition: Calendar_TimeGridViewSettings;
   range: Calendar_Range;
   events: Calendar_Event<TData>[];
+  backgroundEvents: Calendar_Event<TData>[];
   resources: Calendar_Resource<TResourceData>[];
   timeZone: string;
   now: Temporal.ZonedDateTime;
@@ -162,7 +235,9 @@ export const layoutTimeGrid_build = <TData, TResourceData>({
       ? dates.flatMap(date => groups.map(resource => ({ date, resource })))
       : groups.flatMap(resource => dates.map(date => ({ date, resource })));
 
-  const columns = pairs.map(({ date, resource }) => buildColumn({ date, resource, events, timeZone, now }));
+  const columns = pairs.map(({ date, resource }) =>
+    buildColumn({ date, resource, events, backgroundEvents, timeZone, now }),
+  );
   const slotMinutes = definition.slotMinutes ?? DEFAULT_SLOT_MINUTES;
 
   return {
@@ -173,7 +248,7 @@ export const layoutTimeGrid_build = <TData, TResourceData>({
       return { key: time.toString(), time };
     }),
     columns,
-    allDay: definition.allDay === false ? undefined : buildAllDay(columns, groups, events),
+    allDay: definition.allDay === false ? undefined : buildAllDay(columns, groups, events, backgroundEvents),
     minColumnWidth: definition.minColumnWidth,
   };
 };

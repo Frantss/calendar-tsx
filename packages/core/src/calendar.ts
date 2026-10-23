@@ -32,7 +32,7 @@ type AnyOptions = Calendar_Options<any, any, Calendar_Views, Calendar_Features>;
 /** Inputs the layout depends on; everything else on the options is read untracked (D24). */
 type Tracked = Pick<
   AnyOptions,
-  'timeZone' | 'views' | 'view' | 'date' | 'events' | 'resources' | 'firstDayOfWeek' | 'state'
+  'timeZone' | 'views' | 'view' | 'date' | 'events' | 'backgroundEvents' | 'resources' | 'firstDayOfWeek' | 'state'
 > & { now: Temporal.Instant; featureOptions: Record<string, unknown> };
 
 const tracked_from = (options: AnyOptions, now: Temporal.Instant, featureKeys: readonly string[]): Tracked => ({
@@ -41,6 +41,7 @@ const tracked_from = (options: AnyOptions, now: Temporal.Instant, featureKeys: r
   view: options.view,
   date: options.date,
   events: options.events,
+  backgroundEvents: options.backgroundEvents,
   resources: options.resources,
   firstDayOfWeek: options.firstDayOfWeek,
   state: options.state,
@@ -60,6 +61,7 @@ const tracked_equals = (a: Tracked, b: Tracked) =>
   a.view === b.view &&
   a.date.equals(b.date) &&
   a.events === b.events &&
+  a.backgroundEvents === b.backgroundEvents &&
   a.resources === b.resources &&
   a.firstDayOfWeek === b.firstDayOfWeek &&
   records_equal(a.state, b.state) &&
@@ -194,12 +196,17 @@ export const createCalendar = <
     for (const [key, feature] of active)
       if (feature.events) events = stage_run(`${key}:events`, feature.events, events);
 
+    const backgroundEvents = calendarEvents_normalize(input.backgroundEvents ?? [], input.timeZone).filter(event =>
+      calendarEvents_overlaps(event, viewContext.range),
+    );
+
     const layout = resolve(definition, definition['~layout']) as Calendar_LayoutFeature;
     let model: Calendar_AnyLayout = layout.build(
       {
         range: viewContext.range,
         period: viewContext.period,
         events,
+        backgroundEvents,
         resources: input.resources ?? [],
         timeZone: input.timeZone,
         now,

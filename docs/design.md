@@ -10,7 +10,7 @@
 
 A headless calendar library that satisfies `docs/calendar-spec.md` (R1–R11): a framework-agnostic core on TanStack Store, Temporal for all date math, a React adapter with Ark-style composable parts, and no styles.
 
-- **In scope:** views, navigation and visible range, event layout, resources and availability shading, overflow, now indicator, click/focus targets, geometry exposed as CSS variables and data attributes.
+- **In scope:** views, navigation and visible range, event layout, background events (D37), resources and availability shading, overflow, now indicator, click/focus targets, geometry exposed as CSS variables and data attributes.
 - **Out of scope (consumer's job):** URL sync, header controls and selectors, data fetching, the drawer, drafts as data, colours and copy per event kind.
 - **Not supported:** drag and resize, date selection, recurrence. Timeline views were here until D34.
 
@@ -38,6 +38,7 @@ Library-level capabilities, each traced to the app spec. Draft; confirmed when t
 - **C10 — Day targets:** day cells and day headers addressable as interactive parts. _(R8.1)_
 - **C11 — Min column width / horizontal scroll** for week and resource grids. _(R1.6, pending app Q1)_
 - **C12 — Managed event state (opt-in):** a standalone event store with add/remove/update whose state feeds the calendar's `events` input. _(D2)_
+- **C13 — Background events:** shaded date or time ranges (holidays, closures, blocked time) drawn under the events, per resource or across all of them. _(D37; FullCalendar parity, not an app requirement)_
 
 ## Composition
 
@@ -140,6 +141,7 @@ Every part renders `data-scope="calendar"` and its `data-part`, accepts a `rende
 | `MonthView_Week`                            | One week row; `role="row"`; sets `--cal-rows`                                                                                                              | —    |
 | `MonthView_Day`                             | One day cell; `role="gridcell"`, `data-today`, `data-outside`                                                                                              | —    |
 | `MonthView_DayTrigger`                      | Button to go to the day (app R8.1)                                                                                                                         | —    |
+| `MonthView_WeekBackgroundEvent`             | An all-day background event across the week row, under the bars; `--cal-col-start`, `--cal-col-span`, `data-continues-before/after`; `aria-hidden` (D37)   | —    |
 | `MonthView_WeekEvent`                       | A bar in the week row; `--cal-col-start`, `--cal-col-span`, `--cal-row`, `data-continues-before/after`; button (D17)                                       | —    |
 | `MonthView_Overflow`                        | "See all" button inside a day; renders when `day.hasMore` (local hidden rows or the `dayOverflow` hint); `data-hidden-count` is the local count (D14, D17) | —    |
 
@@ -151,10 +153,12 @@ Every part renders `data-scope="calendar"` and its `data-part`, accepts a `rende
 | `TimeGridView_Header` / `TimeGridView_ColumnHeader` | Column headers (date, or resource with `data-unavailable`)                  | —    |
 | `TimeGridView_ColumnTrigger`                        | Button inside a date header to go to the day (app R8.1)                     | —    |
 | `TimeGridView_AllDay` / `TimeGridView_AllDayCell`   | All-day row and its per-column cells; omitted by views with `allDay: false` | —    |
+| `TimeGridView_AllDayBackgroundEvent`                | An all-day background event across every row of the all-day section (D37)   | —    |
 | `TimeGridView_AllDayEvent`                          | A bar in the all-day row, spanning columns (D17)                            | —    |
 | `TimeGridView_Body`                                 | Scrollable body; sets `--cal-slots`                                         | —    |
 | `TimeGridView_Axis` / `TimeGridView_AxisLabel`      | Slot labels                                                                 | —    |
 | `TimeGridView_Column`                               | One day or resource column                                                  | —    |
+| `TimeGridView_BackgroundEvent`                      | Shaded segment from a background event; `--cal-start/span` (D37)            | —    |
 | `TimeGridView_Unavailable`                          | Shaded segment from availability (D12)                                      | —    |
 | `TimeGridView_Event`                                | Positioned event; `--cal-start/span/lane/lanes`                             | —    |
 | `TimeGridView_NowIndicator`                         | Renders only in today's column (D11)                                        | —    |
@@ -197,6 +201,7 @@ type Calendar_Options<TData, TResourceData, TViews extends Record<string, Calend
   date: Temporal.PlainDate; // controlled (D5, D7)
   onNavigate: (next: Calendar_Navigation<TViews>) => void;
   events: Calendar_EventInput<TData>[]; // D2, D7, D8
+  backgroundEvents?: Calendar_EventInput<TData>[]; // D37
   resources?: Calendar_Resource<TResourceData>[]; // D12
   eventOrder?: (a: Calendar_Event<TData>, b: Calendar_Event<TData>, context: Calendar_ViewContext<TViews>) => number; // D16
   firstDayOfWeek?: 1 | 2 | 3 | 4 | 5 | 6 | 7; // ISO; 7 = Sunday
@@ -998,6 +1003,35 @@ Rejected: `weeks` on `monthView` (a one-week "month" view, and a settings bag wh
 
 Rejected: `listView({ months })` (a count cannot express a calendar year, since `months: 12` would start at the month of `date`); separate `listMonthView`/`listYearView` factories (four names for one layout). The same month and year periods are what `dayGridYear` needs later (D35).
 
+### D37 — Background events are a separate input, laid out under the events
+
+**Serves:** C13; D33
+
+**Verified:** not verified — additive; cheap to reverse while the packages are experimental
+
+**Relation to D33.** Background layers and background events both shade time, but they answer different questions. A layer is a rule the app configures once: a `kind` of shading (closed, holiday) over ranges that may repeat weekly or be inverted, styled by `data-kind`, with no identity per range. A background event is one dated item from the app's data: it has an id, a `TData` payload the app renders or links from, continuation flags across days and weeks, and a place in the all-day row. Business hours are a layer; a booked-out afternoon or a conference fetched with the events is a background event. The two coexist and stack: layers render through `backgroundFeature`'s `backgrounds` fields, background events through the core's `backgroundEvents` fields.
+
+**Why:** Background events are shaded ranges with an event's shape: an id, a timed or all-day span, optional `resourceIds`, and `data`. They arrive as their own option, `backgroundEvents`, beside `events`. As a flag on `events` they would reach every consumer of the event list (`day.events` in the overflow popover, list days, `eventOrder`, feature `events` stages), and each would have to filter them out. The input shares `TData` (D8): a second generic would stay `unknown` whenever the app names `TData` explicitly, because TypeScript has no partial type-argument inference, and apps already discriminate `data` by kind. The option is tracked by reference like `events` (D24), normalised to `timeZone` (D7), clipped to the visible range and kept in input order; it reaches layout features as `Calendar_LayoutInput.backgroundEvents`.
+
+Layout:
+
+- **Time grid:** each column gets `backgroundEvents` segments as fractions of its day, clipped at midnight like timed events (D17) but without lanes. An all-day background event also covers its whole column (`start: 0, span: 1`), so a holiday shades the day even in a view with `allDay: false`. The all-day row gets `allDay.backgroundEvents` spans across columns, placed per resource group like the bars (D19) but without rows.
+- **Month and day grids (D35):** each week gets `backgroundEvents` spans for all-day background events only. A timed one would tint a whole day cell for an hour of it.
+- **List:** background events are ignored; the list shows only days with events (D18).
+- **Timeline (D34):** not shaded yet; the timeline layout ignores background events.
+- **Resources:** a background event without `resourceIds` covers every resource column, unlike an event, which appears only in the columns it names. A closure usually applies to everyone, so this matches FullCalendar.
+- **Overflow:** background events take no row, so they never count toward `maxEventsPerDay` or `hiddenCount` (D17).
+
+Parts: `MonthView_WeekBackgroundEvent`, `TimeGridView_AllDayBackgroundEvent` and `TimeGridView_BackgroundEvent` render `aria-hidden` divs with `--cal-*` geometry and `data-continues-before`/`data-continues-after`; they are not interactive, because the time and date they cover already belong to the day cells and columns (D13, D15). `base.css` sets `pointer-events: none` on them and places them under the events. The month spans are positioned above the in-flow day cells, so the day triggers must stay clickable through them. In the all-day row the consumer renders them before the bars, because grid items paint in DOM order. `default.css` fills them with a 10% accent wash (`--calendar-background-event`), translucent so day numbers and slot lines show through, and hatches them in `Highlight` under forced colours.
+
+**Rejected:**
+
+- **A `background` flag on events:** it leaks into every list of events, as above.
+- **Background layers (D33) for these entries:** a layer per entry loses the id and payload, and one layer of all entries cannot tell the app which entry a shaded span came from, nor flag continuation across days.
+- **Sharing D33's parts and fields:** layers are keyed by layer and `kind`, background events by event; one part would need both shapes. They keep separate names (`backgrounds` against `backgroundEvents`, `TimeGridViewBackground` against `TimeGridViewBackgroundEvent`).
+- **Extending resource `availability` (D12):** it is the inverse (shade outside the intervals), per resource only, and has no payload.
+- **Month tint for timed background events:** a partial-day range cannot be shown in a day cell without reading as the whole day.
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.
@@ -1030,6 +1064,7 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - A duplicate event id logs a development-only warning; production behaviour is unspecified and not relied on. _(D2)_
 - Replacing `events` through `setOptions` re-derives the layout with no other API calls (see-all merge, drafts). _(C5, D2, app R4.5, R11.3)_
 - `event.data` keeps its `TData` type through to the parts (type test). _(D8)_
+- Replacing `backgroundEvents` re-derives the layout; it is tracked by reference like `events`. _(C13, D24, D37)_
 
 ### Month layout
 
@@ -1039,6 +1074,7 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - A bar in a hidden row counts toward `hiddenCount` on every day it crosses. _(D17)_
 - `dayOverflow(date) === true` sets `hasMore` on a day with no locally hidden rows; `hiddenCount` stays the local count. _(D17, app R4.2)_
 - Padding days carry `isOutside`; today's cell carries `isToday` from the clock. _(C1, D11)_
+- An all-day background event becomes `backgroundEvents` spans split at week boundaries; a timed one does not appear; neither changes `rows` or `hiddenCount`. _(C13, D37)_
 
 ### Time-grid layout
 
@@ -1050,6 +1086,10 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - A period crossing midnight shades correctly on both days. _(D12)_
 - An event referencing two resources appears in both columns. _(C7, app R7.3)_
 - The now indicator appears only in today's column, at the clock's offset. _(C9, D11, app R1.5)_
+- A timed background event becomes a `backgroundEvents` segment at its fraction of the day, takes no lane, and is dropped outside the visible range. _(C13, D37)_
+- A background event crossing midnight splits across columns with continuation flags. _(C13, D37)_
+- A background event without `resourceIds` shades every resource column; one with `resourceIds` shades only those. _(C13, D37)_
+- An all-day background event spans the all-day row's columns and shades each of its columns whole. _(C13, D37)_
 
 ### Day-grid views
 
@@ -1095,6 +1135,7 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - `TimeGridView_Event` sets `--cal-start`, `--cal-span`, `--cal-lane`, `--cal-lanes` from its segment. _(D9, app R1.8)_
 - `MonthView_WeekEvent` sets `--cal-col-start`, `--cal-col-span`, `--cal-row`. _(D9, D17)_
 - `MonthView_Overflow` renders only when `day.hasMore`, with `data-hidden-count`. _(D14, D17, app R6.1)_
+- `MonthView_WeekBackgroundEvent`, `TimeGridView_AllDayBackgroundEvent` and `TimeGridView_BackgroundEvent` set their `--cal-*` geometry and continuation flags and are `aria-hidden`. _(C13, D37)_
 - `MonthView_DayTrigger view="day"` (C10) calls `api.navigate({ view: 'day', date })` on click; a consumer `onClick` calling `preventDefault()` skips it. _(D22, app R8.1)_
 - `TimeGridView_ColumnHeader` for an unavailable resource carries `data-unavailable`. _(C7, app R7.2)_
 - `Calendar_Root` and `useCalendar` + `Calendar_RootProvider` produce the same context. _(D6)_
@@ -1122,6 +1163,9 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - An accent set on an ancestor tints the events, and `--calendar-event` overrides that tint. _(D26)_
 - `high-contrast.css` outlines events, timeline events included, in the text colour at 2px, marks today in its accent in both modes, dashes the edge where a bar continues, and still lets `--calendar-event` override the fill. _(D26)_
 - `revenuecat.css` marks today in the exact brand red with black purple numbers, tints events blue, and keeps red text off white, on time-grid and timeline headers. _(D26)_
+- A timed background event fills its fraction of the column under the events, and the event stays on top. _(D26, D37)_
+- An all-day background event covers every bar row of the all-day section across its columns. _(D26, D37)_
+- A month background span covers its day cells, and the day triggers under it stay clickable. _(D26, D37)_
 - `stripe.css` marks today in blurple with its contrast colour and tints events from it, in both modes. _(D26)_
 - With `default.css`, timeline events take the accent tint, today's day trigger the accent, resource cells stay opaque, unavailable time is hatched, the now line is the accent, a scrolled day label sticks beside the resource column, and forced-colors mode marks today with `Highlight`. _(D26, D34)_
 - With `base.css`, a timeline event sits at its fraction of the track, day headers line up with their slots, stacked events do not overlap, and the now line sits at the clock's offset. _(D26, D34)_

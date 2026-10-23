@@ -101,6 +101,15 @@ it('re-derives when the events reference changes', async () => {
   expect(utils.state()).not.toBe(before);
 });
 
+it('re-derives when the backgroundEvents reference changes', async () => {
+  const utils = await calendarSetup_create();
+  const before = utils.state();
+
+  utils.update({ backgroundEvents: [fixtures_allDay('holiday', { start: '2026-03-17' })] });
+
+  expect(utils.state()).not.toBe(before);
+});
+
 it('reads eventOrder at derivation time without tracking it', async () => {
   const events = [
     fixtures_timed('a', { date: '2026-03-11', start: '09:00', end: '10:00' }),
