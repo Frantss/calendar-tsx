@@ -17,6 +17,9 @@ export default defineConfig({
     tanstackStart({
       prerender: {
         enabled: true,
+        // the crawler queues `/page#anchor` apart from `/page` but writes both to the same file; concurrent writes can
+        // leave it empty, and the sidebar already links every page without a hash
+        filter: ({ path }) => !path.includes('#'),
       },
     }),
     react(),
