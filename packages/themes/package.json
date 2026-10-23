@@ -1,0 +1,43 @@
+{
+  "name": "@calendar-tsx/themes",
+  "version": "0.0.0",
+  "description": "Stylesheets for @calendar-tsx parts: a positioning base and a default theme.",
+  "license": "MIT",
+  "author": "Frantss <frantss.bongiovanni@gmail.com>",
+  "files": [
+    "base.css",
+    "default.css"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "imports": {
+    "#tests/themes.setup": "./src/tests/themes.setup.tsx",
+    "#*": "./src/*.ts"
+  },
+  "exports": {
+    "./base.css": "./base.css",
+    "./default.css": "./default.css",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "vp test",
+    "test:dev": "vp test --watch",
+    "check:types": "vp exec tsc --noEmit",
+    "check:package": "publint --strict"
+  },
+  "devDependencies": {
+    "@calendar-tsx/core": "workspace:*",
+    "@calendar-tsx/react": "workspace:*",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "publint": "^0.3.25",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "temporal-polyfill": "^1.0.6",
+    "typescript": "^7.0.2",
+    "vitest-browser-react": "^2.3.0"
+  }
+}
