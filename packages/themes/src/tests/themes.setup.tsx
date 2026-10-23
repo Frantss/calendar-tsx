@@ -8,8 +8,6 @@ import type { Calendar_AllDayEventInput, Calendar_TimedEventInput, Calendar_View
 import { calendarClock_fixed, calendarView_month, calendarView_timeGrid } from '@calendar-tsx/core';
 import { Calendar_RootProvider, useCalendar } from '@calendar-tsx/react';
 
-import '../../default.css';
-
 export type ThemesSetup_EventData = { title: string };
 
 type ThemesSetup_Event =
@@ -27,6 +25,7 @@ const themesSetup_defaults = iife(() => ({
   view: 'day',
   events: [] as ThemesSetup_Event[],
   colorScheme: 'light' as CSSProperties['colorScheme'],
+  className: undefined as string | undefined,
 }));
 
 export const themesSetup_timed = (id: string, { date, start, end }: { date: string; start: string; end: string }) => ({
@@ -44,9 +43,9 @@ export const themesSetup_allDay = (id: string, { start, end }: { start: string; 
   data: { title: id },
 });
 
-/** Renders `children` themed by `default.css`, at a fixed width so geometry is deterministic. */
+/** Renders `children` at a fixed width so geometry is deterministic; each spec imports the stylesheets it tests. */
 export const themesSetup_render = async (children: ReactNode, overrides: Partial<typeof themesSetup_defaults> = {}) => {
-  const { views, view, events, colorScheme } = { ...themesSetup_defaults, ...overrides };
+  const { views, view, events, colorScheme, className } = { ...themesSetup_defaults, ...overrides };
 
   const Harness = () => {
     const calendar = useCalendar<ThemesSetup_EventData, null>({
@@ -61,7 +60,7 @@ export const themesSetup_render = async (children: ReactNode, overrides: Partial
     });
 
     return (
-      <div style={{ inlineSize: 700, colorScheme }}>
+      <div className={className} style={{ inlineSize: 700, colorScheme }}>
         <Calendar_RootProvider value={calendar}>{children}</Calendar_RootProvider>
       </div>
     );

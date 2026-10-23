@@ -18,6 +18,8 @@ import {
   useCalendarSelector,
 } from '@calendar-tsx/react';
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
+import '../../default.css';
+
 import { themesSetup_allDay, themesSetup_part, themesSetup_rect, themesSetup_render, themesSetup_timed } from '#tests/themes.setup';
 
 const TimeGrid = ({ eventClassName }: { eventClassName?: string }) => {
