@@ -1,117 +1,17 @@
 ---
 title: Overview
-description: Solid bindings for the core — reactive primitives and unstyled, composable parts.
+description: Build calendars in Solid with headless, composable parts.
 ---
 
-`@calendar-tsx/solid` creates a [core](/docs/core) calendar from Solid signals and renders its layouts with unstyled
-parts. Part names, props, data attributes and `--cal-*` variables match the [React bindings](/docs/react), so the
-[themes](/docs/themes) style both. It differs only where Solid's reactivity requires it.
+`@calendar-tsx/solid` creates a calendar from Solid signals and renders it with unstyled parts for month, week, day,
+resource and list views. Part names, props, data attributes and `--cal-*` variables match the React bindings, so the
+same themes style both.
 
-## Install
+<Cards>
+  <Card title='Installation' href='/docs/solid/getting-started/installation' />
+  <Card title='Quick start' href='/docs/solid/getting-started/quick-start' />
+  <Card title='Concepts' href='/docs/solid/getting-started/concepts' />
+  <Card title='Month view' href='/docs/solid/views/month-view' />
+</Cards>
 
-```npm
-npm i @calendar-tsx/solid @calendar-tsx/core temporal-polyfill
-```
-
-Solid 1.x, from 1.8, is supported.
-
-## Quick start
-
-```tsx
-import type { Calendar_EventInput, Calendar_State } from '@calendar-tsx/core';
-import { createCalendarViews, monthView, timeGridView } from '@calendar-tsx/core';
-import {
-  CalendarProvider,
-  MonthView,
-  MonthViewDay,
-  MonthViewWeek,
-  MonthViewWeekEvent,
-  useCalendar,
-  useCalendarSelector,
-} from '@calendar-tsx/solid';
-import '@calendar-tsx/themes/default.css';
-import { createSignal, For, Show } from 'solid-js';
-import { Temporal } from 'temporal-polyfill';
-
-type Booking = { title: string };
-
-// module scope: views and features are compared by reference
-const views = createCalendarViews({
-  month: monthView({ maxEventsPerDay: 3 }),
-  week: timeGridView({ days: 7 }),
-});
-
-export const App = (props: { events: Calendar_EventInput<Booking>[] }) => {
-  const [view, setView] = createSignal<keyof typeof views.views>('month');
-  const [date, setDate] = createSignal(Temporal.Now.plainDateISO());
-
-  const calendar = useCalendar(() => ({
-    timeZone: 'America/New_York',
-    views: views.views,
-    features: { ...views.features },
-    view: view(),
-    date: date(),
-    events: props.events,
-    onNavigate: next => {
-      setView(next.view);
-      setDate(next.date);
-    },
-  }));
-
-  return (
-    <CalendarProvider value={calendar}>
-      <button onClick={() => calendar.api.prev()}>Previous</button>
-      <button onClick={() => calendar.api.today()}>Today</button>
-      <button onClick={() => calendar.api.next()}>Next</button>
-      <Month />
-    </CalendarProvider>
-  );
-};
-
-// the context erases the instance's types; annotate the selector to get them back
-type State = Calendar_State<Booking, unknown, typeof views.views>;
-
-const Month = () => {
-  const layout = useCalendarSelector((state: State) => state.layout);
-  const month = () => {
-    const current = layout();
-
-    return current.kind === 'month' ? current : undefined;
-  };
-
-  return (
-    <Show when={month()}>
-      {month => (
-        <MonthView model={month()}>
-          <For each={month().weeks}>
-            {week => (
-              <MonthViewWeek week={week}>
-                <For each={week.days}>{day => <MonthViewDay day={day}>{day.date.day}</MonthViewDay>}</For>
-                <For each={week.segments}>
-                  {segment => <MonthViewWeekEvent segment={segment}>{segment.event.data.title}</MonthViewWeekEvent>}
-                </For>
-              </MonthViewWeek>
-            )}
-          </For>
-        </MonthView>
-      )}
-    </Show>
-  );
-};
-```
-
-## Differences from React
-
-|                       | React                               | Solid                                                  |
-| --------------------- | ----------------------------------- | ------------------------------------------------------ |
-| `useCalendar`         | `useCalendar(options)`              | `useCalendar(() => options)`: an accessor              |
-| `useCalendarSelector` | Returns the value                   | Returns an accessor                                    |
-| Event store `events`  | An array                            | An accessor                                            |
-| `render`              | An element or `(props, state) => …` | A function only: `(props, state) => …`, both functions |
-| Class prop            | `className`                         | `class`                                                |
-| Lists and conditions  | `.map()`, `&&`                      | `<For>`, `<Show>`                                      |
-| Server Components     | Entry marked `'use client'`         | Not applicable                                         |
-
-See [primitives](/docs/solid/primitives), [parts](/docs/solid/parts) and [server rendering](/docs/solid/server-rendering).
-
-<Callout title='Experimental'>The Solid API can change or be removed in any release, without notice.</Callout>
+<Callout title='Experimental'>The API can change or be removed in any release, without notice.</Callout>

@@ -10,7 +10,7 @@
     "dev": "vp dev",
     "build": "vp build",
     "preview": "vp preview",
-    "check:types": "vp exec tsc --noEmit && vp exec tsc --noEmit -p examples/react && vp exec tsc --noEmit -p examples/features"
+    "check:types": "vp exec tsc --noEmit && vp exec tsc --noEmit -p examples/react && vp exec tsc --noEmit -p examples/solid && vp exec tsc --noEmit -p examples/features && vp exec tsc --noEmit -p examples/features/solid"
   },
   "dependencies": {
     "@tanstack/react-router": "1.170.45",
@@ -28,6 +28,7 @@
   "devDependencies": {
     "@calendar-tsx/core": "workspace:*",
     "@calendar-tsx/react": "workspace:*",
+    "@calendar-tsx/solid": "workspace:*",
     "@calendar-tsx/themes": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
     "@types/mdx": "^2.0.14",
@@ -36,6 +37,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "nitro": "3.0.260903-beta",
+    "solid-js": "1.9.17",
     "tailwindcss": "^4.3.3",
     "temporal-polyfill": "^1.0.6",
     "typescript": "^7.0.2"

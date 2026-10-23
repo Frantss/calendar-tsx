@@ -237,6 +237,9 @@ importers:
       '@calendar-tsx/react':
         specifier: workspace:*
         version: link:../../packages/react
+      '@calendar-tsx/solid':
+        specifier: workspace:*
+        version: link:../../packages/solid
       '@calendar-tsx/themes':
         specifier: workspace:*
         version: link:../../packages/themes
@@ -261,6 +264,9 @@ importers:
       nitro:
         specifier: 3.0.260903-beta
         version: 3.0.260903-beta
+      solid-js:
+        specifier: 1.9.17
+        version: 1.9.17
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3

@@ -1,4 +1,4 @@
-`@calendar-tsx/themes` styles the parts of `@calendar-tsx/react`. The stylesheets select parts by their
+`@calendar-tsx/themes` styles the parts of the React and Solid bindings. The stylesheets select parts by their
 `data-scope`/`data-part` attributes and lay them out from the `--cal-*` geometry the parts emit, so they need no
 JavaScript and no class names.
 
@@ -46,7 +46,7 @@ when those layers come after the calendar's. See [overriding rules](customizing#
 
 ## Expected composition
 
-The layout assumes the parts are nested as the React bindings document them:
+The layout assumes the parts are nested as the [view pages](../views/month-view) show them:
 
 - `MonthViewWeek` holds its `MonthViewDay` cells and `MonthViewWeekEvent` bars.
 - `TimeGridView` holds `TimeGridViewHeader`, an optional `TimeGridViewAllDay` and `TimeGridViewBody`.

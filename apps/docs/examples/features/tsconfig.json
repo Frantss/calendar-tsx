@@ -6,5 +6,5 @@
     "declaration": false,
     "emitDeclarationOnly": false
   },
-  "include": ["./**/*.ts", "./**/*.tsx", "../core/**/*.ts"]
+  "include": ["./highlight-feature.ts", "./react.tsx", "../core/**/*.ts"]
 }

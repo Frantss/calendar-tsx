@@ -1,0 +1,24 @@
+---
+title: Navigation
+description: Move between views and dates, build a toolbar and sync the URL.
+---
+
+<include>../../../shared/features/navigation.mdx#intro</include>
+
+## Toolbar
+
+Call the actions on the instance from `useCalendar`, and select the context for the title and the current view:
+
+<include lang='tsx' meta='title="toolbar.tsx"'>
+  ../../../../examples/solid/navigation.tsx#toolbar
+</include>
+
+## URL sync
+
+Keep `view` and `date` in the URL, so links and the back button work:
+
+<include lang='tsx' meta='title="use-url-calendar.ts"'>
+  ../../../../examples/solid/url-sync.tsx#url
+</include>
+
+<include>../../../shared/features/navigation.mdx#range</include>

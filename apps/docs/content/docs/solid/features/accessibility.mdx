@@ -1,0 +1,18 @@
+---
+title: Accessibility
+description: Roles, labels and the locale for the built-in labels.
+---
+
+<include>../../../shared/features/accessibility.mdx#intro</include>
+
+## Locale
+
+Pass `locale` to `CalendarProvider`, or to `Calendar`. It defaults to `'en-US'`.
+
+<include lang='tsx'>../../../../examples/solid/accessibility.tsx#locale</include>
+
+## Labels
+
+Give events a label that includes their time, which the visible title often leaves out:
+
+<include lang='tsx'>../../../../examples/solid/accessibility.tsx#label</include>

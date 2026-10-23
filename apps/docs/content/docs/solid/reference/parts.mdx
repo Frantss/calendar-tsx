@@ -1,0 +1,24 @@
+---
+title: Parts
+description: Every part, its model prop and its element.
+---
+
+Every part renders one element with `data-scope='calendar'`, a `data-part` name, state attributes and its geometry as
+`--cal-*` custom properties; [custom themes](/docs/solid/styling/custom-themes#parts) lists them. Parts render your
+children, accept any props of their element plus [`render`](rendering-parts), and pass `ref` to their element.
+
+All parts must render inside `CalendarProvider` or `Calendar`.
+
+## Month
+
+<include>../../../shared/views/month.mdx#parts-table</include>
+
+## Time grid
+
+<include>../../../shared/views/time-grid.mdx#parts-table</include>
+
+`TimeGridViewUnavailable` takes an unavailable `segment` and shades it; see the [resource view](/docs/solid/views/resource-view).
+
+## List
+
+<include>../../../shared/views/list.mdx#parts-table</include>
