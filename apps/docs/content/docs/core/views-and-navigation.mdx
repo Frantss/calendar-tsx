@@ -1,0 +1,117 @@
+---
+title: Views and navigation
+description: Define views, then move between them with controlled view and date.
+---
+
+## Views
+
+A view is one of three layout kinds, built with a factory. Give each a key of your own; several keys can share a kind.
+`createCalendarViews` returns the views and every feature they use, for the calendar's `views` and `features` options.
+
+```ts
+import { createCalendarViews, listView, monthView, timeGridView } from '@calendar-tsx/core';
+
+const views = createCalendarViews({
+  month: monthView({ maxEventsPerDay: 4 }),
+  week: timeGridView({ days: 7 }),
+  day: timeGridView({ days: 1 }),
+  resources: timeGridView({ days: 1, groupBy: 'resource' }),
+  agenda: listView({ days: 7 }),
+});
+
+views.views; // pass as `views`
+views.features; // { monthLayout, timeGridLayout, listLayout }: spread into `features`
+```
+
+Define the views once, at module scope, so their references stay stable.
+
+Every factory also takes `features`, the [features](/docs/core/features) the view takes part in, and the per-view
+settings those features add:
+
+```ts
+timeGridView({ days: 7, features: { highlightFeature }, highlight: { only: true } });
+```
+
+### `monthView`
+
+| Option            | Type                                    | Description                                                                  |
+| ----------------- | --------------------------------------- | ---------------------------------------------------------------------------- |
+| `maxEventsPerDay` | `number`                                | Bar rows shown per week; events in further rows are hidden and counted.      |
+| `dayOverflow`     | `(date: Temporal.PlainDate) => boolean` | Marks a day as having more events, for example ones you have not loaded yet. |
+
+### `timeGridView`
+
+| Option           | Type                               | Default            | Description                                                           |
+| ---------------- | ---------------------------------- | ------------------ | --------------------------------------------------------------------- |
+| `days`           | `number`                           | —                  | Days shown. `7` aligns to the start of the week.                      |
+| `groupBy`        | `'resource'`                       | —                  | One column per resource and day.                                      |
+| `groupOrder`     | `'resource-first' \| 'date-first'` | `'resource-first'` | Column order when grouped by resource.                                |
+| `allDay`         | `boolean`                          | `true`             | `false` drops the all-day row from the layout.                        |
+| `slotMinutes`    | `number`                           | `30`               | Length of each time slot; should divide a day evenly.                 |
+| `minColumnWidth` | `string`                           | —                  | Passed through to the layout for horizontal scrolling, e.g. `'8rem'`. |
+
+### `listView`
+
+| Option | Type     | Description                                                                        |
+| ------ | -------- | ---------------------------------------------------------------------------------- |
+| `days` | `number` | Days shown. `7` aligns to the start of the week. Only days with events are listed. |
+
+## Range and period
+
+Every view and date resolve to two date ranges, both inclusive:
+
+- **`period`** is the nominal span: the month, or `days` days.
+- **`range`** is what is visible. For a month it extends to whole weeks; for other views it equals `period`.
+
+| Kind                         | Period                              | Range                |
+| ---------------------------- | ----------------------------------- | -------------------- |
+| Month                        | First to last day of `date`'s month | Padded to full weeks |
+| Time grid or list, `days: 7` | The week containing `date`          | Same as period       |
+| Time grid or list, other     | `days` days starting at `date`      | Same as period       |
+
+Weeks start on `firstDayOfWeek` (default Sunday). Only events overlapping the range are laid out.
+
+To get the range for any view and date without an instance, for example to fetch events before creating the
+calendar, use `getCalendarNavigation`. It uses each view's own layout, not a replacement passed in `features`.
+
+```ts
+import { getCalendarNavigation } from '@calendar-tsx/core';
+
+const { range, period } = getCalendarNavigation(views.views, 'month', Temporal.PlainDate.from('2026-03-11'), {
+  firstDayOfWeek: 1,
+});
+```
+
+## Actions
+
+`calendar.api` holds the navigation actions. None of them changes the calendar: each computes the next navigation and
+calls `onNavigate` with it.
+
+| Action                     | Next view and date                                       |
+| -------------------------- | -------------------------------------------------------- |
+| `next()`, `prev()`         | One period forward or back: a month, or `days` days.     |
+| `today()`                  | Today in `timeZone`, from the clock.                     |
+| `goTo(date)`               | Same view, `date`.                                       |
+| `setView(view, date?)`     | `view`, keeping the current date unless one is given.    |
+| `navigate({ view, date })` | Either or both; omitted fields keep their current value. |
+
+`onNavigate` receives `{ view, date, range, period }`. Feeding `view` and `date` back in is what moves the calendar:
+
+```ts
+let state: { view: keyof typeof views.views; date: Temporal.PlainDate } = {
+  view: 'week',
+  date: Temporal.Now.plainDateISO(),
+};
+
+const calendar = createCalendar({
+  ...options,
+  ...state,
+  onNavigate: next => {
+    state = { view: next.view, date: next.date };
+    calendar['~update']({ ...calendar.options, ...state });
+  },
+});
+```
+
+Framework bindings do this for you through their own state. Because the next range arrives with the call, you can sync
+the URL or start fetching before the calendar re-renders.

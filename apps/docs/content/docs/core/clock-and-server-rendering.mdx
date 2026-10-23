@@ -1,0 +1,59 @@
+---
+title: Clock and server rendering
+description: Where "now" comes from, how adapters drive an instance, and how to hydrate server-rendered markup.
+---
+
+## Clock
+
+The calendar reads "now" from a clock: for `today()`, today's highlights and the time grid's now indicator. A clock
+is `{ now, subscribe }`, and two are built in:
+
+```ts
+import { fixedClock, intervalClock } from '@calendar-tsx/core';
+
+intervalClock({ every: Temporal.Duration.from({ seconds: 30 }) }); // ticks on an interval
+fixedClock(Temporal.Instant.from('2026-03-11T14:00:00Z')); // never ticks; for tests and stories
+```
+
+Without a `clock` option, the calendar uses an interval clock that ticks every minute. Each tick re-derives the state
+only when "now" changed.
+
+## Adapter lifecycle
+
+Framework bindings drive an instance through two methods:
+
+- **`'~mount'()`** reads the clock, subscribes to its ticks, and returns the unsubscribe. Call it when the calendar
+  mounts and the cleanup when it unmounts. Until then the clock does not tick.
+- **`'~update'(options)`** replaces the options. Call it with every render's options; it writes to the store only when
+  a [tracked option](/docs/core/options) changed, so unchanged renders cost a comparison.
+
+```ts
+const calendar = createCalendar(options);
+const unmount = calendar['~mount']();
+
+const subscription = calendar.store.subscribe(state => render(state));
+
+// on every render with new options
+calendar['~update'](nextOptions);
+
+// on teardown
+subscription.unsubscribe();
+unmount();
+```
+
+## Server rendering
+
+Before `'~mount'`, the state derives "now" from `initialNow` if given, otherwise from the clock. On a server and a
+client those clocks disagree, so today's highlight and the now indicator can differ and break hydration.
+
+Pass the same instant to both:
+
+```ts
+// server: pick the instant and send it to the client, for example in the page's data
+const initialNow = Temporal.Now.instant();
+
+// server and client
+const calendar = createCalendar({ ...options, initialNow });
+```
+
+`initialNow` is read once, at creation. After `'~mount'` the clock takes over and the state catches up to real time.

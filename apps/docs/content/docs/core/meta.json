@@ -1,0 +1,13 @@
+{
+  "title": "Core",
+  "icon": "Cpu",
+  "pages": [
+    "index",
+    "options",
+    "views-and-navigation",
+    "events-and-resources",
+    "layouts",
+    "features",
+    "clock-and-server-rendering"
+  ]
+}

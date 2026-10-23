@@ -1,0 +1,105 @@
+---
+title: Layouts
+description: The state the calendar derives, and the shape of each layout kind.
+---
+
+`calendar.store.state` holds three fields, plus the state slices of registered [features](/docs/core/features):
+
+| Field     | Type                     | Description                                                       |
+| --------- | ------------------------ | ----------------------------------------------------------------- |
+| `context` | `Calendar_ViewContext`   | `view`, `kind`, `date`, `range` and `period` of the current view. |
+| `layout`  | `Calendar_Layout`        | The render model; switch on `layout.kind`.                        |
+| `now`     | `Temporal.ZonedDateTime` | The clock's current time in `timeZone`.                           |
+
+```ts
+const { layout } = calendar.store.state;
+
+switch (layout.kind) {
+  case 'month': // layout.weeks
+  case 'timeGrid': // layout.columns, layout.slots, layout.allDay
+  case 'list': // layout.days
+}
+```
+
+`layout` is typed as the union of the layouts your views use, so only those cases need handling.
+
+Every item has a `key` that is stable across derivations, for use as a list key.
+
+Features add fields to months' days, bar segments, time-grid columns and segments, and list days, but only in the
+views that list them. Code that reads such a field across views checks for it first, for example
+`'isHighlighted' in segment`.
+
+To type a selector over the state, use `Calendar_StateOf<typeof calendar>`.
+
+## Bars
+
+Month weeks and the time grid's all-day row lay events out as **bar segments** across day columns. Each event takes
+the lowest row where all of its columns are free.
+
+| Field             | Description                               |
+| ----------------- | ----------------------------------------- |
+| `event`           | The event, in the calendar's time zone.   |
+| `colStart`        | First column, zero-based.                 |
+| `colSpan`         | Columns covered.                          |
+| `row`             | Zero-based row.                           |
+| `continuesBefore` | The event starts before the first column. |
+| `continuesAfter`  | The event ends after the last column.     |
+
+## Month
+
+`{ kind: 'month', weekdays, weeks }`
+
+- `weekdays` holds the first week's seven dates, for column headers.
+- Each week has `days`, bar `segments` and `rows`: the number of bar rows shown, at most `maxEventsPerDay`.
+  Segments in further rows are dropped.
+
+Each day in `week.days`:
+
+| Field         | Description                                                                            |
+| ------------- | -------------------------------------------------------------------------------------- |
+| `date`        | The day.                                                                               |
+| `isOutside`   | The day pads the grid and lies outside the month.                                      |
+| `isToday`     | The day is today in `timeZone`.                                                        |
+| `hiddenCount` | Hidden bar segments crossing this day.                                                 |
+| `hasMore`     | `hiddenCount > 0`, or the view's `dayOverflow` returned `true` for this day.           |
+| `events`      | Every event on this day, including hidden ones, in order. Use it for an overflow list. |
+
+## Time grid
+
+`{ kind: 'timeGrid', slots, columns, allDay, minColumnWidth }`
+
+- `slots` holds one `{ key, time }` per `slotMinutes` across the day, for row labels.
+- `columns` holds one column per day, or per resource and day when grouped.
+- `allDay` holds bar `segments` and `rows` for all-day events, with columns indexed like `columns`. It is absent when
+  the view sets `allDay: false`.
+- `minColumnWidth` is the view's option, passed through.
+
+Positions inside a column are **fractions of that day** (0 at midnight, 1 at the next midnight) measured in real
+time, so a daylight-saving day is 23 or 25 hours long.
+
+Each column:
+
+| Field           | Description                                                       |
+| --------------- | ----------------------------------------------------------------- |
+| `date`          | The day.                                                          |
+| `resource`      | The column's resource, when grouped.                              |
+| `isToday`       | The day is today in `timeZone`.                                   |
+| `isUnavailable` | The resource has no availability on this day.                     |
+| `segments`      | Timed events in this column.                                      |
+| `unavailable`   | `{ key, start, span }` gaps between the resource's availability.  |
+| `now`           | Fraction of the day for the current time, only on today's column. |
+
+Each timed segment has `event`, `start` and `span` (fractions), `continuesBefore` and `continuesAfter` (the event is
+clipped at midnight), and `lane` and `lanes`. Events that overlap, directly or through others, form a cluster; each
+takes the lowest free lane, and every event in the cluster shares the cluster's `lanes` count. Events that only touch
+do not overlap.
+
+When grouped by resource, `groupOrder: 'resource-first'` keeps a resource's days adjacent, so multi-day all-day bars
+span them. With `'date-first'`, all-day bars are split per column.
+
+## List
+
+`{ kind: 'list', days }`
+
+Each day is `{ key, date, events }`. Only days with at least one event are listed, so an empty range has no days; render
+your own empty state for it.

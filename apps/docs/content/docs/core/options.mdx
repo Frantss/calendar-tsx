@@ -1,0 +1,89 @@
+---
+title: Options
+description: Everything createCalendar accepts.
+---
+
+```ts
+createCalendar<TData, TResourceData, TViews, TFeatures>(options);
+```
+
+`TData` is the type of each event's `data` payload and `TResourceData` that of each resource's. `TViews` and
+`TFeatures` are inferred from `views` and `features`, so `view` and `onNavigate` only accept your view keys, and the
+options, state and actions of the registered [features](/docs/core/features) appear on the calendar.
+
+| Option           | Type                                     | Default         | Tracked        |
+| ---------------- | ---------------------------------------- | --------------- | -------------- |
+| `timeZone`       | `string` (IANA zone)                     | —               | Yes            |
+| `views`          | `createCalendarViews(…).views`           | —               | Yes            |
+| `features`       | `{ ...views.features, …calendarWide }`   | —               | Read once      |
+| `view`           | `keyof TViews`                           | —               | Yes            |
+| `date`           | `Temporal.PlainDate`                     | —               | Yes            |
+| `onNavigate`     | `(next: Calendar_Navigation) => void`    | —               | No             |
+| `events`         | `Calendar_EventInput<TData>[]`           | —               | Yes            |
+| `resources`      | `Calendar_Resource<TResourceData>[]`     | `[]`            | Yes            |
+| `firstDayOfWeek` | `1`–`7` (Monday–Sunday)                  | `7` (Sunday)    | Yes            |
+| `eventOrder`     | `(a, b, context) => number`              | see below       | No             |
+| `clock`          | `Calendar_Clock`                         | one-minute tick | No             |
+| `initialNow`     | `Temporal.Instant`                       | clock's `now()` | No             |
+| `locale`         | `string`                                 | —               | No             |
+| `state`          | Controlled feature state slices          | —               | Yes, per slice |
+| `atoms`          | External stores for feature state slices | —               | Read once      |
+
+**Tracked** options re-derive the layout when they change through `~update`. Others are read when needed: changing
+`eventOrder` alone does not re-order until a tracked input changes. **Read once** options are read at creation and
+ignored afterwards.
+
+Registered features can add options of their own; see [features](/docs/core/features).
+
+`views`, `events`, `resources` and each `state` slice are compared **by reference**. Pass a new array or object to signal a change, and
+keep the same reference otherwise, or every update re-derives.
+
+## `timeZone`
+
+The IANA zone every timed event is converted to and laid out in, for example `'Europe/Paris'`. It also decides which
+day is "today".
+
+## `views`, `view` and `date`
+
+`views` maps your own keys to [views](/docs/core/views-and-navigation), usually through `createCalendarViews`. `view`
+selects one, and `date` is any day inside the period to show. Both are controlled: see
+[actions](/docs/core/views-and-navigation#actions). An unknown `view` key throws.
+
+## `features`
+
+Every feature the calendar uses, keyed by name. Spread `views.features` from `createCalendarViews`, which holds each
+view's layout and the features it lists, and add calendar-wide features next to it:
+
+```ts
+createCalendar({ ...options, views: views.views, features: { myFeature, ...views.features } });
+```
+
+Leaving out a feature a view uses is a type error. The object is read once, at creation. See
+[features](/docs/core/features).
+
+## `onNavigate`
+
+Called by every navigation action with the next `view`, `date`, `range` and `period`. Store `view` and `date` and pass
+them back in.
+
+## `events` and `resources`
+
+See [events and resources](/docs/core/events-and-resources). Event ids must be unique.
+
+## `eventOrder`
+
+Sorts the events of the visible range before layout. It receives the view context (`view`, `kind`, `date`, `range`,
+`period`), so the order can differ per view. Without it, events sort by
+[the default order](/docs/core/events-and-resources#order).
+
+## `clock` and `initialNow`
+
+See [clock and server rendering](/docs/core/clock-and-server-rendering).
+
+## `state` and `atoms`
+
+Where feature state lives; see [feature state](/docs/core/features#state).
+
+## `locale`
+
+Not read by the core. Adapters use it for accessible labels; the React bindings take it on the root part.
