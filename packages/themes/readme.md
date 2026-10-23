@@ -19,6 +19,7 @@ import '@calendar-tsx/themes/default.css';
 | `default.css`       | `base.css` plus the default look.                                                                               |
 | `high-contrast.css` | Black on white and white on black at WCAG AAA, with outlined events. See [High contrast](#high-contrast-theme). |
 | `shadcn.css`        | The default look with its tokens read from shadcn/ui's variables. See [shadcn/ui](#shadcnui).                   |
+| `material-ui.css`   | The default look with its tokens read from Material UI's CSS theme variables. See [Material UI](#material-ui).  |
 | `revenuecat.css`    | The default layout in RevenueCat's brand colors. See [RevenueCat](#revenuecat).                                 |
 | `stripe.css`        | The default layout in Stripe's colors. See [Stripe](#stripe).                                                   |
 | `compact.css`       | Density only: smaller slots, bars and text. Import it after any theme.                                          |
@@ -105,6 +106,30 @@ the default theme's accent tint, so they are `--primary` tinted 16% into `--back
 
 Dark mode follows shadcn's `.dark` class, on `<html>` or on any element around the calendar; `color-scheme` is not
 needed.
+
+## Material UI
+
+`material-ui.css` replaces `default.css`: it maps the calendar tokens onto the CSS theme variables Material UI emits
+with `cssVariables: true` (`--mui-palette-background-paper`, `--mui-palette-text-primary`,
+`--mui-palette-text-secondary`, `--mui-palette-action-hover`, `--mui-palette-divider`, `--mui-palette-primary-main`,
+`--mui-palette-primary-contrastText`, `--mui-shape-borderRadius`), so the calendar follows the app's palette, shape and
+color scheme. Events take the default theme's accent tint, so they are the primary color tinted 16% into the paper.
+
+```ts
+const theme = createTheme({
+  cssVariables: { colorSchemeSelector: 'class' },
+  colorSchemes: { light: true, dark: true },
+});
+```
+
+```ts
+import '@calendar-tsx/themes/material-ui.css';
+```
+
+Without `cssVariables` Material UI emits no variables and the calendar loses its colors. The theme expects the default
+`mui` prefix and `:root` as the `rootSelector`. Dark mode follows MUI's built-in `colorSchemeSelector` values:
+`media`, and `class`, `data` or `data-mui-color-scheme` set on `<html>` or on an element around the calendar;
+`color-scheme` is not needed. A custom selector such as `[data-theme="%s"]` works on `<html>` only.
 
 ## RevenueCat
 
