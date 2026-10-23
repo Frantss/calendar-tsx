@@ -4,27 +4,29 @@ import type { Measurement } from './measure';
 export function ContrastReadout({ measurement, loading }: { measurement: Measurement | null; loading: boolean }) {
   return (
     <section aria-labelledby='contrast-heading' className='flex flex-col gap-2'>
-      <h2 id='contrast-heading' className='text-base font-semibold'>
+      <h2 id='contrast-heading' className='text-[13px] font-semibold'>
         Contrast{measurement ? `, ${measurement.mode} palette` : ''}
       </h2>
       {!measurement ? (
-        <p className='text-sm text-fd-muted-foreground'>
+        <p className='text-[13px] text-fd-muted-foreground'>
           {loading ? 'Measuring once the preview loads…' : 'The preview has not reported its colors.'}
         </p>
       ) : measurement.contrast.every(pair => pair.ratio === null) ? (
-        <p className='text-sm text-fd-muted-foreground'>This theme sets no colors, so there is nothing to measure.</p>
+        <p className='text-[13px] text-fd-muted-foreground'>
+          This theme sets no colors, so there is nothing to measure.
+        </p>
       ) : (
         <div className='overflow-x-auto rounded-lg border border-fd-border'>
-          <table className='w-full text-sm'>
+          <table className='w-full text-[12px]'>
             <thead className='bg-fd-muted text-left text-fd-muted-foreground'>
               <tr>
-                <th scope='col' className='px-3 py-2 font-medium'>
+                <th scope='col' className='px-2 py-1 font-medium'>
                   Pair
                 </th>
-                <th scope='col' className='px-3 py-2 font-medium'>
+                <th scope='col' className='px-2 py-1 font-medium'>
                   Ratio
                 </th>
-                <th scope='col' className='px-3 py-2 font-medium'>
+                <th scope='col' className='px-2 py-1 font-medium'>
                   AA
                 </th>
               </tr>
@@ -37,13 +39,13 @@ export function ContrastReadout({ measurement, loading }: { measurement: Measure
 
                 return (
                   <tr key={pair.label} className='border-t border-fd-border'>
-                    <th scope='row' className='px-3 py-2 text-left font-normal'>
+                    <th scope='row' className='px-2 py-1 text-left font-normal'>
                       {pair.label}
                     </th>
-                    <td className='px-3 py-2 font-mono'>
+                    <td className='px-2 py-1 font-mono'>
                       {pair.ratio === null ? 'n/a' : `${pair.ratio.toFixed(2)}:1`}
                     </td>
-                    <td className={`px-3 py-2 ${passes || !required ? '' : 'font-semibold text-fd-error'}`}>
+                    <td className={`px-2 py-1 ${passes || !required ? '' : 'font-semibold text-fd-error'}`}>
                       {pair.ratio === null
                         ? 'not set'
                         : passes
@@ -57,7 +59,7 @@ export function ContrastReadout({ measurement, loading }: { measurement: Measure
           </table>
         </div>
       )}
-      <p className='text-xs text-fd-muted-foreground'>
+      <p className='text-[11px] text-fd-muted-foreground'>
         Measured from the rendered preview, with translucent colors composited over the surface. Text needs 4.5:1.
         Borders need 3:1 only where the border is what shows a control's edge (WCAG 1.4.11); grid lines that only
         decorate do not.
