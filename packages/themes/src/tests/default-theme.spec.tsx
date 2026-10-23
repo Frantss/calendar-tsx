@@ -1,4 +1,7 @@
+/// <reference types="@vitest/browser-playwright" />
+
 import { expect, it } from 'vitest';
+import { cdp } from 'vitest/browser';
 
 import type { Calendar_MonthLayout, Calendar_TimeGridLayout } from '@calendar-tsx/core';
 import {
@@ -177,4 +180,17 @@ it('resolves derived tokens below an override', async () => {
 
   expect(yoga && getComputedStyle(yoga).color).toBe('rgb(0, 128, 0)');
   style.remove();
+});
+
+it('restores the today marker with system colors in forced-colors mode', async () => {
+  await cdp().send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] });
+  await themesSetup_render(<Month />, { view: 'month' });
+  const today = themesSetup_part('month-day', '[data-today]')[0]?.querySelector('[data-part="month-day-trigger"]');
+  const probe = document.body.appendChild(document.createElement('div'));
+  probe.style.cssText = 'forced-color-adjust: none; background: Highlight;';
+
+  expect(matchMedia('(forced-colors: active)').matches).toBe(true);
+  expect(today && getComputedStyle(today).backgroundColor).toBe(getComputedStyle(probe).backgroundColor);
+  probe.remove();
+  await cdp().send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'none' }] });
 });

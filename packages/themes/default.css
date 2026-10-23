@@ -309,4 +309,48 @@
     color: var(--calendar-text-muted);
     text-align: center;
   }
+
+  /*
+   * Forced colors (Windows High Contrast) drop background colors and gradients. Events and triggers keep their
+   * borders, so only state carried by fills is restored here, with system colors. `forced-color-adjust` is
+   * inherited, so it is opted out only on leaves, never on a column that holds events.
+   */
+  @media (forced-colors: active) {
+    :where([data-scope='calendar'][data-today])
+      :where([data-scope='calendar']:is([data-part='month-day-trigger'], [data-part='time-grid-column-trigger'])) {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
+    }
+
+    :where([data-scope='calendar'][data-outside]) :where([data-scope='calendar'][data-part='month-day-trigger']) {
+      forced-color-adjust: none;
+      color: GrayText;
+    }
+
+    :where([data-scope='calendar'][data-part='time-grid-unavailable']) {
+      forced-color-adjust: none;
+      background: repeating-linear-gradient(135deg, transparent 0 6px, GrayText 6px 7px);
+    }
+
+    :where([data-scope='calendar'][data-part='time-grid-now']) {
+      forced-color-adjust: none;
+      border-color: Highlight;
+    }
+
+    :where([data-scope='calendar'][data-part='time-grid-now'])::before {
+      background: Highlight;
+    }
+
+    /* Slot lines on a leaf pseudo-element, under the events */
+    :where([data-scope='calendar'][data-part='time-grid-column'])::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      forced-color-adjust: none;
+      background-image: linear-gradient(to bottom, GrayText 1px, transparent 1px);
+      background-size: 100% calc(100% / var(--cal-slots));
+      pointer-events: none;
+    }
+  }
 }
