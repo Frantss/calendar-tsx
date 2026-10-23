@@ -7,7 +7,13 @@ import { tests_withDefault } from '#tests/utils/with-default';
 import { iife } from '#tests/utils/iife';
 import { tests_render } from '#tests/utils/render';
 
-import type { Calendar_EventInput, Calendar_Options, Calendar_Resource, Calendar_Views } from '@calendar-tsx/core';
+import type {
+  Calendar_BackgroundLayer,
+  Calendar_EventInput,
+  Calendar_Options,
+  Calendar_Resource,
+  Calendar_Views,
+} from '@calendar-tsx/core';
 import { createCalendarViews, fixedClock, listView, monthView, timeGridView } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_timeZone } from '#tests/calendar.fixtures';
@@ -25,6 +31,7 @@ const calendarSolidSetup_defaults = iife(() => ({
   date: Temporal.PlainDate.from('2026-03-11'),
   events: [] as Calendar_EventInput<Fixtures_EventData>[],
   resources: [] as Calendar_Resource<null>[],
+  backgrounds: [] as Calendar_BackgroundLayer[],
   locale: 'en-US',
   now: Temporal.ZonedDateTime.from('2026-03-11T10:40[America/New_York]').toInstant(),
 }));
@@ -48,6 +55,7 @@ export const calendarSolidSetup_render = (
     date: tests_withDefault(overrides, 'date', calendarSolidSetup_defaults.date),
     events: tests_withDefault(overrides, 'events', calendarSolidSetup_defaults.events),
     resources: tests_withDefault(overrides, 'resources', calendarSolidSetup_defaults.resources),
+    backgrounds: tests_withDefault(overrides, 'backgrounds', calendarSolidSetup_defaults.backgrounds),
     locale: tests_withDefault(overrides, 'locale', calendarSolidSetup_defaults.locale),
     clock: fixedClock(tests_withDefault(overrides, 'now', calendarSolidSetup_defaults.now)),
   };

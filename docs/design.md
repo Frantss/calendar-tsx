@@ -852,9 +852,9 @@ Rejected:
 
 **Serves:** C7, D12, D29; FullCalendar parity for background events, inverse background events and business hours; future constraints for selection, drag and resize (D29)
 
-**Status:** proposed. Additive to D12: `availability`, `column.isUnavailable` and `column.unavailable` are unchanged. Folding D12 into this decision is a separate, later decision.
+**Status:** accepted and implemented (`packages/core/src/calendar-backgrounds.ts`, the background parts in both adapters, `base.css` and `default.css`). Amends D29 with `trackedOptions` (below). Additive to D12: `availability`, `column.isUnavailable` and `column.unavailable` are unchanged. Folding D12 into this decision is a separate, later decision.
 
-**Verified:** not verified — design only; FullCalendar behaviour checked against the v7 docs (Background Events, Business Hours, `businessHours` per resource), nothing prototyped
+**Verified:** layout, part and theme tests; FullCalendar behaviour checked against the v7 docs (Background Events, Business Hours, `businessHours` per resource)
 
 **Why:** The time grid shades only resource columns, from absolute intervals (D12). A week or day view without resources cannot shade anything, the month view has no shaded days, and there is no equivalent of FullCalendar's `display: 'background'` or `'inverse-background'` events or of its `businessHours`. One mechanism covers all three: named layers of time ranges, each optionally inverted and optionally limited to resources, which the core clips to each column or day.
 
@@ -870,7 +870,7 @@ type Calendar_BackgroundLayer<TKind extends string = string> = {
   kind: TKind; // emitted as data-kind; themes and consumers style by it
   inverse?: boolean; // shade what the ranges do not cover
   resourceIds?: string[]; // omitted: every column
-  ranges: Calendar_BackgroundRange[] | ((range: Calendar_Range) => Calendar_BackgroundRange[]);
+  ranges: Calendar_BackgroundRange[] | ((range: Calendar_Range, timeZone: string) => Calendar_BackgroundRange[]);
 };
 
 /** Identity: returns its argument, typed, with `kind` kept as a literal. */
@@ -889,18 +889,18 @@ createCalendar({ …, features: { backgroundFeature, ...views.features }, backgr
 
 - **`createBackgroundLayer`** is an identity function. It takes `create*` although D30 keeps that prefix for instances, because the consumer reads it as building the layer, as `createCalendarViews` builds the views record. It gives an object literal its type at the point it is written, so a typo in a range or a misplaced `inverse` errors on the layer rather than on `createCalendar`, and layers can be declared apart from the calendar without annotating them. `const TKind` keeps `kind` as a literal (`'closed' | 'holiday'` above). Whether that union then flows into `background.kind` in the model needs the feature's option and model maps to take a kind generic; until then the model types `kind` as `string`.
 - **Layers, not a flat list.** A layer exists even with no ranges, which is how an inverse layer shades a whole column: the same rule as D12's empty `availability`.
-- **The function form** receives the visible range and runs when the layout derives. Business hours are then a helper that returns such a function from weekly rules (`{ daysOfWeek, startTime, endTime }[]`), so recurrence stays out of the core, as D12 requires. Timed ranges are converted to `timeZone` (D7).
-- **Tracked by reference,** like `events` (D24): `backgrounds` and each function form must be stable, or every update rederives.
+- **The function form** receives the visible range and the calendar's `timeZone`, and runs when the layout derives. Business hours are `createWeeklyRanges(rules)`, which returns such a function from `{ daysOfWeek, startTime, endTime }[]` (ISO days, `Temporal.PlainTime`s), so recurrence stays out of the layout, as D12 requires. It is named like `createBackgroundLayer`, after what the consumer builds. Timed ranges are compared as instants, so their own zone does not matter (D7).
+- **Tracked by reference,** like `events` (D24): `backgrounds` and each function form must be stable, or every update rederives. Feature options were untracked before this decision (the store only rederived from core inputs and feature state), so a feature now lists the option keys that rederive in `trackedOptions`; `backgroundFeature` lists `['backgrounds']`. This amends D29's feature interface.
 
 **Output.** `backgroundFeature` adds fields in `decorate`, for the views that list it, through the existing column and day feature maps:
 
-| Layout    | Field                                                               | Part                                                                              |
-| --------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Time grid | `column.backgrounds: { key, layer, kind, start, span }[]`           | `TimeGridViewBackground`: `aria-hidden`, `--cal-start`, `--cal-span`, `data-kind` |
-| Month     | `day.backgrounds: { key, layer, kind }[]`, from all-day ranges only | `MonthViewDayBackground`, or the consumer reads the field                         |
-| List      | none                                                                | —                                                                                 |
+| Layout    | Field                                                     | Part                                                                                    |
+| --------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Time grid | `column.backgrounds: { key, layer, kind, start, span }[]` | `TimeGridViewBackground`: `aria-hidden`, `--cal-start`, `--cal-span`, `data-kind`       |
+| Month     | `day.backgrounds: { key, layer, kind }[]`                 | `MonthViewDayBackground`: `aria-hidden`, `data-kind`, fills the day beneath its content |
+| List      | none                                                      | —                                                                                       |
 
-Time-grid fractions use the real wall-clock day length, as `unavailable` does (D12; the DST open question applies). Overlapping ranges within a layer are merged so nothing is shaded twice; layers stack in input order. Inverse layers reuse the complement that D12's `unavailable` already computes. Any meaning beyond shading (a "Closed" label) is the consumer's text (D20). `base.css` positions the part as it positions `time-grid-unavailable`; `default.css` adds one fill token.
+Time-grid fractions use the real wall-clock day length, as `unavailable` does (D12; the DST open question applies). Overlapping ranges within a layer are merged so nothing is shaded twice; layers stack in input order. Inverse layers reuse the complement that D12's `unavailable` already computes, now shared in `layout/layout-intervals.ts`. Both parts carry `data-layer` as well as `data-kind`. Any meaning beyond shading (a "Closed" label) is the consumer's text (D20). `base.css` positions the time-grid part as it positions `time-grid-unavailable`, and makes `month-day` a positioned, isolated box so the day part sits beneath the day's content. `default.css` fills both parts from `--calendar-background` (unset by default: a 6% wash of the text color) and hatches them under forced colors, at the opposite angle from unavailable time.
 
 **Considered and rejected:**
 
@@ -911,13 +911,18 @@ Time-grid fractions use the real wall-clock day length, as `unavailable` does (D
 
 **Cost:** one core feature (clip, merge, complement), one or two parts in each of React and Solid, theme CSS, and layout and part tests. Roughly twice a business-hours-only feature.
 
+**Settled when implementing** (recorded here; revisit if a consumer needs otherwise):
+
+- **Month view:** a day takes a layer when one of its all-day ranges covers the day. Timed ranges are ignored there, as in FullCalendar, except by inverse layers: an inverse layer marks the days none of its ranges touch, so a business-hours layer marks the closed days.
+- **All-day ranges in the time grid** clip to the whole column (start `0`, span `1`).
+- **Layers without `resourceIds`** shade every column, resource columns included. Layers with `resourceIds` shade only those resources' columns, and nothing in columns without a resource or in the month view.
+- **Weekly rules** use ISO days (`1` Monday … `7` Sunday). An `endTime` at or before its `startTime` ends the next day, so `22:00`–`02:00` and `09:00`–`00:00` work without times past 24:00. Times that fall in a DST gap resolve with Temporal's default `'compatible'` disambiguation.
+- **`kind` in the model** is typed `string`; the literal union stays on the input.
+
 **Open questions:**
 
-- Timed ranges in the month view: ignored (FullCalendar renders timed background events only in the time grid), a `partial` flag on the day, or a covered fraction?
-- The time grid's all-day row: do all-day ranges shade `TimeGridViewAllDayCell` too? FullCalendar's behaviour there was not checked.
-- Layers without `resourceIds` in resource columns: shade every column, or only columns without a resource? FullCalendar's behaviour was not checked.
+- The time grid's all-day row: should all-day ranges shade it too? Not implemented; FullCalendar's behaviour there was not checked.
 - Whether resource-scoped layers belong on the resource (`resource.backgrounds`) instead of `resourceIds` on the layer, which needs a resource feature map.
-- Weekly rules: hours past midnight (FullCalendar's time strings may allow `'26:00'`; unverified), the day numbering (ISO `1`–`7` to match `firstDayOfWeek`, rather than FullCalendar's Sunday-zero), and how a boundary that falls in a DST gap resolves.
 - Whether calendar-wide and resource layers of the same `kind` combine (union) or the resource layer overrides, as a per-resource `businessHours` may in FullCalendar (its docs do not say).
 - `decorate` receives no visible range in its context; the feature derives it from the columns and days. Whether the context should carry it.
 

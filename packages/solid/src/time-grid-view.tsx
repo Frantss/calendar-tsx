@@ -1,6 +1,7 @@
 import { Show, splitProps } from 'solid-js';
 
 import type {
+  Calendar_BackgroundSegment,
   Calendar_BarSegment,
   Calendar_TimeGridColumn,
   Calendar_TimeGridLayout,
@@ -206,6 +207,29 @@ export const TimeGridViewUnavailable = (
         rest,
       )}
       state={local.segment}
+    />
+  );
+};
+
+/** A span a background layer shades, from `column.backgrounds` (D33). */
+export const TimeGridViewBackground = (
+  props: { background: Calendar_BackgroundSegment } & Calendar_HTMLProps<'div', Calendar_BackgroundSegment>,
+) => {
+  const [local, rest] = splitProps(props, ['background']);
+
+  return (
+    <calendar.div
+      {...calendarProps_merge(
+        () => ({
+          'aria-hidden': true,
+          'data-kind': local.background.kind,
+          'data-layer': local.background.layer,
+          style: vars({ start: local.background.start, span: local.background.span }),
+          ...part('time-grid-background'),
+        }),
+        rest,
+      )}
+      state={local.background}
     />
   );
 };

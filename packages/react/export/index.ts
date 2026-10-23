@@ -7,6 +7,7 @@ export type {
 export { ListViewDay, ListViewDayHeader, ListViewEmpty, ListViewEvent, ListView } from '#list-view';
 export {
   MonthViewDay,
+  MonthViewDayBackground,
   MonthViewDayTrigger,
   MonthViewHeader,
   MonthViewHeaderCell,
@@ -20,6 +21,7 @@ export {
   TimeGridViewAllDayEvent,
   TimeGridViewAxis,
   TimeGridViewAxisLabel,
+  TimeGridViewBackground,
   TimeGridViewBody,
   TimeGridViewColumn,
   TimeGridViewColumnHeader,

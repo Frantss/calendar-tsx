@@ -34,11 +34,21 @@
     );
   }
 
+  /* Positioned and isolated so a day background fills the cell beneath its content */
   :where([data-scope='calendar'][data-part='month-day']) {
+    position: relative;
+    isolation: isolate;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     min-inline-size: 0;
+  }
+
+  :where([data-scope='calendar'][data-part='month-day-background']) {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
   }
 
   :where([data-scope='calendar'][data-part='month-overflow']) {
@@ -118,14 +128,20 @@
   }
 
   :where([data-scope='calendar'][data-part='time-grid-unavailable']),
+  :where([data-scope='calendar'][data-part='time-grid-background']),
   :where([data-scope='calendar'][data-part='time-grid-event']) {
     position: absolute;
     inset-block-start: calc(var(--cal-start) * 100%);
     block-size: calc(var(--cal-span) * 100%);
   }
 
-  :where([data-scope='calendar'][data-part='time-grid-unavailable']) {
+  :where([data-scope='calendar'][data-part='time-grid-unavailable']),
+  :where([data-scope='calendar'][data-part='time-grid-background']) {
     inset-inline: 0;
+  }
+
+  :where([data-scope='calendar'][data-part='time-grid-background']) {
+    pointer-events: none;
   }
 
   :where([data-scope='calendar'][data-part='time-grid-event']) {

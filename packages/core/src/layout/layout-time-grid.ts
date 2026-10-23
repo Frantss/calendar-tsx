@@ -12,32 +12,16 @@ import type {
   Calendar_TimeGridViewSettings,
 } from '#calendar.types';
 import { layoutBars_build, layoutBars_rows } from '#layout/layout-bars';
+import { layoutIntervals_clip, layoutIntervals_complement, layoutIntervals_day } from '#layout/layout-intervals';
 import { layoutLanes_assign } from '#layout/layout-lanes';
 
 const DEFAULT_SLOT_MINUTES = 30;
 const MINUTES_PER_DAY = 24 * 60;
 
-type Interval = { startMs: number; endMs: number };
-
 const matchesResource = <TData, TResourceData>(
   event: Calendar_Event<TData>,
   resource?: Calendar_Resource<TResourceData>,
 ) => !resource || (event.resourceIds ?? []).includes(resource.id);
-
-/** Gaps between the day's availability intervals; a resource with none is unavailable all day (D12). */
-const complement = (intervals: Interval[], day: Interval) => {
-  const gaps: Interval[] = [];
-  let cursor = day.startMs;
-
-  for (const interval of intervals) {
-    if (interval.startMs > cursor) gaps.push({ startMs: cursor, endMs: interval.startMs });
-    cursor = Math.max(cursor, interval.endMs);
-  }
-
-  if (cursor < day.endMs) gaps.push({ startMs: cursor, endMs: day.endMs });
-
-  return gaps;
-};
 
 const buildColumn = <TData, TResourceData>({
   date,
@@ -53,10 +37,7 @@ const buildColumn = <TData, TResourceData>({
   now: Temporal.ZonedDateTime;
 }): Calendar_TimeGridColumn<TData, TResourceData> => {
   // Real wall-clock day length in `timeZone`, so DST days are 23 or 25 hours long.
-  const day = {
-    startMs: date.toZonedDateTime({ timeZone }).epochMilliseconds,
-    endMs: date.add({ days: 1 }).toZonedDateTime({ timeZone }).epochMilliseconds,
-  };
+  const day = layoutIntervals_day(date, timeZone);
   const length = day.endMs - day.startMs;
   const fraction = (ms: number) => (ms - day.startMs) / length;
   const key = `${resource?.id ?? 'all'}:${date}`;
@@ -80,13 +61,14 @@ const buildColumn = <TData, TResourceData>({
     ];
   });
 
-  const availability = (resource?.availability ?? [])
-    .map(period => ({
-      startMs: Math.max(period.start.epochMilliseconds, day.startMs),
-      endMs: Math.min(period.end.epochMilliseconds, day.endMs),
-    }))
-    .filter(period => period.endMs > period.startMs)
-    .sort((a, b) => a.startMs - b.startMs);
+  // Its gaps are the unavailable segments; a resource with none is unavailable all day (D12).
+  const availability = layoutIntervals_clip(
+    (resource?.availability ?? []).map(period => ({
+      startMs: period.start.epochMilliseconds,
+      endMs: period.end.epochMilliseconds,
+    })),
+    day,
+  );
 
   const isToday = date.equals(now.toPlainDate());
 
@@ -107,7 +89,7 @@ const buildColumn = <TData, TResourceData>({
       continuesAfter: item.continuesAfter,
     })),
     unavailable: resource
-      ? complement(availability, day).map(gap => ({
+      ? layoutIntervals_complement(availability, day).map(gap => ({
           key: `${key}:unavailable:${gap.startMs}`,
           start: fraction(gap.startMs),
           span: (gap.endMs - gap.startMs) / length,

@@ -55,22 +55,23 @@ with it for the numbers on today's marker. Use a `light-dark()` pair so each mod
 | `--calendar-accent`, `--calendar-accent-contrast`                                          | `#b4441e` `#ffffff`, `#f08a5d` `#1a0d07`              |
 | `--calendar-event`, `--calendar-event-border`                                              | unset: the accent tinted 16% and 24% into the surface |
 | `--calendar-event-text`, `--calendar-focus-ring`                                           | unset: fall back to the text and the accent           |
+| `--calendar-background`                                                                    | unset: the text at 6% over the surface                |
 | `--calendar-radius`, `--calendar-bar-radius`                                               | `0.375rem`, `0.25rem`                                 |
 | `--calendar-font-size`, `--calendar-font-size-sm`, `--calendar-font-size-xs`               | `0.875rem`, `0.75rem`, `0.6875rem`                    |
 | `--calendar-slot-height`, `--calendar-axis-width`                                          | `3rem`, `4rem`                                        |
 | `--calendar-bar-height`, `--calendar-bar-gap`, `--calendar-bar-inset`                      | `1.375rem`, `2px`, `2px`                              |
 | `--calendar-day-header-height`, `--calendar-overflow-height`, `--calendar-week-min-height` | `2.25rem`, `1.5rem`, `6rem`                           |
 
-The theme sets no font family; the calendar inherits the page's. The event tokens and `--calendar-focus-ring` are left
-unset on purpose: a token declared as `var(--other)` resolves where it is declared, so a default on `:root`
+The theme sets no font family; the calendar inherits the page's. The event tokens, `--calendar-focus-ring` and `--calendar-background` are
+left unset on purpose: a token declared as `var(--other)` resolves where it is declared, so a default on `:root`
 would ignore an override of the token it points to.
 
 **Dark mode.** Colors use `light-dark()`, so they follow the inherited `color-scheme`. The theme never sets it: declare
 `color-scheme: light dark` on the page to follow the system, or `light`/`dark` on any ancestor to force a mode.
 
 **Forced colors.** Under `forced-colors: active` (Windows High Contrast), the browser drops fills. Events keep their
-borders, and the default theme restores today's marker, the now line, slot lines, unavailable hatching and
-outside-month dates with system colors.
+borders, and the default theme restores today's marker, the now line, slot lines, unavailable hatching,
+background layers (hatched the other way) and outside-month dates with system colors.
 
 **Overriding rules.** The files use cascade layers (`calendar.base`, `calendar.theme`, `calendar.density`) and
 zero-specificity selectors. Unlayered CSS always wins over them without `!important`. Layered CSS wins only if its layer comes later:

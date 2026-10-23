@@ -4,6 +4,7 @@ import type { Temporal } from 'temporal-polyfill';
 
 import type {
   Calendar_BarSegment,
+  Calendar_DayBackground,
   Calendar_MonthDay,
   Calendar_MonthLayout,
   Calendar_MonthWeek,
@@ -77,6 +78,26 @@ export const MonthViewDay = forwardRef<HTMLDivElement, MonthViewDayProps<unknown
     ref={ref}
   />
 )) as <TData>(props: MonthViewDayProps<TData> & RefAttributes<HTMLDivElement>) => ReactElement | null;
+
+/** Fills its day for a layer in `day.backgrounds` (D33). */
+export const MonthViewDayBackground = forwardRef<
+  HTMLDivElement,
+  { background: Calendar_DayBackground } & Calendar_HTMLProps<'div', Calendar_DayBackground>
+>(({ background, ...props }, ref) => (
+  <calendar.div
+    {...calendarProps_merge(
+      {
+        'aria-hidden': true,
+        'data-kind': background.kind,
+        'data-layer': background.layer,
+        ...part('month-day-background'),
+      },
+      props,
+    )}
+    state={background}
+    ref={ref}
+  />
+));
 
 type MonthViewDayTriggerProps<TData> = { day: Calendar_MonthDay<TData>; view: string } & Calendar_HTMLProps<
   'button',

@@ -56,7 +56,8 @@ createCalendar({ ...options, views: views.views, features: { ...views.features }
 ```
 
 - **Hooks:** `getInitialState`, `constructApi`, an `events` stage after the core sort, and a `decorate` pass that adds
-  model fields. Stages rerun when their input or `deps` change.
+  model fields. Stages rerun when their input or `deps` change. Feature options are read untracked unless the feature
+  lists their keys in `trackedOptions`.
 - **Settings:** a feature's defaults, then the calendar option, then the view's setting, shallow-merged per layer.
 - **State:** each slice is uncontrolled, controlled through `state`, or kept in an external store through `atoms`.
 - **Types:** features extend the `Calendar_*_FeatureMap` interfaces by declaration merging, keyed by their export name.
@@ -64,3 +65,45 @@ createCalendar({ ...options, views: views.views, features: { ...views.features }
 - **Replacing an implementation:** `{ ...views.features, listLayout: myList }` replaces it in every view.
 - **Layouts are features too:** `monthLayout`, `timeGridLayout` and `listLayout` supply
   navigation and `build`; a new view kind is a layout feature plus a `Calendar_Layout_FeatureMap` entry.
+
+## Background layers
+
+`backgroundFeature` shades time in the time-grid and month views that list it (design D33). Each layer in the
+`backgrounds` option is one kind of shading: fixed ranges, a function of the visible range, or the gaps they leave
+(`inverse`), optionally limited to some resources.
+
+```ts
+import { backgroundFeature, createBackgroundLayer, createWeeklyRanges } from '@calendar-tsx/core';
+
+// module scope: layers and their ranges functions are compared by reference
+const backgrounds = [
+  createBackgroundLayer({
+    id: 'business-hours',
+    kind: 'closed',
+    inverse: true,
+    ranges: createWeeklyRanges([
+      {
+        daysOfWeek: [1, 2, 3, 4, 5],
+        startTime: Temporal.PlainTime.from('09:00'),
+        endTime: Temporal.PlainTime.from('17:00'),
+      },
+    ]),
+  }),
+  createBackgroundLayer({
+    id: 'holidays',
+    kind: 'holiday',
+    ranges: [{ allDay: true, start: Temporal.PlainDate.from('2026-12-25') }],
+  }),
+];
+
+const views = createCalendarViews({
+  week: timeGridView({ days: 7, features: { backgroundFeature } }),
+  month: monthView({ maxEventsPerDay: 4, features: { backgroundFeature } }),
+});
+
+createCalendar({ ...options, views: views.views, features: { ...views.features }, backgrounds });
+```
+
+Time-grid columns get `backgrounds: { key, layer, kind, start, span }[]`, as fractions of the day. Month days get
+`backgrounds: { key, layer, kind }[]` from all-day ranges, and from inverse layers on the days none of their ranges
+touch. Render them with `TimeGridViewBackground` and `MonthViewDayBackground`.

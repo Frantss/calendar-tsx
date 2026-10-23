@@ -3,14 +3,18 @@
 import { expect, it } from 'vitest';
 import { cdp } from 'vitest/browser';
 
-import type { Calendar_MonthLayout, Calendar_TimeGridLayout } from '@calendar-tsx/core';
+import type { Calendar_BackgroundSegment, Calendar_DayBackground, Calendar_MonthLayout, Calendar_TimeGridLayout } from '@calendar-tsx/core';
+import { backgroundFeature, monthView, timeGridView } from '@calendar-tsx/core';
+import { Temporal } from 'temporal-polyfill';
 import {
   MonthViewDay,
+  MonthViewDayBackground,
   MonthViewDayTrigger,
   MonthViewOverflow,
   MonthView,
   MonthViewWeek,
   MonthViewWeekEvent,
+  TimeGridViewBackground,
   TimeGridViewBody,
   TimeGridViewColumn,
   TimeGridViewColumnHeader,
@@ -40,6 +44,9 @@ const TimeGrid = ({ eventClassName }: { eventClassName?: string }) => {
       <TimeGridViewBody model={grid}>
         {grid.columns.map(column => (
           <TimeGridViewColumn key={column.key} column={column}>
+            {(column as { backgrounds?: Calendar_BackgroundSegment[] }).backgrounds?.map(background => (
+              <TimeGridViewBackground key={background.key} background={background} />
+            ))}
             {column.segments.map(segment => (
               <TimeGridViewEvent key={segment.key} segment={segment} className={eventClassName}>
                 {segment.event.data.title}
@@ -62,6 +69,9 @@ const Month = () => {
         <MonthViewWeek key={week.key} week={week}>
           {week.days.map(day => (
             <MonthViewDay key={day.key} day={day}>
+              {(day as { backgrounds?: Calendar_DayBackground[] }).backgrounds?.map(background => (
+                <MonthViewDayBackground key={background.key} background={background} />
+              ))}
               <MonthViewDayTrigger day={day} view='day'>
                 {day.date.day}
               </MonthViewDayTrigger>
@@ -224,4 +234,48 @@ it('leaves a gap between the day number and the first bar', async () => {
 
   // 0.25rem at the default 16px root size
   expect(bar.top - trigger.bottom).toBeCloseTo(4, 0);
+});
+
+const backgroundViews = {
+  day: timeGridView({ days: 1, features: { backgroundFeature } }),
+  month: monthView({ maxEventsPerDay: 3, features: { backgroundFeature } }),
+};
+
+it("shades a background layer's span across the column", async () => {
+  await themesSetup_render(<TimeGrid />, {
+    views: backgroundViews,
+    backgrounds: [
+      {
+        id: 'lunch',
+        kind: 'lunch',
+        ranges: [
+          {
+            start: Temporal.ZonedDateTime.from('2026-03-11T12:00[America/New_York]'),
+            end: Temporal.ZonedDateTime.from('2026-03-11T13:00[America/New_York]'),
+          },
+        ],
+      },
+    ],
+  });
+  const column = themesSetup_part('time-grid-column')[0];
+  const lunch = themesSetup_rect(themesSetup_part('time-grid-background')[0]);
+
+  expect(lunch.top - themesSetup_rect(column).top).toBeCloseTo(themesSetup_rect(column).height / 2, 0);
+  expect(lunch.height).toBeCloseTo(themesSetup_rect(column).height / 24, 0);
+  expect(lunch.width).toBeCloseTo(column?.clientWidth ?? 0, 0);
+});
+
+it('fills a month day beneath its day number', async () => {
+  await themesSetup_render(<Month />, {
+    views: backgroundViews,
+    view: 'month',
+    backgrounds: [{ id: 'holiday', kind: 'holiday', ranges: [{ allDay: true, start: Temporal.PlainDate.from('2026-03-11') }] }],
+  });
+  const day = themesSetup_part('month-day', '[data-date="2026-03-11"]')[0];
+  const background = themesSetup_rect(themesSetup_part('month-day-background')[0]);
+  const trigger = day?.querySelector<HTMLElement>('[data-part="month-day-trigger"]');
+  const center = themesSetup_rect(trigger ?? undefined);
+
+  expect(background).toEqual(themesSetup_rect(day));
+  expect(document.elementFromPoint(center.x + center.width / 2, center.y + center.height / 2)).toBe(trigger);
 });

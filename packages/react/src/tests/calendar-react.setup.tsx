@@ -7,7 +7,13 @@ import { tests_withDefault } from '#tests/utils/with-default';
 
 import { iife } from '#tests/utils/iife';
 
-import type { Calendar_EventInput, Calendar_Options, Calendar_Resource, Calendar_Views } from '@calendar-tsx/core';
+import type {
+  Calendar_BackgroundLayer,
+  Calendar_EventInput,
+  Calendar_Options,
+  Calendar_Resource,
+  Calendar_Views,
+} from '@calendar-tsx/core';
 import { fixedClock, listView, monthView, timeGridView, createCalendarViews } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_timeZone } from '#tests/calendar.fixtures';
@@ -25,6 +31,7 @@ const calendarReactSetup_defaults = iife(() => ({
   date: Temporal.PlainDate.from('2026-03-11'),
   events: [] as Calendar_EventInput<Fixtures_EventData>[],
   resources: [] as Calendar_Resource<null>[],
+  backgrounds: [] as Calendar_BackgroundLayer[],
   locale: 'en-US',
   now: Temporal.ZonedDateTime.from('2026-03-11T10:40[America/New_York]').toInstant(),
 }));
@@ -45,6 +52,7 @@ export const calendarReactSetup_render = async (children: ReactNode, overrides: 
     date: tests_withDefault(overrides, 'date', calendarReactSetup_defaults.date),
     events: tests_withDefault(overrides, 'events', calendarReactSetup_defaults.events),
     resources: tests_withDefault(overrides, 'resources', calendarReactSetup_defaults.resources),
+    backgrounds: tests_withDefault(overrides, 'backgrounds', calendarReactSetup_defaults.backgrounds),
     locale: tests_withDefault(overrides, 'locale', calendarReactSetup_defaults.locale),
     clock: fixedClock(tests_withDefault(overrides, 'now', calendarReactSetup_defaults.now)),
   };

@@ -33,9 +33,9 @@ type AnyOptions = Calendar_Options<any, any, Calendar_Views, Calendar_Features>;
 type Tracked = Pick<
   AnyOptions,
   'timeZone' | 'views' | 'view' | 'date' | 'events' | 'resources' | 'firstDayOfWeek' | 'state'
-> & { now: Temporal.Instant };
+> & { now: Temporal.Instant; featureOptions: Record<string, unknown> };
 
-const tracked_from = (options: AnyOptions, now: Temporal.Instant): Tracked => ({
+const tracked_from = (options: AnyOptions, now: Temporal.Instant, featureKeys: readonly string[]): Tracked => ({
   timeZone: options.timeZone,
   views: options.views,
   view: options.view,
@@ -45,6 +45,7 @@ const tracked_from = (options: AnyOptions, now: Temporal.Instant): Tracked => ({
   firstDayOfWeek: options.firstDayOfWeek,
   state: options.state,
   now,
+  featureOptions: Object.fromEntries(featureKeys.map(key => [key, (options as Record<string, unknown>)[key]])),
 });
 
 const records_equal = (a: Record<string, unknown> = {}, b: Record<string, unknown> = {}) => {
@@ -62,6 +63,7 @@ const tracked_equals = (a: Tracked, b: Tracked) =>
   a.resources === b.resources &&
   a.firstDayOfWeek === b.firstDayOfWeek &&
   records_equal(a.state, b.state) &&
+  records_equal(a.featureOptions, b.featureOptions) &&
   a.now.equals(b.now);
 
 /** Every feature the calendar registers, then any a view declares that `features` leaves out (D29). */
@@ -95,8 +97,9 @@ export const createCalendar = <
   let options = initial as AnyOptions;
   const clock = () => options.clock ?? defaultClock;
   const features = features_all(options);
+  const featureKeys = Object.values(features).flatMap(feature => feature.trackedOptions ?? []);
 
-  const persisted = createStore(tracked_from(options, options.initialNow ?? clock().now()));
+  const persisted = createStore(tracked_from(options, options.initialNow ?? clock().now(), featureKeys));
   const initialState: Record<string, unknown> = Object.assign(
     {},
     ...Object.values(features).map(feature => feature.getInitialState?.()),
@@ -260,7 +263,7 @@ export const createCalendar = <
     '~update': next => {
       options = next as AnyOptions;
       persisted.setState(state => {
-        const updated = tracked_from(options, state.now);
+        const updated = tracked_from(options, state.now, featureKeys);
 
         return tracked_equals(state, updated) ? state : updated;
       });

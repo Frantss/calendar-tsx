@@ -2,6 +2,7 @@ import type { ReactElement, RefAttributes } from 'react';
 import { forwardRef } from 'react';
 
 import type {
+  Calendar_BackgroundSegment,
   Calendar_BarSegment,
   Calendar_TimeGridColumn,
   Calendar_TimeGridLayout,
@@ -199,6 +200,27 @@ export const TimeGridViewUnavailable = forwardRef<
       props,
     )}
     state={segment}
+    ref={ref}
+  />
+));
+
+/** A span a background layer shades, from `column.backgrounds` (D33). */
+export const TimeGridViewBackground = forwardRef<
+  HTMLDivElement,
+  { background: Calendar_BackgroundSegment } & Calendar_HTMLProps<'div', Calendar_BackgroundSegment>
+>(({ background, ...props }, ref) => (
+  <calendar.div
+    {...calendarProps_merge(
+      {
+        'aria-hidden': true,
+        'data-kind': background.kind,
+        'data-layer': background.layer,
+        style: vars({ start: background.start, span: background.span }),
+        ...part('time-grid-background'),
+      },
+      props,
+    )}
+    state={background}
     ref={ref}
   />
 ));

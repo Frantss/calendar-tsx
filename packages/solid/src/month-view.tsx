@@ -3,6 +3,7 @@ import type { Temporal } from 'temporal-polyfill';
 
 import type {
   Calendar_BarSegment,
+  Calendar_DayBackground,
   Calendar_MonthDay,
   Calendar_MonthLayout,
   Calendar_MonthWeek,
@@ -86,6 +87,28 @@ export const MonthViewDay = <TData,>(props: MonthViewDayProps<TData>) => {
         rest,
       )}
       state={local.day}
+    />
+  );
+};
+
+/** Fills its day for a layer in `day.backgrounds` (D33). */
+export const MonthViewDayBackground = (
+  props: { background: Calendar_DayBackground } & Calendar_HTMLProps<'div', Calendar_DayBackground>,
+) => {
+  const [local, rest] = splitProps(props, ['background']);
+
+  return (
+    <calendar.div
+      {...calendarProps_merge(
+        () => ({
+          'aria-hidden': true,
+          'data-kind': local.background.kind,
+          'data-layer': local.background.layer,
+          ...part('month-day-background'),
+        }),
+        rest,
+      )}
+      state={local.background}
     />
   );
 };
