@@ -15,6 +15,8 @@ export default defineConfig({
     fumadocsMdx(),
     tailwindcss(),
     tanstackStart({
+      // only reachable through the playground's iframe, which the crawler does not follow
+      pages: [{ path: '/playground/preview' }],
       prerender: {
         enabled: true,
         // the crawler queues `/page#anchor` apart from `/page` but writes both to the same file; concurrent writes can

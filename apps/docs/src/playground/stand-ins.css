@@ -1,0 +1,43 @@
+/*
+ * Stand-ins for the variables an app using shadcn/ui or Material UI defines: shadcn's default neutral palette and
+ * Material UI's default palette, so `shadcn.css` and `material-ui.css` have something to read in the preview.
+ */
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --border: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+
+  --mui-palette-background-paper: #fff;
+  --mui-palette-text-primary: rgba(0, 0, 0, 0.87);
+  --mui-palette-text-secondary: rgba(0, 0, 0, 0.6);
+  --mui-palette-divider: rgba(0, 0, 0, 0.12);
+  --mui-palette-action-hover: rgba(0, 0, 0, 0.04);
+  --mui-palette-primary-main: #1976d2;
+  --mui-palette-primary-contrastText: #fff;
+  --mui-shape-borderRadius: 4px;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --ring: oklch(0.556 0 0);
+
+  --mui-palette-background-paper: #121212;
+  --mui-palette-text-primary: #fff;
+  --mui-palette-text-secondary: rgba(255, 255, 255, 0.7);
+  --mui-palette-divider: rgba(255, 255, 255, 0.12);
+  --mui-palette-action-hover: rgba(255, 255, 255, 0.08);
+  --mui-palette-primary-main: #90caf9;
+  --mui-palette-primary-contrastText: rgba(0, 0, 0, 0.87);
+}

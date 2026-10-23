@@ -1,0 +1,17 @@
+/* The preview page's own frame. Unlayered, so it sits outside the calendar's layers. */
+html {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  padding: 1rem;
+  background: Canvas;
+  color: CanvasText;
+  font-family: system-ui, sans-serif;
+}
+
+/* Keep the time grid inside the frame, scrolling, with room for the status line below it */
+[data-scope='calendar'][data-part='time-grid-root'] {
+  max-block-size: calc(100dvh - 5rem);
+}

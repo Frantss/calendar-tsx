@@ -9,17 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as SiteRouteImport } from './routes/_site'
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
+import { Route as SiteIndexRouteImport } from './routes/_site/index'
 import { Route as ApiSearchRouteImport } from './routes/api/search'
-import { Route as DocsSplatRouteImport } from './routes/docs/$'
 import { Route as DocsChar123Char125DotmdRouteImport } from './routes/docs/{$}[.]md'
+import { Route as PlaygroundPreviewRouteImport } from './routes/playground/preview'
+import { Route as SiteDocsSplatRouteImport } from './routes/_site/docs/$'
+import { Route as SiteDocsPlaygroundRouteImport } from './routes/_site/docs/playground'
 import { Route as OgDocsSplatRouteImport } from './routes/og/docs/$'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const SiteRoute = SiteRouteImport.update({
+  id: '/_site',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LlmsFullDottxtRoute = LlmsFullDottxtRouteImport.update({
@@ -32,20 +34,35 @@ const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
   path: '/llms.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SiteIndexRoute = SiteIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SiteRoute,
+} as any)
 const ApiSearchRoute = ApiSearchRouteImport.update({
   id: '/api/search',
   path: '/api/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocsSplatRoute = DocsSplatRouteImport.update({
-  id: '/docs/$',
-  path: '/docs/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsChar123Char125DotmdRoute = DocsChar123Char125DotmdRouteImport.update({
   id: '/docs/{$}.md',
   path: '/docs/{$}.md',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PlaygroundPreviewRoute = PlaygroundPreviewRouteImport.update({
+  id: '/playground/preview',
+  path: '/playground/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteDocsSplatRoute = SiteDocsSplatRouteImport.update({
+  id: '/docs/$',
+  path: '/docs/$',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteDocsPlaygroundRoute = SiteDocsPlaygroundRouteImport.update({
+  id: '/docs/playground',
+  path: '/docs/playground',
+  getParentRoute: () => SiteRoute,
 } as any)
 const OgDocsSplatRoute = OgDocsSplatRouteImport.update({
   id: '/og/docs/$',
@@ -54,31 +71,38 @@ const OgDocsSplatRoute = OgDocsSplatRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof SiteIndexRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/api/search': typeof ApiSearchRoute
-  '/docs/$': typeof DocsSplatRoute
   '/docs/{$}.md': typeof DocsChar123Char125DotmdRoute
+  '/playground/preview': typeof PlaygroundPreviewRoute
+  '/docs/$': typeof SiteDocsSplatRoute
+  '/docs/playground': typeof SiteDocsPlaygroundRoute
   '/og/docs/$': typeof OgDocsSplatRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/api/search': typeof ApiSearchRoute
-  '/docs/$': typeof DocsSplatRoute
   '/docs/{$}.md': typeof DocsChar123Char125DotmdRoute
+  '/playground/preview': typeof PlaygroundPreviewRoute
+  '/': typeof SiteIndexRoute
+  '/docs/$': typeof SiteDocsSplatRoute
+  '/docs/playground': typeof SiteDocsPlaygroundRoute
   '/og/docs/$': typeof OgDocsSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_site': typeof SiteRouteWithChildren
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/api/search': typeof ApiSearchRoute
-  '/docs/$': typeof DocsSplatRoute
   '/docs/{$}.md': typeof DocsChar123Char125DotmdRoute
+  '/playground/preview': typeof PlaygroundPreviewRoute
+  '/_site/': typeof SiteIndexRoute
+  '/_site/docs/$': typeof SiteDocsSplatRoute
+  '/_site/docs/playground': typeof SiteDocsPlaygroundRoute
   '/og/docs/$': typeof OgDocsSplatRoute
 }
 export interface FileRouteTypes {
@@ -88,46 +112,53 @@ export interface FileRouteTypes {
     | '/llms-full.txt'
     | '/llms.txt'
     | '/api/search'
-    | '/docs/$'
     | '/docs/{$}.md'
+    | '/playground/preview'
+    | '/docs/$'
+    | '/docs/playground'
     | '/og/docs/$'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/api/search'
-    | '/docs/$'
     | '/docs/{$}.md'
+    | '/playground/preview'
+    | '/'
+    | '/docs/$'
+    | '/docs/playground'
     | '/og/docs/$'
   id:
     | '__root__'
-    | '/'
+    | '/_site'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/api/search'
-    | '/docs/$'
     | '/docs/{$}.md'
+    | '/playground/preview'
+    | '/_site/'
+    | '/_site/docs/$'
+    | '/_site/docs/playground'
     | '/og/docs/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  SiteRoute: typeof SiteRouteWithChildren
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   ApiSearchRoute: typeof ApiSearchRoute
-  DocsSplatRoute: typeof DocsSplatRoute
   DocsChar123Char125DotmdRoute: typeof DocsChar123Char125DotmdRoute
+  PlaygroundPreviewRoute: typeof PlaygroundPreviewRoute
   OgDocsSplatRoute: typeof OgDocsSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
+    '/_site': {
+      id: '/_site'
+      path: ''
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof SiteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/llms-full.txt': {
@@ -144,18 +175,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LlmsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_site/': {
+      id: '/_site/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof SiteIndexRouteImport
+      parentRoute: typeof SiteRoute
+    }
     '/api/search': {
       id: '/api/search'
       path: '/api/search'
       fullPath: '/api/search'
       preLoaderRoute: typeof ApiSearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/docs/$': {
-      id: '/docs/$'
-      path: '/docs/$'
-      fullPath: '/docs/$'
-      preLoaderRoute: typeof DocsSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs/{$}.md': {
@@ -164,6 +195,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/docs/{$}.md'
       preLoaderRoute: typeof DocsChar123Char125DotmdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/playground/preview': {
+      id: '/playground/preview'
+      path: '/playground/preview'
+      fullPath: '/playground/preview'
+      preLoaderRoute: typeof PlaygroundPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_site/docs/$': {
+      id: '/_site/docs/$'
+      path: '/docs/$'
+      fullPath: '/docs/$'
+      preLoaderRoute: typeof SiteDocsSplatRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/docs/playground': {
+      id: '/_site/docs/playground'
+      path: '/docs/playground'
+      fullPath: '/docs/playground'
+      preLoaderRoute: typeof SiteDocsPlaygroundRouteImport
+      parentRoute: typeof SiteRoute
     }
     '/og/docs/$': {
       id: '/og/docs/$'
@@ -175,13 +227,27 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface SiteRouteChildren {
+  SiteIndexRoute: typeof SiteIndexRoute
+  SiteDocsSplatRoute: typeof SiteDocsSplatRoute
+  SiteDocsPlaygroundRoute: typeof SiteDocsPlaygroundRoute
+}
+
+const SiteRouteChildren: SiteRouteChildren = {
+  SiteIndexRoute: SiteIndexRoute,
+  SiteDocsSplatRoute: SiteDocsSplatRoute,
+  SiteDocsPlaygroundRoute: SiteDocsPlaygroundRoute,
+}
+
+const SiteRouteWithChildren = SiteRoute._addFileChildren(SiteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  SiteRoute: SiteRouteWithChildren,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
   ApiSearchRoute: ApiSearchRoute,
-  DocsSplatRoute: DocsSplatRoute,
   DocsChar123Char125DotmdRoute: DocsChar123Char125DotmdRoute,
+  PlaygroundPreviewRoute: PlaygroundPreviewRoute,
   OgDocsSplatRoute: OgDocsSplatRoute,
 }
 export const routeTree = rootRouteImport

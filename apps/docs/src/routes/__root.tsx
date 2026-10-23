@@ -1,6 +1,7 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/react-router';
-import appCss from '@/styles/app.css?url';
 import { RootProvider } from 'fumadocs-ui/provider/tanstack';
+import appCss from '@/styles/app.css?url';
+import { NotFound } from '@/components/not-found';
 
 export const Route = createRootRoute({
   head: () => ({
@@ -16,9 +17,15 @@ export const Route = createRootRoute({
         title: 'calendar-tsx',
       },
     ],
-    links: [{ rel: 'stylesheet', href: appCss }],
   }),
   component: RootComponent,
+  // unknown paths render outside the `_site` layout, so they bring its stylesheet and provider themselves
+  notFoundComponent: () => (
+    <RootProvider>
+      <link rel='stylesheet' href={appCss} precedence='default' />
+      <NotFound />
+    </RootProvider>
+  ),
 });
 
 function RootComponent() {
@@ -28,9 +35,7 @@ function RootComponent() {
         <HeadContent />
       </head>
       <body className='flex flex-col min-h-screen'>
-        <RootProvider>
-          <Outlet />
-        </RootProvider>
+        <Outlet />
         <Scripts />
       </body>
     </html>
