@@ -17,8 +17,15 @@ import '@calendar-tsx/themes/default.css';
 | ------------- | --------------------------------------------------------------------------------------------- |
 | `base.css`    | Positioning only: month bars, time-grid columns and lanes, the now line. Every theme uses it. |
 | `default.css` | `base.css` plus the default look.                                                             |
+| `shadcn.css`  | The default look with its tokens read from shadcn/ui's variables. See [shadcn/ui](#shadcnui). |
+| `compact.css` | Density only: smaller slots, bars and text. Import it after any theme.                        |
 
 Import `base.css` alone to write your own look on top of working layout.
+
+```ts
+import '@calendar-tsx/themes/default.css';
+import '@calendar-tsx/themes/compact.css';
+```
 
 ## Customizing
 
@@ -31,32 +38,54 @@ Override any `--calendar-*` token on an ancestor of the calendar:
 }
 ```
 
-| Token                                                                                      | Default (light, dark)                              |
-| ------------------------------------------------------------------------------------------ | -------------------------------------------------- |
-| `--calendar-surface`, `--calendar-surface-muted`                                           | `#ffffff` `#f5f4f1`, `#171615` `#201f1d`           |
-| `--calendar-text`, `--calendar-text-muted`                                                 | `#1c1b19` `#5f5c56`, `#f2efe9` `#a9a49b`           |
-| `--calendar-border`                                                                        | `#dedbd4`, `#34322e`                               |
-| `--calendar-accent`, `--calendar-accent-contrast`                                          | `#b4441e` `#ffffff`, `#f08a5d` `#1a0d07`           |
-| `--calendar-event`, `--calendar-event-text`, `--calendar-event-border`                     | `#ebe6dc` text `#d3ccbf`, `#2e2b27` text `#45413b` |
-| `--calendar-focus-ring`                                                                    | the accent                                         |
-| `--calendar-radius`, `--calendar-bar-radius`                                               | `0.375rem`, `0.25rem`                              |
-| `--calendar-font-size`                                                                     | `0.875rem`                                         |
-| `--calendar-slot-height`, `--calendar-axis-width`                                          | `3rem`, `4rem`                                     |
-| `--calendar-bar-height`, `--calendar-bar-gap`, `--calendar-bar-inset`                      | `1.375rem`, `2px`, `2px`                           |
-| `--calendar-day-header-height`, `--calendar-overflow-height`, `--calendar-week-min-height` | `2rem`, `1.5rem`, `6rem`                           |
+| Token                                                                                      | Default (light, dark)                       |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------- |
+| `--calendar-surface`, `--calendar-surface-muted`                                           | `#ffffff` `#f5f4f1`, `#171615` `#201f1d`    |
+| `--calendar-text`, `--calendar-text-muted`                                                 | `#1c1b19` `#5f5c56`, `#f2efe9` `#a9a49b`    |
+| `--calendar-border`                                                                        | `#dedbd4`, `#34322e`                        |
+| `--calendar-accent`, `--calendar-accent-contrast`                                          | `#b4441e` `#ffffff`, `#f08a5d` `#1a0d07`    |
+| `--calendar-event`, `--calendar-event-border`                                              | `#ebe6dc` `#d3ccbf`, `#2e2b27` `#45413b`    |
+| `--calendar-event-text`, `--calendar-focus-ring`                                           | unset: fall back to the text and the accent |
+| `--calendar-radius`, `--calendar-bar-radius`                                               | `0.375rem`, `0.25rem`                       |
+| `--calendar-font-size`, `--calendar-font-size-sm`, `--calendar-font-size-xs`               | `0.875rem`, `0.75rem`, `0.6875rem`          |
+| `--calendar-slot-height`, `--calendar-axis-width`                                          | `3rem`, `4rem`                              |
+| `--calendar-bar-height`, `--calendar-bar-gap`, `--calendar-bar-inset`                      | `1.375rem`, `2px`, `2px`                    |
+| `--calendar-day-header-height`, `--calendar-overflow-height`, `--calendar-week-min-height` | `2rem`, `1.5rem`, `6rem`                    |
 
-The theme sets no font family; the calendar inherits the page's.
+The theme sets no font family; the calendar inherits the page's. `--calendar-event-text` and `--calendar-focus-ring`
+are left unset on purpose: a token declared as `var(--other)` resolves where it is declared, so a default on `:root`
+would ignore an override of the token it points to.
 
 **Dark mode.** Colors use `light-dark()`, so they follow the inherited `color-scheme`. The theme never sets it: declare
 `color-scheme: light dark` on the page to follow the system, or `light`/`dark` on any ancestor to force a mode.
 
-**Overriding rules.** Both files use cascade layers (`calendar.base`, `calendar.theme`) and zero-specificity
-selectors. Unlayered CSS always wins over them without `!important`. Layered CSS wins only if its layer comes later:
+**High contrast.** Under `forced-colors: active` (Windows High Contrast), the browser drops fills. Events keep their
+borders, and the default theme restores today's marker, the now line, slot lines, unavailable hatching and
+outside-month dates with system colors.
+
+**Overriding rules.** The files use cascade layers (`calendar.base`, `calendar.theme`, `calendar.density`) and
+zero-specificity selectors. Unlayered CSS always wins over them without `!important`. Layered CSS wins only if its layer comes later:
 CSS that declares its own layers after importing the theme beats it, and anything earlier loses. Tailwind is
 layered, so see [Tailwind](#tailwind).
 
 **Scrolling.** `TimeGridView_Root` scrolls, with a sticky header. Give it a height (`max-block-size: 40rem`) to
 scroll inside the page rather than show all 24 hours.
+
+## shadcn/ui
+
+`shadcn.css` replaces `default.css`: it maps the calendar tokens onto shadcn/ui's variables (`--background`,
+`--foreground`, `--muted`, `--muted-foreground`, `--border`, `--primary`, `--primary-foreground`, `--ring`,
+`--radius`), so the calendar follows the app's palette, radius and `.dark` class with no further setup. Events are
+`--primary` tinted 16% into `--background`, because shadcn's `--secondary`, `--muted` and `--accent` sit almost on the
+background in light mode. Use the Tailwind v4 variable naming (full `oklch()` colors, not the v3 HSL channels).
+
+```css
+@import 'tailwindcss';
+@import '@calendar-tsx/themes/shadcn.css' layer(components);
+```
+
+Dark mode follows shadcn's `.dark` class, on `<html>` or on any element around the calendar; `color-scheme` is not
+needed.
 
 ## Tailwind
 
