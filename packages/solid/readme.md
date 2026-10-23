@@ -4,7 +4,7 @@
 > **Experimental.** `@calendar-tsx/solid` is an experiment. Its API can change or be removed in any release, without notice.
 
 Solid bindings for [`@calendar-tsx/core`](../core): `useCalendar`, `CalendarProvider`, and unstyled parts for the
-month (`MonthView*`), time-grid (`TimeGridView*`) and list (`ListView*`) layouts. Part names, props, data
+month (`MonthView*`), time-grid (`TimeGridView*`), list (`ListView*`) and timeline (`TimelineView*`) layouts. Part names, props, data
 attributes and `--cal-*` variables match [`@calendar-tsx/react`](../react).
 
 ## Quick example
