@@ -1,0 +1,42 @@
+{
+  "name": "@calendar-tsx/core",
+  "version": "0.0.0",
+  "description": "Headless, framework-agnostic calendar engine on TanStack Store and Temporal.",
+  "license": "MIT",
+  "author": "Frantss <frantss.bongiovanni@gmail.com>",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts",
+  "imports": {
+    "#*": "./src/*.ts"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "test": "vp test",
+    "test:coverage": "vp test --coverage",
+    "test:dev": "vp test --watch",
+    "check:types": "vp exec tsc --noEmit",
+    "check:package": "publint --strict && attw --pack --no-emoji"
+  },
+  "dependencies": {
+    "@tanstack/store": "^0.11.2",
+    "temporal-polyfill": "^1.0.6"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "publint": "^0.3.25",
+    "typescript": "^7.0.2"
+  }
+}
