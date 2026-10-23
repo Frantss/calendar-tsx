@@ -1,6 +1,8 @@
 import type { Calendar_EventInput, Calendar_Resource } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
 
+import type { PlaygroundDataSet, PlaygroundEvent } from './config';
+
 export type Booking = { title: string };
 export type Room = { capacity: number };
 
@@ -17,7 +19,7 @@ const isWeekday = (date: Temporal.PlainDate) => date.dayOfWeek <= 5;
  * A repeating sample week, generated around `anchor` so every view has something to show. It includes overlapping
  * meetings (lanes), an event across midnight, a multi-day all-day event and one busy day (month overflow).
  */
-export const sampleEvents = (anchor: Temporal.PlainDate, timeZone: string): Calendar_EventInput<Booking>[] => {
+const sampleEvents = (anchor: Temporal.PlainDate, timeZone: string): Calendar_EventInput<Booking>[] => {
   const at = (date: Temporal.PlainDate, time: string) =>
     date.toZonedDateTime({ timeZone, plainTime: Temporal.PlainTime.from(time) });
   const timed = (date: Temporal.PlainDate, id: string, start: string, end: string, title: string, room: string) => ({
@@ -57,6 +59,78 @@ export const sampleEvents = (anchor: Temporal.PlainDate, timeZone: string): Cale
     return events;
   });
 };
+
+/** On top of the sample week: crowded mornings for lanes, a weekly on-call bar, and more events per day than fit. */
+const busyEvents = (anchor: Temporal.PlainDate, timeZone: string): Calendar_EventInput<Booking>[] => {
+  const at = (date: Temporal.PlainDate, time: string) =>
+    date.toZonedDateTime({ timeZone, plainTime: Temporal.PlainTime.from(time) });
+  const meetings = [
+    ['triage', '10:00', '11:00', 'Bug triage', 'room-a'],
+    ['interview', '10:30', '11:30', 'Interview', 'room-b'],
+    ['sync', '10:45', '12:00', 'Partner sync', 'room-c'],
+    ['focus', '14:00', '16:00', 'Focus time', 'room-c'],
+  ] as const;
+
+  return sampleDays(anchor).flatMap((date): Calendar_EventInput<Booking>[] => [
+    ...(isWeekday(date)
+      ? meetings.map(([id, start, end, title, room]) => ({
+          id: `${id}-${date.toString()}`,
+          start: at(date, start),
+          end: at(date, end),
+          resourceIds: [room],
+          data: { title },
+        }))
+      : []),
+    ...(date.dayOfWeek === 1
+      ? [
+          {
+            id: `on-call-${date.toString()}`,
+            allDay: true as const,
+            start: date,
+            end: date.add({ days: 4 }),
+            data: { title: 'On call' },
+          },
+        ]
+      : []),
+  ]);
+};
+
+/** The events added in the playground, as calendar input in `timeZone`. */
+export const playgroundEvents = (events: PlaygroundEvent[], timeZone: string): Calendar_EventInput<Booking>[] =>
+  events.map(event => {
+    const date = Temporal.PlainDate.from(event.date);
+    const resourceIds = event.room ? [event.room] : undefined;
+
+    if (event.allDay) {
+      return {
+        id: event.id,
+        allDay: true,
+        start: date,
+        end: date.add({ days: event.days - 1 }),
+        resourceIds,
+        data: { title: event.title },
+      };
+    }
+
+    const start = date.toZonedDateTime({ timeZone, plainTime: Temporal.PlainTime.from(event.start) });
+    const endDate = event.end <= event.start ? date.add({ days: 1 }) : date;
+
+    return {
+      id: event.id,
+      start,
+      end: endDate.toZonedDateTime({ timeZone, plainTime: Temporal.PlainTime.from(event.end) }),
+      resourceIds,
+      data: { title: event.title },
+    };
+  });
+
+/** The generated events of a data set, around the month of `anchor`. */
+export const dataSetEvents = (set: PlaygroundDataSet, anchor: Temporal.PlainDate, timeZone: string) =>
+  set === 'empty'
+    ? []
+    : set === 'busy'
+      ? [...sampleEvents(anchor, timeZone), ...busyEvents(anchor, timeZone)]
+      : sampleEvents(anchor, timeZone);
 
 /** Three rooms: A open on weekdays, B closed over lunch, C closed on Mondays. */
 export const sampleRooms = (anchor: Temporal.PlainDate, timeZone: string): Calendar_Resource<Room>[] => {

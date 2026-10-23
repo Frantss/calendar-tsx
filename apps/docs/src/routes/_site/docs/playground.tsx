@@ -1,20 +1,35 @@
 import { getCalendarNavigation } from '@calendar-tsx/core';
 import { createFileRoute } from '@tanstack/react-router';
 import { HomeLayout } from 'fumadocs-ui/layouts/home';
-import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Temporal } from 'temporal-polyfill';
 
 import { baseOptions } from '@/lib/layout.shared';
-import type { PlaygroundConfig, PlaygroundDensity, PlaygroundScheme, PlaygroundTheme } from '@/playground/config';
+import type {
+  PlaygroundConfig,
+  PlaygroundDataSet,
+  PlaygroundDensity,
+  PlaygroundFirstDayOfWeek,
+  PlaygroundLocale,
+  PlaygroundScheme,
+  PlaygroundSlotMinutes,
+  PlaygroundTheme,
+} from '@/playground/config';
 import {
   defaultPlaygroundConfig,
   parsePlaygroundConfig,
+  playgroundDataSets,
+  playgroundLocales,
   playgroundThemes,
   serializePlaygroundConfig,
 } from '@/playground/config';
+import { ContrastReadout } from '@/playground/contrast-readout';
+import { buttonClass, Checkbox, Field, inputClass, Section, Segmented } from '@/playground/controls';
+import { EventEditor } from '@/playground/event-editor';
+import type { Measurement } from '@/playground/measure';
 import type { PlaygroundToPreview, PreviewToPlayground } from '@/playground/messages';
 import { postPlaygroundMessage, readPlaygroundMessage } from '@/playground/messages';
+import { TokenEditor } from '@/playground/token-editor';
 import type { PlaygroundView } from '@/playground/views';
 import { playgroundViews } from '@/playground/views';
 
@@ -42,17 +57,40 @@ const schemeOptions: { value: PlaygroundScheme; label: string }[] = [
   { value: 'system', label: 'System' },
 ];
 
+const slotOptions: { value: PlaygroundSlotMinutes; label: string }[] = [
+  { value: 15, label: '15 min' },
+  { value: 30, label: '30 min' },
+  { value: 60, label: '1 hour' },
+];
+
+const clockOptions = [
+  { value: 'live', label: 'Live' },
+  { value: 'frozen', label: 'Frozen' },
+] as const;
+
+const weekdays: { value: PlaygroundFirstDayOfWeek; label: string }[] = [
+  { value: 1, label: 'Monday' },
+  { value: 2, label: 'Tuesday' },
+  { value: 3, label: 'Wednesday' },
+  { value: 4, label: 'Thursday' },
+  { value: 5, label: 'Friday' },
+  { value: 6, label: 'Saturday' },
+  { value: 7, label: 'Sunday' },
+];
+
 const today = () => Temporal.Now.plainDateISO().toString();
 
 const toUtcDate = (date: Temporal.PlainDate) => new Date(Date.UTC(date.year, date.month - 1, date.day));
 
 /** The toolbar title: the month, the day, or the span of days the view shows. */
 const periodTitle = (config: PlaygroundConfig) => {
-  const { period } = getCalendarNavigation(playgroundViews.views, config.view, Temporal.PlainDate.from(config.date));
+  const { period } = getCalendarNavigation(playgroundViews.views, config.view, Temporal.PlainDate.from(config.date), {
+    firstDayOfWeek: config.firstDayOfWeek,
+  });
 
-  if (config.view === 'month') return period.start.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  if (config.view === 'month') return period.start.toLocaleString(config.locale, { month: 'long', year: 'numeric' });
 
-  const format = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', dateStyle: 'medium' });
+  const format = new Intl.DateTimeFormat(config.locale, { timeZone: 'UTC', dateStyle: 'medium' });
 
   return period.start.equals(period.end)
     ? format.format(toUtcDate(period.start))
@@ -65,9 +103,13 @@ function Playground() {
   // read on the client only: the config lives in the hash, and "today" must be the viewer's
   const [config, setConfig] = useState<PlaygroundConfig | null>(null);
   const [status, setStatus] = useState<PreviewStatus>('loading');
+  const [measurement, setMeasurement] = useState<Measurement | null>(null);
   const [copyStatus, setCopyStatus] = useState('');
   // the first config goes in the iframe's URL, so the preview renders before the first message arrives
   const [initialSrc, setInitialSrc] = useState<string | null>(null);
+  const [timeZones] = useState(() =>
+    typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : [],
+  );
   const frame = useRef<HTMLIFrameElement>(null);
   const latest = useRef<PlaygroundConfig | null>(null);
 
@@ -89,8 +131,8 @@ function Playground() {
       if (message?.type === 'navigate') {
         setConfig(current => (current ? { ...current, view: message.view, date: message.date } : current));
       }
+      if (message?.type === 'measure') setMeasurement(message.measurement);
     };
-
     // a pasted link or an edited address on an open page; `replaceState` below does not fire this
     const onHashChange = () => setConfig(parsePlaygroundConfig(window.location.hash, today()));
 
@@ -138,71 +180,34 @@ function Playground() {
     }
   };
 
+  const addEvent = (current: PlaygroundConfig) => {
+    const id = `event-${Date.now().toString(36)}`;
+
+    update({
+      events: [
+        ...current.events,
+        { id, title: 'New event', date: current.date, allDay: false, start: '10:00', end: '11:00', days: 1, room: '' },
+      ],
+    });
+  };
+
   return (
     <HomeLayout {...baseOptions()}>
       <main className='mx-auto flex w-full max-w-[90rem] flex-col gap-6 px-4 py-6 lg:px-6'>
         <header className='flex flex-col gap-1'>
           <h1 className='text-2xl font-semibold'>Playground</h1>
           <p className='text-fd-muted-foreground'>
-            Change the view, the date and the theme. The preview runs the React parts with only the chosen theme loaded,
-            and the address bar keeps every setting, so you can share what you see.
+            Change the calendar, its data and its theme. The preview runs the React parts with only the chosen theme
+            loaded, and the address bar keeps every setting, so you can share what you see.
           </p>
         </header>
 
         {!config ? (
           <p className='text-fd-muted-foreground'>Loading the playground…</p>
         ) : (
-          <div className='grid gap-6 lg:grid-cols-[17rem_minmax(0,1fr)]'>
-            <form aria-label='Playground settings' className='grid content-start gap-5 sm:grid-cols-2 lg:grid-cols-1'>
-              <Segmented
-                legend='View'
-                name='view'
-                options={viewOptions}
-                value={config.view}
-                onChange={view => update({ view })}
-              />
-              <Field label='Date'>
-                <input
-                  type='date'
-                  required
-                  value={config.date}
-                  onChange={event => event.target.value && update({ date: event.target.value })}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label='Theme'>
-                <select
-                  value={config.theme}
-                  onChange={event => update({ theme: event.target.value as PlaygroundTheme })}
-                  className={inputClass}
-                >
-                  {playgroundThemes.map(theme => (
-                    <option key={theme.id} value={theme.id}>
-                      {theme.label}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Segmented
-                legend='Density'
-                name='density'
-                options={densityOptions}
-                value={config.density}
-                onChange={density => update({ density })}
-              />
-              <Segmented
-                legend='Color scheme'
-                name='scheme'
-                options={schemeOptions}
-                value={config.scheme}
-                onChange={scheme => update({ scheme })}
-              />
-              {(config.theme === 'shadcn' || config.theme === 'material-ui') && (
-                <p className='text-sm text-fd-muted-foreground sm:col-span-2 lg:col-span-1'>
-                  These themes read your app's variables. The preview stands in their default palettes.
-                </p>
-              )}
-              <div className='flex flex-wrap items-center gap-2 sm:col-span-2 lg:col-span-1'>
+          <div className='grid gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]'>
+            <form aria-label='Playground settings' className='order-last flex flex-col gap-3 lg:order-none'>
+              <div className='flex flex-wrap items-center gap-2'>
                 <button type='button' onClick={copyLink} className={buttonClass}>
                   Copy link
                 </button>
@@ -211,118 +216,248 @@ function Playground() {
                   onClick={() => setConfig(defaultPlaygroundConfig(today()))}
                   className={buttonClass}
                 >
-                  Reset
+                  Reset everything
                 </button>
-                <p role='status' className='basis-full text-sm text-fd-muted-foreground'>
+                <p role='status' className='basis-full text-sm text-fd-muted-foreground empty:hidden'>
                   {copyStatus}
                 </p>
               </div>
-            </form>
 
-            <section aria-labelledby='playground-period' className='flex min-w-0 flex-col gap-3'>
-              <div className='flex flex-wrap items-center gap-2'>
-                <button
-                  type='button'
-                  disabled={status !== 'ready'}
-                  onClick={() => send({ type: 'action', action: 'prev' })}
-                  className={buttonClass}
-                >
-                  Previous
-                </button>
-                <button
-                  type='button'
-                  disabled={status !== 'ready'}
-                  onClick={() => send({ type: 'action', action: 'today' })}
-                  className={buttonClass}
-                >
-                  Today
-                </button>
-                <button
-                  type='button'
-                  disabled={status !== 'ready'}
-                  onClick={() => send({ type: 'action', action: 'next' })}
-                  className={buttonClass}
-                >
-                  Next
-                </button>
-                <h2 id='playground-period' className='ms-1 text-lg font-medium'>
-                  {periodTitle(config)}
-                </h2>
-              </div>
-              <div className='relative overflow-hidden rounded-xl border border-fd-border'>
-                {initialSrc && (
-                  <iframe
-                    ref={frame}
-                    src={initialSrc}
-                    title='Calendar preview'
-                    className='block h-[70dvh] w-full lg:h-[calc(100dvh-12rem)] lg:min-h-[36rem]'
+              <Section title='Calendar' open>
+                <Segmented
+                  legend='View'
+                  options={viewOptions}
+                  value={config.view}
+                  onChange={view => update({ view })}
+                />
+                <Field label='Date'>
+                  <input
+                    type='date'
+                    required
+                    value={config.date}
+                    onChange={event => event.target.value && update({ date: event.target.value })}
+                    className={inputClass}
                   />
+                </Field>
+                <Field label='Time zone'>
+                  <select
+                    value={config.timeZone}
+                    onChange={event => update({ timeZone: event.target.value })}
+                    className={inputClass}
+                  >
+                    <option value=''>Your time zone ({Temporal.Now.timeZoneId()})</option>
+                    {timeZones.map(zone => (
+                      <option key={zone} value={zone}>
+                        {zone}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label='Week starts on'>
+                  <select
+                    value={config.firstDayOfWeek}
+                    onChange={event =>
+                      update({ firstDayOfWeek: Number(event.target.value) as PlaygroundFirstDayOfWeek })
+                    }
+                    className={inputClass}
+                  >
+                    {weekdays.map(day => (
+                      <option key={day.value} value={day.value}>
+                        {day.label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label='Locale' hint='Formats the dates and labels in the preview.'>
+                  <select
+                    value={config.locale}
+                    onChange={event => update({ locale: event.target.value as PlaygroundLocale })}
+                    className={inputClass}
+                  >
+                    {playgroundLocales.map(locale => (
+                      <option key={locale} value={locale}>
+                        {locale}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label='Bar rows per day, month view' hint='Events in further rows are hidden behind "more".'>
+                  <input
+                    type='number'
+                    min={1}
+                    max={6}
+                    value={config.maxEventsPerDay}
+                    onChange={event => {
+                      const rows = Number(event.target.value);
+
+                      if (Number.isInteger(rows) && rows >= 1 && rows <= 6) update({ maxEventsPerDay: rows });
+                    }}
+                    className={inputClass}
+                  />
+                </Field>
+                <Segmented
+                  legend='Time slot, week and day views'
+                  options={slotOptions}
+                  value={config.slotMinutes}
+                  onChange={slotMinutes => update({ slotMinutes })}
+                />
+                <Checkbox
+                  label='All-day row in week and day views'
+                  checked={config.allDay}
+                  onChange={allDay => update({ allDay })}
+                />
+                <Segmented
+                  legend='Clock'
+                  options={clockOptions}
+                  value={config.now ? 'frozen' : 'live'}
+                  onChange={mode => update({ now: mode === 'frozen' ? `${config.date}T14:30` : '' })}
+                />
+                {config.now && (
+                  <Field label='Frozen at' hint='In the calendar’s time zone. Today and the now line follow it.'>
+                    <input
+                      type='datetime-local'
+                      required
+                      value={config.now}
+                      onChange={event => event.target.value && update({ now: event.target.value.slice(0, 16) })}
+                      className={inputClass}
+                    />
+                  </Field>
                 )}
-                {status !== 'ready' && (
-                  <p className='absolute inset-0 grid place-items-center bg-fd-background p-6 text-center text-fd-muted-foreground'>
-                    {status === 'loading'
-                      ? 'Loading the preview…'
-                      : "The preview didn't load. Reload the page to try again."}
+              </Section>
+
+              <Section title='Data'>
+                <Field label='Events' hint='Generated around the date you pick, so every month has some.'>
+                  <select
+                    value={config.data}
+                    onChange={event => update({ data: event.target.value as PlaygroundDataSet })}
+                    className={inputClass}
+                  >
+                    {playgroundDataSets.map(set => (
+                      <option key={set.id} value={set.id}>
+                        {set.label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <div className='flex flex-col gap-3'>
+                  <h3 className='text-sm font-medium'>Your events</h3>
+                  {config.events.length === 0 && (
+                    <p className='text-sm text-fd-muted-foreground'>None yet. Add one to see it in the preview.</p>
+                  )}
+                  {config.events.map(event => (
+                    <EventEditor
+                      key={event.id}
+                      event={event}
+                      onChange={next =>
+                        update({ events: config.events.map(item => (item.id === event.id ? next : item)) })
+                      }
+                      onRemove={() => update({ events: config.events.filter(item => item.id !== event.id) })}
+                    />
+                  ))}
+                  <button type='button' onClick={() => addEvent(config)} className={buttonClass}>
+                    Add an event on{' '}
+                    {Temporal.PlainDate.from(config.date).toLocaleString(config.locale, { dateStyle: 'medium' })}
+                  </button>
+                </div>
+              </Section>
+
+              <Section title='Theme' open>
+                <Field label='Theme'>
+                  <select
+                    value={config.theme}
+                    onChange={event => update({ theme: event.target.value as PlaygroundTheme })}
+                    className={inputClass}
+                  >
+                    {playgroundThemes.map(theme => (
+                      <option key={theme.id} value={theme.id}>
+                        {theme.label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                {(config.theme === 'shadcn' || config.theme === 'material-ui') && (
+                  <p className='text-sm text-fd-muted-foreground'>
+                    These themes read your app's variables. The preview stands in their default palettes.
                   </p>
                 )}
-              </div>
-            </section>
+                <Segmented
+                  legend='Density'
+                  options={densityOptions}
+                  value={config.density}
+                  onChange={density => update({ density })}
+                />
+                <Segmented
+                  legend='Color scheme'
+                  options={schemeOptions}
+                  value={config.scheme}
+                  onChange={scheme => update({ scheme })}
+                />
+              </Section>
+
+              <Section title='Tokens'>
+                <TokenEditor
+                  tokens={config.tokens}
+                  measurement={measurement}
+                  usesColors={config.theme !== 'base'}
+                  onChange={tokens => update({ tokens })}
+                />
+              </Section>
+            </form>
+
+            <div className='flex min-w-0 flex-col gap-6'>
+              <section aria-labelledby='playground-period' className='flex flex-col gap-3'>
+                <div className='flex flex-wrap items-center gap-2'>
+                  <button
+                    type='button'
+                    disabled={status !== 'ready'}
+                    onClick={() => send({ type: 'action', action: 'prev' })}
+                    className={buttonClass}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    type='button'
+                    disabled={status !== 'ready'}
+                    onClick={() => send({ type: 'action', action: 'today' })}
+                    className={buttonClass}
+                  >
+                    Today
+                  </button>
+                  <button
+                    type='button'
+                    disabled={status !== 'ready'}
+                    onClick={() => send({ type: 'action', action: 'next' })}
+                    className={buttonClass}
+                  >
+                    Next
+                  </button>
+                  <h2 id='playground-period' className='ms-1 text-lg font-medium'>
+                    {periodTitle(config)}
+                  </h2>
+                </div>
+                <div className='relative overflow-hidden rounded-xl border border-fd-border'>
+                  {initialSrc && (
+                    <iframe
+                      ref={frame}
+                      src={initialSrc}
+                      title='Calendar preview'
+                      className='block h-[70dvh] w-full lg:h-[calc(100dvh-12rem)] lg:min-h-[36rem]'
+                    />
+                  )}
+                  {status !== 'ready' && (
+                    <p className='absolute inset-0 grid place-items-center bg-fd-background p-6 text-center text-fd-muted-foreground'>
+                      {status === 'loading'
+                        ? 'Loading the preview…'
+                        : "The preview didn't load. Reload the page to try again."}
+                    </p>
+                  )}
+                </div>
+              </section>
+              <ContrastReadout measurement={measurement} loading={status === 'loading'} />
+            </div>
           </div>
         )}
       </main>
     </HomeLayout>
-  );
-}
-
-const inputClass =
-  'min-h-11 w-full rounded-lg border border-fd-border bg-fd-background px-3 text-sm focus-visible:outline-2 focus-visible:outline-fd-ring';
-
-const buttonClass =
-  'min-h-11 rounded-lg border border-fd-border bg-fd-secondary px-4 text-sm font-medium text-fd-secondary-foreground hover:bg-fd-accent disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-fd-ring';
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <label className='flex flex-col gap-1.5 text-sm font-medium'>
-      {label}
-      {children}
-    </label>
-  );
-}
-
-function Segmented<TValue extends string>({
-  legend,
-  name,
-  options,
-  value,
-  onChange,
-}: {
-  legend: string;
-  name: string;
-  options: { value: TValue; label: string }[];
-  value: TValue;
-  onChange: (value: TValue) => void;
-}) {
-  return (
-    <fieldset className='flex flex-col gap-1.5'>
-      <legend className='mb-1.5 text-sm font-medium'>{legend}</legend>
-      <div className='flex flex-wrap gap-1 rounded-lg border border-fd-border p-1'>
-        {options.map(option => (
-          <label
-            key={option.value}
-            className='flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-md px-3 text-sm hover:bg-fd-accent has-[:checked]:bg-fd-primary has-[:checked]:text-fd-primary-foreground has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-fd-ring'
-          >
-            <input
-              type='radio'
-              name={name}
-              value={option.value}
-              checked={value === option.value}
-              onChange={() => onChange(option.value)}
-              className='sr-only'
-            />
-            {option.label}
-          </label>
-        ))}
-      </div>
-    </fieldset>
   );
 }

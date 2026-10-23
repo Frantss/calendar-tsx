@@ -7,6 +7,7 @@ import revenuecatCss from '@calendar-tsx/themes/revenuecat.css?url';
 import shadcnCss from '@calendar-tsx/themes/shadcn.css?url';
 import stripeCss from '@calendar-tsx/themes/stripe.css?url';
 import type { Calendar_Event } from '@calendar-tsx/core';
+import { fixedClock } from '@calendar-tsx/core';
 import { CalendarProvider, useCalendar } from '@calendar-tsx/react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -14,14 +15,16 @@ import { Temporal } from 'temporal-polyfill';
 
 import type { PlaygroundConfig, PlaygroundTheme } from '@/playground/config';
 import { parsePlaygroundConfig, serializePlaygroundConfig } from '@/playground/config';
+import { measureTheme } from '@/playground/measure';
 import type { PlaygroundToPreview, PreviewToPlayground } from '@/playground/messages';
 import { postPlaygroundMessage, readPlaygroundMessage } from '@/playground/messages';
 import previewCss from '@/playground/preview.css?url';
 import { describeEvent, PreviewLayout } from '@/playground/preview-views';
 import type { Booking } from '@/playground/sample-data';
-import { sampleEvents, sampleRooms } from '@/playground/sample-data';
+import { dataSetEvents, playgroundEvents, sampleRooms } from '@/playground/sample-data';
 import standInsCss from '@/playground/stand-ins.css?url';
-import { playgroundViews } from '@/playground/views';
+import { tokenOverridesCss } from '@/playground/tokens';
+import { createPlaygroundViews } from '@/playground/views';
 
 const themeCss: Record<PlaygroundTheme, string> = {
   default: defaultCss,
@@ -91,12 +94,40 @@ function Preview() {
   }, []);
 
   const scheme = useEffectiveScheme(config?.scheme);
+  const overrides = config ? tokenOverridesCss(config.tokens) : '';
+  const loaded = config !== null;
 
   // shadcn/ui and Material UI switch on a `.dark` class, the other themes on `color-scheme`
   useEffect(() => {
     document.documentElement.style.colorScheme = scheme;
     document.documentElement.classList.toggle('dark', scheme === 'dark');
   }, [scheme]);
+
+  // report the rendered colors once every stylesheet has applied, for the token editor and the contrast readout
+  useEffect(() => {
+    if (!loaded || !embedded.current) return;
+
+    let frame = 0;
+    let attempts = 0;
+    const measure = () => {
+      const pending = [...document.querySelectorAll<HTMLLinkElement>('link[rel=stylesheet]')].some(link => !link.sheet);
+
+      if (pending && attempts++ < 120) {
+        frame = requestAnimationFrame(measure);
+
+        return;
+      }
+
+      postPlaygroundMessage(window.parent, {
+        type: 'measure',
+        measurement: measureTheme(scheme),
+      } satisfies PreviewToPlayground);
+    };
+
+    frame = requestAnimationFrame(measure);
+
+    return () => cancelAnimationFrame(frame);
+  }, [loaded, config?.theme, config?.density, overrides, scheme]);
 
   if (!config) return <p>Loading the calendar…</p>;
 
@@ -115,7 +146,14 @@ function Preview() {
       <link rel='stylesheet' href={themeCss[config.theme]} />
       {config.density === 'compact' && <link rel='stylesheet' href={compactCss} />}
       {(config.theme === 'shadcn' || config.theme === 'material-ui') && <link rel='stylesheet' href={standInsCss} />}
-      <PreviewCalendar config={config} onApi={value => (api.current = value)} onNavigate={onNavigate} />
+      {overrides && <style>{overrides}</style>}
+      {/* a new clock needs a new instance: the clock is read at creation and on mount */}
+      <PreviewCalendar
+        key={`${config.now}|${config.timeZone}`}
+        config={config}
+        onApi={value => (api.current = value)}
+        onNavigate={onNavigate}
+      />
     </>
   );
 }
@@ -129,22 +167,37 @@ function PreviewCalendar({
   onApi: (api: Api) => void;
   onNavigate: (view: PlaygroundConfig['view'], date: string) => void;
 }) {
-  const [timeZone] = useState(() => Temporal.Now.timeZoneId());
+  const [timeZone] = useState(() => config.timeZone || Temporal.Now.timeZoneId());
+  const [clock] = useState(() =>
+    config.now ? fixedClock(Temporal.PlainDateTime.from(config.now).toZonedDateTime(timeZone).toInstant()) : undefined,
+  );
   const [selected, setSelected] = useState<Calendar_Event<Booking> | null>(null);
   const date = Temporal.PlainDate.from(config.date);
   const month = date.with({ day: 1 }).toString();
+  const { maxEventsPerDay, slotMinutes, allDay } = config;
+  const views = useMemo(
+    () => createPlaygroundViews({ maxEventsPerDay, slotMinutes, allDay }),
+    [maxEventsPerDay, slotMinutes, allDay],
+  );
   // regenerated per month only, so the arrays keep their identity while the week or day changes
-  const events = useMemo(() => sampleEvents(Temporal.PlainDate.from(month), timeZone), [month, timeZone]);
+  const generated = useMemo(
+    () => dataSetEvents(config.data, Temporal.PlainDate.from(month), timeZone),
+    [config.data, month, timeZone],
+  );
+  const added = useMemo(() => playgroundEvents(config.events, timeZone), [config.events, timeZone]);
+  const events = useMemo(() => [...generated, ...added], [generated, added]);
   const resources = useMemo(() => sampleRooms(Temporal.PlainDate.from(month), timeZone), [month, timeZone]);
 
   const calendar = useCalendar({
     timeZone,
-    views: playgroundViews.views,
-    features: { ...playgroundViews.features },
+    views: views.views,
+    features: { ...views.features },
     view: config.view,
     date,
     events,
     resources,
+    firstDayOfWeek: config.firstDayOfWeek,
+    ...(clock ? { clock } : {}),
     onNavigate: next => onNavigate(next.view, next.date.toString()),
   });
 
@@ -177,10 +230,10 @@ function PreviewCalendar({
   }, [config.view]);
 
   return (
-    <CalendarProvider value={calendar}>
+    <CalendarProvider value={calendar} locale={config.locale}>
       <PreviewLayout onSelect={setSelected} />
       <p role='status' style={{ marginBlock: '0.75rem 0', minBlockSize: '1.5em', fontSize: '0.875rem' }}>
-        {selected ? describeEvent(selected) : 'Select an event to see its details.'}
+        {selected ? describeEvent(selected, config.locale) : 'Select an event to see its details.'}
       </p>
     </CalendarProvider>
   );

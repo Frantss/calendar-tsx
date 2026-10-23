@@ -33,19 +33,21 @@ import type { Calendar_Event } from '@calendar-tsx/core';
 import type { Booking } from './sample-data';
 import type { PlaygroundState } from './views';
 
-const time = (value: { toLocaleString: (locale: string, options: Intl.DateTimeFormatOptions) => string }) =>
-  value.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' });
+type Formattable = { toLocaleString: (locale: string, options: Intl.DateTimeFormatOptions) => string };
+
+const time = (value: Formattable, locale: string) =>
+  value.toLocaleString(locale, { hour: 'numeric', minute: '2-digit' });
 
 /** What an event click reports, as one line of text. */
-export const describeEvent = (event: Calendar_Event<Booking>) =>
+export const describeEvent = (event: Calendar_Event<Booking>, locale: string) =>
   'allDay' in event
-    ? `${event.data.title}, all day from ${event.start.toLocaleString('en-US', { dateStyle: 'medium' })}`
-    : `${event.data.title}, ${event.start.toLocaleString('en-US', { dateStyle: 'medium' })} from ${time(event.start)} to ${time(event.end)}`;
+    ? `${event.data.title}, all day from ${event.start.toLocaleString(locale, { dateStyle: 'medium' })}`
+    : `${event.data.title}, ${event.start.toLocaleString(locale, { dateStyle: 'medium' })} from ${time(event.start, locale)} to ${time(event.end, locale)}`;
 
 /** Renders the active view's layout with the React parts, the way the docs' view pages compose them. */
 export const PreviewLayout = ({ onSelect }: { onSelect: (event: Calendar_Event<Booking>) => void }) => {
   const layout = useCalendarSelector((state: PlaygroundState) => state.layout);
-  const { instance } = useCalendarContext();
+  const { instance, locale } = useCalendarContext();
 
   if (layout.kind === 'month') {
     return (
@@ -53,7 +55,7 @@ export const PreviewLayout = ({ onSelect }: { onSelect: (event: Calendar_Event<B
         <MonthViewHeader>
           {layout.weekdays.map(weekday => (
             <MonthViewHeaderCell key={weekday.toString()} weekday={weekday}>
-              {weekday.toLocaleString('en-US', { weekday: 'short' })}
+              {weekday.toLocaleString(locale, { weekday: 'short' })}
             </MonthViewHeaderCell>
           ))}
         </MonthViewHeader>
@@ -90,7 +92,7 @@ export const PreviewLayout = ({ onSelect }: { onSelect: (event: Calendar_Event<B
                 column.resource.title
               ) : (
                 <TimeGridViewColumnTrigger column={column} view='day'>
-                  {column.date.toLocaleString('en-US', { weekday: 'short', day: 'numeric' })}
+                  {column.date.toLocaleString(locale, { weekday: 'short', day: 'numeric' })}
                 </TimeGridViewColumnTrigger>
               )}
             </TimeGridViewColumnHeader>
@@ -109,7 +111,7 @@ export const PreviewLayout = ({ onSelect }: { onSelect: (event: Calendar_Event<B
           <TimeGridViewAxis>
             {layout.slots.map(slot => (
               <TimeGridViewAxisLabel key={slot.key} slot={slot}>
-                {slot.time.minute === 0 ? slot.time.toLocaleString('en-US', { hour: 'numeric' }) : null}
+                {slot.time.minute === 0 ? slot.time.toLocaleString(locale, { hour: 'numeric' }) : null}
               </TimeGridViewAxisLabel>
             ))}
           </TimeGridViewAxis>
@@ -135,10 +137,10 @@ export const PreviewLayout = ({ onSelect }: { onSelect: (event: Calendar_Event<B
     <ListView model={layout}>
       {layout.days.map(day => (
         <ListViewDay key={day.key} day={day}>
-          <ListViewDayHeader day={day}>{day.date.toLocaleString('en-US', { dateStyle: 'full' })}</ListViewDayHeader>
+          <ListViewDayHeader day={day}>{day.date.toLocaleString(locale, { dateStyle: 'full' })}</ListViewDayHeader>
           {day.events.map(event => (
             <ListViewEvent key={event.id} event={event} onClick={() => onSelect(event)}>
-              {'allDay' in event ? 'All day' : time(event.start)} · {event.data.title}
+              {'allDay' in event ? 'All day' : time(event.start, locale)} · {event.data.title}
             </ListViewEvent>
           ))}
         </ListViewDay>
