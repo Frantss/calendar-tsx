@@ -1,0 +1,61 @@
+import { Temporal } from 'temporal-polyfill';
+import { expect, it } from 'vitest';
+import { page } from 'vitest/browser';
+
+import type { Calendar_ListLayout } from '@calendar-tsx/core';
+import type { Fixtures_EventData } from '#tests/calendar.fixtures';
+import { fixtures_timed } from '#tests/calendar.fixtures';
+import { ListView_Day, ListView_DayHeader, ListView_Empty, ListView_Event, ListView_Root } from '#list-view';
+import { useCalendarSelector } from '#use-calendar';
+import type { CalendarReactSetup_Overrides } from '#tests/calendar-react.setup';
+import { calendarReactSetup_render } from '#tests/calendar-react.setup';
+
+const ListBody = () => {
+  const list = useCalendarSelector(state => state.layout) as Calendar_ListLayout<Fixtures_EventData>;
+
+  return (
+    <ListView_Root model={list}>
+      {list.days.map(day => (
+        <ListView_Day key={day.key} day={day}>
+          <ListView_DayHeader day={day}>{day.key}</ListView_DayHeader>
+          {day.events.map(event => (
+            <ListView_Event key={event.id} event={event}>
+              {event.data.title}
+            </ListView_Event>
+          ))}
+        </ListView_Day>
+      ))}
+      <ListView_Empty>Nothing scheduled</ListView_Empty>
+    </ListView_Root>
+  );
+};
+
+const setup = async (overrides: CalendarReactSetup_Overrides = {}) => {
+  const utils = await calendarReactSetup_render(<ListBody />, { view: 'list_week', ...overrides });
+
+  const ui = {
+    region: page.getByRole('region', { name: 'Event list' }),
+    headings: page.getByRole('heading', { level: 3 }),
+    event: (title: string) => page.getByRole('button', { name: title }),
+    empty: page.getByText('Nothing scheduled'),
+  };
+
+  return { ...utils, ui };
+};
+
+it('renders days with events and hides the empty part', async () => {
+  const { ui } = await setup({
+    events: [fixtures_timed('Yoga', { date: '2026-03-11', start: '09:00', end: '10:00' })],
+  });
+
+  await expect.element(ui.region).toHaveAttribute('data-part', 'list-root');
+  await expect.element(ui.event('Yoga')).toHaveAttribute('data-part', 'list-event');
+  expect(ui.headings.elements().map(heading => heading.textContent)).toEqual(['2026-03-11']);
+  await expect.element(ui.empty).not.toBeInTheDocument();
+});
+
+it('renders the empty part when the range has no events', async () => {
+  const { ui } = await setup({ date: Temporal.PlainDate.from('2026-04-15') });
+
+  await expect.element(ui.empty).toHaveAttribute('data-part', 'list-empty');
+});
