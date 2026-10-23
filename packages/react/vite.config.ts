@@ -27,6 +27,8 @@ export default defineConfig({
     sourcemap: true,
     minify: false,
     clean: true,
+    // the parts use context and hooks, so React Server Components must treat the entry as a client module (D27)
+    banner: { js: "'use client';" },
     deps: {
       alwaysBundle: [/#.*/],
     },
