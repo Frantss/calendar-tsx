@@ -15,7 +15,7 @@ import '@calendar-tsx/themes/default.css';
 
 | File                | Contents                                                                                                        |
 | ------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `base.css`          | Positioning only: month bars, time-grid columns and lanes, the now line. Every theme uses it.                   |
+| `base.css`          | Positioning only: month bars, time-grid columns and lanes, timeline rows, the now line. Every theme uses it.    |
 | `default.css`       | `base.css` plus the default look.                                                                               |
 | `high-contrast.css` | Black on white and white on black at WCAG AAA, with outlined events. See [High contrast](#high-contrast-theme). |
 | `shadcn.css`        | The default look with its tokens read from shadcn/ui's variables. See [shadcn/ui](#shadcnui).                   |
