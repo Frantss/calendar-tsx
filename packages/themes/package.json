@@ -8,6 +8,7 @@
     "base.css",
     "default.css",
     "shadcn.css",
+    "revenuecat.css",
     "compact.css"
   ],
   "type": "module",
@@ -22,6 +23,7 @@
     "./base.css": "./base.css",
     "./default.css": "./default.css",
     "./shadcn.css": "./shadcn.css",
+    "./revenuecat.css": "./revenuecat.css",
     "./compact.css": "./compact.css",
     "./package.json": "./package.json"
   },

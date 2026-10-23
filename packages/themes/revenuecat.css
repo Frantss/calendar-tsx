@@ -1,0 +1,29 @@
+/*
+ * The default layout in RevenueCat's brand colors (press kit: red #f2545b, royal blue #576cdb, black purple #1f1f47).
+ * Monochrome black purple with the brand colors as accents, as the press kit recommends: red marks today and now,
+ * blue tints events and the focus ring. Radiant green is left out to keep one accent per role.
+ */
+@import './default.css';
+
+@layer calendar.base, calendar.theme, calendar.density;
+
+@layer calendar.theme {
+  :where(:root) {
+    --calendar-surface: light-dark(#ffffff, #1f1f47);
+    --calendar-surface-muted: light-dark(#f6f6f8, #2a2a50);
+    --calendar-text: light-dark(#1f1f47, #f4f4f8);
+    --calendar-text-muted: light-dark(#5e5e7b, #b7b7c4);
+    --calendar-border: light-dark(#e2e2e7, #414163);
+    /* Exact brand red, as fills and lines only: as text on white it is 3.39:1 */
+    --calendar-accent: #f2545b;
+    --calendar-accent-contrast: #1f1f47;
+    --calendar-event: light-dark(#dde2f8, #313876);
+    --calendar-event-border: light-dark(#bcc4f1, #3e4998);
+    --calendar-focus-ring: #576cdb;
+  }
+
+  /* The default theme writes today's header in the accent; on white the brand red is too light for small text */
+  :where([data-scope='calendar'][data-part='time-grid-column-header'][data-today]) {
+    color: light-dark(var(--calendar-text), var(--calendar-accent));
+  }
+}
