@@ -108,7 +108,8 @@ export type Calendar_TimeGridViewSettings = {
   minColumnWidth?: string;
 };
 
-export type Calendar_ListViewSettings = { days: number };
+/** A run of `days` days, or the calendar month or year containing the date (D35). */
+export type Calendar_ListViewSettings = { days: number; period?: never } | { period: 'month' | 'year'; days?: never };
 
 export type Calendar_TimelineViewSettings = {
   days: number;

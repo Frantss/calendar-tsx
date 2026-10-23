@@ -26,7 +26,7 @@ A headless calendar library that satisfies `docs/calendar-spec.md` (R1–R11): a
 
 Library-level capabilities, each traced to the app spec. Draft; confirmed when the scope area closes.
 
-- **C1 — Views:** month grid, week-based day grid (D34), day/week time grid with all-day row, list day/week, resource time grid, resource timeline (D33). _(app R1.1–R1.4)_
+- **C1 — Views:** month grid, week-based day grid (D34), day/week time grid with all-day row, list day/week/month/year (D35), resource time grid, resource timeline (D33). _(app R1.1–R1.4)_
 - **C2 — Navigation:** current view and date, prev/next/today, go to date, change view; visible range and period derivable synchronously after any change. _(R2.3–R2.5, R3.2–R3.5, R8.1, R11.1)_
 - **C3 — Change notification:** a single subscription that reports view/date changes, so the app can sync the URL. _(R2.1–R2.2)_
 - **C4 — Time-grid layout:** overlapping timed events laid out side by side; rows do not stretch; slot labels formattable. _(R1.2, R1.7, R1.8)_
@@ -257,7 +257,7 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 - `monthView({ maxEventsPerDay, dayOverflow?, fixedWeekCount? })`: row cap per day, plus an optional per-day overflow hint for API-truncated data (D17); `fixedWeekCount` always shows six weeks (D34).
 - `dayGridView({ weeks, maxEventsPerDay, dayOverflow? })`: a day grid of whole weeks, such as a one-week or rolling four-week grid (D34).
 - `timeGridView({ days, groupBy?: 'resource', groupOrder?: 'resource-first' | 'date-first', allDay?, slotDuration?, minColumnWidth? })`: day, week and resource views (D4, D19). `minColumnWidth` is emitted as `--cal-min-column-width` for the consumer's CSS (C11, D9).
-- `listView({ days })`: list day and list week (D18).
+- `listView({ days })` or `listView({ period: 'month' | 'year' })`: list day and list week, or a calendar month or year (D18, D35).
 - `timelineView({ days, groupBy?: 'resource', slotMinutes?, minSlotWidth? })`: day, week and resource timelines (D33). `minSlotWidth` is emitted as `--cal-min-slot-width`.
 
 ## Props boundary
@@ -904,6 +904,22 @@ Rejected: a horizontal orientation on `timeGridView` (above); a separate all-day
 
 Rejected: `weeks` on `monthView` (a one-week "month" view, and a settings bag where `weeks` and `fixedWeekCount` cannot combine); renaming the month layout, model and parts to a day grid (cleanest naming, but it touches core, both adapters, every theme and the D30 names for no behaviour change; still possible later).
 
+### D35 — List views can cover a calendar month or year
+
+**Serves:** C1; D4, D18
+
+**Status:** accepted.
+
+**Verified:** not verified — additive; the list model and its parts are unchanged
+
+**Why:** FullCalendar's `listMonth` and `listYear` differ from `listDay`/`listWeek` only in their period, and the list builder already lists whatever range it gets (D18). So `listView` takes either `days` or `period`:
+
+- **`listView({ period: 'month' })`:** the calendar month containing `date`; a step moves one month and lands on the 1st, as the month view does.
+- **`listView({ period: 'year' })`:** the calendar year containing `date`; a step moves one year and lands on 1 January.
+- Range equals period, as for the `days` form, so a list never shows padding days. The settings type is a union, so `days` and `period` cannot be combined.
+
+Rejected: `listView({ months })` (a count cannot express a calendar year, since `months: 12` would start at the month of `date`); separate `listMonthView`/`listYearView` factories (four names for one layout). The same month and year periods are what `dayGridYear` needs later (D34).
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.
@@ -977,6 +993,7 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 ### List layout
 
 - Only days with events appear, in order; `ListView_Empty` renders when `days` is empty. _(D18, app R1.3)_
+- `listView({ period: 'month' })` lists 1–31 March 2026 for any date in March and steps to 1 April; `listView({ period: 'year' })` lists 2026 and steps to 1 January 2027. _(D35)_
 
 ### Clock and lifecycle
 

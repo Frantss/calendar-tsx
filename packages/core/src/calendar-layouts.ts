@@ -83,9 +83,19 @@ export const timeGridLayout: Calendar_LayoutFeature<'timeGrid', Calendar_TimeGri
 
 export const listLayout: Calendar_LayoutFeature<'list', Calendar_ListViewSettings> = {
   kind: 'list',
-  period: (date, settings, { firstDayOfWeek }) => days_period(date, settings.days, firstDayOfWeek),
+  period: (date, settings, { firstDayOfWeek }) => {
+    if (settings.days !== undefined) return days_period(date, settings.days, firstDayOfWeek);
+    if (settings.period === 'month') return { start: date.with({ day: 1 }), end: date.with({ day: date.daysInMonth }) };
+
+    return { start: date.with({ month: 1, day: 1 }), end: date.with({ month: date.monthsInYear, day: 31 }) };
+  },
   range: period => period,
-  step: (date, settings, direction) => date.add({ days: settings.days * direction }),
+  step: (date, settings, direction) => {
+    if (settings.days !== undefined) return date.add({ days: settings.days * direction });
+    if (settings.period === 'month') return date.with({ day: 1 }).add({ months: direction });
+
+    return date.with({ month: 1, day: 1 }).add({ years: direction });
+  },
   build: input => layoutList_build({ range: input.range, events: input.events }),
 };
 
