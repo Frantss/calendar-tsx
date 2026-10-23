@@ -209,6 +209,7 @@ export const TimeGridViewColumn = <TData, TResourceData>(props: ColumnProps<TDat
         () => ({
           'data-today': flag(local.column.isToday),
           'data-unavailable': flag(local.column.isUnavailable),
+          style: vars({ 'column-lanes': local.column.lanes }),
           ...part('time-grid-column'),
         }),
         rest,
@@ -308,6 +309,8 @@ export const TimeGridViewEvent = <TData,>(props: TimeGridViewEventProps<TData>) 
             span: local.segment.span,
             lane: local.segment.lane,
             lanes: local.segment.lanes,
+            'inline-start': local.segment.inlineStart,
+            'inline-size': local.segment.inlineSize,
           }),
           ...part('time-grid-event'),
         }),

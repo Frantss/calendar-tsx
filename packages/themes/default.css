@@ -27,6 +27,7 @@
     --calendar-bar-height: 1.375rem;
     --calendar-bar-gap: 2px;
     --calendar-bar-inset: 2px;
+    --calendar-event-gap: 4px;
     --calendar-overflow-height: 1.5rem;
     --calendar-week-min-height: 6rem;
     --calendar-slot-height: 3rem;
@@ -69,7 +70,8 @@
   :where([data-scope='calendar']:is(button)):focus-visible {
     outline: 2px solid var(--calendar-focus-ring, var(--calendar-accent));
     outline-offset: 2px;
-    z-index: 3;
+    /* Above the lanes of a time-grid column (D38); 3 elsewhere */
+    z-index: calc(3 + var(--cal-column-lanes, 0));
   }
 
   /*

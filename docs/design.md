@@ -147,21 +147,21 @@ Every part renders `data-scope="calendar"` and its `data-part`, accepts a `rende
 
 **Time grid** (`kind: 'timeGrid'`; days and resource columns, D4)
 
-| Part                                                | Role                                                                        | Owns |
-| --------------------------------------------------- | --------------------------------------------------------------------------- | ---- |
-| `TimeGridView_Root`                                 | Receives the time-grid model; labelled region                               | —    |
-| `TimeGridView_Header` / `TimeGridView_ColumnHeader` | Column headers (date, or resource with `data-unavailable`)                  | —    |
-| `TimeGridView_ColumnTrigger`                        | Button inside a date header to go to the day (app R8.1)                     | —    |
-| `TimeGridView_AllDay` / `TimeGridView_AllDayCell`   | All-day row and its per-column cells; omitted by views with `allDay: false` | —    |
-| `TimeGridView_AllDayBackgroundEvent`                | An all-day background event across every row of the all-day section (D37)   | —    |
-| `TimeGridView_AllDayEvent`                          | A bar in the all-day row, spanning columns (D17)                            | —    |
-| `TimeGridView_Body`                                 | Scrollable body; sets `--cal-slots`                                         | —    |
-| `TimeGridView_Axis` / `TimeGridView_AxisLabel`      | Slot labels                                                                 | —    |
-| `TimeGridView_Column`                               | One day or resource column                                                  | —    |
-| `TimeGridView_BackgroundEvent`                      | Shaded segment from a background event; `--cal-start/span` (D37)            | —    |
-| `TimeGridView_Unavailable`                          | Shaded segment from availability (D12)                                      | —    |
-| `TimeGridView_Event`                                | Positioned event; `--cal-start/span/lane/lanes`                             | —    |
-| `TimeGridView_NowIndicator`                         | Renders only in today's column (D11)                                        | —    |
+| Part                                                | Role                                                                           | Owns |
+| --------------------------------------------------- | ------------------------------------------------------------------------------ | ---- |
+| `TimeGridView_Root`                                 | Receives the time-grid model; labelled region                                  | —    |
+| `TimeGridView_Header` / `TimeGridView_ColumnHeader` | Column headers (date, or resource with `data-unavailable`)                     | —    |
+| `TimeGridView_ColumnTrigger`                        | Button inside a date header to go to the day (app R8.1)                        | —    |
+| `TimeGridView_AllDay` / `TimeGridView_AllDayCell`   | All-day row and its per-column cells; omitted by views with `allDay: false`    | —    |
+| `TimeGridView_AllDayBackgroundEvent`                | An all-day background event across every row of the all-day section (D37)      | —    |
+| `TimeGridView_AllDayEvent`                          | A bar in the all-day row, spanning columns (D17)                               | —    |
+| `TimeGridView_Body`                                 | Scrollable body; sets `--cal-slots`                                            | —    |
+| `TimeGridView_Axis` / `TimeGridView_AxisLabel`      | Slot labels                                                                    | —    |
+| `TimeGridView_Column`                               | One day or resource column                                                     | —    |
+| `TimeGridView_BackgroundEvent`                      | Shaded segment from a background event; `--cal-start/span` (D37)               | —    |
+| `TimeGridView_Unavailable`                          | Shaded segment from availability (D12)                                         | —    |
+| `TimeGridView_Event`                                | Positioned event; `--cal-start/span/lane/lanes/inline-start/inline-size` (D38) | —    |
+| `TimeGridView_NowIndicator`                         | Renders only in today's column (D11)                                           | —    |
 
 **List** (`kind: 'list'`)
 
@@ -260,7 +260,7 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 
 - `monthView({ maxEventsPerDay, dayOverflow?, fixedWeekCount? })`: row cap per day, plus an optional per-day overflow hint for API-truncated data (D17); `fixedWeekCount` always shows six weeks (D35).
 - `dayGridView({ weeks, maxEventsPerDay, dayOverflow? })`: a day grid of whole weeks, such as a one-week or rolling four-week grid (D35).
-- `timeGridView({ days, groupBy?: 'resource', groupOrder?: 'resource-first' | 'date-first', allDay?, slotDuration?, minColumnWidth? })`: day, week and resource views (D4, D19). `minColumnWidth` is emitted as `--cal-min-column-width` for the consumer's CSS (C11, D9).
+- `timeGridView({ days, groupBy?: 'resource', groupOrder?: 'resource-first' | 'date-first', allDay?, slotDuration?, minColumnWidth?, overlap?: 'side-by-side' | 'cascade' })`: day, week and resource views (D4, D19, D38). `minColumnWidth` is emitted as `--cal-min-column-width` for the consumer's CSS (C11, D9).
 - `listView({ days })` or `listView({ period: 'month' | 'year' })`: list day and list week, or a calendar month or year (D18, D36).
 - `timelineView({ days, groupBy?: 'resource', slotMinutes?, minSlotWidth? })`: day, week and resource timelines (D34). `minSlotWidth` is emitted as `--cal-min-slot-width`.
 
@@ -1036,6 +1036,28 @@ Parts: `MonthView_WeekBackgroundEvent`, `TimeGridView_AllDayBackgroundEvent` and
 - **Extending resource `availability` (D12):** it is the inverse (shade outside the intervals), per resource only, and has no payload.
 - **Month tint for timed background events:** a partial-day range cannot be shown in a day cell without reading as the whole day.
 
+### D38 — Overlapping timed events expand into free lanes, side by side or cascaded
+
+**Serves:** C4; app R1.8; FullCalendar parity for `slotEventOverlap`
+
+**Verified:** core geometry, part and theme tests; FullCalendar's `slotEventOverlap` (boolean, default `true`, "at most half of each event will be obscured") checked against the v7 docs, its forward expansion recalled rather than checked against its source
+
+**Why:** Lanes split an overlap cluster into equal columns, so an event with free lanes beside it stayed narrow, and there was no equivalent of FullCalendar's overlapping layout. The core now computes each segment's horizontal geometry, `inlineStart` and `inlineSize` as fractions of the column, emitted as `--cal-inline-start` and `--cal-inline-size`. It stays in the core (D1) because expansion depends on the other events, which CSS cannot see, and non-DOM consumers get the numbers too. `lane` and `lanes` are unchanged, so CSS written against them keeps working.
+
+- **Lanes:** as before, per overlap cluster: each event takes the lowest lane free at its start, sorted by start and then longest first, and touching events do not overlap. A timed event split at midnight (D17) takes part in each day's column on its own.
+- **Expansion, in both modes:** an event spans from its lane up to the first later lane holding an event it overlaps, or to the column's edge. An event with nothing to its right fills the rest of the column.
+- **`timeGridView({ overlap })`:** `'side-by-side'` (the default) uses that span. `'cascade'` doubles it, capped at the column's edge, so the next lane covers at most half of the event, as FullCalendar promises. The default keeps today's look for existing grids except where expansion widens an event; FullCalendar's default is the overlapping layout.
+- **Paint order:** later lanes paint over earlier ones. `base.css` sets `z-index: calc(1 + var(--cal-lane))` on events and isolates each column, so lane z-indexes cannot rise above the sticky header. The column carries `lanes` (the most lanes any cluster in it uses) as `--cal-column-lanes`, which keeps the now line above every lane; `default.css` adds it to the focus ring's z-index. Side by side, nothing overlaps, so the order has no visible effect.
+- **Gap:** the geometry is exact fractions, so lanes meet edge to edge. `base.css` takes `--calendar-event-gap` (4px) off each event's width and height, so neighbouring lanes, back-to-back events and the column's edge stay apart; it is a theme concern, like `--calendar-bar-inset` for month bars (D26), not part of the model.
+
+**Rejected:**
+
+- **CSS only** (a cascade attribute on the root, width `2 / lanes`): no expansion, and non-DOM consumers would redo the math.
+- **Cascade without expansion:** smaller, but leaves the narrow-event problem in both modes.
+- **Cascade as the default, as in FullCalendar:** it changes every existing time grid.
+- **The name `eventOverlap`:** FullCalendar uses it for whether a drag may overlap another event, which this library may need later (D29).
+- **Painting by DOM order instead of z-index:** segments stay in time order so tab order follows the day (D15); sorting them by lane would make keyboard order jump.
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.
@@ -1085,6 +1107,8 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 ### Time-grid layout
 
 - Two overlapping events in a column get `lane` 0 and 1 of `lanes: 2`; a third event overlapping only the second gets lane 0 of 2. _(C4, app R1.8)_
+- An event with no overlapping event in a later lane widens to the column's edge; the others end at the first later lane they overlap; `column.lanes` is the most lanes any cluster uses. _(C4, D38)_
+- With `overlap: 'cascade'`, each event's width doubles, capped at the column's edge, so a later lane covers at most half of it. _(C4, D38)_
 - `start` and `span` are fractions of the column's day (`09:00`–`10:00` → `0.375`, `0.041…`). _(C4, D9)_
 - A timed event crossing midnight splits into two segments in a multi-day grid and clips in a single-day grid. _(D17)_
 - A resource with availability `09:00–17:00` yields unavailable segments `[0, 0.375)` and `[0.708…, 1)`. _(C7, D12, app R7.1)_
@@ -1138,7 +1162,7 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - A ref passed to a part reaches the rendered DOM node, with and without `render`. _(D25)_
 - `props_merge` calls handlers in source order, joins `className`, shallow-merges `style`, and lets later values win. _(D25)_
 - Re-rendering `useCalendar` with referentially equal tracked options does not re-derive the store; changing `events` does. _(D24)_
-- `TimeGridView_Event` sets `--cal-start`, `--cal-span`, `--cal-lane`, `--cal-lanes` from its segment. _(D9, app R1.8)_
+- `TimeGridView_Event` sets `--cal-start`, `--cal-span`, `--cal-lane`, `--cal-lanes`, `--cal-inline-start`, `--cal-inline-size` from its segment, and `TimeGridView_Column` sets `--cal-column-lanes`. _(D9, D38, app R1.8)_
 - `MonthView_WeekEvent` sets `--cal-col-start`, `--cal-col-span`, `--cal-row`. _(D9, D17)_
 - `MonthView_Overflow` renders only when `day.hasMore`, with `data-hidden-count`. _(D14, D17, app R6.1)_
 - `MonthView_WeekBackgroundEvent`, `TimeGridView_AllDayBackgroundEvent` and `TimeGridView_BackgroundEvent` set their `--cal-*` geometry and continuation flags and are `aria-hidden`. _(C13, D37)_
@@ -1154,7 +1178,8 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 ### Themes
 
 - A timed event at `09:00`–`10:00` sits at 37.5% of its column's height and spans 1/24 of it. _(D26, D9)_
-- Overlapping events split the column's padding box into equal lanes. _(D26, C4)_
+- Overlapping events split the column's padding box into equal lanes, each less `--calendar-event-gap`, so neighbours do not touch. _(D26, C4, D38)_
+- Cascaded events paint the later lane over the earlier one, which spans the column where nothing is to its right. _(D26, D38)_
 - Time-grid column headers line up with their columns through the shared subgrid, with or without an axis. _(D26)_
 - The now line sits at the clock's offset. _(D26, C9)_
 - A month bar spans exactly the day cells it covers, minus `--calendar-bar-inset`. _(D26, D17)_
@@ -1548,7 +1573,7 @@ Generic parameters are shown as `unknown` on the parts for brevity; the real par
 
 **From the verification pass (risks from outvoted dissents):**
 
-- _correctness_ (D1, time-grid layout): lane assignment is unspecified: per overlap cluster or per column, whether touching events overlap, and how split segments take part.
+- ~~_correctness_ (D1, time-grid layout): lane assignment is unspecified: per overlap cluster or per column, whether touching events overlap, and how split segments take part.~~ Settled in D38: per cluster, touching events do not overlap, and split segments take part in each day's column on their own.
 - _simplicity_ (D17, month cap): a row cap can hide an event on a day that has free rows, because a bar from a neighbouring day pushed it down.
 - ~~_contract-compatibility_ (D1): `layout` is a closed union and the sketch matches it `.exhaustive()`, so adding a layout kind is a breaking change for consumers.~~ Addressed in the D1 rewrite (open union, `.otherwise()`).
 

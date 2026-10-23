@@ -137,7 +137,7 @@ it('places a timed event at its fraction of the day', async () => {
   const yoga = themesSetup_rect(event('Yoga'));
 
   expect(yoga.top - column.top).toBeCloseTo(column.height * 0.375, 0);
-  expect(yoga.height).toBeCloseTo(column.height / 24, 0);
+  expect(yoga.height).toBeCloseTo(column.height / 24 - 4, 0);
 });
 
 it('splits overlapping events into equal lanes', async () => {
@@ -152,7 +152,30 @@ it('splits overlapping events into equal lanes', async () => {
 
   // lanes divide the column's padding box, inside its border
   expect(pilates.left - themesSetup_rect(column).left - (column?.clientLeft ?? 0)).toBeCloseTo((column?.clientWidth ?? 0) / 2, 0);
-  expect(pilates.width).toBeCloseTo((column?.clientWidth ?? 0) / 2, 0);
+  // less --calendar-event-gap, so neighbouring lanes do not touch
+  expect(pilates.width).toBeCloseTo((column?.clientWidth ?? 0) / 2 - 4, 0);
+  expect(pilates.left - themesSetup_rect(event('Yoga')).right).toBeCloseTo(4, 0);
+});
+
+it('cascades overlapping events with the later lane on top', async () => {
+  await themesSetup_render(<TimeGrid />, {
+    views: { day: timeGridView({ days: 1, overlap: 'cascade' }) },
+    events: [
+      themesSetup_timed('Yoga', { date: '2026-03-11', start: '09:00', end: '10:00' }),
+      themesSetup_timed('Pilates', { date: '2026-03-11', start: '09:30', end: '11:00' }),
+    ],
+  });
+  event('Pilates')?.scrollIntoView({ block: 'center' });
+  const column = themesSetup_part('time-grid-column')[0];
+  const yoga = themesSetup_rect(event('Yoga'));
+  const pilates = themesSetup_rect(event('Pilates'));
+  const at = (x: number, y: number) => document.elementFromPoint(x, y)?.textContent;
+
+  // the earlier lane spans the column; the later one covers its right half where they overlap
+  expect(yoga.width).toBeCloseTo((column?.clientWidth ?? 0) - 4, 0);
+  expect(pilates.width).toBeCloseTo((column?.clientWidth ?? 0) / 2 - 4, 0);
+  expect(at(pilates.left + pilates.width / 2, pilates.top + 4)).toBe('Pilates');
+  expect(at(yoga.left + yoga.width / 4, pilates.top + 4)).toBe('Yoga');
 });
 
 it('lines column headers up with their columns', async () => {

@@ -11,6 +11,7 @@ import type {
   Calendar_Resource,
   Calendar_TimeGridColumn,
   Calendar_TimeGridLayout,
+  Calendar_TimeGridOverlap,
   Calendar_TimeGridViewSettings,
 } from '#calendar.types';
 import { layoutBars_background, layoutBars_build, layoutBars_rows } from '#layout/layout-bars';
@@ -38,6 +39,7 @@ const buildColumn = <TData, TResourceData>({
   backgroundEvents,
   timeZone,
   now,
+  overlap,
 }: {
   date: Temporal.PlainDate;
   resource?: Calendar_Resource<TResourceData>;
@@ -45,6 +47,7 @@ const buildColumn = <TData, TResourceData>({
   backgroundEvents: Calendar_Event<TData>[];
   timeZone: string;
   now: Temporal.ZonedDateTime;
+  overlap: Calendar_TimeGridOverlap;
 }): Calendar_TimeGridColumn<TData, TResourceData> => {
   // Real wall-clock day length in `timeZone`, so DST days are 23 or 25 hours long.
   const day = layoutIntervals_day(date, timeZone);
@@ -120,6 +123,7 @@ const buildColumn = <TData, TResourceData>({
   );
 
   const isToday = date.equals(now.toPlainDate());
+  const placed = layoutLanes_assign(timed, overlap);
 
   return {
     key,
@@ -127,13 +131,16 @@ const buildColumn = <TData, TResourceData>({
     resource,
     isToday,
     isUnavailable: !!resource && availability.length === 0,
-    segments: layoutLanes_assign(timed).map(item => ({
+    lanes: Math.max(0, ...placed.map(item => item.lanes)),
+    segments: placed.map(item => ({
       key: `${key}:${item.event.id}`,
       event: item.event,
       start: fraction(item.startMs),
       span: (item.endMs - item.startMs) / length,
       lane: item.lane,
       lanes: item.lanes,
+      inlineStart: item.inlineStart,
+      inlineSize: item.inlineSize,
       continuesBefore: item.continuesBefore,
       continuesAfter: item.continuesAfter,
     })),
@@ -236,7 +243,15 @@ export const layoutTimeGrid_build = <TData, TResourceData>({
       : groups.flatMap(resource => dates.map(date => ({ date, resource })));
 
   const columns = pairs.map(({ date, resource }) =>
-    buildColumn({ date, resource, events, backgroundEvents, timeZone, now }),
+    buildColumn({
+      date,
+      resource,
+      events,
+      backgroundEvents,
+      timeZone,
+      now,
+      overlap: definition.overlap ?? 'side-by-side',
+    }),
   );
   const slotMinutes = definition.slotMinutes ?? DEFAULT_SLOT_MINUTES;
 

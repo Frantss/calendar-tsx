@@ -137,8 +137,10 @@
     grid-template-rows: repeat(var(--cal-slots), minmax(0, 1fr));
   }
 
+  /* Isolated so lane z-indexes stay inside the column, under the sticky header */
   :where([data-scope='calendar'][data-part='time-grid-column']) {
     position: relative;
+    isolation: isolate;
     grid-row: 1;
     min-inline-size: 0;
   }
@@ -163,17 +165,23 @@
     pointer-events: none;
   }
 
+  /*
+   * The gap comes off each event's inline and block end, so neighbouring lanes, back-to-back events and the column's
+   * edge stay apart. Later lanes paint over earlier ones, which only shows when cascaded (D38).
+   */
   :where([data-scope='calendar'][data-part='time-grid-event']) {
-    inset-inline-start: calc(var(--cal-lane) / var(--cal-lanes) * 100%);
-    inline-size: calc(100% / var(--cal-lanes));
-    z-index: 1;
+    inset-inline-start: calc(var(--cal-inline-start) * 100%);
+    inline-size: calc(var(--cal-inline-size) * 100% - var(--calendar-event-gap, 4px));
+    block-size: calc(var(--cal-span) * 100% - var(--calendar-event-gap, 4px));
+    z-index: calc(1 + var(--cal-lane));
   }
 
+  /* Above every lane of its column */
   :where([data-scope='calendar'][data-part='time-grid-now']) {
     position: absolute;
     inset-block-start: calc(var(--cal-now) * 100%);
     inset-inline: 0;
-    z-index: 1;
+    z-index: calc(1 + var(--cal-column-lanes, 0));
     pointer-events: none;
   }
 

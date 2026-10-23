@@ -106,8 +106,11 @@ it('positions timed events and flags overlaps', async () => {
   });
 
   await expect.element(ui.event('Yoga')).toHaveAttribute('data-overlap', '');
-  expect(ui.event('Yoga').element().getAttribute('style')).toMatch(/^--cal-start: 0\.375; --cal-span: 0\.0416+\d*; --cal-lane: 0; --cal-lanes: 2;$/);
-  expect(ui.event('Pilates').element().getAttribute('style')).toContain('--cal-lane: 1;');
+  expect(ui.event('Yoga').element().getAttribute('style')).toMatch(
+    /^--cal-start: 0\.375; --cal-span: 0\.0416+\d*; --cal-lane: 0; --cal-lanes: 2; --cal-inline-start: 0; --cal-inline-size: 0\.5;$/,
+  );
+  expect(ui.event('Pilates').element().getAttribute('style')).toContain('--cal-lane: 1; --cal-lanes: 2; --cal-inline-start: 0.5;');
+  expect(ui.part('time-grid-column')[0]?.getAttribute('style')).toBe('--cal-column-lanes: 2;');
 });
 
 it('renders all-day events in the all-day row only', async () => {

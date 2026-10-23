@@ -148,6 +148,9 @@ export type Calendar_DayGridViewSettings = {
   dayOverflow?: (date: Temporal.PlainDate) => boolean;
 };
 
+/** How overlapping timed events share a column (D38). */
+export type Calendar_TimeGridOverlap = 'side-by-side' | 'cascade';
+
 export type Calendar_TimeGridViewSettings = {
   days: number;
   groupBy?: 'resource';
@@ -155,6 +158,8 @@ export type Calendar_TimeGridViewSettings = {
   allDay?: boolean;
   slotMinutes?: number;
   minColumnWidth?: string;
+  /** Defaults to `'side-by-side'`; `'cascade'` lets later lanes cover up to half of an event (D38). */
+  overlap?: Calendar_TimeGridOverlap;
 };
 
 /** A run of `days` days, or the calendar month or year containing the date (D36). */
@@ -221,6 +226,9 @@ export type Calendar_TimeGridSegment<TData, TFeatures = {}> = {
   span: number;
   lane: number;
   lanes: number;
+  /** Fractions of the column's width, after expansion into free lanes and any cascade (D38). */
+  inlineStart: number;
+  inlineSize: number;
   continuesBefore: boolean;
   continuesAfter: boolean;
 } & Calendar_PickFeatures<Calendar_TimeGridSegment_FeatureMap, TFeatures>;
@@ -243,6 +251,8 @@ export type Calendar_TimeGridColumn<TData, TResourceData, TFeatures = {}> = {
   resource?: Calendar_Resource<TResourceData>;
   isToday: boolean;
   isUnavailable: boolean;
+  /** The most lanes any overlap cluster in the column uses; 0 without timed events. */
+  lanes: number;
   segments: Calendar_TimeGridSegment<TData, TFeatures>[];
   /** Timed background events, plus all-day ones covering the whole day (D37). */
   backgroundEvents: Calendar_BackgroundEventSegment<TData>[];

@@ -203,6 +203,7 @@ export const TimeGridViewColumn = forwardRef<HTMLDivElement, ColumnProps<unknown
         {
           'data-today': flag(column.isToday),
           'data-unavailable': flag(column.isUnavailable),
+          style: vars({ 'column-lanes': column.lanes }),
           ...part('time-grid-column'),
         },
         props,
@@ -293,7 +294,14 @@ export const TimeGridViewEvent = forwardRef<HTMLButtonElement, TimeGridViewEvent
           'data-overlap': flag(segment.lanes > 1),
           'data-continues-before': flag(segment.continuesBefore),
           'data-continues-after': flag(segment.continuesAfter),
-          style: vars({ start: segment.start, span: segment.span, lane: segment.lane, lanes: segment.lanes }),
+          style: vars({
+            start: segment.start,
+            span: segment.span,
+            lane: segment.lane,
+            lanes: segment.lanes,
+            'inline-start': segment.inlineStart,
+            'inline-size': segment.inlineSize,
+          }),
           ...part('time-grid-event'),
         },
         props,

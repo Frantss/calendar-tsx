@@ -61,6 +61,7 @@ with it for the numbers on today's marker. Use a `light-dark()` pair so each mod
 | `--calendar-font-size`, `--calendar-font-size-sm`, `--calendar-font-size-xs`               | `0.875rem`, `0.75rem`, `0.6875rem`                    |
 | `--calendar-slot-height`, `--calendar-axis-width`                                          | `3rem`, `4rem`                                        |
 | `--calendar-bar-height`, `--calendar-bar-gap`, `--calendar-bar-inset`                      | `1.375rem`, `2px`, `2px`                              |
+| `--calendar-event-gap`                                                                     | `4px`: space after each time-grid event, both axes    |
 | `--calendar-day-header-height`, `--calendar-overflow-height`, `--calendar-week-min-height` | `2.25rem`, `1.5rem`, `6rem`                           |
 
 The theme sets no font family; the calendar inherits the page's. The event tokens, `--calendar-focus-ring` and `--calendar-background` are

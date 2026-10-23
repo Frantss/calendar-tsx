@@ -32,6 +32,51 @@ it('places overlapping events side by side per overlap cluster', async () => {
   expect(utils.lanes('all:2026-03-11')).toEqual(['yoga:0/2', 'pilates:1/2', 'spin:0/2', 'swim:0/1']);
 });
 
+const overlapping = [
+  fixtures_timed('x', { date: '2026-03-11', start: '09:00', end: '12:00' }),
+  fixtures_timed('y', { date: '2026-03-11', start: '09:00', end: '10:00' }),
+  fixtures_timed('z', { date: '2026-03-11', start: '09:30', end: '10:30' }),
+  fixtures_timed('w', { date: '2026-03-11', start: '10:30', end: '11:30' }),
+];
+
+/** `[lane, inlineStart, inlineSize]` per event, in thirds of the column, rounded past float noise. */
+const geometry = (segments: { event: { id: string }; lane: number; inlineStart: number; inlineSize: number }[] = []) =>
+  Object.fromEntries(
+    segments.map(segment => [segment.event.id, [segment.lane, Math.round(segment.inlineStart * 3), Math.round(segment.inlineSize * 3)]]),
+  );
+
+it('expands an event into the free lanes to its right, side by side by default', async () => {
+  const utils = await setup({ events: overlapping });
+  const column = utils.column('all:2026-03-11');
+
+  // w overlaps only x, so it widens across lanes 1 and 2
+  expect(geometry(column?.segments)).toEqual({
+    x: [0, 0, 1],
+    y: [1, 1, 1],
+    z: [2, 2, 1],
+    w: [1, 1, 2],
+  });
+  expect(column?.lanes).toBe(3);
+});
+
+it('cascades overlapping events so later lanes cover at most half of an event', async () => {
+  const views = { ...calendarSetup_defaults.views, day: timeGridView({ days: 1, overlap: 'cascade' }) };
+  const utils = await setup({ views, events: overlapping });
+
+  expect(geometry(utils.column('all:2026-03-11')?.segments)).toEqual({
+    x: [0, 0, 2],
+    y: [1, 1, 2],
+    z: [2, 2, 1],
+    w: [1, 1, 2],
+  });
+});
+
+it('reports no lanes for a column without timed events', async () => {
+  const utils = await setup();
+
+  expect(utils.column('all:2026-03-11')?.lanes).toBe(0);
+});
+
 it('does not treat touching events as overlapping', async () => {
   const utils = await setup({
     events: [
