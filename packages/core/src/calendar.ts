@@ -59,7 +59,7 @@ export const calendar_create = <TData, TResourceData = unknown, TViews extends C
   let options = initial;
   const clock = () => options.clock ?? defaultClock;
 
-  const persisted = createStore(tracked_from(initial, clock().now()));
+  const persisted = createStore(tracked_from(initial, initial.initialNow ?? clock().now()));
 
   const store = createStore((): Calendar_State<TData, TResourceData, TViews> => {
     const input = persisted.state;

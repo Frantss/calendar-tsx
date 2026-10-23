@@ -177,6 +177,17 @@ it('ticks now while mounted and stops after unmount', async () => {
   expect(utils.state().now.toString()).toContain('T10:41');
 });
 
+it('derives the first state from initialNow and reads the clock on mount', async () => {
+  const utils = await calendarSetup_create({ initialNow: Temporal.Instant.from('2026-03-11T03:00:00Z') });
+
+  expect(utils.state().now.toString()).toContain('2026-03-10T23:00');
+
+  const unmount = utils.instance['~mount']();
+
+  expect(utils.state().now.toString()).toContain('2026-03-11T10:40');
+  unmount();
+});
+
 it('never changes now with a fixed clock', async () => {
   vi.useFakeTimers();
   const utils = await calendarSetup_create();

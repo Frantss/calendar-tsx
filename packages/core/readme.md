@@ -29,3 +29,6 @@ calendar.api.next(); // emits onNavigate; never writes state
 
 Adapters drive the instance through `'~mount'` (starts the clock) and `'~update'(options)` (writes only when a tracked
 input changed).
+
+Until `'~mount'`, the state derives "now" from `initialNow` when given, otherwise from the clock. To render on a server
+and hydrate on the client, pass the same `initialNow` to both.

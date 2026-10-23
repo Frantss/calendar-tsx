@@ -95,6 +95,11 @@ export type Calendar_Options<TData, TResourceData, TViews extends Calendar_Views
   eventOrder?: (a: Calendar_Event<TData>, b: Calendar_Event<TData>, context: Calendar_ViewContext<TViews>) => number;
   firstDayOfWeek?: Calendar_FirstDayOfWeek;
   clock?: Calendar_Clock;
+  /**
+   * "Now" for the first derivation, before `'~mount'` reads the clock. Pass the same instant on the server and the
+   * client so server-rendered markup hydrates (D27). Read once at creation.
+   */
+  initialNow?: Temporal.Instant;
 };
 
 export type Calendar_MonthDay<TData> = {

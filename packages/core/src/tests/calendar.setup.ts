@@ -39,6 +39,7 @@ export const calendarSetup_defaults = iife(() => {
     firstDayOfWeek: 7 as const,
     eventOrder: undefined as Calendar_Options<Fixtures_EventData, null, Calendar_Views>['eventOrder'],
     clock: undefined as Calendar_Clock | undefined,
+    initialNow: undefined as Temporal.Instant | undefined,
   };
 });
 
@@ -60,6 +61,7 @@ export const calendarSetup_create = async (overrides: CalendarSetup_Overrides = 
     firstDayOfWeek: tests_withDefault(overrides, 'firstDayOfWeek', calendarSetup_defaults.firstDayOfWeek),
     eventOrder: tests_withDefault(overrides, 'eventOrder', calendarSetup_defaults.eventOrder),
     clock: tests_withDefault(overrides, 'clock', calendarSetup_defaults.clock) ?? calendarClock_fixed(now),
+    initialNow: tests_withDefault(overrides, 'initialNow', calendarSetup_defaults.initialNow),
     onNavigate,
   };
 
