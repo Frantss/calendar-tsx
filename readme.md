@@ -1,5 +1,8 @@
 # calendar-tsx
 
+> [!WARNING]
+> **Experimental.** calendar-tsx is an experiment. Its API can change or be removed in any release, without notice.
+
 A headless, framework-agnostic calendar library. The core computes a render-ready view model — month grids with
 spanning bars, time grids with overlap lanes and resource columns, lists — on [TanStack Store](https://tanstack.com/store)
 and [Temporal](https://tc39.es/proposal-temporal/docs/). The React bindings render it as unstyled, composable parts.

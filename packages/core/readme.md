@@ -1,5 +1,8 @@
 # @calendar-tsx/core
 
+> [!WARNING]
+> **Experimental.** `@calendar-tsx/core` is an experiment. Its API can change or be removed in any release, without notice.
+
 Framework-agnostic calendar engine that powers [`@calendar-tsx/react`](../react). It derives month, time-grid and
 list layouts from controlled view/date options and event input, in a single time zone.
 

@@ -1,5 +1,8 @@
 # @calendar-tsx/react
 
+> [!WARNING]
+> **Experimental.** `@calendar-tsx/react` is an experiment. Its API can change or be removed in any release, without notice.
+
 React bindings for [`@calendar-tsx/core`](../core): `useCalendar`, `Calendar_RootProvider`, and unstyled parts for the
 month (`MonthView_*`), time-grid (`TimeGridView_*`) and list (`ListView_*`) layouts.
 
