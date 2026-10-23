@@ -5,11 +5,12 @@
 
 A headless, framework-agnostic calendar library. The core computes a render-ready view model — month grids with
 spanning bars, time grids with overlap lanes and resource columns, lists — on [TanStack Store](https://tanstack.com/store)
-and [Temporal](https://tc39.es/proposal-temporal/docs/). The React bindings render it as unstyled, composable parts.
+and [Temporal](https://tc39.es/proposal-temporal/docs/). The React and Solid bindings render it as unstyled, composable
+parts.
 
 ## Key ideas
 
-- Framework-agnostic core; React bindings on top
+- Framework-agnostic core; React and Solid bindings on top
 - Controlled view and date: navigation actions only emit `onNavigate`
 - Events are input; the core never owns them
 - Strict Temporal types, laid out in one `timeZone`
@@ -21,6 +22,7 @@ and [Temporal](https://tc39.es/proposal-temporal/docs/). The React bindings rend
 | Package                                   | Description                                          | Docs                                |
 | ----------------------------------------- | ---------------------------------------------------- | ----------------------------------- |
 | [`@calendar-tsx/react`](packages/react)   | React bindings — hooks and parts.                    | [readme](packages/react/readme.md)  |
+| [`@calendar-tsx/solid`](packages/solid)   | Solid bindings — hooks and parts.                    | [readme](packages/solid/readme.md)  |
 | [`@calendar-tsx/core`](packages/core)     | Framework-agnostic calendar engine.                  | [readme](packages/core/readme.md)   |
 | [`@calendar-tsx/themes`](packages/themes) | Stylesheets: a positioning base and a default theme. | [readme](packages/themes/readme.md) |
 

@@ -1,0 +1,54 @@
+{
+  "name": "@calendar-tsx/solid",
+  "version": "0.0.1-experimental.0",
+  "description": "Solid bindings for @calendar-tsx/core: unstyled, composable calendar parts.",
+  "license": "MIT",
+  "author": "Frantss <frantss.bongiovanni@gmail.com>",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts",
+  "imports": {
+    "#calendar-factory": "./src/calendar-factory.tsx",
+    "#list-view": "./src/list-view.tsx",
+    "#month-view": "./src/month-view.tsx",
+    "#time-grid-view": "./src/time-grid-view.tsx",
+    "#use-calendar": "./src/use-calendar.tsx",
+    "#tests/calendar-solid.setup": "./src/tests/calendar-solid.setup.tsx",
+    "#*": "./src/*.ts"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "test": "vp test",
+    "test:dev": "vp test --watch",
+    "check:types": "vp exec tsc --noEmit",
+    "check:package": "publint --strict && attw --pack --no-emoji"
+  },
+  "dependencies": {
+    "@calendar-tsx/core": "workspace:*",
+    "@tanstack/solid-store": "^0.11.2",
+    "@tanstack/store": "^0.11.2",
+    "temporal-polyfill": "^1.0.6"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "publint": "^0.3.25",
+    "solid-js": "1.9.17",
+    "typescript": "^7.0.2",
+    "vite-plugin-solid": "^2.11.14"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.8.0"
+  }
+}

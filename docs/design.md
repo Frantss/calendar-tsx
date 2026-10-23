@@ -1,6 +1,6 @@
 # Calendar — design spec
 
-> Status: **core and React adapter implemented** (`packages/core`, `packages/react`)
+> Status: **core, React and Solid adapters implemented** (`packages/core`, `packages/react`, `packages/solid`)
 
 > Moved from guildara-frontend (`lib/calendar`) to this repository. References to `lib/calendar/core` and
 > `lib/calendar/react` now mean `packages/core` (`@calendar-tsx/core`) and `packages/react` (`@calendar-tsx/react`);
@@ -832,6 +832,14 @@ Rejected:
 - **`createViews`:** too generic for auto-import.
 - **Renaming the types in the same pass:** about 60 renames with no gain at runtime. That is still open.
 
+### D31 — The Solid adapter mirrors the React one with Solid's reactivity and Ark v6's Solid factory
+
+**Serves:** constraint (framework-agnostic core); D3, D6, D24, D25, D29, D30
+
+**Verified:** not verified — additive; the core is unchanged
+
+**Why:** A second adapter is the test of the core's framework independence, so `@calendar-tsx/solid` reuses the React adapter's part names (D30), props, data attributes and `--cal-*` variables, and its D29 typing (`TFeatures` with `Calendar_ValidateFeatures`, an erased instance in context, a selector typed by annotating its state with `Calendar_StateOf`), and differs only where Solid requires it. `useCalendar` takes an accessor, as TanStack's Solid adapters do: it creates the instance once from `untrack(options)`, starts the clock in `onMount` with `onCleanup`, and pushes `options()` through `'~update'` in a `createRenderEffect`, which re-runs whenever a signal read inside the accessor changes. D24's reference comparison still decides whether the store re-derives. `Calendar` passes its props through the same accessor. `useCalendarSelector` is `@tanstack/solid-store`'s `useSelector` and returns an accessor. Parts port Ark v6's Solid `withRender` (`@ark-ui/solid@6.0.0-next.0`): `render(props, state)` is a function only, where `props(userProps?)` returns the part's props merged with the consumer's and `state` is an accessor. Solid has no virtual elements to clone, so the element form of D25 does not exist. Unlike Ark, the part's `ref` stays in `props()` and chains with a `ref` passed to it, so a ref reaches the node with and without `render`. A local `calendarProps_merge` replaces `@zag-js/solid`'s `mergeProps` with the D25 contract (`class` instead of `className`, `ref` chained like handlers); every key is a getter and a source may be a function, so merged props stay reactive. Conditional parts (`MonthViewOverflow`, `TimeGridViewNowIndicator`, `ListViewEmpty`) use `<Show>`. The package builds with `vite-plugin-solid` as the pack plugin (DOM output, no `solid` export condition), mirroring React's browser-only build.
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.
@@ -1272,6 +1280,14 @@ export const ListView_Empty = (props: PartProps<'div'>) => {
 Generic parameters are shown as `unknown` on the parts for brevity; the real parts infer `TData`/`TResourceData` from `model`/`segment` (D8).
 
 ## Open questions
+
+**From implementing the Solid adapter (`packages/solid`):**
+
+- The build ships compiled DOM output only. There is no `solid` export condition with preserved JSX, so SSR (`generate: 'ssr'`) consumers cannot use the package yet.
+- `calendarProps_merge` chains handlers only when both are functions; Solid's bound-handler form (`onClick={[fn, data]}`) replaces the part's handler instead.
+- As in Ark, a part reads `render` once when it is created; switching between `render` and no `render` on a live part does not re-render it.
+- Tests mount with a local `tests_render` helper over `solid-js/web`'s `render`, because `vitest-browser-solid@1.0.1` declares a `vitest@^4` peer and the repo runs Vitest 5.
+- `vite-plugin-solid` sets a `jsdom` test environment unless one is given, so the package's Vite config sets `environment: 'node'`; the tests still run in the browser.
 
 **From implementing the React adapter (`lib/calendar/react`):**
 

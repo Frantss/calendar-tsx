@@ -77,7 +77,7 @@ pnpm run build           # build all workspaces
 pnpm run build:dev       # watch mode
 pnpm run check:types     # type-check all workspaces
 pnpm run check:all       # lint, format, types, and package validation
-pnpm run test            # run core and React tests once
+pnpm run test            # run core, React and Solid tests once
 pnpm run fix:all         # auto-fix lint and format
 pnpm run fix:format AGENTS.md  # format a specific file
 
