@@ -27,7 +27,7 @@ export function createEvent<TData>(event: Calendar_EventInput<TData>): Calendar_
 
 export const calendarEvents_isAllDay = <TData>(
   event: Calendar_Event<TData>,
-): event is Calendar_AllDayEventInput<TData> => 'allDay' in event && event.allDay === true;
+): event is Calendar_AllDayEventInput<TData> => event.kind === 'allDay';
 
 /** Inclusive date span; a timed event ending exactly at midnight ends on the previous day. */
 export const calendarEvents_dateSpan = <TData>(event: Calendar_Event<TData>): Calendar_Range => {

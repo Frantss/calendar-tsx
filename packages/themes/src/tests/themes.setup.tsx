@@ -39,6 +39,7 @@ const themesSetup_defaults = iife(() => ({
 
 export const themesSetup_timed = (id: string, { date, start, end }: { date: string; start: string; end: string }) => ({
   id,
+  kind: 'timed' as const,
   start: Temporal.ZonedDateTime.from(`${date}T${start}[${themesSetup_timeZone}]`),
   end: Temporal.ZonedDateTime.from(`${date}T${end}[${themesSetup_timeZone}]`),
   data: { title: id },
@@ -46,7 +47,7 @@ export const themesSetup_timed = (id: string, { date, start, end }: { date: stri
 
 export const themesSetup_allDay = (id: string, { start, end }: { start: string; end: string }) => ({
   id,
-  allDay: true as const,
+  kind: 'allDay' as const,
   start: Temporal.PlainDate.from(start),
   end: Temporal.PlainDate.from(end),
   data: { title: id },

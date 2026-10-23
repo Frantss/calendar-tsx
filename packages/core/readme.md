@@ -42,12 +42,13 @@ and hydrate on the client, pass the same `initialNow` to both.
 
 ## Events
 
-Events are plain objects (design D2, D7, D8). `createEvent` returns its argument unchanged; use it to type an event
-where it is written, with `data` inferring the payload type:
+Events are plain objects (design D2, D7, D8), discriminated by `kind`: `'timed'` events take `ZonedDateTime` bounds,
+`'allDay'` events take `PlainDate` bounds. `createEvent` returns its argument unchanged; use it to type an event where
+it is written, with `data` inferring the payload type:
 
 ```ts
-const yoga = createEvent({ id: 'yoga', start, end, data: { title: 'Yoga' } }); // Calendar_TimedEventInput<{ title: string }>
-const fair = createEvent<EventData>({ id: 'fair', allDay: true, start: Temporal.PlainDate.from('2026-03-11'), data });
+const yoga = createEvent({ id: 'yoga', kind: 'timed', start, end, data: { title: 'Yoga' } }); // Calendar_TimedEventInput<{ title: string }>
+const fair = createEvent<EventData>({ id: 'fair', kind: 'allDay', start: Temporal.PlainDate.from('2026-03-11'), data });
 ```
 
 ## Background events
@@ -60,8 +61,8 @@ layers for rules such as business hours:
 createCalendar({
   ...options,
   backgroundEvents: [
-    { id: 'holiday', allDay: true, start: Temporal.PlainDate.from('2026-03-17'), data: { kind: 'holiday' } },
-    { id: 'lunch', start: lunchStart, end: lunchEnd, data: { kind: 'closed' } },
+    { id: 'holiday', kind: 'allDay', start: Temporal.PlainDate.from('2026-03-17'), data: { kind: 'holiday' } },
+    { id: 'lunch', kind: 'timed', start: lunchStart, end: lunchEnd, data: { kind: 'closed' } },
   ],
 });
 ```

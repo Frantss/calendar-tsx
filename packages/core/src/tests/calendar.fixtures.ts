@@ -20,6 +20,7 @@ export const fixtures_timed = (
   }: { date: string; start: string; end: string; endDate?: string; resourceIds?: string[] },
 ): Calendar_TimedEventInput<Fixtures_EventData> => ({
   id,
+  kind: 'timed',
   start: fixtures_at(date, start),
   end: fixtures_at(endDate, end),
   resourceIds,
@@ -31,7 +32,7 @@ export const fixtures_allDay = (
   { start, end, resourceIds }: { start: string; end?: string; resourceIds?: string[] },
 ): Calendar_AllDayEventInput<Fixtures_EventData> => ({
   id,
-  allDay: true,
+  kind: 'allDay',
   start: Temporal.PlainDate.from(start),
   end: end ? Temporal.PlainDate.from(end) : undefined,
   resourceIds,

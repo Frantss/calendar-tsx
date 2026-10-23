@@ -340,6 +340,8 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 
 **Why:** The input types make the timed/all-day split explicit. Timed events are `ZonedDateTime`. All-day events are a separate `PlainDate` shape, so no all-day event can be faked as a timed one; today `build-apc-event.ts` encodes all-day availability as `date + 1 minute`, while `build-apc-events-from-availability.ts` emits all-day events with real start times. The controlled `date` is a `PlainDate`. Time zone rules: the core converts every timed input with `withTimeZone(timeZone)` before layout; "now" and "today" resolve in `timeZone`; every time in the view model is in `timeZone`; the host zone is never read. String parsing stays at the app edge, in one mapper from API values. The rationale is the explicit shape plus a single conversion point, not a claim that strict input reduces bugs by itself. How 23- and 25-hour DST days map to slot fractions is still open.
 
+**Amended:** both shapes carry an explicit discriminant, `kind: 'timed'` or `kind: 'allDay'`, so `event.kind` narrows the union. Before, only all-day events had a field (`allDay: true`) and narrowing needed `'allDay' in event`. A string `kind` was chosen over a required `allDay: boolean` because it reads as a tag rather than a flag, matches the layout models' `kind`, and leaves room for another shape without a second boolean. Values are camelCase like the layout kinds (`'timeGrid'`).
+
 ### D8 — Events carry a generic `data: TData` payload
 
 **Serves:** C5; app R5.1–R5.8
@@ -1065,6 +1067,7 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - Replacing `events` through `setOptions` re-derives the layout with no other API calls (see-all merge, drafts). _(C5, D2, app R4.5, R11.3)_
 - `event.data` keeps its `TData` type through to the parts (type test). _(D8)_
 - `createEvent` returns its argument, infers `TData` from `data`, keeps the timed or all-day variant, and rejects a mixed shape (type test). _(D7, D8)_
+- An event without `kind` is a type error, and `event.kind` narrows the union (type test). _(D7)_
 - Replacing `backgroundEvents` re-derives the layout; it is tracked by reference like `events`. _(C13, D24, D37)_
 
 ### Month layout
@@ -1203,6 +1206,7 @@ import type { Store } from '@tanstack/store';
 
 type Calendar_TimedEventInput<TData> = {
   id: string;
+  kind: 'timed';
   start: Temporal.ZonedDateTime;
   end: Temporal.ZonedDateTime;
   resourceIds?: string[];
@@ -1211,7 +1215,7 @@ type Calendar_TimedEventInput<TData> = {
 
 type Calendar_AllDayEventInput<TData> = {
   id: string;
-  allDay: true;
+  kind: 'allDay';
   start: Temporal.PlainDate;
   end?: Temporal.PlainDate; // inclusive; defaults to start
   resourceIds?: string[];

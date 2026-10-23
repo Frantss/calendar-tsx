@@ -3,6 +3,7 @@ import type { Temporal } from 'temporal-polyfill';
 
 export type Calendar_TimedEventInput<TData> = {
   id: string;
+  kind: 'timed';
   start: Temporal.ZonedDateTime;
   end: Temporal.ZonedDateTime;
   resourceIds?: string[];
@@ -11,7 +12,7 @@ export type Calendar_TimedEventInput<TData> = {
 
 export type Calendar_AllDayEventInput<TData> = {
   id: string;
-  allDay: true;
+  kind: 'allDay';
   start: Temporal.PlainDate;
   /** Inclusive; defaults to `start`. */
   end?: Temporal.PlainDate;
@@ -19,6 +20,7 @@ export type Calendar_AllDayEventInput<TData> = {
   data: TData;
 };
 
+/** Discriminated by `kind`. */
 export type Calendar_EventInput<TData> = Calendar_TimedEventInput<TData> | Calendar_AllDayEventInput<TData>;
 
 /** An input after normalization: timed events are expressed in the calendar's `timeZone`. */
