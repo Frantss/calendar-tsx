@@ -74,5 +74,11 @@ your views and features, annotate the selector with `Calendar_StateOf` from `@ca
   is an accessor. Solid has no elements to clone, so there is no `render={<El />}` form.
 - Parts take `class`, not `className`, and `ref` as in any Solid component.
 
+## Server rendering
+
+The package renders with `renderToString` and hydrates with `hydrate`; no separate entry is needed. Pass the same
+`initialNow` (a `Temporal.Instant` chosen once per request) to the calendar on the server and on the client, or the now
+indicator and `data-today` can differ and hydration fails.
+
 Parts render no styles: position them with CSS reading `--cal-*` custom properties (for example
 `left: calc(var(--cal-col-start) / 7 * 100%)`).

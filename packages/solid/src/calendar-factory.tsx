@@ -1,5 +1,5 @@
 // Port of Ark v6's Solid `ark` factory (chakra-ui/ark, `@ark-ui/solid@6.0.0-next.0`, src/components/factory.tsx)
-// without `asChild` and without `@zag-js/solid`'s `mergeProps` (D25, D26).
+// without `asChild` and without `@zag-js/solid`'s `mergeProps` (D25, D31).
 import type { Accessor, ComponentProps, JSX, ValidComponent } from 'solid-js';
 import { splitProps } from 'solid-js';
 import { Dynamic } from 'solid-js/web';

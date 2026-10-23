@@ -19,6 +19,7 @@
     "#time-grid-view": "./src/time-grid-view.tsx",
     "#use-calendar": "./src/use-calendar.tsx",
     "#tests/calendar-solid.setup": "./src/tests/calendar-solid.setup.tsx",
+    "#tests/ssr.app": "./src/tests/ssr.app.tsx",
     "#*": "./src/*.ts"
   },
   "exports": {
