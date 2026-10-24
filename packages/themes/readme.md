@@ -47,29 +47,38 @@ Override any `--calendar-*` token on an ancestor of the calendar:
 }
 ```
 
-**Accent.** `--calendar-accent` recolors the calendar on its own: today's marker, the now line, today's column tint,
-the focus ring and the events, which are tints of it unless `--calendar-event` is set. Set `--calendar-accent-contrast`
-with it for the numbers on today's marker. Use a `light-dark()` pair so each mode gets a fitting shade.
+**Roles.** Each kind of thing has its own color, so they read apart. `--calendar-accent` marks today (marker, header,
+column tint) and the focus ring; set `--calendar-accent-contrast` with it for the numbers on today's marker.
+`--calendar-event-color` colors events: timed events are tints of it (14% fill and 30% border in light mode, 26% and
+45% in dark mode) with a 3px stripe where they start, and all-day and multi-day bars (`data-all-day`,
+`data-multi-day`) are solid in it with `--calendar-event-color-contrast` text. `--calendar-now` draws the now line,
+`--calendar-background-event-color` washes background events with a top edge, unavailable time is hatched, and
+Saturday and Sunday (`data-weekday` 6 and 7) take `--calendar-weekend`. Time grids and timelines draw full lines on the
+hour and half-strength lines at each slot. Use `light-dark()` pairs so each mode gets a fitting shade. The event
+colors resolve on each event, so a class on one event part that sets `--calendar-event-color` recolors it.
 
-| Token                                                                                     | Default (light, dark)                                 |
-| ----------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `--calendar-surface`, `--calendar-surface-muted`                                          | `#ffffff` `#f5f4f1`, `#171615` `#201f1d`              |
-| `--calendar-text`, `--calendar-text-muted`                                                | `#1c1b19` `#5f5c56`, `#f2efe9` `#a9a49b`              |
-| `--calendar-border`                                                                       | `#dedbd4`, `#34322e`                                  |
-| `--calendar-accent`, `--calendar-accent-contrast`                                         | `#b4441e` `#ffffff`, `#f08a5d` `#1a0d07`              |
-| `--calendar-event`, `--calendar-event-border`                                             | unset: the accent tinted 16% and 24% into the surface |
-| `--calendar-event-text`, `--calendar-focus-ring`                                          | unset: fall back to the text and the accent           |
-| `--calendar-background`                                                                   | unset: the text at 6% over the surface                |
-| `--calendar-background-event`                                                             | unset: the accent at 10% over transparent             |
-| `--calendar-radius`, `--calendar-bar-radius`                                              | `0.375rem`, `0.25rem`                                 |
-| `--calendar-font-size`, `--calendar-font-size-sm`, `--calendar-font-size-xs`              | `0.875rem`, `0.75rem`, `0.6875rem`                    |
-| `--calendar-slot-height`, `--calendar-axis-width`                                         | `3rem`, `4rem`                                        |
-| `--calendar-bar-height`, `--calendar-bar-gap`, `--calendar-bar-inset`                     | `1.375rem`, `2px`, `2px`                              |
-| `--calendar-event-gap`                                                                    | `4px`: space after each time-grid event, both axes    |
-| `--calendar-day-header-height`, `--calendar-overflow-height`, `--calendar-row-min-height` | `2.25rem`, `1.5rem`, `6rem`                           |
+| Token                                                                                     | Default (light, dark)                                                     |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `--calendar-surface`, `--calendar-surface-muted`                                          | `#ffffff` `#f5f4f1`, `#171615` `#201f1d`                                  |
+| `--calendar-text`, `--calendar-text-muted`                                                | `#1c1b19` `#5f5c56`, `#f2efe9` `#a9a49b`                                  |
+| `--calendar-border`, `--calendar-border-strong`                                           | `#dedbd4` `#c4c0b7`, `#34322e` `#4a4742`                                  |
+| `--calendar-accent`, `--calendar-accent-contrast`                                         | `#b4441e` `#ffffff`, `#f08a5d` `#1a0d07`                                  |
+| `--calendar-event-color`, `--calendar-event-color-contrast`                               | `#2f63d6` `#ffffff`, `#7ea6ff` `#0b1530`                                  |
+| `--calendar-event`, `--calendar-event-border`                                             | unset: tints of the event color, or the event color on solid bars         |
+| `--calendar-event-text`, `--calendar-focus-ring`                                          | unset: the text (the event color's contrast on solid bars) and the accent |
+| `--calendar-now`, `--calendar-background-event-color`                                     | `#d4321f` `#1a8a6e`, `#ff6d5a` `#4cc9a4`                                  |
+| `--calendar-weekend`                                                                      | unset: the text at 3% over transparent                                    |
+| `--calendar-background`                                                                   | unset: the text at 6% over the surface                                    |
+| `--calendar-background-event`                                                             | unset: the background event color at 14% over transparent                 |
+| `--calendar-radius`, `--calendar-bar-radius`                                              | `0.375rem`, `0.25rem`                                                     |
+| `--calendar-font-size`, `--calendar-font-size-sm`, `--calendar-font-size-xs`              | `0.875rem`, `0.75rem`, `0.6875rem`                                        |
+| `--calendar-slot-height`, `--calendar-axis-width`                                         | `3rem`, `4rem`                                                            |
+| `--calendar-bar-height`, `--calendar-bar-gap`, `--calendar-bar-inset`                     | `1.375rem`, `2px`, `2px`                                                  |
+| `--calendar-event-gap`                                                                    | `4px`: space after each time-grid event, both axes                        |
+| `--calendar-day-header-height`, `--calendar-overflow-height`, `--calendar-row-min-height` | `2.25rem`, `1.5rem`, `6rem`                                               |
 
-The theme sets no font family; the calendar inherits the page's. The event tokens, `--calendar-focus-ring` and `--calendar-background` are
-left unset on purpose: a token declared as `var(--other)` resolves where it is declared, so a default on `:root`
+The theme sets no font family; the calendar inherits the page's. The event fill, border and text tokens, `--calendar-focus-ring`, `--calendar-background` and
+`--calendar-weekend` are left unset on purpose: a token declared as `var(--other)` resolves where it is declared, so a default on `:root`
 would ignore an override of the token it points to.
 
 **Dark mode.** Colors use `light-dark()`, so they follow the inherited `color-scheme`. The theme never sets it: declare
@@ -96,10 +105,11 @@ Resource agendas wrap these rows in `ListViewSection`. `ListViewSectionHeader` l
 ## High contrast theme
 
 `high-contrast.css` replaces `default.css` for people who choose more contrast. Every text pairing meets WCAG AAA
-(9:1 or more) and every boundary is 5:1 or more. Events are outlined with a 2px border in the text color instead of
-tinted, focus rings are 3px, and a bar that continues past a week edge (or a time-grid event past midnight) gets a
+(9:1 or more) and every boundary is 5:1 or more. Timed events are outlined with a 2px border and a 4px stripe in the
+text color instead of tinted, all-day and multi-day bars are solid in the text color, focus rings are 3px, and a bar that continues past a week edge (or a time-grid event past midnight) gets a
 dashed edge, so continuation does not depend on a missing corner radius. The accent is deep blue in light mode and
-yellow in dark mode. `--calendar-event` and `--calendar-event-border` still override the outline.
+yellow in dark mode; the now line is red and background events green. `--calendar-event` and `--calendar-event-border`
+still override the outline.
 
 This is separate from Windows High Contrast: under `forced-colors: active` the browser chooses the colors, and every
 theme falls back to the default theme's forced-colors rules.
@@ -107,10 +117,11 @@ theme falls back to the default theme's forced-colors rules.
 ## shadcn/ui
 
 `shadcn.css` replaces `default.css`: it maps the calendar tokens onto shadcn/ui's variables (`--background`,
-`--foreground`, `--muted`, `--muted-foreground`, `--border`, `--primary`, `--primary-foreground`, `--ring`,
-`--radius`), so the calendar follows the app's palette, radius and `.dark` class with no further setup. Events take
-the default theme's accent tint, so they are `--primary` tinted 16% into `--background`; shadcn's `--secondary`,
-`--muted` and `--accent` sit almost on the background in light mode. Use the Tailwind v4 variable naming (full `oklch()` colors, not the v3 HSL channels).
+`--foreground`, `--muted`, `--muted-foreground`, `--border`, `--primary`, `--primary-foreground`, `--chart-1`,
+`--chart-2`, `--destructive`, `--ring`, `--radius`), so the calendar follows the app's palette, radius and `.dark` class
+with no further setup. Events take `--chart-1`, apart from today's `--primary`, with `--foreground` on solid bars; the
+now line takes `--destructive` and background events `--chart-2`. shadcn's `--secondary`, `--muted` and `--accent` sit
+almost on the background in light mode. Use the Tailwind v4 variable naming (full `oklch()` colors, not the v3 HSL channels).
 
 ```css
 @import 'tailwindcss';
@@ -125,8 +136,10 @@ needed.
 `material-ui.css` replaces `default.css`: it maps the calendar tokens onto the CSS theme variables Material UI emits
 with `cssVariables: true` (`--mui-palette-background-paper`, `--mui-palette-text-primary`,
 `--mui-palette-text-secondary`, `--mui-palette-action-hover`, `--mui-palette-divider`, `--mui-palette-primary-main`,
-`--mui-palette-primary-contrastText`, `--mui-shape-borderRadius`), so the calendar follows the app's palette, shape and
-color scheme. Events take the default theme's accent tint, so they are the primary color tinted 16% into the paper.
+`--mui-palette-primary-contrastText`, `--mui-palette-secondary-main`, `--mui-palette-secondary-contrastText`,
+`--mui-palette-error-main`, `--mui-palette-success-main`, `--mui-shape-borderRadius`), so the calendar follows the
+app's palette, shape and color scheme. Events take the secondary color, apart from today's primary; the now line takes
+the error color and background events the success color.
 
 ```ts
 const theme = createTheme({
@@ -148,15 +161,17 @@ Without `cssVariables` Material UI emits no variables and the calendar loses its
 
 `revenuecat.css` replaces `default.css` with RevenueCat's press-kit colors, used the way the kit recommends:
 monochrome black purple (`#1f1f47`) with the brand colors as accents. The exact red (`#f2545b`) marks today and the now
-line, with black purple numbers on it; royal blue (`#576cdb`) tints events and draws the focus ring. Dark mode uses
+line, with black purple numbers on it; royal blue (`#576cdb`, `#8b9bf0` in dark mode) colors events and draws the focus
+ring. Dark mode uses
 black purple as the surface. On white the brand red is 3.39:1, so the theme keeps it to fills and lines and writes
 today's time-grid header in the text color instead.
 
 ## Stripe
 
 `stripe.css` replaces `default.css` with the colors from the public `--hds-color-*` tokens on stripe.com: blurple
-`#533afd` (`brand-600`, a step deeper than the logo's `#635bff`) marks today and the now line and tints events, on
-slate neutrals (`#061b31` text on white; white on `#0d1738` in dark mode, with `#7389ff` as the accent). Borders are
+`#533afd` (`brand-600`, a step deeper than the logo's `#635bff`; `#7389ff` in dark mode) colors events and the focus ring,
+on slate neutrals (`#061b31` text on white; white on `#0d1738` in dark mode). Today is marked in slate so it reads
+apart from the events, the now line is ruby (`#e2225f`) and background events are green (`#00b261`). Borders are
 one step stronger than Stripe's quiet borders, which at 1.2:1 lose the grid.
 
 This theme is not affiliated with or endorsed by Stripe. Stripe's [Marks Usage Terms](https://stripe.com/marks/legal)
@@ -199,7 +214,7 @@ a part.
 
 **Utilities only.** To style every part yourself, import `base.css` alone in the same layer and use the parts' state
 attributes as variants. Boolean attributes (`data-today`, `data-outside`, `data-overlap`, `data-unavailable`,
-`data-continues-before`, `data-continues-after`) match `data-*:`, and descendants of a part reach them with `in-data-*:`:
+`data-all-day`, `data-multi-day`, `data-continues-before`, `data-continues-after`) match `data-*:`, and descendants of a part reach them with `in-data-*:`:
 
 ```css
 @import 'tailwindcss';

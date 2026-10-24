@@ -76,7 +76,7 @@ export const measureTheme = (mode: PaletteMode): Measurement => {
     return getComputedStyle(span).color;
   };
 
-  // an event part picks up the theme's derived event colors (accent tints, high contrast's outline)
+  // an event part picks up the theme's derived event colors (event color tints, high contrast's outline)
   const event = document.createElement('button');
 
   event.dataset['scope'] = 'calendar';
@@ -131,6 +131,8 @@ export const measureTheme = (mode: PaletteMode): Measurement => {
       pair('Muted text on muted surface', rgba['text-muted'], onSurface(rgba['surface-muted']), 4.5),
       pair("Today's number on the accent", rgba['accent-contrast'], onSurface(rgba.accent), 4.5),
       pair('Event text on event fill', rgba['event-text'], onSurface(rgba.event), 4.5),
+      pair('Text on all-day bars', rgba['event-color-contrast'], onSurface(rgba['event-color']), 4.5),
+      pair('Now line against surface', rgba.now, surface, 3),
       pair('Border against surface', rgba.border, surface, 3),
       pair('Event border against surface', rgba['event-border'], surface, 3),
     ],

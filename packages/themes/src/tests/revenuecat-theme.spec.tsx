@@ -82,13 +82,23 @@ it('marks today with the exact brand red and black purple numbers', async () => 
   expect(style('time-grid-column-trigger', 'color')).toBe('rgb(31, 31, 71)');
 });
 
+/** The default theme's timed-event fill: the event color tinted 14% (light) or 26% (dark) into the surface. */
+const tint = (color: string) => {
+  const probe = document.body.appendChild(document.createElement('div'));
+  probe.style.color = color;
+  const resolved = getComputedStyle(probe).color;
+  probe.remove();
+
+  return resolved;
+};
+
 it.each([
-  ['light', 'rgb(221, 226, 248)', 'rgb(31, 31, 71)'],
-  ['dark', 'rgb(49, 56, 118)', 'rgb(242, 84, 91)'],
+  ['light', 'color-mix(in oklab, #576cdb 14%, #ffffff)', 'rgb(31, 31, 71)'],
+  ['dark', 'color-mix(in oklab, #8b9bf0 26%, #1f1f47)', 'rgb(242, 84, 91)'],
 ] as const)('tints events blue and keeps small red text off white in %s mode', async (colorScheme, event, header) => {
   await themesSetup_render(<TimeGrid />, { events, colorScheme });
 
-  expect(style('time-grid-event', 'backgroundColor')).toBe(event);
+  expect(style('time-grid-event', 'backgroundColor')).toBe(tint(event));
   expect(style('time-grid-column-header', 'color')).toBe(header);
 });
 

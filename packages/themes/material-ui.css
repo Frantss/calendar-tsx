@@ -19,7 +19,11 @@
     --calendar-border: var(--mui-palette-divider);
     --calendar-accent: var(--mui-palette-primary-main);
     --calendar-accent-contrast: var(--mui-palette-primary-contrastText);
-    /* Events are left to the default theme's accent tint, so they follow the primary color */
+    /* Events take the secondary color, so they read apart from today's primary */
+    --calendar-event-color: var(--mui-palette-secondary-main);
+    --calendar-event-color-contrast: var(--mui-palette-secondary-contrastText);
+    --calendar-now: var(--mui-palette-error-main);
+    --calendar-background-event-color: var(--mui-palette-success-main);
     --calendar-radius: var(--mui-shape-borderRadius);
     --calendar-bar-radius: var(--mui-shape-borderRadius);
   }

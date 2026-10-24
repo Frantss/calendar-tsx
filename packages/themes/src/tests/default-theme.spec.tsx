@@ -380,16 +380,23 @@ it('restores the today marker with system colors in forced-colors mode', async (
 });
 
 it.each([
-  ['tints events from an accent set on an ancestor', 'accent', 'color-mix(in oklab, rgb(0, 0, 255) 16%, #ffffff)'],
-  ['lets --calendar-event override the accent tint', 'accent fill', 'rgb(1, 2, 3)'],
-] as const)('%s', async (_, className, expected) => {
+  ['tints events from an event color set on an ancestor', 'events', 'light', 'color-mix(in oklab, rgb(0, 0, 255) 14%, #ffffff)'],
+  ['tints events more deeply on a dark surface', 'events', 'dark', 'color-mix(in oklab, rgb(0, 0, 255) 26%, #171615)'],
+  ['keeps events apart from an accent set on an ancestor', 'accent', 'light', 'color-mix(in oklab, #2f63d6 14%, #ffffff)'],
+  ['lets --calendar-event override the tint', 'events fill', 'light', 'rgb(1, 2, 3)'],
+] as const)('%s', async (_, className, colorScheme, expected) => {
   const style = document.head.appendChild(document.createElement('style'));
-  style.textContent = '.accent { --calendar-accent: rgb(0, 0, 255); } .fill { --calendar-event: rgb(1, 2, 3); }';
+  style.textContent = `
+    .events { --calendar-event-color: rgb(0, 0, 255); }
+    .accent { --calendar-accent: rgb(0, 0, 255); }
+    .fill { --calendar-event: rgb(1, 2, 3); }
+  `;
   const probe = document.body.appendChild(document.createElement('div'));
   probe.style.color = expected;
 
   await themesSetup_render(<TimeGrid />, {
     className,
+    colorScheme,
     events: [themesSetup_timed('Yoga', { date: '2026-03-11', start: '09:00', end: '10:00' })],
   });
   const yoga = event('Yoga');
@@ -397,6 +404,99 @@ it.each([
   expect(yoga && getComputedStyle(yoga).backgroundColor).toBe(getComputedStyle(probe).color);
   probe.remove();
   style.remove();
+});
+
+it('draws timed events with a stripe in the event color', async () => {
+  await themesSetup_render(<TimeGrid />, { events: [themesSetup_timed('Yoga', { date: '2026-03-11', start: '09:00', end: '10:00' })] });
+  const yoga = event('Yoga');
+
+  expect(yoga && getComputedStyle(yoga).borderInlineStartWidth).toBe('3px');
+  expect(yoga && getComputedStyle(yoga).borderInlineStartColor).toBe('rgb(47, 99, 214)');
+});
+
+it('draws all-day and multi-day bars solid, and timed single-day bars tinted', async () => {
+  await themesSetup_render(<Month />, {
+    view: 'month',
+    events: [
+      themesSetup_allDay('Fair', { start: '2026-03-11', end: '2026-03-11' }),
+      themesSetup_timed('Deploy', { date: '2026-03-12', start: '22:00', end: '02:00', endDate: '2026-03-13' }),
+      themesSetup_timed('Yoga', { date: '2026-03-10', start: '09:00', end: '10:00' }),
+    ],
+  });
+  const bar = (title: string) => themesSetup_part('day-grid-row-event').find(element => element.textContent === title)!;
+  const probe = document.body.appendChild(document.createElement('div'));
+  probe.style.color = 'color-mix(in oklab, #2f63d6 14%, #ffffff)';
+
+  for (const title of ['Fair', 'Deploy']) {
+    expect(getComputedStyle(bar(title)).backgroundColor).toBe('rgb(47, 99, 214)');
+    expect(getComputedStyle(bar(title)).color).toBe('rgb(255, 255, 255)');
+  }
+  expect(getComputedStyle(bar('Yoga')).backgroundColor).toBe(getComputedStyle(probe).color);
+  expect(getComputedStyle(bar('Yoga')).color).toBe('rgb(28, 27, 25)');
+  probe.remove();
+});
+
+it('drops the stripe where a bar continues from an earlier week', async () => {
+  await themesSetup_render(<Month />, { view: 'month', events: [themesSetup_allDay('Fair', { start: '2026-03-06', end: '2026-03-09' })] });
+  const [first, second] = themesSetup_part('day-grid-row-event');
+
+  expect(first && getComputedStyle(first).borderInlineStartWidth).toBe('3px');
+  expect(second && getComputedStyle(second).borderInlineStartWidth).toBe('1px');
+});
+
+it('shades weekends and tints today apart from them', async () => {
+  await themesSetup_render(<TimeGrid />, { view: 'week' });
+  const columns = themesSetup_part('time-grid-column');
+  const probe = (color: string) => {
+    const element = document.body.appendChild(document.createElement('div'));
+    element.style.color = color;
+    const resolved = getComputedStyle(element).color;
+    element.remove();
+
+    return resolved;
+  };
+  const background = (index: number) => columns[index] && getComputedStyle(columns[index]).backgroundColor;
+
+  expect(background(0)).toBe(probe('color-mix(in oklab, #1c1b19 3%, transparent)'));
+  expect(background(6)).toBe(probe('color-mix(in oklab, #1c1b19 3%, transparent)'));
+  expect(background(1)).toBe('rgba(0, 0, 0, 0)');
+  expect(background(3)).toBe(probe('color-mix(in oklab, #b4441e 6%, transparent)'));
+});
+
+/** Measures the slot and hour line spacing the column resolves, as a child laid out from the same lengths. */
+const lineGeometry = (column: HTMLElement | undefined) => {
+  const probe = column?.appendChild(document.createElement('div'));
+  probe?.setAttribute('style', 'position: absolute; inset-block-start: var(--_calendar-hour-start); block-size: var(--_calendar-hour);');
+  const rect = themesSetup_rect(probe);
+  const top = themesSetup_rect(column).top + (column?.clientTop ?? 0);
+  probe?.remove();
+
+  return { hourStart: rect.top - top, hour: rect.height };
+};
+
+it.each([
+  ['a full day', undefined, 24, 0],
+  ['a window starting off the hour', { startMinutes: 8 * 60 + 30, endMinutes: 18 * 60 }, 9.5, 0.5],
+] as const)('draws hour lines over half-hour slots across %s', async (_, timeWindow, hours, offset) => {
+  await themesSetup_render(<TimeGrid />, { views: { day: timeGridView({ days: 1, timeWindow }) } });
+  const column = themesSetup_part('time-grid-column')[0];
+  const height = column?.clientHeight ?? 0;
+  const { hourStart, hour } = lineGeometry(column);
+
+  expect(column && getComputedStyle(column).backgroundImage.match(/repeating-linear-gradient/g)).toHaveLength(2);
+  expect(hour).toBeCloseTo(height / hours, 0);
+  expect(hourStart).toBeCloseTo((height / hours) * offset, 0);
+});
+
+it('draws the now line and background events in their own colors', async () => {
+  await themesSetup_render(<TimeGrid />, {
+    events: [themesSetup_background(themesSetup_timed('Closed', { date: '2026-03-11', start: '12:00', end: '18:00' }))],
+  });
+  const now = themesSetup_part('time-grid-now')[0];
+  const shade = themesSetup_part('time-grid-background-event')[0];
+
+  expect(now && getComputedStyle(now).borderTopColor).toBe('rgb(212, 50, 31)');
+  expect(shade && getComputedStyle(shade).boxShadow).toBe('rgb(26, 138, 110) 0px 2px 0px 0px inset');
 });
 
 it('leaves a gap between the day number and the first bar', async () => {

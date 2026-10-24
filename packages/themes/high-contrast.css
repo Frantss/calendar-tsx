@@ -1,7 +1,8 @@
 /*
  * High contrast: black on white and white on black, every text pairing at WCAG AAA (7:1 or more) and every boundary
- * at 5:1 or more. Events are outlined in the text color rather than tinted, borders and focus rings are thicker,
- * and bars that continue past a week edge get a dashed edge so continuation does not rely on a corner radius.
+ * at 5:1 or more. Timed events are outlined in the text color rather than tinted, all-day and multi-day bars are
+ * solid in it, borders and focus rings are thicker, and bars that continue past a week edge get a dashed edge so
+ * continuation does not rely on a corner radius.
  * For people who choose more contrast; Windows High Contrast (forced colors) is handled by the default theme.
  */
 @import './default.css';
@@ -15,8 +16,15 @@
     --calendar-text: light-dark(#000000, #ffffff);
     --calendar-text-muted: light-dark(#3d3d3d, #c7c7c7);
     --calendar-border: light-dark(#6b6b6b, #949494);
+    --calendar-border-strong: light-dark(#3d3d3d, #c7c7c7);
     --calendar-accent: light-dark(#0035a8, #ffd500);
     --calendar-accent-contrast: light-dark(#ffffff, #000000);
+    --calendar-event-color: light-dark(#000000, #ffffff);
+    --calendar-event-color-contrast: light-dark(#ffffff, #000000);
+    /* 6.48:1 on white, 8.65:1 on black */
+    --calendar-now: light-dark(#c00000, #ff8080);
+    /* 6.53:1 on white, 12.82:1 on black */
+    --calendar-background-event-color: light-dark(#006b4f, #5fe0b5);
     --calendar-radius: 0.25rem;
     --calendar-bar-radius: 0.125rem;
   }
@@ -32,8 +40,23 @@
   ) {
     --_calendar-event: var(--calendar-event, var(--calendar-surface));
     --_calendar-event-border: var(--calendar-event-border, var(--calendar-text));
+    --_calendar-event-text: var(--calendar-event-text, var(--calendar-text));
     border-width: 2px;
+    border-inline-start-width: 4px;
     font-weight: 600;
+  }
+
+  /* All-day and multi-day bars: solid in the event color, as in the default theme */
+  :where(
+    [data-scope='calendar']:is(
+        [data-part='day-grid-row-event'],
+        [data-part='time-grid-all-day-event'],
+        [data-part='timeline-event']
+      ):is([data-all-day], [data-multi-day])
+  ) {
+    --_calendar-event: var(--calendar-event, var(--calendar-event-color));
+    --_calendar-event-border: var(--calendar-event-border, var(--calendar-event-color));
+    --_calendar-event-text: var(--calendar-event-text, var(--calendar-event-color-contrast));
   }
 
   :where(
@@ -48,7 +71,12 @@
 
   :where([data-scope='calendar'][data-part='timeline-event']) {
     --_calendar-timeline-border-width: 2px;
+    --_calendar-event-stripe: 4px;
     border-inline-width: 0;
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-event'][data-continues-before]) {
+    --_calendar-event-stripe: var(--_calendar-timeline-border-width);
   }
 
   /* Bars continue across week and range edges; time-grid events continue across midnight */
@@ -59,6 +87,7 @@
         [data-part='timeline-event']
       )
   ) {
+    border-inline-start-width: 2px;
     border-inline-start-style: dashed;
   }
 
@@ -70,6 +99,27 @@
       )
   ) {
     border-inline-end-style: dashed;
+  }
+
+  /* On a solid bar the border is the fill's color, so a dashed edge is drawn in the bar's text color */
+  :where(
+    [data-scope='calendar'][data-continues-before]:is(
+        [data-part='day-grid-row-event'],
+        [data-part='time-grid-all-day-event'],
+        [data-part='timeline-event']
+      ):is([data-all-day], [data-multi-day])
+  ) {
+    border-inline-start-color: var(--_calendar-event-text);
+  }
+
+  :where(
+    [data-scope='calendar'][data-continues-after]:is(
+        [data-part='day-grid-row-event'],
+        [data-part='time-grid-all-day-event'],
+        [data-part='timeline-event']
+      ):is([data-all-day], [data-multi-day])
+  ) {
+    border-inline-end-color: var(--_calendar-event-text);
   }
 
   :where([data-scope='calendar'][data-part='time-grid-event'][data-continues-before]) {

@@ -46,8 +46,11 @@ const Month = () => {
 
 // A stand-in for an app's shadcn variables, light on :root and dark under .dark
 const shadcnVariables = `
-  :root { --background: rgb(255, 255, 255); --primary: rgb(10, 20, 30); --primary-foreground: rgb(250, 250, 250); --radius: 10px; }
-  .dark { --background: rgb(0, 0, 0); --primary: rgb(230, 231, 232); }
+  :root {
+    --background: rgb(255, 255, 255); --foreground: rgb(9, 9, 11); --primary: rgb(10, 20, 30);
+    --primary-foreground: rgb(250, 250, 250); --chart-1: rgb(245, 120, 40); --destructive: rgb(220, 40, 40); --radius: 10px;
+  }
+  .dark { --background: rgb(0, 0, 0); --foreground: rgb(250, 250, 250); --primary: rgb(230, 231, 232); --chart-1: rgb(40, 90, 230); }
 `;
 
 let style: HTMLStyleElement;
@@ -62,25 +65,16 @@ afterEach(() => {
   document.documentElement.classList.remove('dark');
 });
 
-/** Resolves a color the way the theme's event fill does: --primary tinted 16% into --background. */
-const tint = (primary: string, background: string) => {
-  const probe = document.body.appendChild(document.createElement('div'));
-  probe.style.color = `color-mix(in oklab, ${primary} 16%, ${background})`;
-  const color = getComputedStyle(probe).color;
-  probe.remove();
-
-  return color;
-};
-
 const today = () => themesSetup_part('day-grid-day', '[data-today]')[0]?.querySelector('[data-part="day-grid-day-trigger"]');
 const bar = () => themesSetup_part('day-grid-row-event')[0];
 const events = [themesSetup_allDay('Fair', { start: '2026-03-11', end: '2026-03-11' })];
 
-it('takes the accent, event fill and radius from the shadcn variables', async () => {
+it('takes the accent, event color and radius from the shadcn variables', async () => {
   await themesSetup_render(<Month />, { view: 'month', events });
 
   expect(today() && getComputedStyle(today()!).backgroundColor).toBe('rgb(10, 20, 30)');
-  expect(getComputedStyle(bar()!).backgroundColor).toBe(tint('rgb(10, 20, 30)', 'rgb(255, 255, 255)'));
+  expect(getComputedStyle(bar()!).backgroundColor).toBe('rgb(245, 120, 40)');
+  expect(getComputedStyle(bar()!).color).toBe('rgb(9, 9, 11)');
   expect(getComputedStyle(bar()!).borderTopLeftRadius).toBe('6px');
 });
 
@@ -89,7 +83,8 @@ it('follows .dark on the root element', async () => {
   await themesSetup_render(<Month />, { view: 'month', events });
 
   expect(today() && getComputedStyle(today()!).backgroundColor).toBe('rgb(230, 231, 232)');
-  expect(getComputedStyle(bar()!).backgroundColor).toBe(tint('rgb(230, 231, 232)', 'rgb(0, 0, 0)'));
+  expect(getComputedStyle(bar()!).backgroundColor).toBe('rgb(40, 90, 230)');
+  expect(getComputedStyle(bar()!).color).toBe('rgb(250, 250, 250)');
 });
 
 it('follows .dark on an element inside the page', async () => {

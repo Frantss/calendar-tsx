@@ -1,7 +1,7 @@
 /*
  * The default layout in Stripe's colors, taken from the public `--hds-color-*` tokens on stripe.com: blurple
  * (brand-600 #533afd, a step deeper than the logo's #635bff) on slate neutrals. Not affiliated with or endorsed by
- * Stripe. Events follow the accent through the default theme's tint.
+ * Stripe. Blurple colors the events; today is marked in slate, so the two read apart, and the now line is ruby.
  */
 @import './default.css';
 
@@ -17,8 +17,15 @@
     --calendar-text-muted: light-dark(#50617a, #a3b5d6);
     /* One step stronger than Stripe's quiet borders, which are 1.2:1 and lose the grid */
     --calendar-border: light-dark(#d4dee9, #23356e);
-    /* brand-600 with white (6.19:1), brandDark-400 with neutralDark-990 (5.64:1) */
-    --calendar-accent: light-dark(#533afd, #7389ff);
+    /* text-solid with white (17.37:1), white with neutralDark-990 (17.55:1) */
+    --calendar-accent: light-dark(#061b31, #ffffff);
     --calendar-accent-contrast: light-dark(#ffffff, #0d1738);
+    /* brand-600 with white (6.19:1), brandDark-400 with neutralDark-990 (5.64:1) */
+    --calendar-event-color: light-dark(#533afd, #7389ff);
+    --calendar-event-color-contrast: light-dark(#ffffff, #0d1738);
+    --calendar-focus-ring: light-dark(#533afd, #7389ff);
+    /* ruby-500 on white (4.54:1), ruby-400 on neutralDark-990 (4.09:1) */
+    --calendar-now: light-dark(#e2225f, #ea2261);
+    --calendar-background-event-color: #00b261;
   }
 }

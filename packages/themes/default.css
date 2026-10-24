@@ -1,9 +1,12 @@
 /*
  * The default calendar theme (D26). Override any `--calendar-*` token on an ancestor of the
  * calendar; colors follow the inherited `color-scheme` through `light-dark()`.
+ * Each role has its own color, so they read apart: the accent marks today and focus, `--calendar-event-color` the
+ * events, `--calendar-now` the now line and `--calendar-background-event-color` background events.
  * Tokens that default to another token (`--calendar-event`, `--calendar-event-border`, `--calendar-event-text`,
- * `--calendar-focus-ring`, `--calendar-background`, `--calendar-background-event`) are left undeclared and fall back at
- * the point of use: declared on `:root`, they would resolve there and ignore overrides further down.
+ * `--calendar-focus-ring`, `--calendar-background`, `--calendar-background-event`, `--calendar-weekend`) are left
+ * undeclared and fall back at the point of use: declared on `:root`, they would resolve there and ignore overrides
+ * further down.
  */
 @import './base.css';
 
@@ -16,8 +19,13 @@
     --calendar-text: light-dark(#1c1b19, #f2efe9);
     --calendar-text-muted: light-dark(#5f5c56, #a9a49b);
     --calendar-border: light-dark(#dedbd4, #34322e);
+    --calendar-border-strong: light-dark(#c4c0b7, #4a4742);
     --calendar-accent: light-dark(#b4441e, #f08a5d);
     --calendar-accent-contrast: light-dark(#ffffff, #1a0d07);
+    --calendar-event-color: light-dark(#2f63d6, #7ea6ff);
+    --calendar-event-color-contrast: light-dark(#ffffff, #0b1530);
+    --calendar-now: light-dark(#d4321f, #ff6d5a);
+    --calendar-background-event-color: light-dark(#1a8a6e, #4cc9a4);
     --calendar-radius: 0.375rem;
     --calendar-bar-radius: 0.25rem;
     --calendar-font-size: 0.875rem;
@@ -123,8 +131,8 @@
   }
 
   /*
-   * Event colors: tints of the accent unless set, so one accent recolors the calendar. Resolved on the event itself
-   * so an accent overridden on any ancestor reaches it. 16% and 24% keep the old neutral's separation from the surface.
+   * Event colors: tints of `--calendar-event-color` unless set, resolved on the event itself so a color set on any
+   * ancestor, or on one event, reaches it. Dark surfaces take a stronger tint, or the fill sinks into the surface.
    */
   :where(
     [data-scope='calendar']:is(
@@ -134,14 +142,37 @@
       [data-part='timeline-event']
     )
   ) {
-    --_calendar-event: var(--calendar-event, color-mix(in oklab, var(--calendar-accent) 16%, var(--calendar-surface)));
+    --_calendar-event: var(
+      --calendar-event,
+      light-dark(
+        color-mix(in oklab, var(--calendar-event-color) 14%, var(--calendar-surface)),
+        color-mix(in oklab, var(--calendar-event-color) 26%, var(--calendar-surface))
+      )
+    );
     --_calendar-event-border: var(
       --calendar-event-border,
-      color-mix(in oklab, var(--calendar-accent) 24%, var(--calendar-surface))
+      light-dark(
+        color-mix(in oklab, var(--calendar-event-color) 30%, var(--calendar-surface)),
+        color-mix(in oklab, var(--calendar-event-color) 45%, var(--calendar-surface))
+      )
     );
+    --_calendar-event-text: var(--calendar-event-text, var(--calendar-text));
   }
 
-  /* Background events: a light accent wash, translucent so day numbers and slot lines show through */
+  /* All-day and multi-day bars are solid, so they read apart from timed events */
+  :where(
+    [data-scope='calendar']:is(
+        [data-part='day-grid-row-event'],
+        [data-part='time-grid-all-day-event'],
+        [data-part='timeline-event']
+      ):is([data-all-day], [data-multi-day])
+  ) {
+    --_calendar-event: var(--calendar-event, var(--calendar-event-color));
+    --_calendar-event-border: var(--calendar-event-border, var(--calendar-event-color));
+    --_calendar-event-text: var(--calendar-event-text, var(--calendar-event-color-contrast));
+  }
+
+  /* Background events: a wash in their own color with a top edge, translucent so day numbers and slot lines show */
   :where(
     [data-scope='calendar']:is(
       [data-part='day-grid-row-background-event'],
@@ -150,7 +181,11 @@
       [data-part='timeline-background-event']
     )
   ) {
-    background: var(--calendar-background-event, color-mix(in oklab, var(--calendar-accent) 10%, transparent));
+    background: var(
+      --calendar-background-event,
+      color-mix(in oklab, var(--calendar-background-event-color) 14%, transparent)
+    );
+    box-shadow: inset 0 2px 0 var(--calendar-background-event-color);
   }
 
   /* Event bars: day-grid rows, the time grid's all-day row and timeline rows */
@@ -164,10 +199,13 @@
   ) {
     padding-inline: 0.375rem;
     border: 1px solid var(--_calendar-event-border);
+    /* The stripe marks where the event starts, so a bar continued from an earlier row has none */
+    border-inline-start: 3px solid var(--calendar-event-color);
     border-radius: var(--calendar-bar-radius);
     background: var(--_calendar-event);
-    color: var(--calendar-event-text, var(--calendar-text));
+    color: var(--_calendar-event-text);
     font-size: var(--calendar-font-size-sm);
+    font-weight: 500;
     line-height: calc(var(--calendar-bar-height) - 2px);
     white-space: nowrap;
     overflow: hidden;
@@ -179,6 +217,16 @@
     border-end-start-radius: 0;
   }
 
+  :where(
+    [data-scope='calendar'][data-continues-before]:is(
+        [data-part='day-grid-row-event'],
+        [data-part='time-grid-all-day-event'],
+        [data-part='timeline-event']
+      )
+  ) {
+    border-inline-start: 1px solid var(--_calendar-event-border);
+  }
+
   :where([data-scope='calendar'][data-continues-after]:is(button)) {
     border-start-end-radius: 0;
     border-end-end-radius: 0;
@@ -186,12 +234,21 @@
 
   :where([data-scope='calendar']:is([data-part$='-event'])):hover {
     background: color-mix(in oklab, var(--_calendar-event), var(--calendar-text) 8%);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
   }
 
   /* Month */
 
-  :where([data-scope='calendar'][data-part='day-grid-header']) {
-    border-block-end: 1px solid var(--calendar-border);
+  /* Header bands sit on the muted surface, over the surface so a translucent muted surface stays opaque when sticky */
+  :where(
+    [data-scope='calendar']:is(
+      [data-part='day-grid-header'],
+      [data-part='time-grid-header'],
+      [data-part='timeline-header']
+    )
+  ) {
+    background: linear-gradient(var(--calendar-surface-muted), var(--calendar-surface-muted)), var(--calendar-surface);
+    border-block-end: 1px solid var(--calendar-border-strong);
   }
 
   :where([data-scope='calendar'][data-part='day-grid-header-cell']) {
@@ -213,9 +270,28 @@
     border-inline-start: 1px solid var(--calendar-border);
   }
 
+  /* Weekends are Saturday and Sunday; restyle `[data-weekday]` (ISO, 1 is Monday) for other weeks */
+  :where(
+    [data-scope='calendar']:is(
+        [data-part='day-grid-day'],
+        [data-part='time-grid-column-header'],
+        [data-part='time-grid-column'],
+        [data-part='timeline-day-header']
+      ):is([data-weekday='6'], [data-weekday='7'])
+  ) {
+    background-color: var(--calendar-weekend, color-mix(in oklab, var(--calendar-text) 3%, transparent));
+  }
+
   :where([data-scope='calendar'][data-part='day-grid-day'][data-outside]) {
     background: var(--calendar-surface-muted);
     color: var(--calendar-text-muted);
+  }
+
+  :where([data-scope='calendar']:is([data-part='day-grid-day'], [data-part='time-grid-column-header'])[data-today]) {
+    background-color: light-dark(
+      color-mix(in oklab, var(--calendar-accent) 7%, var(--calendar-surface)),
+      color-mix(in oklab, var(--calendar-accent) 12%, var(--calendar-surface))
+    );
   }
 
   /*
@@ -243,24 +319,22 @@
     font-weight: 600;
   }
 
+  /* A pill, so it reads as an action rather than a bar */
   :where([data-scope='calendar'][data-part='day-grid-overflow']) {
-    padding: 0.125rem 0.25rem;
-    border-radius: var(--calendar-bar-radius);
-    color: var(--calendar-text-muted);
+    inline-size: fit-content;
+    padding: 0 0.5rem;
+    border-radius: 999px;
+    background: var(--calendar-surface-muted);
+    color: var(--calendar-text);
     font-size: var(--calendar-font-size-sm);
+    font-weight: 600;
   }
 
   :where([data-scope='calendar'][data-part='day-grid-overflow']):hover {
-    color: var(--calendar-text);
-    text-decoration: underline;
+    background: color-mix(in oklab, var(--calendar-surface-muted), var(--calendar-text) 8%);
   }
 
   /* Time grid */
-
-  :where([data-scope='calendar'][data-part='time-grid-header']) {
-    background: var(--calendar-surface);
-    border-block-end: 1px solid var(--calendar-border);
-  }
 
   :where([data-scope='calendar'][data-part='time-grid-column-header']) {
     display: flex;
@@ -269,7 +343,7 @@
     gap: 0.125rem;
     padding: 0.375rem 0.25rem;
     border-inline-start: 1px solid var(--calendar-border);
-    color: var(--calendar-text-muted);
+    color: var(--calendar-text);
     font-size: var(--calendar-font-size-sm);
     font-weight: 600;
     text-align: center;
@@ -305,15 +379,34 @@
     translate: none;
   }
 
-  /* One line per slot, drawn from the slot count rather than one element per slot (D13) */
+  /*
+   * Lines drawn from the slot geometry rather than one element per slot (D13): half-strength lines at each slot and
+   * full lines on the hour. A visible window may start off the hour, so the hour lines start `--cal-hour-offset` in.
+   */
   :where([data-scope='calendar'][data-part='time-grid-column']) {
     border-inline-start: 1px solid var(--calendar-border);
-    background-image: linear-gradient(to bottom, var(--calendar-border) 1px, transparent 1px);
-    background-size: 100% calc(100% / var(--cal-slot-units, var(--cal-slots)));
+    --_calendar-slot: calc(100% / var(--cal-slot-units, var(--cal-slots)));
+    --_calendar-hour: calc(var(--_calendar-slot) * var(--cal-slots-per-hour, 1));
+    --_calendar-hour-start: calc(var(--_calendar-slot) * var(--cal-hour-offset, 0));
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 var(--_calendar-hour-start),
+        var(--calendar-border) var(--_calendar-hour-start) calc(var(--_calendar-hour-start) + 1px),
+        transparent calc(var(--_calendar-hour-start) + 1px) var(--_calendar-hour)
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        color-mix(in oklab, var(--calendar-border) 50%, transparent) 0 1px,
+        transparent 1px var(--_calendar-slot)
+      );
   }
 
   :where([data-scope='calendar'][data-part='time-grid-column'][data-today]) {
-    background-color: color-mix(in oklab, var(--calendar-accent) 4%, transparent);
+    background-color: light-dark(
+      color-mix(in oklab, var(--calendar-accent) 6%, transparent),
+      color-mix(in oklab, var(--calendar-accent) 8%, transparent)
+    );
   }
 
   /* Hatched so unavailable time reads apart from muted, out-of-range surfaces */
@@ -321,10 +414,10 @@
     background:
       repeating-linear-gradient(
         135deg,
-        transparent 0 6px,
-        color-mix(in oklab, var(--calendar-border) 70%, transparent) 6px 7px
+        transparent 0 5px,
+        color-mix(in oklab, var(--calendar-text) 14%, transparent) 5px 6px
       ),
-      color-mix(in oklab, var(--calendar-surface-muted) 80%, transparent);
+      color-mix(in oklab, var(--calendar-surface-muted) 90%, transparent);
   }
 
   /* One fill for every kind; style a kind with [data-kind] or set --calendar-background */
@@ -341,10 +434,12 @@
   :where([data-scope='calendar'][data-part='time-grid-event']) {
     padding: 0.125rem 0.375rem;
     border: 1px solid var(--_calendar-event-border);
+    border-inline-start: 3px solid var(--calendar-event-color);
     border-radius: var(--calendar-bar-radius);
     background: var(--_calendar-event);
-    color: var(--calendar-event-text, var(--calendar-text));
+    color: var(--_calendar-event-text);
     font-size: var(--calendar-font-size-sm);
+    font-weight: 500;
     line-height: 1.3;
     overflow: hidden;
     /* buttons center their content; events read from the top, at their start time */
@@ -378,43 +473,46 @@
     border-start-end-radius: var(--calendar-bar-radius);
   }
 
+  /* The now line has its own color, apart from today's accent */
   :where([data-scope='calendar'][data-part='time-grid-now']) {
-    border-block-start: 2px solid var(--calendar-accent);
+    border-block-start: 2px solid var(--calendar-now);
   }
 
   :where([data-scope='calendar'][data-part='time-grid-now'])::before {
     content: '';
     position: absolute;
-    inset-block-start: -5px;
-    inset-inline-start: -4px;
-    inline-size: 8px;
-    block-size: 8px;
+    inset-block-start: -6px;
+    inset-inline-start: -5px;
+    inline-size: 10px;
+    block-size: 10px;
     border-radius: 999px;
-    background: var(--calendar-accent);
+    background: var(--calendar-now);
   }
 
   /* Timeline */
 
   :where([data-scope='calendar'][data-part='timeline-event']) {
+    --_calendar-event-stripe: 3px;
     padding-inline: 0;
     border-inline-width: 0;
-    text-indent: calc(0.375rem + var(--_calendar-timeline-border-width, 1px));
+    text-indent: calc(0.375rem + var(--_calendar-event-stripe));
   }
 
+  :where([data-scope='calendar'][data-part='timeline-event'][data-continues-before]) {
+    --_calendar-event-stripe: var(--_calendar-timeline-border-width, 1px);
+  }
+
+  /* The element's own inline borders are zero-width; their colors carry the stripe and the continuation edges */
   :where([data-scope='calendar'][data-part='timeline-event'])::before {
     content: '';
     position: absolute;
     inset: 0;
     border-inline-width: var(--_calendar-timeline-border-width, 1px);
+    border-inline-start-width: var(--_calendar-event-stripe);
     border-inline-style: inherit;
-    border-inline-color: var(--_calendar-event-border);
+    border-inline-color: inherit;
     border-radius: inherit;
     pointer-events: none;
-  }
-
-  :where([data-scope='calendar'][data-part='timeline-header']) {
-    background: var(--calendar-surface);
-    border-block-end: 1px solid var(--calendar-border);
   }
 
   /* The corner base.css pins over the resource column */
@@ -424,14 +522,18 @@
 
   :where([data-scope='calendar'][data-part='timeline-day-header']) {
     padding: 0.375rem 0.5rem 0.125rem;
-    border-inline-start: 1px solid var(--calendar-border);
-    color: var(--calendar-text-muted);
+    border-inline-start: 1px solid var(--calendar-border-strong);
+    color: var(--calendar-text);
     font-size: var(--calendar-font-size-sm);
     font-weight: 600;
     white-space: nowrap;
   }
 
   :where([data-scope='calendar'][data-part='timeline-day-header'][data-today]) {
+    background-color: light-dark(
+      color-mix(in oklab, var(--calendar-accent) 7%, var(--calendar-surface)),
+      color-mix(in oklab, var(--calendar-accent) 12%, var(--calendar-surface))
+    );
     color: var(--calendar-accent);
   }
 
@@ -470,8 +572,8 @@
   /* Opaque, since events and the now line scroll under it */
   :where([data-scope='calendar'][data-part='timeline-resource']) {
     padding: 0.375rem 0.75rem;
-    border-inline-end: 1px solid var(--calendar-border);
-    background: var(--calendar-surface);
+    border-inline-end: 1px solid var(--calendar-border-strong);
+    background: linear-gradient(var(--calendar-surface-muted), var(--calendar-surface-muted)), var(--calendar-surface);
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -479,14 +581,29 @@
   }
 
   :where([data-scope='calendar'][data-part='timeline-resource'][data-unavailable]) {
-    background: var(--calendar-surface-muted);
     color: var(--calendar-text-muted);
   }
 
-  /* One line per slot, drawn from the slot count rather than one element per slot (D13) */
+  /* Slot and hour lines as in the time grid (D13), plus a strong line where each day's window starts */
   :where([data-scope='calendar'][data-part='timeline-lane']) {
-    background-image: linear-gradient(to right, var(--calendar-border) 1px, transparent 1px);
-    background-size: calc(100% / var(--cal-slot-units, var(--cal-slots))) 100%;
+    --_calendar-slot: calc(100% / var(--cal-day-slot-units, var(--cal-slot-units, var(--cal-slots))));
+    --_calendar-hour: calc(var(--_calendar-slot) * var(--cal-slots-per-hour, 1));
+    --_calendar-hour-start: calc(var(--_calendar-slot) * var(--cal-hour-offset, 0));
+    background-image:
+      linear-gradient(to right, var(--calendar-border-strong) 1px, transparent 1px),
+      repeating-linear-gradient(
+        to right,
+        transparent 0 var(--_calendar-hour-start),
+        var(--calendar-border) var(--_calendar-hour-start) calc(var(--_calendar-hour-start) + 1px),
+        transparent calc(var(--_calendar-hour-start) + 1px) var(--_calendar-hour)
+      ),
+      repeating-linear-gradient(
+        to right,
+        color-mix(in oklab, var(--calendar-border) 50%, transparent) 0 1px,
+        transparent 1px var(--_calendar-slot)
+      );
+    /* One tile per day, so each day's lines start at its own window */
+    background-size: calc(100% / var(--cal-days, 1)) 100%;
   }
 
   /* A focused event stays under the sticky resource column and header */
@@ -495,18 +612,18 @@
   }
 
   :where([data-scope='calendar'][data-part='timeline-now']) {
-    border-inline-start: 2px solid var(--calendar-accent);
+    border-inline-start: 2px solid var(--calendar-now);
   }
 
   :where([data-scope='calendar'][data-part='timeline-now'])::before {
     content: '';
     position: absolute;
     inset-block-start: 0;
-    inset-inline-start: -5px;
-    inline-size: 8px;
-    block-size: 8px;
+    inset-inline-start: -6px;
+    inline-size: 10px;
+    block-size: 10px;
     border-radius: 999px;
-    background: var(--calendar-accent);
+    background: var(--calendar-now);
   }
 
   /* List */
@@ -570,6 +687,7 @@
     padding: 0.625rem 0.75rem;
     border-block-start: 1px solid var(--calendar-border);
     overflow-wrap: anywhere;
+    border-inline-start: 3px solid var(--calendar-event-color);
   }
 
   :where([data-scope='calendar'][data-part='list-day-header'] + [data-part='list-event']) {

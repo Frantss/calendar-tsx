@@ -113,12 +113,27 @@ it.each([
   expect(today && getComputedStyle(today).backgroundColor).toBe(accent);
 });
 
-it('dashes the edge where a bar continues into the next week', async () => {
+it.each([
+  ['light', 'rgb(0, 0, 0)', 'rgb(255, 255, 255)'],
+  ['dark', 'rgb(255, 255, 255)', 'rgb(0, 0, 0)'],
+] as const)('fills all-day bars solid in the text color in %s mode', async (colorScheme, fill, text) => {
+  await themesSetup_render(<Month />, {
+    view: 'month',
+    colorScheme,
+    events: [themesSetup_allDay('Fair', { start: '2026-03-11', end: '2026-03-11' })],
+  });
+  const fair = getComputedStyle(themesSetup_part('day-grid-row-event')[0]!);
+
+  expect([fair.backgroundColor, fair.color]).toEqual([fill, text]);
+});
+
+it('dashes the edge where a bar continues into the next week, in a color that shows on the solid fill', async () => {
   await themesSetup_render(<Month />, { view: 'month', events: [themesSetup_allDay('Fair', { start: '2026-03-14', end: '2026-03-16' })] });
   const [before, after] = themesSetup_part('day-grid-row-event').map(bar => getComputedStyle(bar));
 
   expect([before?.borderRightStyle, before?.borderLeftStyle]).toEqual(['dashed', 'solid']);
   expect([after?.borderLeftStyle, after?.borderRightStyle]).toEqual(['dashed', 'solid']);
+  expect([before?.borderRightColor, after?.borderLeftColor]).toEqual(['rgb(255, 255, 255)', 'rgb(255, 255, 255)']);
 });
 
 it('lets --calendar-event override the outline fill', async () => {

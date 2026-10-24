@@ -23,7 +23,7 @@ import {
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
 import '../../default.css';
 
-import { themesSetup_part, themesSetup_rect, themesSetup_render, themesSetup_timed } from '#tests/themes.setup';
+import { themesSetup_allDay, themesSetup_part, themesSetup_rect, themesSetup_render, themesSetup_timed } from '#tests/themes.setup';
 
 const views: Calendar_Views = {
   timeline: timelineView({ days: 1, groupBy: 'resource' }),
@@ -85,14 +85,14 @@ const render = (overrides: Parameters<typeof themesSetup_render>[1] = {}) =>
 
 const todayTrigger = () => themesSetup_part('timeline-day-header', '[data-today]')[0]?.querySelector('[data-part="timeline-day-trigger"]');
 
-it('tints timeline events from an accent set on an ancestor', async () => {
+it('tints timeline events from an event color set on an ancestor', async () => {
   const style = document.head.appendChild(document.createElement('style'));
-  style.textContent = '.accent { --calendar-accent: rgb(0, 0, 255); }';
+  style.textContent = '.events { --calendar-event-color: rgb(0, 0, 255); }';
   const probe = document.body.appendChild(document.createElement('div'));
-  probe.style.color = 'color-mix(in oklab, rgb(0, 0, 255) 16%, #ffffff)';
+  probe.style.color = 'color-mix(in oklab, rgb(0, 0, 255) 14%, #ffffff)';
 
   await render({
-    className: 'accent',
+    className: 'events',
     events: [{ ...themesSetup_timed('Yoga', { date: '2026-03-11', start: '09:00', end: '10:00' }), resourceIds: ['Ana'] }],
   });
   const yoga = themesSetup_part('timeline-event')[0];
@@ -113,8 +113,52 @@ it('keeps resource cells opaque and mutes unavailable ones', async () => {
   await render();
   const [ana, room] = themesSetup_part('timeline-resource');
 
+  // the muted band is drawn over the opaque surface
   expect(ana && getComputedStyle(ana).backgroundColor).toBe('rgb(255, 255, 255)');
-  expect(room && getComputedStyle(room).backgroundColor).toBe('rgb(245, 244, 241)');
+  expect(ana && getComputedStyle(ana).backgroundImage).toContain('linear-gradient(rgb(245, 244, 241), rgb(245, 244, 241))');
+  expect(room && getComputedStyle(room).color).toBe('rgb(95, 92, 86)');
+});
+
+it('draws solid bars for all-day and multi-day events', async () => {
+  await render({
+    view: 'timeline_week',
+    events: [
+      { ...themesSetup_allDay('Fair', { start: '2026-03-11', end: '2026-03-11' }), resourceIds: ['Ana'] },
+      { ...themesSetup_timed('Deploy', { date: '2026-03-12', start: '22:00', end: '02:00', endDate: '2026-03-13' }), resourceIds: ['Ana'] },
+    ],
+  });
+
+  for (const bar of themesSetup_part('timeline-event')) {
+    expect(getComputedStyle(bar).backgroundColor).toBe('rgb(47, 99, 214)');
+    expect(getComputedStyle(bar).color).toBe('rgb(255, 255, 255)');
+  }
+});
+
+it('draws day, hour and slot lines in one tile per day', async () => {
+  await render({ view: 'timeline_week' });
+  const lane = themesSetup_part('timeline-lane')[0];
+  const style = lane && getComputedStyle(lane);
+  const [tile] = style?.backgroundSize.split(',') ?? [];
+
+  expect(style?.backgroundImage.match(/repeating-linear-gradient/g)).toHaveLength(2);
+  expect(parseFloat(tile ?? '')).toBeCloseTo(100 / 7, 2);
+});
+
+it('draws the start stripe inside the bar, and drops it where an event continues from before the range', async () => {
+  await render({
+    view: 'timeline_week',
+    events: [
+      { ...themesSetup_timed('Yoga', { date: '2026-03-11', start: '09:00', end: '12:00' }), resourceIds: ['Ana'] },
+      { ...themesSetup_allDay('Fair', { start: '2026-03-01', end: '2026-03-09' }), resourceIds: ['Ana'] },
+    ],
+  });
+  const stripe = (title: string) => {
+    const bar = themesSetup_part('timeline-event').find(element => element.textContent === title);
+    return bar && getComputedStyle(bar, '::before');
+  };
+
+  expect([stripe('Yoga')?.borderInlineStartWidth, stripe('Yoga')?.borderInlineStartColor]).toEqual(['3px', 'rgb(47, 99, 214)']);
+  expect(stripe('Fair')?.borderInlineStartWidth).toBe('1px');
 });
 
 it('hatches unavailable time', async () => {
@@ -124,11 +168,11 @@ it('hatches unavailable time', async () => {
   expect(shade && getComputedStyle(shade).backgroundImage).toContain('repeating-linear-gradient');
 });
 
-it('draws the now line in the accent', async () => {
+it('draws the now line in its own color', async () => {
   await render();
   const now = themesSetup_part('timeline-now')[0];
 
-  expect(now && getComputedStyle(now).borderInlineStartColor).toBe(accent);
+  expect(now && getComputedStyle(now).borderInlineStartColor).toBe('rgb(212, 50, 31)');
   expect(now && getComputedStyle(now).borderInlineStartWidth).toBe('2px');
 });
 

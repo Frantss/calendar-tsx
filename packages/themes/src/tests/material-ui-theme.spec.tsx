@@ -50,12 +50,16 @@ const muiVariables = `
     --mui-palette-background-paper: rgb(255, 255, 255);
     --mui-palette-primary-main: rgb(25, 118, 210);
     --mui-palette-primary-contrastText: rgb(255, 255, 255);
+    --mui-palette-secondary-main: rgb(156, 39, 176);
+    --mui-palette-secondary-contrastText: rgb(255, 255, 255);
     --mui-shape-borderRadius: 4px;
   }
   .dark, [data-dark], [data-mui-color-scheme='dark'] {
     --mui-palette-background-paper: rgb(18, 18, 18);
     --mui-palette-primary-main: rgb(144, 202, 249);
     --mui-palette-primary-contrastText: rgba(0, 0, 0, 0.87);
+    --mui-palette-secondary-main: rgb(206, 147, 216);
+    --mui-palette-secondary-contrastText: rgba(0, 0, 0, 0.87);
   }
 `;
 
@@ -71,26 +75,17 @@ afterEach(() => {
   document.documentElement.classList.remove('dark');
 });
 
-/** Resolves a color the way the theme's event fill does: the primary color tinted 16% into the paper. */
-const tint = (primary: string, paper: string) => {
-  const probe = document.body.appendChild(document.createElement('div'));
-  probe.style.color = `color-mix(in oklab, ${primary} 16%, ${paper})`;
-  const color = getComputedStyle(probe).color;
-  probe.remove();
-
-  return color;
-};
-
 const today = () => themesSetup_part('day-grid-day', '[data-today]')[0]?.querySelector('[data-part="day-grid-day-trigger"]');
 const bar = () => themesSetup_part('day-grid-row-event')[0];
 const events = [themesSetup_allDay('Fair', { start: '2026-03-11', end: '2026-03-11' })];
 
-it('takes the accent, event fill and radius from the MUI variables', async () => {
+it('takes the accent, event color and radius from the MUI variables', async () => {
   await themesSetup_render(<Month />, { view: 'month', events });
 
   expect(today() && getComputedStyle(today()!).backgroundColor).toBe('rgb(25, 118, 210)');
   expect(today() && getComputedStyle(today()!).color).toBe('rgb(255, 255, 255)');
-  expect(getComputedStyle(bar()!).backgroundColor).toBe(tint('rgb(25, 118, 210)', 'rgb(255, 255, 255)'));
+  expect(getComputedStyle(bar()!).backgroundColor).toBe('rgb(156, 39, 176)');
+  expect(getComputedStyle(bar()!).color).toBe('rgb(255, 255, 255)');
   expect(getComputedStyle(bar()!).borderTopLeftRadius).toBe('4px');
 });
 
@@ -99,7 +94,8 @@ it('follows the dark scheme class on the root element', async () => {
   await themesSetup_render(<Month />, { view: 'month', events });
 
   expect(today() && getComputedStyle(today()!).backgroundColor).toBe('rgb(144, 202, 249)');
-  expect(getComputedStyle(bar()!).backgroundColor).toBe(tint('rgb(144, 202, 249)', 'rgb(18, 18, 18)'));
+  expect(getComputedStyle(bar()!).backgroundColor).toBe('rgb(206, 147, 216)');
+  expect(getComputedStyle(bar()!).color).toBe('rgba(0, 0, 0, 0.87)');
 });
 
 it.each(['dark', 'data-dark', 'data-mui-color-scheme'])('follows a dark scheme set by %s on an element inside the page', async selector => {

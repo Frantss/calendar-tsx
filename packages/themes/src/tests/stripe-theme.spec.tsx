@@ -53,10 +53,10 @@ const style = (part: string, property: 'backgroundColor' | 'color') => {
   return element && getComputedStyle(element)[property];
 };
 
-/** The default theme's event fill: the accent tinted 16% into the surface. */
-const tint = (accent: string, surface: string) => {
+/** The default theme's timed-event fill: the event color tinted 14% (light) or 26% (dark) into the surface. */
+const tint = (event: string, amount: number, surface: string) => {
   const probe = document.body.appendChild(document.createElement('div'));
-  probe.style.color = `color-mix(in oklab, ${accent} 16%, ${surface})`;
+  probe.style.color = `color-mix(in oklab, ${event} ${amount}%, ${surface})`;
   const color = getComputedStyle(probe).color;
   probe.remove();
 
@@ -64,12 +64,12 @@ const tint = (accent: string, surface: string) => {
 };
 
 it.each([
-  ['light', 'rgb(83, 58, 253)', 'rgb(255, 255, 255)', '#533afd', '#ffffff'],
-  ['dark', 'rgb(115, 137, 255)', 'rgb(13, 23, 56)', '#7389ff', '#0d1738'],
-] as const)('marks today in blurple and tints events from it in %s mode', async (colorScheme, accent, contrast, accentHex, surfaceHex) => {
+  ['light', 'rgb(6, 27, 49)', 'rgb(255, 255, 255)', '#533afd', 14, '#ffffff'],
+  ['dark', 'rgb(255, 255, 255)', 'rgb(13, 23, 56)', '#7389ff', 26, '#0d1738'],
+] as const)('marks today in slate and tints events blurple in %s mode', async (colorScheme, accent, contrast, eventHex, amount, surfaceHex) => {
   await themesSetup_render(<TimeGrid />, { events, colorScheme });
 
   expect(style('time-grid-column-trigger', 'backgroundColor')).toBe(accent);
   expect(style('time-grid-column-trigger', 'color')).toBe(contrast);
-  expect(style('time-grid-event', 'backgroundColor')).toBe(tint(accentHex, surfaceHex));
+  expect(style('time-grid-event', 'backgroundColor')).toBe(tint(eventHex, amount, surfaceHex));
 });

@@ -36,11 +36,14 @@ const themesSetup_defaults = iife(() => ({
   className: undefined as string | undefined,
 }));
 
-export const themesSetup_timed = (id: string, { date, start, end }: { date: string; start: string; end: string }) => ({
+export const themesSetup_timed = (
+  id: string,
+  { date, start, end, endDate = date }: { date: string; start: string; end: string; endDate?: string },
+) => ({
   id,
   kind: 'timed' as const,
   start: Temporal.ZonedDateTime.from(`${date}T${start}[${themesSetup_timeZone}]`),
-  end: Temporal.ZonedDateTime.from(`${date}T${end}[${themesSetup_timeZone}]`),
+  end: Temporal.ZonedDateTime.from(`${endDate}T${end}[${themesSetup_timeZone}]`),
   data: { title: id },
 });
 

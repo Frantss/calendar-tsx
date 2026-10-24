@@ -18,9 +18,14 @@
     --calendar-accent: var(--primary);
     --calendar-accent-contrast: var(--primary-foreground);
     /*
-     * Events are left to the default theme's accent tint, so they follow --primary: shadcn's --secondary, --muted and
-     * --accent all sit almost on the background in light mode (1.09:1 in the neutral palette).
+     * Events, the now line and background events take chart and destructive colors, which shadcn keeps apart from
+     * --primary; its --secondary, --muted and --accent sit almost on the background (1.09:1 in the neutral palette).
+     * The default charts are mid-lightness in light mode and mid-darkness in dark mode, so --foreground reads on them.
      */
+    --calendar-event-color: var(--chart-1);
+    --calendar-event-color-contrast: var(--foreground);
+    --calendar-now: var(--destructive);
+    --calendar-background-event-color: var(--chart-2);
     --calendar-focus-ring: var(--ring);
     --calendar-radius: var(--radius);
     /* shadcn's --radius-sm */

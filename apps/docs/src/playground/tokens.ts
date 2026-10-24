@@ -6,9 +6,14 @@ export const colorTokens = [
   { name: 'text', label: 'Text' },
   { name: 'text-muted', label: 'Muted text' },
   { name: 'border', label: 'Border' },
+  { name: 'border-strong', label: 'Strong border' },
+  { name: 'event-color', label: 'Event color' },
+  { name: 'event-color-contrast', label: 'On event color' },
   { name: 'event', label: 'Event fill' },
   { name: 'event-border', label: 'Event border' },
   { name: 'event-text', label: 'Event text' },
+  { name: 'now', label: 'Now line' },
+  { name: 'background-event-color', label: 'Background event' },
   { name: 'focus-ring', label: 'Focus ring' },
 ] as const;
 
