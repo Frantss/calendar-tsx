@@ -11,6 +11,7 @@
     "build": "vp build",
     "preview": "vp preview",
     "test": "vp test --config ../../vite.config.ts",
+    "test:hmr": "node scripts/test-hot-reload.mjs",
     "check:types": "vp exec tsc --noEmit && vp exec tsc --noEmit -p examples/core && vp exec tsc --noEmit -p examples/react && vp exec tsc --noEmit -p examples/solid && vp exec tsc --noEmit -p examples/features && vp exec tsc --noEmit -p examples/features/solid"
   },
   "dependencies": {

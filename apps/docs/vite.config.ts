@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { tanstackStart } from '@tanstack/react-start/plugin/vite';
@@ -6,7 +7,7 @@ import { nitro } from 'nitro/vite';
 import { defineConfig } from 'vite-plus';
 import { base } from '../../vite.config';
 
-export default defineConfig({
+export default defineConfig(({ command, isPreview }) => ({
   ...base,
   server: {
     port: 3000,
@@ -30,8 +31,21 @@ export default defineConfig({
   ],
   resolve: {
     tsconfigPaths: true,
-    alias: {
-      tslib: 'tslib/tslib.es6.js',
-    },
+    alias: [
+      { find: 'tslib', replacement: 'tslib/tslib.es6.js' },
+      // Keep dev modules stable while package builds replace their dist output.
+      ...(command === 'serve' && !isPreview
+        ? [
+            {
+              find: /^@calendar-tsx\/core$/,
+              replacement: fileURLToPath(new URL('../../packages/core/export/index.ts', import.meta.url)),
+            },
+            {
+              find: /^@calendar-tsx\/react$/,
+              replacement: fileURLToPath(new URL('../../packages/react/export/index.ts', import.meta.url)),
+            },
+          ]
+        : []),
+    ],
   },
-});
+}));

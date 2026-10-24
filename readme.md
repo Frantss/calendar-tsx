@@ -42,3 +42,13 @@ pnpm run check:all
 pnpm run test
 pnpm --filter @calendar-tsx/docs run dev
 ```
+
+The docs dev server loads core and React from their source entries, so edits hot reload without rebuilding packages. Production docs builds use the packages' generated exports.
+
+With the docs dev server running, check that workspace rebuilds preserve the preview:
+
+```bash
+pnpm --filter @calendar-tsx/docs run test:hmr
+# For a different dev-server address:
+DOCS_DEV_URL=http://127.0.0.1:5173 pnpm --filter @calendar-tsx/docs run test:hmr
+```
