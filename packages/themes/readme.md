@@ -13,18 +13,19 @@ JavaScript.
 import '@calendar-tsx/themes/default.css';
 ```
 
-| File                | Contents                                                                                                        |
-| ------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `base.css`          | Positioning only: day-grid bars, time-grid columns and lanes, timeline rows, the now line. Every theme uses it. |
-| `default.css`       | `base.css` plus the default look.                                                                               |
-| `high-contrast.css` | Black on white and white on black at WCAG AAA, with outlined events. See [High contrast](#high-contrast-theme). |
-| `shadcn.css`        | The default look with its tokens read from shadcn/ui's variables. See [shadcn/ui](#shadcnui).                   |
-| `material-ui.css`   | The default look with its tokens read from Material UI's CSS theme variables. See [Material UI](#material-ui).  |
-| `revenuecat.css`    | The default layout in RevenueCat's brand colors. See [RevenueCat](#revenuecat).                                 |
-| `stripe.css`        | The default layout in Stripe's colors. See [Stripe](#stripe).                                                   |
-| `fullcalendar.css`  | FullCalendar's classic theme, for apps migrating from it. See [FullCalendar classic](#fullcalendar-classic).    |
-| `compact.css`       | Density only: smaller slots, bars and text. Import it after any theme.                                          |
-| `print.css`         | Print only: paper colors, outlined events, no scrolling. Import it after any theme. See [Print](#print).        |
+| File                  | Contents                                                                                                        |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `base.css`            | Positioning only: day-grid bars, time-grid columns and lanes, timeline rows, the now line. Every theme uses it. |
+| `default.css`         | `base.css` plus the default look.                                                                               |
+| `high-contrast.css`   | Black on white and white on black at WCAG AAA, with outlined events. See [High contrast](#high-contrast-theme). |
+| `shadcn.css`          | The default look with its tokens read from shadcn/ui's variables. See [shadcn/ui](#shadcnui).                   |
+| `material-ui.css`     | The default look with its tokens read from Material UI's CSS theme variables. See [Material UI](#material-ui).  |
+| `revenuecat.css`      | The default layout in RevenueCat's brand colors. See [RevenueCat](#revenuecat).                                 |
+| `stripe.css`          | The default layout in Stripe's colors. See [Stripe](#stripe).                                                   |
+| `fullcalendar.css`    | FullCalendar's classic theme, for apps migrating from it. See [FullCalendar classic](#fullcalendar-classic).    |
+| `google-calendar.css` | Google Calendar's web look. See [Google Calendar](#google-calendar).                                            |
+| `compact.css`         | Density only: smaller slots, bars and text. Import it after any theme.                                          |
+| `print.css`           | Print only: paper colors, outlined events, no scrolling. Import it after any theme. See [Print](#print).        |
 
 Import `base.css` alone to write your own look on top of working layout.
 
@@ -232,6 +233,37 @@ Where it differs from FullCalendar:
   `--fc-classic-faint-foreground` to raise them.
 
 This theme is not affiliated with or endorsed by FullCalendar.
+
+## Google Calendar
+
+```ts
+import '@calendar-tsx/themes/google-calendar.css';
+```
+
+`google-calendar.css` gives the calendar Google Calendar's web look. The light values were measured from Google
+Calendar's rendered styles in October 2026.
+
+- Today is a filled circle in the primary blue (`#0b57d0`, white number): 24px in a month, 46px in a week's header,
+  where today's weekday label turns blue too. Day numbers are centered; weekday labels are 11px spaced capitals in
+  `#444746`.
+- Events are solid `#3f51b5`, one of Google Calendar's event colors, with white 12px text and a 6px radius. A timed
+  single-day event in a month is an 8px dot and its text, with no fill, and list rows lead with a 12px dot.
+- The time grid draws hour lines only, 40px apart, and a 2px `#db372d` now line with a 12px dot.
+- Lines are `#dde3ea`, text `#1f1f1f`, and weekends and today's column are unshaded. The calendar is a card with 28px
+  corners and no outline; place it on `#f8fafd`, Google Calendar's app background.
+
+For the closest match, put the weekday outside the day-number trigger in time-grid headers, so the label sits above
+the number as in Google Calendar, and load Google Sans if your app has a license for it: the theme sets no font.
+
+Dark mode uses Google's own Material 3 dark values for the same roles (`#131314` surface, `#333537` lines, `#e3e3e3`
+text, `#a8c7fa` today), read from Google Calendar's stylesheet. Which role each part takes in dark mode is inferred
+rather than measured, and the event and now colors stay the light ones; the event blue is 2.7:1 against the dark
+surface, below the 3:1 a dot should have.
+
+Google Calendar has no timeline view; the timeline keeps the default theme's layout in these colors. Its hour height
+depends on the density setting; the 40px measured here is `--calendar-slot-height: 20px`.
+
+This theme is not affiliated with or endorsed by Google. Google Calendar is a trademark of Google LLC.
 
 ## Print
 

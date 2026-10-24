@@ -13,6 +13,7 @@ export const playgroundThemes = [
   { id: 'revenuecat', label: 'RevenueCat' },
   { id: 'stripe', label: 'Stripe' },
   { id: 'fullcalendar', label: 'FullCalendar classic' },
+  { id: 'google-calendar', label: 'Google Calendar' },
   { id: 'base', label: 'Base only (positioning)' },
 ] as const;
 

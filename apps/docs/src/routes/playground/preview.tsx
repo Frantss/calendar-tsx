@@ -2,6 +2,7 @@ import baseCss from '@calendar-tsx/themes/base.css?url';
 import compactCss from '@calendar-tsx/themes/compact.css?url';
 import defaultCss from '@calendar-tsx/themes/default.css?url';
 import fullcalendarCss from '@calendar-tsx/themes/fullcalendar.css?url';
+import googleCalendarCss from '@calendar-tsx/themes/google-calendar.css?url';
 import highContrastCss from '@calendar-tsx/themes/high-contrast.css?url';
 import materialUiCss from '@calendar-tsx/themes/material-ui.css?url';
 import printCss from '@calendar-tsx/themes/print.css?url';
@@ -36,6 +37,7 @@ const themeCss: Record<PlaygroundTheme, string> = {
   revenuecat: revenuecatCss,
   stripe: stripeCss,
   fullcalendar: fullcalendarCss,
+  'google-calendar': googleCalendarCss,
   base: baseCss,
 };
 

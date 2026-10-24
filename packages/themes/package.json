@@ -18,6 +18,7 @@
     "revenuecat.css",
     "stripe.css",
     "fullcalendar.css",
+    "google-calendar.css",
     "compact.css",
     "print.css"
   ],
@@ -38,6 +39,7 @@
     "./revenuecat.css": "./revenuecat.css",
     "./stripe.css": "./stripe.css",
     "./fullcalendar.css": "./fullcalendar.css",
+    "./google-calendar.css": "./google-calendar.css",
     "./compact.css": "./compact.css",
     "./print.css": "./print.css",
     "./package.json": "./package.json"

@@ -1,0 +1,224 @@
+/*
+ * The look of Google Calendar on the web, measured from its rendered styles (October 2026). Not affiliated with or
+ * endorsed by Google. Light values are as measured; dark values are Google's own Material 3 dark tokens for the same
+ * roles, taken from the page's stylesheet, but which role each part uses in dark mode is inferred, not measured.
+ * Today is a filled circle in the primary blue, events are solid with white text, timed events in a month are a dot
+ * and a title, the time grid draws hour lines only, and weekends and today's column are unshaded.
+ */
+@import './default.css';
+
+@layer calendar.base, calendar.theme, calendar.density, calendar.print;
+
+@layer calendar.theme {
+  :where(:root) {
+    /* surface, surface-container, on-surface, on-surface-variant, surface-container-highest */
+    --calendar-surface: light-dark(#ffffff, #131314);
+    --calendar-surface-muted: light-dark(#f0f4f9, #1e1f20);
+    --calendar-text: light-dark(#1f1f1f, #e3e3e3);
+    --calendar-text-muted: light-dark(#444746, #c4c7c5);
+    --calendar-border: light-dark(#dde3ea, #333537);
+    --calendar-border-strong: light-dark(#dde3ea, #333537);
+    /* primary and on-primary */
+    --calendar-accent: light-dark(#0b57d0, #a8c7fa);
+    --calendar-accent-contrast: light-dark(#ffffff, #062e6f);
+    /* A blue from Google Calendar's event colors, with white text (6.87:1) */
+    --calendar-event-color: #3f51b5;
+    --calendar-event-color-contrast: #ffffff;
+    --calendar-now: #db372d;
+    --calendar-weekend: transparent;
+    --calendar-radius: 28px;
+    --calendar-bar-radius: 6px;
+    --calendar-bar-height: 18px;
+    --calendar-day-header-height: 1.75rem;
+    /* 40px an hour, as measured; Google Calendar's density setting changes it */
+    --calendar-slot-height: 20px;
+    --calendar-event-gap: 2px;
+  }
+
+  /* A card on the app's shell (surface-container-low, #f8fafd), without an outline of its own */
+  :where([data-scope='calendar'][data-part$='-root']) {
+    border-color: transparent;
+  }
+
+  /* Headers sit on the surface; weekday labels are small, spaced capitals */
+  :where(
+    [data-scope='calendar']:is(
+      [data-part='day-grid-header'],
+      [data-part='time-grid-header'],
+      [data-part='timeline-header']
+    )
+  ) {
+    background: var(--calendar-surface);
+    border-block-end-color: var(--calendar-border);
+  }
+
+  :where([data-scope='calendar'][data-part='day-grid-header']) {
+    border-block-end: 0;
+  }
+
+  :where([data-scope='calendar']:is([data-part='day-grid-header-cell'], [data-part='time-grid-column-header'])) {
+    color: var(--calendar-text-muted);
+    font-size: var(--calendar-font-size-xs);
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  :where([data-scope='calendar'][data-part='time-grid-column-header'][data-today]) {
+    color: var(--calendar-accent);
+  }
+
+  /* Day numbers: centered 24px circles in a month, 46px in a week's header */
+  :where([data-scope='calendar'][data-part='day-grid-day-trigger']) {
+    align-self: center;
+    min-inline-size: 24px;
+    block-size: 24px;
+    padding-inline: 0;
+    font-size: var(--calendar-font-size-sm);
+    font-weight: 500;
+    letter-spacing: 0.1px;
+  }
+
+  :where([data-scope='calendar'][data-part='time-grid-column-trigger']) {
+    min-inline-size: 46px;
+    block-size: 46px;
+    font-size: 26px;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  :where([data-scope='calendar'][data-today]) :where([data-scope='calendar'][data-part='day-grid-day-trigger']) {
+    font-weight: 500;
+  }
+
+  :where([data-scope='calendar'][data-today]) :where([data-scope='calendar'][data-part='time-grid-column-trigger']) {
+    font-weight: 400;
+  }
+
+  /* Events: solid in the event color with white text, with no stripe */
+  :where(
+    [data-scope='calendar']:is(
+      [data-part='day-grid-row-event'],
+      [data-part='time-grid-all-day-event'],
+      [data-part='time-grid-event'],
+      [data-part='timeline-event']
+    )
+  ) {
+    --_calendar-event: var(--calendar-event, var(--calendar-event-color));
+    --_calendar-event-border: var(--calendar-event-border, var(--calendar-event-color));
+    --_calendar-event-text: var(--calendar-event-text, var(--calendar-event-color-contrast));
+  }
+
+  :where(
+    [data-scope='calendar']:is(
+      [data-part='day-grid-row-event'],
+      [data-part='time-grid-all-day-event'],
+      [data-part='time-grid-event']
+    )
+  ) {
+    padding-inline: 6px;
+    border-inline-start-width: 1px;
+    border-inline-start-color: var(--_calendar-event-border);
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-event']) {
+    --_calendar-event-stripe: 1px;
+    text-indent: 6px;
+  }
+
+  :where([data-scope='calendar'][data-part='time-grid-event']) {
+    padding-block: 2px;
+    line-height: 15px;
+  }
+
+  /* A timed single-day event in a month: an 8px dot and its text, with no fill */
+  :where([data-scope='calendar'][data-part='day-grid-row-event']:not([data-all-day], [data-multi-day])) {
+    --_calendar-event: var(--calendar-event, transparent);
+    --_calendar-event-border: var(--calendar-event-border, transparent);
+    --_calendar-event-text: var(--calendar-event-text, var(--calendar-text));
+  }
+
+  :where([data-scope='calendar'][data-part='day-grid-row-event']:not([data-all-day], [data-multi-day]))::before {
+    content: '';
+    display: inline-block;
+    inline-size: 8px;
+    block-size: 8px;
+    margin-inline-end: 6px;
+    border-radius: 999px;
+    background: var(--calendar-event-color);
+    vertical-align: 0.0625em;
+  }
+
+  :where([data-scope='calendar'][data-part='day-grid-row-event']:not([data-all-day], [data-multi-day])):hover {
+    background: var(--calendar-surface-muted);
+    box-shadow: none;
+  }
+
+  :where([data-scope='calendar'][data-part='day-grid-overflow']) {
+    border-radius: var(--calendar-bar-radius);
+    background: none;
+    font-weight: 500;
+  }
+
+  :where([data-scope='calendar'][data-part='day-grid-overflow']):hover {
+    background: var(--calendar-surface-muted);
+  }
+
+  /* Time grid: hour lines only, and a 12px dot on the now line */
+
+  :where([data-scope='calendar'][data-part='time-grid-column']) {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0 var(--_calendar-hour-start),
+      var(--calendar-border) var(--_calendar-hour-start) calc(var(--_calendar-hour-start) + 1px),
+      transparent calc(var(--_calendar-hour-start) + 1px) var(--_calendar-hour)
+    );
+  }
+
+  :where([data-scope='calendar'][data-part='time-grid-axis-label']) {
+    font-weight: 500;
+    letter-spacing: 0.1px;
+  }
+
+  :where([data-scope='calendar'][data-part='time-grid-now'])::before {
+    inset-block-start: -7px;
+    inset-inline-start: -6px;
+    inline-size: 12px;
+    block-size: 12px;
+  }
+
+  /* List: a plain date rail with the day number above small capitals, and a 12px dot on each event */
+
+  :where([data-scope='calendar'][data-part='list-day-header']) {
+    background: none;
+  }
+
+  :where([data-scope='calendar'][data-part='list-day-header'] > time > strong) {
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  :where([data-scope='calendar'][data-part='list-day-header'] > time > span) {
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+
+  /* Lines between days only, not between a day's events */
+  :where([data-scope='calendar'][data-part='list-event']) {
+    border-block-start: 0;
+    border-inline-start: 0;
+  }
+
+  :where([data-scope='calendar'][data-part='list-event'])::before {
+    content: '';
+    display: inline-block;
+    inline-size: 12px;
+    block-size: 12px;
+    margin-inline-end: 1rem;
+    border-radius: 999px;
+    background: var(--calendar-event-color);
+    vertical-align: -0.0625em;
+  }
+}
