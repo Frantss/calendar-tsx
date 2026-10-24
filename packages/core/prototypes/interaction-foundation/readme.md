@@ -60,7 +60,7 @@ Movement results preserve the event payload on both `before` and `after` through
 
 [types.verify.ts](types.verify.ts) compiles with installed TypeScript 7.0.2 against the actual view factories, feature
 maps, options, API and state. It is compiler input only: do not execute its deliberately invalid expressions.
-Its 25 checked `@ts-expect-error` cases verify absent feature APIs/options/settings/state, missing and inactive
+Its 36 checked `@ts-expect-error` cases verify absent feature APIs/options/settings/state, missing and inactive
 prerequisites, event payload inference, selection discriminants and exclusive state ownership. Calendar-wide
 prerequisites and reverse registration order compile. Cycles are runtime checks; widened feature records retain
 D29's existing loss of precise static gating. [types.public.verify.ts](types.public.verify.ts) verifies movement
@@ -116,10 +116,10 @@ The inspector shows session state, selection, geometry, input, builds, listeners
 Source compilation exposed the
 [adapter context-erasure gap](../../../../reports/interaction-foundation.md#6-adapter-context-erasure-retains-required-feature-state),
 now resolved by erasing optional feature state and layout decorations at the provider boundary. Each adapter's
-`types.verify.tsx` positively checks display-only, movement-only and selection-enabled providers and `Calendar`
+`types.verify.tsx` positively checks display-only, movement-only, resize-only and selection-enabled providers and `Calendar`
 wrappers against source and built declarations. Display views cover list, month, time-grid and timeline layouts.
-Nine negative assertions per adapter preserve absent selection state/APIs, selection-only movement exclusion,
-selector result types, view-key inference and movement payload types. The 25 core assertions and two public-core
+Thirteen negative assertions per adapter preserve absent selection state/APIs, selection-only movement exclusion,
+selector result types, view-key inference and movement payload types. The 36 core assertions and six public-core
 assertions also compile. Runtime behavior is unchanged.
 
 ### Extension verification
@@ -145,6 +145,51 @@ assertions also compile. Runtime behavior is unchanged.
   passed. Browser verification used direct interactions/probes, with no prototype runtime test suite added.
 
 Still unproved: production feature/capability registration, arbitrary controlled snapshot cloning, a third-party
-operation registry and tree shaking. Resize, conversion, grouped movement, touch, auto-scroll and complete
+operation registry and tree shaking. Conversion, grouped movement, touch, auto-scroll and complete
 resource/availability policy are outside this extension. Movement previews currently build an isolated event model;
 extracting a shared interval projector would be a separate production implementation decision.
+
+## Independent resizing extension
+
+Question: can start/end resizing use the same sessions, validators, projection and adapter bindings without registering
+movement or selection? Yes, in this prototype. Register `{ interactionFeature, eventResizeFeature }`; constraints remain
+optional. The runtime rejects movement and selection when their features are absent, and no selected-range slice is
+registered. Both framework harnesses start in **Resize only** mode; the Operations selector also enables all three.
+
+The feature contributes `resizing.enabled`, `onEventResize`, and `resize.begin(eventId, edge)` /
+`resize.evaluate(eventId, edge, target)`. Callback and evaluation results retain the consumer's payload type on
+`before` and `after`. The shared public controls still cannot start another operation. Compiler fixtures cover
+missing runtime prerequisites, unregistered options/settings/APIs, invalid edges and absence of selection state.
+
+A resize changes only the chosen edge. Timed bounds must remain strictly ordered; inclusive all-day ends allow a
+single day. An omitted all-day end is materialized as the original start when resizing the start, preserving the
+fixed edge. Payloads and resources retain identity; kind conversion and a different target resource are rejected.
+The optional timed overlap rule ignores the source event and rechecks supplied input before completion.
+
+Handles are shown only on a segment's actual start/end, including split events. Timed handles use snapped clock
+positions without movement's grab offset; fold resolution preserves the chosen edge's offset. All-day handles snap
+to date boundaries and convert the visual end boundary back to an inclusive date. The programmatic preview buttons
+provide keyboard access. Very narrow timeline bars are exercised programmatically; their pointer affordances are
+outside this proof. Application input changes only through **Apply edit**.
+
+Verification:
+
+- Fourteen direct runtime probes covered independent registration, fixed-edge/payload/resource preservation,
+  invalid/crossed edges, kind/resource rejection, one emission, stale completion, source replacement, arriving
+  overlaps, inactive/disabled views, inclusive/implicit all-day ends and DST offset resolution.
+- Both timed edges completed through real pointer input in both layouts, both adapters and all three ownership
+  modes: 12 combinations. Movement and selection were unavailable, and `selectedRange` was absent from base state.
+  Every draft caused zero base builds; preview/applied geometry differed by at most `0.015625px`. Unmount released
+  every listener, surface, subscription and UI observer.
+- Controlled all-day end shrinking completed in both layouts/adapters, retaining inclusive dates and zero draft
+  base builds. The standalone demo adds three guided resize walkthroughs alongside the original eleven.
+- The source and built-declaration checks include resize-only core/React/Solid calendars. Production interaction
+  exports remain unchanged. This extension adds no runtime test suite.
+- Workspace build, both harness bundles, all six compiler configurations, `check:all` and the 276 existing tests
+  passed. All 14 standalone walkthroughs completed without page errors. At 390px, both harnesses and the standalone
+  demo had no page-level overflow. Existing development servers were reused after a duplicate start reported
+  `Error: Port 5177 is already in use`.
+
+The operation union and API facade still enumerate operation kinds; this proves a third built-in operation, not
+arbitrary third-party registration. Production capability registration, constraints beyond supplied timed overlaps,
+edge permission policies, conversion, touch and auto-scroll remain outside the prototype.

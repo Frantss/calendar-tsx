@@ -37,6 +37,7 @@ import {
   type Data,
   type Instance,
   type Preset,
+  type Mode,
   type View,
 } from '../../../core/prototypes/interaction-foundation/bindings/setup';
 import {
@@ -90,6 +91,10 @@ const Grid = (props: { model: Calendar_TimeGridLayout<Data, null>; host: Host; s
         {segment => (
           <TimeGridViewAllDayEvent segment={segment} data-event-id={segment.event.id}>
             {segment.event.data.title}
+            {!segment.continuesBefore && (
+              <span class='resize-handle start' data-resize-edge='start' aria-hidden='true' />
+            )}
+            {!segment.continuesAfter && <span class='resize-handle end' data-resize-edge='end' aria-hidden='true' />}
           </TimeGridViewAllDayEvent>
         )}
       </For>
@@ -114,6 +119,12 @@ const Grid = (props: { model: Calendar_TimeGridLayout<Data, null>; host: Host; s
               {segment => (
                 <TimeGridViewEvent segment={segment} data-event-id={segment.event.id}>
                   {segment.event.data.title}
+                  {!segment.continuesBefore && (
+                    <span class='resize-handle start' data-resize-edge='start' aria-hidden='true' />
+                  )}
+                  {!segment.continuesAfter && (
+                    <span class='resize-handle end' data-resize-edge='end' aria-hidden='true' />
+                  )}
                 </TimeGridViewEvent>
               )}
             </For>
@@ -148,6 +159,12 @@ const Timeline = (props: { model: Calendar_TimelineLayout<Data, null>; host: Hos
                 {segment => (
                   <TimelineViewEvent segment={segment} data-event-id={segment.event.id}>
                     {segment.event.data.title}
+                    {!segment.continuesBefore && (
+                      <span class='resize-handle start' data-resize-edge='start' aria-hidden='true' />
+                    )}
+                    {!segment.continuesAfter && (
+                      <span class='resize-handle end' data-resize-edge='end' aria-hidden='true' />
+                    )}
                   </TimelineViewEvent>
                 )}
               </For>
@@ -179,8 +196,8 @@ const Layout = (props: { calendar: Instance; host: Host; state: HostState }) => 
     </>
   );
 };
-const Harness = (props: { preset: Preset; owner: Ownership['mode'] }) => {
-  const setup = createSetup(props.preset);
+const Harness = (props: { preset: Preset; owner: Ownership['mode']; mode: Mode }) => {
+  const setup = createSetup(props.preset, props.mode);
   const [view, setView] = createSignal<View>('grid');
   const [date, setDate] = createSignal(setup.date);
   const [events, setEvents] = createSignal(setup.events);
@@ -227,6 +244,7 @@ const Harness = (props: { preset: Preset; owner: Ownership['mode'] }) => {
     if (pointer() && view() !== 'list' && element) onCleanup(untrack(() => host.attach(element)));
   });
   const fields = () => ({
+    Features: state().features.join(', '),
     Session: state().draft.session ? `${state().draft.session!.intent.kind} / ${state().draft.session!.token}` : 'Idle',
     Target: state().draft.session?.target?.at.toString() ?? 'None',
     Candidate: (() => {
@@ -238,6 +256,9 @@ const Harness = (props: { preset: Preset; owner: Ownership['mode'] }) => {
         : 'None';
     })(),
     Outcome: state().draft.outcome ?? 'None',
+    'Last edit': state().lastMove
+      ? `${state().lastMove!.before.id}: ${state().lastMove!.after.start.toString()} → ${state().lastMove!.after.end?.toString() ?? state().lastMove!.after.start.toString()}`
+      : 'None',
     Selection: rangeLabel(state().selectedRange),
     Previews:
       state()
@@ -272,6 +293,8 @@ const Harness = (props: { preset: Preset; owner: Ownership['mode'] }) => {
         <button onClick={() => host.command('select')}>Preview selection 14–15</button>
         <button onClick={() => host.command('move')}>Preview move to Room B 14:00</button>
         <button onClick={() => host.command('allDay')}>Preview two-day selection</button>
+        <button onClick={() => host.command('resize-start')}>Preview Resizable start at 13:30</button>
+        <button onClick={() => host.command('resize-end')}>Preview Resizable end at 16:00</button>
         <button onClick={() => host.command('complete')}>Complete</button>
         <button onClick={() => host.command('cancel')}>Cancel</button>
         <button
@@ -285,7 +308,7 @@ const Harness = (props: { preset: Preset; owner: Ownership['mode'] }) => {
               );
           }}
         >
-          Apply move
+          Apply edit
         </button>
         <button
           onClick={() =>
@@ -350,16 +373,27 @@ const Harness = (props: { preset: Preset; owner: Ownership['mode'] }) => {
 };
 const App = () => {
   const [preset, setPreset] = createSignal<Preset>('ordinary');
+  const [mode, setMode] = createSignal<Mode>('resize-only');
   const [owner, setOwner] = createSignal<Ownership['mode']>('internal');
   const [mounted, setMounted] = createSignal(true);
   return (
     <>
-      <p>Throwaway prototype. Uses production hooks, parts and base positioning CSS.</p>
+      <p>
+        Throwaway prototype. Can resizing work without movement or selection? Drag an event edge, or use the preview
+        buttons. Uses production hooks, parts and base positioning CSS.
+      </p>
       <div class='controls'>
         <label>
           Fixture{' '}
           <select value={preset()} onChange={event => setPreset(event.currentTarget.value as Preset)}>
             <For each={Object.keys(presets)}>{key => <option>{key}</option>}</For>
+          </select>
+        </label>
+        <label>
+          Operations{' '}
+          <select value={mode()} onChange={event => setMode(event.currentTarget.value as Mode)}>
+            <option value='resize-only'>Resize only</option>
+            <option value='all'>Selection, movement and resizing</option>
           </select>
         </label>
         <label>
@@ -372,8 +406,14 @@ const App = () => {
         </label>
         <button onClick={() => setMounted(value => !value)}>{mounted() ? 'Unmount calendar' : 'Mount calendar'}</button>
       </div>
-      <Show keyed when={mounted() ? `${preset()}:${owner()}` : undefined}>
-        {key => <Harness preset={key.split(':')[0] as Preset} owner={key.split(':')[1] as Ownership['mode']} />}
+      <Show keyed when={mounted() ? `${preset()}:${owner()}:${mode()}` : undefined}>
+        {key => (
+          <Harness
+            preset={key.split(':')[0] as Preset}
+            owner={key.split(':')[1] as Ownership['mode']}
+            mode={key.split(':')[2] as Mode}
+          />
+        )}
       </Show>
     </>
   );

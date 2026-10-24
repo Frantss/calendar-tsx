@@ -9,14 +9,21 @@ export type Selection =
   | { kind: 'allDay'; start: Temporal.PlainDate; end: Temporal.PlainDate; resourceIds?: string[] };
 export type SelectIntent = { kind: 'select'; anchor: Target };
 export type MoveIntent = { kind: 'move'; eventId: string };
-export type Intent = SelectIntent | MoveIntent;
+export type ResizeIntent = { kind: 'resize'; eventId: string; edge: 'start' | 'end' };
+export type Intent = SelectIntent | MoveIntent | ResizeIntent;
 export type SelectProposal = { kind: 'select'; range: Selection };
 export type MoveProposal<TData = unknown> = {
   kind: 'move';
   before: Calendar_EventInput<TData>;
   after: Calendar_EventInput<TData>;
 };
-export type Proposal<TData = unknown> = SelectProposal | MoveProposal<TData>;
+export type ResizeProposal<TData = unknown> = {
+  kind: 'resize';
+  edge: ResizeIntent['edge'];
+  before: Calendar_EventInput<TData>;
+  after: Calendar_EventInput<TData>;
+};
+export type Proposal<TData = unknown> = SelectProposal | MoveProposal<TData> | ResizeProposal<TData>;
 export type Evaluation<T = Proposal> =
   | { status: 'valid'; proposal: T }
   | { status: 'rejected' | 'unavailable'; reason: string };
@@ -37,11 +44,13 @@ export type Input<TData = unknown> = {
       '~features': object;
       selection?: { enabled?: boolean };
       movement?: { enabled?: boolean };
+      resizing?: { enabled?: boolean };
       constraints?: { preventOverlap?: boolean };
     }
   >;
   selection?: { enabled?: boolean };
   movement?: { enabled?: boolean };
+  resizing?: { enabled?: boolean };
   constraints?: { preventOverlap?: boolean };
 };
 export type Rule = (proposal: Proposal, input: Input) => string | undefined;
@@ -127,6 +136,42 @@ const moveOperation: Operation = {
   },
 };
 
+const resizeOperation: Operation = {
+  kind: 'resize',
+  create(intent, target, input) {
+    if (intent.kind !== 'resize') return { status: 'unavailable', reason: 'wrong-operation' };
+    if (intent.edge !== 'start' && intent.edge !== 'end') return { status: 'rejected', reason: 'invalid-edge' };
+    const before = input.events.find(event => event.id === intent.eventId);
+    if (!before) return { status: 'rejected', reason: 'source-removed' };
+    if (target.resourceId && before.resourceIds?.length && !before.resourceIds.includes(target.resourceId))
+      return { status: 'rejected', reason: 'different-resources' };
+    if (before.kind === 'timed' && target.kind === 'timed') {
+      if (Temporal.ZonedDateTime.compare(before.start, before.end) >= 0)
+        return { status: 'rejected', reason: 'invalid-source-range' };
+      const start = intent.edge === 'start' ? target.at : before.start;
+      const end = intent.edge === 'end' ? target.at : before.end;
+      if (Temporal.ZonedDateTime.compare(start, end) >= 0) return { status: 'rejected', reason: 'invalid-range' };
+      return {
+        status: 'valid',
+        proposal: { kind: 'resize', edge: intent.edge, before, after: { ...before, start, end } },
+      };
+    }
+    if (before.kind === 'allDay' && target.kind === 'allDay') {
+      const fixedEnd = before.end ?? before.start;
+      if (Temporal.PlainDate.compare(before.start, fixedEnd) > 0)
+        return { status: 'rejected', reason: 'invalid-source-range' };
+      const start = intent.edge === 'start' ? target.at : before.start;
+      const end = intent.edge === 'end' ? target.at : fixedEnd;
+      if (Temporal.PlainDate.compare(start, end) > 0) return { status: 'rejected', reason: 'invalid-range' };
+      return {
+        status: 'valid',
+        proposal: { kind: 'resize', edge: intent.edge, before, after: { ...before, start, end } },
+      };
+    }
+    return { status: 'unavailable', reason: 'conversion-not-prototyped' };
+  },
+};
+
 export const interactionFeature = { trackedOptions: [] } as const satisfies Feature;
 export const dateSelectionFeature = {
   trackedOptions: [],
@@ -138,6 +183,11 @@ export const eventMoveFeature = {
   requires: ['interactionFeature'],
   operation: moveOperation,
 } as const satisfies Feature;
+export const eventResizeFeature = {
+  trackedOptions: [],
+  requires: ['interactionFeature'],
+  operation: resizeOperation,
+} as const satisfies Feature;
 export const constraintsFeature = {
   trackedOptions: [],
   requires: ['interactionFeature'],
@@ -146,7 +196,7 @@ export const constraintsFeature = {
     const range = proposal.kind === 'select' ? proposal.range : proposal.after;
     if (range.kind === 'allDay') return;
     const overlapping = input.events.some(event => {
-      if (event.kind !== 'timed' || (proposal.kind === 'move' && event.id === proposal.before.id)) return false;
+      if (event.kind !== 'timed' || (proposal.kind !== 'select' && event.id === proposal.before.id)) return false;
       if (
         range.resourceIds?.length &&
         event.resourceIds?.length &&
@@ -236,7 +286,7 @@ export const createRuntime = (host: {
     const active = activeKeys(host.features, input).map(key => host.features[key]);
     const operation = active.find(feature => feature.operation?.kind === intent.kind)?.operation;
     if (!operation) return { status: 'unavailable', reason: 'operation-disabled' };
-    const setting = intent.kind === 'select' ? 'selection' : 'movement';
+    const setting = ({ select: 'selection', move: 'movement', resize: 'resizing' } as const)[intent.kind];
     if ((input.views[input.view][setting]?.enabled ?? input[setting]?.enabled) === false)
       return { status: 'unavailable', reason: 'operation-disabled' };
     const result = operation.create(intent, target, input);
@@ -269,7 +319,7 @@ export const createRuntime = (host: {
     if (!session || session.token !== lease) return;
     context = input;
     if (!changed) return;
-    if (session.intent.kind === 'move') {
+    if (session.intent.kind !== 'select') {
       const id = session.intent.eventId;
       if (input.events.find(event => event.id === id) !== session.source) {
         cancel(session.token, 'source-changed');
@@ -285,11 +335,11 @@ export const createRuntime = (host: {
     const input = host.read();
     const operation = activeKeys(host.features, input).some(key => host.features[key].operation?.kind === intent.kind);
     if (!operation) return { status: 'unavailable' } as const;
-    const setting = intent.kind === 'select' ? 'selection' : 'movement';
+    const setting = ({ select: 'selection', move: 'movement', resize: 'resizing' } as const)[intent.kind];
     if ((input.views[input.view][setting]?.enabled ?? input[setting]?.enabled) === false)
       return { status: 'unavailable' } as const;
-    const source = intent.kind === 'move' ? input.events.find(event => event.id === intent.eventId) : undefined;
-    if (intent.kind === 'move' && !source) return { status: 'unavailable' } as const;
+    const source = intent.kind !== 'select' ? input.events.find(event => event.id === intent.eventId) : undefined;
+    if (intent.kind !== 'select' && !source) return { status: 'unavailable' } as const;
     const token = ++sequence;
     lease = token;
     context = input;

@@ -6,7 +6,7 @@ const runtime = stripTypeScriptTypes(source)
   .replace(/^export /gm, '');
 const polyfill = await readFile(new URL('../../node_modules/temporal-polyfill/global.js', import.meta.url), 'utf8');
 const license = await readFile(new URL('../../node_modules/temporal-polyfill/LICENSE', import.meta.url), 'utf8');
-const code = `${polyfill}\n${runtime}\nglobalThis.InteractionPrototype = { createRuntime, idle, interactionFeature, dateSelectionFeature, eventMoveFeature, constraintsFeature, resolveClockTarget, validateRegistration };`;
+const code = `${polyfill}\n${runtime}\nglobalThis.InteractionPrototype = { createRuntime, idle, interactionFeature, dateSelectionFeature, eventMoveFeature, eventResizeFeature, constraintsFeature, resolveClockTarget, validateRegistration };`;
 const script = `<script src="data:text/javascript;base64,${Buffer.from(code).toString('base64')}"></script>`;
 const template = await readFile(new URL('demo.template.html', import.meta.url), 'utf8');
 await writeFile(

@@ -12,6 +12,8 @@ import {
   type Evaluation,
   type Features,
   type MoveProposal,
+  type ResizeProposal,
+  type ResizeIntent,
   type Ownership,
   type Runtime,
   type SelectProposal,
@@ -29,16 +31,23 @@ type MoveApi<D = unknown> = {
   evaluate: (eventId: string, target: Target) => Evaluation<MoveProposal<D>>;
 };
 
+type ResizeApi<D> = {
+  begin: (eventId: string, edge: ResizeIntent['edge']) => Start;
+  evaluate: (eventId: string, edge: ResizeIntent['edge'], target: Target) => Evaluation<ResizeProposal<D>>;
+};
+
 declare module '../../src/calendar.types.ts' {
   interface Calendar_Options_FeatureMap<TData, TResourceData> {
     interactionFeature: { interactionOwnership?: Ownership };
     dateSelectionFeature: { selection?: { enabled?: boolean }; onSelectionChange?: (range: Selection) => void };
     eventMoveFeature: { movement?: { enabled?: boolean }; onEventMove?: (proposal: MoveProposal<TData>) => void };
+    eventResizeFeature: { resizing?: { enabled?: boolean }; onEventResize?: (proposal: ResizeProposal<TData>) => void };
     constraintsFeature: { constraints?: { preventOverlap?: boolean } };
   }
   interface Calendar_ViewSettings_FeatureMap {
     dateSelectionFeature: { selection?: { enabled?: boolean } };
     eventMoveFeature: { movement?: { enabled?: boolean } };
+    eventResizeFeature: { resizing?: { enabled?: boolean } };
     constraintsFeature: { constraints?: { preventOverlap?: boolean } };
   }
   interface Calendar_State_FeatureMap {
@@ -50,6 +59,7 @@ declare module '../../src/calendar.types.ts' {
     };
     dateSelectionFeature: { selection: SelectionApi };
     eventMoveFeature: { move: MoveApi<TData> };
+    eventResizeFeature: { resize: ResizeApi<TData> };
   }
 }
 
@@ -87,7 +97,8 @@ export const createTypedRuntime = <D, R, const V extends Calendar_Views, const F
     ownership: wide.interactionOwnership,
     emit(proposal) {
       if (proposal.kind === 'select') wide.onSelectionChange?.(proposal.range);
-      else wide.onEventMove?.(proposal as MoveProposal<D>);
+      else if (proposal.kind === 'move') wide.onEventMove?.(proposal as MoveProposal<D>);
+      else wide.onEventResize?.(proposal as ResizeProposal<D>);
     },
   });
   const api: Record<string, unknown> = {};
@@ -101,6 +112,12 @@ export const createTypedRuntime = <D, R, const V extends Calendar_Views, const F
     api.move = {
       begin: (eventId: string) => runtime.begin({ kind: 'move', eventId }),
       evaluate: (eventId: string, target: Target) => runtime.evaluate({ kind: 'move', eventId }, target),
+    };
+  if ('eventResizeFeature' in options.features)
+    api.resize = {
+      begin: (eventId: string, edge: ResizeIntent['edge']) => runtime.begin({ kind: 'resize', eventId, edge }),
+      evaluate: (eventId: string, edge: ResizeIntent['edge'], target: Target) =>
+        runtime.evaluate({ kind: 'resize', eventId, edge }, target),
     };
   return api as Calendar_PickFeatures<Calendar_Api_FeatureMap<D, R>, F>;
 };

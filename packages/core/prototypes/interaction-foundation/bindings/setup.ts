@@ -4,7 +4,14 @@ import { createCalendarViews, timeGridView, timelineView, listView } from '../..
 import { timeGridLayout, timelineLayout } from '../../../src/calendar-layouts';
 import { fixedClock } from '../../../src/calendar-clock';
 import type { Calendar_EventInput, Calendar_Instance, Calendar_Options } from '../../../src/calendar.types';
-import { constraintsFeature, dateSelectionFeature, eventMoveFeature, interactionFeature, idle } from '../runtime';
+import {
+  constraintsFeature,
+  dateSelectionFeature,
+  eventMoveFeature,
+  eventResizeFeature,
+  interactionFeature,
+  idle,
+} from '../runtime';
 import type { Selection } from '../runtime';
 import type {} from '../feature-types';
 
@@ -17,7 +24,8 @@ export const presets = {
 } as const;
 export type Preset = keyof typeof presets;
 
-export const createSetup = (preset: Preset) => {
+export type Mode = 'all' | 'resize-only';
+export const createSetup = (preset: Preset, mode: Mode = 'all') => {
   const spec = presets[preset];
   const date = Temporal.PlainDate.from(spec.date);
   const z = (local: string, offset?: string) =>
@@ -31,6 +39,7 @@ export const createSetup = (preset: Preset) => {
   const events: Calendar_EventInput<Data>[] = [
     timed('Appointment', z('09:00'), z('10:00')),
     timed('Overlapping', z('09:15'), z('09:45')),
+    timed('Resizable', z('14:00'), z('15:00')),
     timed('Short', z('11:00'), z('11:02'), 'b'),
     timed('Midnight', z('23:30'), z('23:30').add({ hours: 1 })),
     {
@@ -50,8 +59,9 @@ export const createSetup = (preset: Preset) => {
       timed('Second fold', z('01:15', '-05:00'), z('01:45', '-05:00')),
     );
   if (preset === 'lordHowe') events.push(timed('Transition', z('01:30'), z('03:00')));
-  const operations = {
+  const allOperations = {
     interactionFeature,
+    eventResizeFeature,
     dateSelectionFeature: {
       ...dateSelectionFeature,
       getInitialState: () => ({ selectedRange: null as Selection | null }),
@@ -59,24 +69,27 @@ export const createSetup = (preset: Preset) => {
     eventMoveFeature,
     constraintsFeature,
   };
-  const views = createCalendarViews({
-    grid: timeGridView({
-      days: 2,
-      groupBy: 'resource',
-      groupOrder: 'date-first',
-      slotMinutes: 15,
-      minColumnWidth: '170px',
-      features: operations,
-    }),
-    timeline: timelineView({
-      days: 2,
-      groupBy: 'resource',
-      slotMinutes: 15,
-      minSlotWidth: '8px',
-      features: operations,
-    }),
-    list: listView({ days: 2 }),
-  });
+  const gridSettings = {
+    days: 2,
+    groupBy: 'resource' as const,
+    groupOrder: 'date-first' as const,
+    slotMinutes: 15,
+    minColumnWidth: '170px',
+  };
+  const timelineSettings = { days: 2, groupBy: 'resource' as const, slotMinutes: 15, minSlotWidth: '8px' };
+  const resizeOperations = { interactionFeature, eventResizeFeature, constraintsFeature };
+  const views =
+    mode === 'resize-only'
+      ? createCalendarViews({
+          grid: timeGridView({ ...gridSettings, features: resizeOperations }),
+          timeline: timelineView({ ...timelineSettings, features: resizeOperations }),
+          list: listView({ days: 2 }),
+        })
+      : createCalendarViews({
+          grid: timeGridView({ ...gridSettings, features: allOperations }),
+          timeline: timelineView({ ...timelineSettings, features: allOperations }),
+          list: listView({ days: 2 }),
+        });
   const counts = {
     baseBuilds: 0,
     baseNotifications: 0,
@@ -105,6 +118,7 @@ export const createSetup = (preset: Preset) => {
     },
   };
   return {
+    mode,
     date,
     timeZone: spec.timeZone,
     events,
@@ -143,5 +157,5 @@ export const optionsFor = (
   events,
   view,
   onNavigate,
-  state: { selectedRange },
+  ...('dateSelectionFeature' in setup.features ? { state: { selectedRange } } : {}),
 });

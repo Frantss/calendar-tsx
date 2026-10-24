@@ -19,7 +19,7 @@ export const createHost = (
   const refs = new Map<string, (element: HTMLElement | null) => void>();
   const observers = new Set<() => void>();
   let message = 'Ready';
-  let lastMove: Extract<Proposal, { kind: 'move' }> | null = null;
+  let lastMove: Exclude<Proposal, { kind: 'select' }> | null = null;
   let baseline = setup.counts.baseBuilds;
   let origin: string | undefined;
   let activeSurface: string | undefined;
@@ -50,7 +50,7 @@ export const createHost = (
     emit: proposal => {
       setup.counts.lastDraftBuilds = setup.counts.baseBuilds - baseline;
       setup.counts.emissions++;
-      if (proposal.kind === 'move') lastMove = proposal;
+      if (proposal.kind !== 'select') lastMove = proposal;
       emit(proposal);
     },
   });
@@ -61,7 +61,9 @@ export const createHost = (
     draft: runtime.store.state,
     previews,
     message,
-    selectedRange: calendar.store.state.selectedRange,
+    selectedRange:
+      'selectedRange' in calendar.store.state ? (calendar.store.state.selectedRange as Selection | null) : null,
+    features: Object.keys(setup.features),
     lastMove,
     counts: { ...setup.counts },
   });
@@ -158,9 +160,16 @@ export const createHost = (
   const attach = (root: HTMLElement) => {
     const controller = new AbortController();
     const { signal } = controller;
-    let pointer: { id: number; token: number; grab: number; kind: Target['kind']; offset?: string } | null = null;
+    let pointer: {
+      id: number;
+      token: number;
+      grab: number;
+      kind: Target['kind'];
+      offset?: string;
+      edge?: 'start' | 'end';
+    } | null = null;
     let ownedToken: number | undefined;
-    const hit = (event: PointerEvent, kind?: Target['kind'], offset?: string): Located => {
+    const hit = (event: PointerEvent, kind?: Target['kind'], offset?: string, edge?: 'start' | 'end'): Located => {
       const element = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-surface]');
       const registered = element && surfaces.get(element.dataset.surface!);
       if (!registered) return { status: 'unavailable', reason: 'outside-surface' } as const;
@@ -178,11 +187,36 @@ export const createHost = (
         registered.surface.kind === 'column'
           ? (event.clientY - bounds.top) / bounds.height
           : (event.clientX - left) / width;
+      if (kind === 'allDay' && edge) {
+        const context = geometry()!;
+        if (context.model.kind === 'timeGrid' && registered.surface.kind !== 'allDay')
+          return { status: 'unavailable', reason: 'all-day-surface-required' };
+        const index =
+          Math.round(
+            fraction *
+              (context.model.kind === 'timeGrid'
+                ? context.model.columns.length
+                : context.range.start.until(context.range.end).days + 1),
+          ) - (edge === 'end' ? 1 : 0);
+        if (context.model.kind === 'timeGrid') {
+          const column = context.model.columns[index];
+          return column
+            ? { status: 'valid', proposal: { kind: 'allDay', at: column.date, resourceId: column.resource?.id } }
+            : { status: 'unavailable', reason: 'outside-surface' };
+        }
+        const row = context.model.rows.find(
+          row => registered.surface.kind === 'lane' && row.key === registered.surface.key,
+        );
+        return {
+          status: 'valid',
+          proposal: { kind: 'allDay', at: context.range.start.add({ days: index }), resourceId: row?.resource?.id },
+        };
+      }
       return locatePoint(registered.surface, fraction, registered.surface.kind === 'allDay' ? 'allDay' : kind, offset);
     };
     const queue = (event: PointerEvent, finish: boolean) => {
       if (!pointer || pointer.id !== event.pointerId) return;
-      const found = hit(event, pointer.kind, pointer.offset);
+      const found = hit(event, pointer.kind, pointer.offset, pointer.edge);
       let target: Target | string = found.status === 'valid' ? found.proposal : found.reason;
       if (pointer.kind === 'timed' && found.clock) {
         const local = found.clock.subtract({ minutes: pointer.grab });
@@ -199,7 +233,15 @@ export const createHost = (
         if (event.button !== 0 || pointer) return;
         const eventId = (event.target as HTMLElement).closest<HTMLElement>('[data-event-id]')?.dataset.eventId;
         const source = calendar.options.events.find(item => item.id === eventId);
-        const found = hit(event, source?.kind, source?.kind === 'timed' ? source.start.offset : undefined);
+        const edge = (event.target as HTMLElement).closest<HTMLElement>('[data-resize-edge]')?.dataset.resizeEdge as
+          | 'start'
+          | 'end'
+          | undefined;
+        const sourceOffset =
+          source?.kind === 'timed'
+            ? (edge === 'end' ? source.end : source.start).withTimeZone(calendar.options.timeZone).offset
+            : undefined;
+        const found = hit(event, source?.kind, sourceOffset, edge);
         if (found.status !== 'valid' && !(source?.kind === 'timed' && found.clock)) {
           message = found.reason;
           publish();
@@ -207,19 +249,21 @@ export const createHost = (
         }
         const result = begin(
           source
-            ? { kind: 'move', eventId: source.id }
+            ? edge
+              ? { kind: 'resize', eventId: source.id, edge }
+              : { kind: 'move', eventId: source.id }
             : { kind: 'select', anchor: (found as Extract<Located, { status: 'valid' }>).proposal },
         );
         if (result.status !== 'active') return;
         const point = found.status === 'valid' ? found.proposal : undefined;
         const grab =
-          source?.kind === 'timed' && found.clock
+          source?.kind === 'timed' && found.clock && !edge
             ? source.start
                 .withTimeZone(calendar.options.timeZone)
                 .toPlainDateTime()
                 .until(found.clock)
                 .total({ unit: 'minutes' })
-            : source?.kind === 'allDay' && point?.kind === 'allDay'
+            : source?.kind === 'allDay' && point?.kind === 'allDay' && !edge
               ? source.start.until(point.at).days
               : 0;
         pointer = {
@@ -227,7 +271,8 @@ export const createHost = (
           token: result.token,
           grab,
           kind: source?.kind ?? point!.kind,
-          offset: source?.kind === 'timed' ? source.start.withTimeZone(calendar.options.timeZone).offset : undefined,
+          offset: sourceOffset,
+          edge,
         };
         ownedToken = result.token;
         origin = activeSurface;
@@ -309,7 +354,7 @@ export const createHost = (
       kind,
     );
   };
-  const command = (action: 'move' | 'select' | 'allDay' | 'complete' | 'cancel') => {
+  const command = (action: 'move' | 'select' | 'allDay' | 'resize-start' | 'resize-end' | 'complete' | 'cancel') => {
     if (action === 'complete') {
       const token = runtime.store.state.session?.token;
       if (token !== undefined) {
@@ -331,8 +376,16 @@ export const createHost = (
     origin = activeSurface = undefined;
     const anchor = pointAt(14, 'b', action === 'allDay' ? 'allDay' : 'timed');
     const target = pointAt(
-      action === 'move' ? 14 : action === 'allDay' ? 38 : 15,
-      'b',
+      action === 'resize-start'
+        ? 13.5
+        : action === 'resize-end'
+          ? 16
+          : action === 'move'
+            ? 14
+            : action === 'allDay'
+              ? 38
+              : 15,
+      action.startsWith('resize') ? 'a' : 'b',
       action === 'allDay' ? 'allDay' : 'timed',
     );
     if (anchor.status !== 'valid' || target.status !== 'valid') {
@@ -341,7 +394,11 @@ export const createHost = (
       return;
     }
     const result = begin(
-      action === 'move' ? { kind: 'move', eventId: 'Appointment' } : { kind: 'select', anchor: anchor.proposal },
+      action.startsWith('resize')
+        ? { kind: 'resize', eventId: 'Resizable', edge: action === 'resize-start' ? 'start' : 'end' }
+        : action === 'move'
+          ? { kind: 'move', eventId: 'Appointment' }
+          : { kind: 'select', anchor: anchor.proposal },
     );
     if (result.status === 'active') {
       request = { token: result.token, target: target.proposal, finish: false };
@@ -392,6 +449,7 @@ export const createHost = (
       ...read(),
       view: calendar.options.view,
       events: calendar.options.events,
+      stateKeys: Object.keys(calendar.store.state),
       baseLayout: calendar.store.state.layout,
       observers: observers.size,
     }),

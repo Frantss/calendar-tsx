@@ -7,6 +7,7 @@ import {
   constraintsFeature,
   dateSelectionFeature,
   eventMoveFeature,
+  eventResizeFeature,
   interactionFeature,
   type Snapshot,
 } from './runtime.ts';
@@ -212,3 +213,49 @@ if (productionResult.status === 'valid') {
 const typedApi: Calendar_Api<typeof both.views, typeof both.features, { title: string; bookingId: number }> =
   calendar.api;
 void typedApi;
+
+const resizeOnly = createCalendarViews({
+  day: timeGridView({ days: 1, features: { eventResizeFeature, interactionFeature }, resizing: { enabled: true } }),
+});
+const resizeApi = createTypedRuntime({
+  ...base,
+  ...resizeOnly,
+  view: 'day',
+  events: [{ id: 'appointment', kind: 'allDay', start: date, data: { title: 'Appointment' } }],
+  onEventResize: proposal => {
+    const title: string = proposal.after.data.title;
+    const edge: 'start' | 'end' = proposal.edge;
+    void title;
+    void edge;
+    // @ts-expect-error resize callbacks retain the consumer payload
+    void proposal.before.data.missing;
+  },
+});
+resizeApi.resize.begin('appointment', 'end');
+const resized = resizeApi.resize.evaluate('appointment', 'start', target);
+if (resized.status === 'valid') {
+  const title: string = resized.proposal.after.data.title;
+  void title;
+  // @ts-expect-error resize results must not become any
+  const wrong: number = resized.proposal.before.data.title;
+  void wrong;
+}
+// @ts-expect-error resizing is independently registered
+void resizeApi.move;
+// @ts-expect-error resizing does not expose selection
+void resizeApi.selection;
+// @ts-expect-error shared controls cannot start another operation
+resizeApi.interactions.begin({ kind: 'move', eventId: 'appointment' });
+// @ts-expect-error only event edges can be resized
+resizeApi.resize.begin('appointment', 'middle');
+// @ts-expect-error movement does not imply resize
+void moveApi.resize;
+// @ts-expect-error selection does not imply resize
+void selectApi.resize;
+// @ts-expect-error absent resize feature contributes no view setting
+timeGridView({ days: 1, resizing: { enabled: true } });
+// @ts-expect-error absent resize feature contributes no callback
+displayOptions.onEventResize = () => {};
+const missingResizeRuntime = createCalendarViews({ day: timeGridView({ days: 1, features: { eventResizeFeature } }) });
+// @ts-expect-error resize requires the shared runtime, independently of movement and selection
+createTypedRuntime({ ...base, ...missingResizeRuntime, view: 'day' });

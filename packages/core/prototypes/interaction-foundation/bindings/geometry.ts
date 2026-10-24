@@ -59,7 +59,7 @@ export const locate = (
 
 export const project = (geometry: Geometry, proposal: Proposal): Preview[] => {
   const { model, input, settings, range } = geometry;
-  if (proposal.kind === 'move') {
+  if (proposal.kind !== 'select') {
     const after =
       proposal.after.kind === 'timed'
         ? {

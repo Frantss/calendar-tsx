@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Selection and movement — interaction prototype</title>
+    <title>Selection, movement and resizing — interaction prototype</title>
     <link rel="icon" href="data:," />
     <style>
       * {
@@ -196,17 +196,19 @@
   <body>
     <main>
       <div class="eyebrow">Throwaway logic prototype · calendar-tsx</div>
-      <h1>Selection and movement</h1>
+      <h1>Selection, movement and resizing</h1>
       <p>
-        Can two independently enabled operations share one draft, the same scheduling checks and safe completion, while
-        the application keeps ownership of its events? Explore that model below. This page uses the actual prototype
-        runtime; it does not use the production calendar or framework adapters.
+        Can resizing work with movement and selection switched off? Can independently enabled operations share one
+        draft, the same scheduling checks and safe completion, while the application keeps ownership of its events?
+        Explore that model below. This page uses the actual prototype runtime; it does not use the production calendar
+        or framework adapters.
       </p>
       <section class="panel" aria-labelledby="setup-title">
         <h2 id="setup-title">Feature setup <small class="muted">(changes reset the demo)</small></h2>
         <div class="controls" id="setup">
-          <label><input id="select-feature" type="checkbox" checked /> Selection</label>
-          <label><input id="move-feature" type="checkbox" checked /> Movement</label>
+          <label><input id="select-feature" type="checkbox" /> Selection</label>
+          <label><input id="move-feature" type="checkbox" /> Movement</label>
+          <label><input id="resize-feature" type="checkbox" checked /> Resizing</label>
           <label><input id="constraint-feature" type="checkbox" checked /> Prevent overlaps</label>
           <label><input id="pointer-feature" type="checkbox" /> Pointer input</label>
           <label
@@ -265,8 +267,8 @@
       </section>
       <p class="muted">
         Prototype scope: one UTC surface, same-kind moves, one resource replacement and an overlap rule over timed input
-        events. The DST walkthrough probes target resolution separately. Resizing, timed/all-day conversion, production
-        geometry, React/Solid bindings and scrolling are not implemented here. Data resets on reload.
+        events. The DST walkthrough probes target resolution separately. Timed/all-day conversion, production geometry,
+        React/Solid bindings and scrolling are not implemented here. Data resets on reload.
       </p>
     </main>
     <!-- LICENSE -->
@@ -306,7 +308,7 @@
       const describeProposal = proposal =>
         proposal.kind === 'select'
           ? `Select ${describeRange(proposal.range)}`
-          : `Move ${proposal.before.id}: ${describeRange(proposal.before)} → ${describeRange(proposal.after)}`;
+          : `${proposal.kind === 'resize' ? `Resize ${proposal.edge}` : 'Move'} ${proposal.before.id}: ${describeRange(proposal.before)} → ${describeRange(proposal.after)}`;
       const show = value => {
         message =
           typeof value === 'object'
@@ -329,6 +331,7 @@
         const features = { interactionFeature: P.interactionFeature };
         if ($('select-feature').checked) features.dateSelectionFeature = P.dateSelectionFeature;
         if ($('move-feature').checked) features.eventMoveFeature = P.eventMoveFeature;
+        if ($('resize-feature').checked) features.eventResizeFeature = P.eventResizeFeature;
         if ($('constraint-feature').checked) features.constraintsFeature = P.constraintsFeature;
         input = {
           date,
@@ -400,6 +403,25 @@
         return result;
       }
       const actions = {
+        resizeStart: {
+          label: 'Resize appointment start',
+          run: () => begin({ kind: 'resize', eventId: 'appointment', edge: 'start' }),
+        },
+        resizeEnd: {
+          label: 'Resize appointment end',
+          run: () => begin({ kind: 'resize', eventId: 'appointment', edge: 'end' }),
+        },
+        eight: { label: 'Target 08:00', run: () => runtime.update(token, target(8)) },
+        nine: { label: 'Target 09:00', run: () => runtime.update(token, target(9)) },
+        allDayResizeStart: {
+          label: 'Resize fair start',
+          run: () => begin({ kind: 'resize', eventId: 'fair', edge: 'start' }),
+        },
+        allDayResizeEnd: {
+          label: 'Resize fair end',
+          run: () => begin({ kind: 'resize', eventId: 'fair', edge: 'end' }),
+        },
+        today: { label: 'Target today', run: () => runtime.update(token, dayTarget(0)) },
         select: { label: 'Start selection at 10:00', run: () => begin({ kind: 'select', anchor: target(10) }) },
         move: { label: 'Start moving appointment', run: () => begin({ kind: 'move', eventId: 'appointment' }) },
         eleven: { label: 'Target 11:00', run: () => runtime.update(token, target(11)) },
@@ -419,9 +441,9 @@
         },
         late: { label: 'Complete old session', run: () => runtime.commit(oldToken ?? token) },
         apply: {
-          label: 'Apply proposed move',
+          label: 'Apply proposed edit',
           run: () => {
-            if (!lastMove) return 'No move has been emitted.';
+            if (!lastMove) return 'No edit has been emitted.';
             input = {
               ...input,
               events: input.events.map(event => (event.id === lastMove.before.id ? lastMove.after : event)),
@@ -520,6 +542,27 @@
       };
       const scenarios = [
         {
+          title: 'Resize only',
+          resizeOnly: true,
+          description:
+            'Only resizing is registered. Extend the end, apply it, then try movement and selection: both are unavailable.',
+          steps: ['resizeEnd', 'eleven', 'commit', 'apply', 'move', 'select'],
+        },
+        {
+          title: 'Resize edges',
+          resizeOnly: true,
+          description:
+            'Change the start while retaining the end. An end at the start is rejected; a later target can complete.',
+          steps: ['resizeStart', 'eight', 'commit', 'apply', 'resizeEnd', 'eight', 'commit', 'eleven', 'commit'],
+        },
+        {
+          title: 'Resize all-day',
+          resizeOnly: true,
+          description: 'Shrink the inclusive end to today, apply it, then reject a start after that fixed end.',
+          steps: ['allDayResizeEnd', 'today', 'commit', 'apply', 'allDayResizeStart', 'nextDay', 'commit'],
+        },
+
+        {
           title: 'Select',
           description: 'Select 10:00–11:00. Selection produces a range; the input events stay unchanged.',
           steps: ['select', 'eleven', 'commit'],
@@ -601,7 +644,9 @@
       function startScenario(index) {
         scenarioIndex = index;
         stepIndex = 0;
-        $('select-feature').checked = $('move-feature').checked = $('constraint-feature').checked = true;
+        $('select-feature').checked = $('move-feature').checked = !scenarios[index].resizeOnly;
+        $('resize-feature').checked = !!scenarios[index].resizeOnly;
+        $('constraint-feature').checked = true;
         $('owner').value = scenarios[index].owner ?? 'internal';
         $('pointer-feature').checked = scenarios[index].pointer ?? false;
         reset();
@@ -657,7 +702,7 @@
             ? `${state.session.intent.kind}, token ${state.session.token}`
             : 'Idle',
           'Source / anchor': state.session
-            ? state.session.intent.kind === 'move'
+            ? state.session.intent.kind !== 'select'
               ? state.session.intent.eventId
               : String(state.session.intent.anchor.at)
             : 'None',
@@ -670,7 +715,7 @@
           'Last outcome': state.outcome ?? 'None',
           'Accepted selection': selected ? describeRange(selected) : 'None',
           'Emitted results': String(emitted),
-          'Last move proposal': lastMove ? describeProposal(lastMove) : 'None',
+          'Last edit proposal': lastMove ? describeProposal(lastMove) : 'None',
           'Draft publications / pointer listeners': `${publications} / ${listenerCount}`,
           'Pending controlled snapshot': pending
             ? pending.session
@@ -724,7 +769,16 @@
           element.textContent = label;
           if (id) {
             element.dataset.eventId = id;
+            if ($('resize-feature').checked)
+              for (const edge of ['start', 'end']) {
+                const handle = document.createElement('span');
+                handle.dataset.resizeEdge = edge;
+                handle.setAttribute('aria-hidden', 'true');
+                handle.style.cssText = `position:absolute;left:0;right:0;height:7px;background:#126148;cursor:ns-resize;${edge === 'start' ? 'top' : 'bottom'}:0`;
+                element.append(handle);
+              }
             element.onclick = () => {
+              if ($('pointer-feature').checked) return;
               show(begin({ kind: 'move', eventId: id }));
               render();
             };
@@ -758,7 +812,14 @@
           event => {
             if (event.button !== 0) return;
             const eventId = event.target.closest('[data-event-id]')?.dataset.eventId;
-            const result = begin(eventId ? { kind: 'move', eventId } : { kind: 'select', anchor: locate(event) });
+            const edge = event.target.closest('[data-resize-edge]')?.dataset.resizeEdge;
+            const result = begin(
+              eventId
+                ? edge
+                  ? { kind: 'resize', eventId, edge }
+                  : { kind: 'move', eventId }
+                : { kind: 'select', anchor: locate(event) },
+            );
             if (result.status !== 'active') {
               show(result);
               render();

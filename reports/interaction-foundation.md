@@ -94,3 +94,27 @@ Checked at `fd13cd8` while proposing the optional interaction foundation.
 - **Where:** `apps/docs/content/shared/extending/features.mdx:99`.
 - **Why it matters:** the warning directs consumers to enable optional behavior unnecessarily and contradicts the
   verified opt-in provider contract.
+
+## 10. A third prototype operation reuses the session and geometry seams
+
+- **What:** resize-only registrations complete start/end edits without movement, selection or a selected-range slice.
+  Core and adapter compiler fixtures retain payloads and exclude unregistered APIs. Real pointer runs cover both
+  layouts, both adapters and all ownership modes, with zero base builds during drafts and full cleanup on unmount.
+  Inclusive all-day end shrinking also completes in both layouts/adapters.
+- **Where:** `packages/core/prototypes/interaction-foundation/runtime.ts:139`;
+  `packages/core/prototypes/interaction-foundation/feature-types.ts:34`;
+  `packages/core/prototypes/interaction-foundation/bindings/setup.ts:80`;
+  `packages/react/prototypes/interaction-foundation/types.verify.tsx:108`;
+  `packages/solid/prototypes/interaction-foundation/types.verify.tsx:108`.
+- **Why it matters:** independent operation registration holds for a third operation. The closed intent/proposal
+  unions and enumerated API facade still limit this evidence to built-in operations; arbitrary third-party
+  operation registration remains unproved.
+
+## 11. Very short timeline bars do not provide separate pointer-sized edges
+
+- **What:** the two-minute fixture produces a timeline bar narrower than its resize handles. Its semantic resize API
+  is available, but separate pointer targets for both edges are not demonstrated by the current prototype UI.
+- **Where:** `packages/core/prototypes/interaction-foundation/bindings/setup.ts:43`;
+  `packages/core/prototypes/interaction-foundation/bindings/style.css:222`.
+- **Why it matters:** runtime/API independence does not establish usable pointer affordances at every rendering
+  density. The real-pointer resize proof uses the separate hour-long `Resizable` fixture.

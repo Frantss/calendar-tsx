@@ -1,10 +1,19 @@
 import { createCalendar, createCalendarViews, timeGridView } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
-import { eventMoveFeature, interactionFeature } from './runtime';
-import type { Evaluation, MoveProposal, Target } from './runtime';
+import { eventMoveFeature, eventResizeFeature, interactionFeature } from './runtime';
+import type { Evaluation, MoveProposal, ResizeProposal, Target } from './runtime';
 
 declare module '@calendar-tsx/core' {
+  interface Calendar_State_FeatureMap {
+    dateSelectionFeature: { selectedRange: unknown };
+  }
   interface Calendar_Api_FeatureMap<TData = unknown, TResourceData = unknown> {
+    dateSelectionFeature: { selection: { begin: () => void } };
+    eventResizeFeature: {
+      resize: {
+        evaluate: (eventId: string, edge: 'start' | 'end', target: Target) => Evaluation<ResizeProposal<TData>>;
+      };
+    };
     eventMoveFeature: {
       move: { evaluate: (eventId: string, target: Target) => Evaluation<MoveProposal<TData>> };
     };
@@ -35,3 +44,29 @@ if (result.status === 'valid') {
   // @ts-expect-error built declarations must reject absent payload fields
   void result.proposal.before.data.missing;
 }
+
+const resizeViews = createCalendarViews({
+  grid: timeGridView({ days: 1, features: { eventResizeFeature, interactionFeature } }),
+});
+const resizeCalendar = createCalendar({
+  ...resizeViews,
+  date,
+  timeZone: 'UTC',
+  view: 'grid',
+  events: calendar.options.events,
+  onNavigate: () => {},
+});
+const resized = resizeCalendar.api.resize.evaluate('appointment', 'end', { kind: 'allDay', at: date });
+if (resized.status === 'valid') {
+  const title: string = resized.proposal.after.data.title;
+  void title;
+  // @ts-expect-error built resize results preserve payloads
+  const wrong: number = resized.proposal.before.data.title;
+  void wrong;
+}
+// @ts-expect-error resize-only public declarations omit movement
+void resizeCalendar.api.move;
+// @ts-expect-error resize-only public declarations omit selection
+void resizeCalendar.api.selection;
+// @ts-expect-error resize-only public declarations omit selection state
+void resizeCalendar.store.state.selectedRange;

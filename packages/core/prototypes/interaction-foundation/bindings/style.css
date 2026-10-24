@@ -218,3 +218,34 @@ td {
     grid-template-columns: 1fr;
   }
 }
+
+.resize-handle {
+  position: absolute;
+  z-index: 2;
+  background: #126148;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+}
+.canvas [data-part='time-grid-all-day-event'] {
+  position: relative;
+}
+.resize-handle.start {
+  left: 0;
+}
+.resize-handle.end {
+  right: 0;
+}
+[data-part='time-grid-event'] .resize-handle {
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 5px;
+  bottom: auto;
+  cursor: ns-resize;
+}
+[data-part='time-grid-event'] .resize-handle.end {
+  top: auto;
+  bottom: 0;
+}

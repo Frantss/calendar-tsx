@@ -1,7 +1,7 @@
 # Interaction foundation
 
 Status: **proposal for discussion**, based on `fd13cd8`. Production interaction runtime and interfaces are unchanged.
-A [selection/movement prototype](../packages/core/prototypes/interaction-foundation/readme.md) exercises the shared
+A [selection/movement/resizing prototype](../packages/core/prototypes/interaction-foundation/readme.md) exercises the shared
 lifecycle and compiles its feature-type sketch. Examples below remain conceptual unless linked to that sketch.
 The extension uses real time-grid/timeline geometry and both adapters' public hooks and parts. The
 [adapter context typing gap](../reports/interaction-foundation.md#6-adapter-context-erasure-retains-required-feature-state)
@@ -220,7 +220,7 @@ also mounts the optional adapter bindings.
 
 First prove two independent operations against the same runtime: programmatic/pointer range selection and event
 movement in a time grid. Exercise timeline geometry as the second layout and Solid as the second adapter before
-calling the seams general. Resizing then tests edge semantics without redesigning the lifecycle.
+calling the seams general. The resize extension now exercises edge semantics without a separate lifecycle.
 
 The proof should cover feature-gated types and prerequisites, inactive views, no mounted listeners without drivers,
 programmatic/gesture validation equivalence, stale tokens, source changes, controlled/external state ownership,
@@ -234,3 +234,11 @@ measurement, framework subscriptions/lifetimes and controlled selection wiring. 
 verify display-only, movement-only and selection-enabled calendars in both adapters. Production
 construction/capability registration, third-party operation extensibility and bundle
 guarantees remain unproved. No production interaction feature is marked implemented.
+
+The independent resize proof registers only `interactionFeature` and `eventResizeFeature`, with optional constraints.
+It reuses session ownership, source-change cancellation, validation and event projection. Both edges retain payloads,
+resources and the fixed bound. Timed crossing is rejected; all-day ends remain inclusive, with an omitted end fixed
+at the original start. These are prototype choices, pending production agreement. Resize-only type checks and real
+pointer runs cover core, time-grid/timeline geometry, React/Solid providers and all three ownership modes. Movement
+and selection remain unavailable, with no registered selection state. See the prototype's resize verification for
+scope and evidence. No production resizing feature is marked implemented.

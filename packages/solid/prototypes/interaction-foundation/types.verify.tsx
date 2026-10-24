@@ -7,6 +7,7 @@ import type { Selection } from '../../../core/prototypes/interaction-foundation/
 import {
   dateSelectionFeature,
   eventMoveFeature,
+  eventResizeFeature,
   interactionFeature,
 } from '../../../core/prototypes/interaction-foundation/runtime';
 import type {} from '../../../core/prototypes/interaction-foundation/feature-types';
@@ -94,6 +95,38 @@ export const MovementOnlyTypingProbe = () => {
   void calendar.store.state.selectedRange;
   // @ts-expect-error movement does not imply a selection API
   void calendar.api.selection;
+  return (
+    <Calendar {...options}>
+      <CalendarProvider value={calendar}>{null}</CalendarProvider>
+    </Calendar>
+  );
+};
+
+const resizing = createCalendarViews({
+  grid: timeGridView({ days: 1, features: { eventResizeFeature, interactionFeature } }),
+});
+export const ResizeOnlyTypingProbe = () => {
+  const options = {
+    ...base,
+    ...resizing,
+    view: 'grid' as const,
+    events: [{ id: 'appointment', kind: 'allDay' as const, start: date, data: { title: 'Appointment' } }],
+  };
+  const calendar = useCalendar(() => options);
+  const result = calendar.api.resize.evaluate('appointment', 'end', { kind: 'allDay', at: date });
+  if (result.status === 'valid') {
+    const title: string = result.proposal.after.data.title;
+    void title;
+    // @ts-expect-error resize results retain event payloads
+    const wrong: number = result.proposal.before.data.title;
+    void wrong;
+  }
+  // @ts-expect-error resizing must not expose movement
+  void calendar.api.move;
+  // @ts-expect-error resizing must not expose selection
+  void calendar.api.selection;
+  // @ts-expect-error resizing must not register selection state
+  void calendar.store.state.selectedRange;
   return (
     <Calendar {...options}>
       <CalendarProvider value={calendar}>{null}</CalendarProvider>
