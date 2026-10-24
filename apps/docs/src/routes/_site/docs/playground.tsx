@@ -25,16 +25,7 @@ import {
   serializePlaygroundConfig,
 } from '@/playground/config';
 import { ContrastReadout } from '@/playground/contrast-readout';
-import {
-  buttonClass,
-  Checkbox,
-  Field,
-  iconButtonClass,
-  inputClass,
-  Section,
-  Segmented,
-  SegmentedButtons,
-} from '@/playground/controls';
+import { buttonClass, Checkbox, Field, iconButtonClass, inputClass, Section, Segmented } from '@/playground/controls';
 import { EventEditor } from '@/playground/event-editor';
 import type { Measurement } from '@/playground/measure';
 import type { PlaygroundToPreview, PreviewToPlayground } from '@/playground/messages';
@@ -50,10 +41,18 @@ export const Route = createFileRoute('/_site/docs/playground')({
 
 const viewOptions: { value: PlaygroundView; label: string }[] = [
   { value: 'month', label: 'Month' },
+  { value: 'year', label: 'Year by month' },
+  { value: 'grid_days', label: 'Three-day grid' },
+  { value: 'grid_rooms', label: 'Room day grid' },
+  { value: 'month_rooms', label: 'Months then rooms' },
+  { value: 'room_months', label: 'Rooms then months' },
   { value: 'week', label: 'Week' },
+  { value: 'workweek', label: 'Workweek' },
   { value: 'day', label: 'Day' },
   { value: 'rooms', label: 'Rooms' },
   { value: 'agenda', label: 'Agenda' },
+  { value: 'timeline_month', label: 'Month timeline' },
+  { value: 'timeline_year', label: 'Year timeline' },
 ];
 
 const densityOptions: { value: PlaygroundDensity; label: string }[] = [
@@ -296,7 +295,10 @@ function Playground() {
                       ))}
                     </select>
                   </Field>
-                  <Field label='Bar rows' hint='Per day in the month view; more hide behind "more".'>
+                  <Field
+                    label='Bar rows'
+                    hint='Visible rows of day-grid event bars; additional events appear under "more".'
+                  >
                     <input
                       type='number'
                       min={1}
@@ -517,13 +519,18 @@ function Playground() {
                   <h2 id='playground-period' className='ms-1 me-auto text-[15px] font-medium'>
                     {periodTitle(config)}
                   </h2>
-                  <SegmentedButtons
-                    name='playground-view'
-                    label='View'
-                    options={viewOptions}
+                  <select
+                    aria-label='View'
+                    className={`${inputClass} max-w-52`}
                     value={config.view}
-                    onChange={view => update({ view })}
-                  />
+                    onChange={event => update({ view: event.target.value as PlaygroundView })}
+                  >
+                    {viewOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className='relative overflow-hidden rounded-lg border border-fd-border'>
                   {initialSrc && (

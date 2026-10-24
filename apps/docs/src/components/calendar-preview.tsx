@@ -13,8 +13,9 @@ const today = () => Temporal.Now.plainDateISO().toString();
 // the docs switch themes with a `.dark` class on the root, not only with the media query
 const pageScheme = () => (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
 
-// month and agenda grow the frame to fit; time grids fill a fixed frame and scroll inside it
-const fitsContent = (view: PlaygroundView) => view === 'month' || view === 'agenda';
+// Day grids and agenda grow the frame to fit; time grids and timelines scroll inside a fixed frame.
+const fitsContent = (view: PlaygroundView) =>
+  ['month', 'year', 'grid_days', 'grid_rooms', 'month_rooms', 'room_months', 'agenda'].includes(view);
 
 type PreviewStatus = 'loading' | 'ready' | 'failed';
 

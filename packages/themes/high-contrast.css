@@ -24,7 +24,7 @@
   /* Outlined events: the surface with a text-colored border, unless the app sets the event tokens */
   :where(
     [data-scope='calendar']:is(
-      [data-part='day-grid-week-event'],
+      [data-part='day-grid-row-event'],
       [data-part='time-grid-all-day-event'],
       [data-part='time-grid-event'],
       [data-part='timeline-event']
@@ -38,7 +38,7 @@
 
   :where(
     [data-scope='calendar']:is(
-      [data-part='day-grid-week-event'],
+      [data-part='day-grid-row-event'],
       [data-part='time-grid-all-day-event'],
       [data-part='timeline-event']
     )
@@ -49,7 +49,7 @@
   /* Bars continue across week and range edges; time-grid events continue across midnight */
   :where(
     [data-scope='calendar'][data-continues-before]:is(
-        [data-part='day-grid-week-event'],
+        [data-part='day-grid-row-event'],
         [data-part='time-grid-all-day-event'],
         [data-part='timeline-event']
       )
@@ -59,7 +59,7 @@
 
   :where(
     [data-scope='calendar'][data-continues-after]:is(
-        [data-part='day-grid-week-event'],
+        [data-part='day-grid-row-event'],
         [data-part='time-grid-all-day-event'],
         [data-part='timeline-event']
       )

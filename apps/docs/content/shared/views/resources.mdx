@@ -11,6 +11,8 @@ import { timeGridView } from '@calendar-tsx/core';
 timeGridView({ days: 1, groupBy: 'resource' });
 ```
 
+For date cells without a time axis, use `dayGridView({ days: 1, groupBy: 'resource', maxEventsPerDay: 3 })`. The [day grid](day-grid-view#grouping) also supports month grouping and ordered month/resource combinations.
+
 Pass the resources to the calendar, in the order their columns should appear:
 
 <include lang='ts'>../../../examples/core/setup.ts#resources</include>

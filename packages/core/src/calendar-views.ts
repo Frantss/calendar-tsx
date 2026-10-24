@@ -1,6 +1,9 @@
 import { dayGridLayout, listLayout, timeGridLayout, timelineLayout } from '#calendar-layouts';
+import { calendarPeriods_groups, calendarPeriods_validate } from '#calendar-periods';
 import type {
   Calendar_DayGridViewSettings,
+  Calendar_DurationSettings,
+  Calendar_VisibilitySettings,
   Calendar_Features,
   Calendar_FeaturesOf,
   Calendar_LayoutKey,
@@ -27,8 +30,22 @@ const view_create = (
   kind: string,
   layoutKey: Calendar_LayoutKey,
   layout: unknown,
-  { features, ...settings }: { features?: Calendar_Features },
-) => ({ ...settings, kind, '~layout': layoutKey, '~features': { ...features, [layoutKey]: layout } });
+  { features, ...settings }: Calendar_DurationSettings & Calendar_VisibilitySettings & { features?: Calendar_Features },
+) => {
+  calendarPeriods_validate(settings);
+  const grid = settings as Calendar_DayGridViewSettings;
+  const groups = calendarPeriods_groups(grid.groupBy);
+  if (groups.length !== new Set(groups).size || groups.some(group => !['month', 'resource'].includes(group)))
+    throw new Error('[calendar] groupBy must contain distinct month or resource keys');
+  if (groups.includes('month') && (kind !== 'dayGrid' || settings.days !== undefined || settings.weeks !== undefined))
+    throw new Error('[calendar] month grouping requires a day grid with a calendar-month duration');
+  if (grid.fixedWeekCount !== undefined && settings.period !== 'month' && !groups.includes('month'))
+    throw new Error('[calendar] fixedWeekCount requires individual month grids');
+  const slotMinutes = (settings as { slotMinutes?: number }).slotMinutes;
+  if (slotMinutes !== undefined && (!Number.isInteger(slotMinutes) || slotMinutes < 1))
+    throw new Error('[calendar] slotMinutes must be a positive integer');
+  return { ...settings, kind, '~layout': layoutKey, '~features': { ...features, [layoutKey]: layout } };
+};
 
 // `NoInfer` keeps views nested in `createCalendarViews` from inferring their features from its constraint, which
 // would leak a string index into `keyof views.features` (D29).

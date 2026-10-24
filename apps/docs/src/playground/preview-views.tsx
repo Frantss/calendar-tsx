@@ -1,4 +1,5 @@
 import {
+  DayGridViewSectionHeader,
   ListView,
   ListViewDay,
   ListViewDayHeader,
@@ -10,8 +11,8 @@ import {
   DayGridViewHeader,
   DayGridViewHeaderCell,
   DayGridViewOverflow,
-  DayGridViewWeek,
-  DayGridViewWeekEvent,
+  DayGridViewRow,
+  DayGridViewRowEvent,
   TimeGridView,
   TimeGridViewAllDay,
   TimeGridViewAllDayEvent,
@@ -27,8 +28,10 @@ import {
   TimeGridViewUnavailable,
   useCalendarContext,
   useCalendarSelector,
+  DayGridViewSection,
 } from '@calendar-tsx/react';
 import type { Calendar_Event } from '@calendar-tsx/core';
+import { Timeline } from '../../examples/react/timeline-view';
 
 import type { Booking } from './sample-data';
 import type { PlaygroundState } from './views';
@@ -49,34 +52,49 @@ export const PreviewLayout = ({ onSelect }: { onSelect: (event: Calendar_Event<B
   const layout = useCalendarSelector((state: PlaygroundState) => state.layout);
   const { instance, locale } = useCalendarContext();
 
+  if (layout.kind === 'timeline') return <Timeline locale={locale} onSelect={onSelect} />;
+
   if (layout.kind === 'dayGrid') {
     return (
       <DayGridView model={layout}>
-        <DayGridViewHeader>
-          {layout.weekdays.map(weekday => (
-            <DayGridViewHeaderCell key={weekday.toString()} weekday={weekday}>
-              {weekday.toLocaleString(locale, { weekday: 'short' })}
-            </DayGridViewHeaderCell>
-          ))}
-        </DayGridViewHeader>
-        {layout.weeks.map(week => (
-          <DayGridViewWeek key={week.key} week={week}>
-            {week.days.map(day => (
-              <DayGridViewDay key={day.key} day={day}>
-                <DayGridViewDayTrigger day={day} view='day'>
-                  {day.date.day}
-                </DayGridViewDayTrigger>
-                <DayGridViewOverflow day={day} onClick={() => instance.api.navigate({ view: 'day', date: day.date })}>
-                  {day.hiddenCount} more
-                </DayGridViewOverflow>
-              </DayGridViewDay>
+        {layout.sections.map(section => (
+          <DayGridViewSection key={section.key} section={section}>
+            {section.month || section.resource ? (
+              <DayGridViewSectionHeader>
+                {section.resource?.title} {section.month?.toLocaleString(locale, { month: 'long', year: 'numeric' })}
+              </DayGridViewSectionHeader>
+            ) : null}
+
+            <DayGridViewHeader>
+              {section.columns.map(column => (
+                <DayGridViewHeaderCell key={column.key} column={column}>
+                  {column.resource?.title} {column.date.toLocaleString(locale, { weekday: 'short' })}
+                </DayGridViewHeaderCell>
+              ))}
+            </DayGridViewHeader>
+            {section.rows.map(week => (
+              <DayGridViewRow key={week.key} row={week}>
+                {week.days.map(day => (
+                  <DayGridViewDay key={day.key} day={day}>
+                    <DayGridViewDayTrigger day={day} view='day'>
+                      {day.date.day}
+                    </DayGridViewDayTrigger>
+                    <DayGridViewOverflow
+                      day={day}
+                      onClick={() => instance.api.navigate({ view: 'day', date: day.date })}
+                    >
+                      {day.hiddenCount} more
+                    </DayGridViewOverflow>
+                  </DayGridViewDay>
+                ))}
+                {week.segments.map(segment => (
+                  <DayGridViewRowEvent key={segment.key} segment={segment} onClick={() => onSelect(segment.event)}>
+                    {segment.event.data.title}
+                  </DayGridViewRowEvent>
+                ))}
+              </DayGridViewRow>
             ))}
-            {week.segments.map(segment => (
-              <DayGridViewWeekEvent key={segment.key} segment={segment} onClick={() => onSelect(segment.event)}>
-                {segment.event.data.title}
-              </DayGridViewWeekEvent>
-            ))}
-          </DayGridViewWeek>
+          </DayGridViewSection>
         ))}
       </DayGridView>
     );

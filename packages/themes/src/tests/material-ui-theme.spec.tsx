@@ -1,7 +1,15 @@
 import { afterEach, beforeEach, expect, it } from 'vitest';
 
 import type { Calendar_DayGridLayout } from '@calendar-tsx/core';
-import { DayGridViewDay, DayGridViewDayTrigger, DayGridView, DayGridViewWeek, DayGridViewWeekEvent, useCalendarSelector } from '@calendar-tsx/react';
+import {
+  DayGridViewDay,
+  DayGridViewDayTrigger,
+  DayGridView,
+  DayGridViewRow,
+  DayGridViewRowEvent,
+  useCalendarSelector,
+  DayGridViewSection,
+} from '@calendar-tsx/react';
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
 import '../../material-ui.css';
 
@@ -12,21 +20,25 @@ const Month = () => {
 
   return (
     <DayGridView model={month}>
-      {month.weeks.map(week => (
-        <DayGridViewWeek key={week.key} week={week}>
-          {week.days.map(day => (
-            <DayGridViewDay key={day.key} day={day}>
-              <DayGridViewDayTrigger day={day} view='month'>
-                {day.date.day}
-              </DayGridViewDayTrigger>
-            </DayGridViewDay>
+      {month.sections.map(section => (
+        <DayGridViewSection key={section.key} section={section}>
+          {section.rows.map(week => (
+            <DayGridViewRow key={week.key} row={week}>
+              {week.days.map(day => (
+                <DayGridViewDay key={day.key} day={day}>
+                  <DayGridViewDayTrigger day={day} view='month'>
+                    {day.date.day}
+                  </DayGridViewDayTrigger>
+                </DayGridViewDay>
+              ))}
+              {week.segments.map(segment => (
+                <DayGridViewRowEvent key={segment.key} segment={segment}>
+                  {segment.event.data.title}
+                </DayGridViewRowEvent>
+              ))}
+            </DayGridViewRow>
           ))}
-          {week.segments.map(segment => (
-            <DayGridViewWeekEvent key={segment.key} segment={segment}>
-              {segment.event.data.title}
-            </DayGridViewWeekEvent>
-          ))}
-        </DayGridViewWeek>
+        </DayGridViewSection>
       ))}
     </DayGridView>
   );
@@ -70,7 +82,7 @@ const tint = (primary: string, paper: string) => {
 };
 
 const today = () => themesSetup_part('day-grid-day', '[data-today]')[0]?.querySelector('[data-part="day-grid-day-trigger"]');
-const bar = () => themesSetup_part('day-grid-week-event')[0];
+const bar = () => themesSetup_part('day-grid-row-event')[0];
 const events = [themesSetup_allDay('Fair', { start: '2026-03-11', end: '2026-03-11' })];
 
 it('takes the accent, event fill and radius from the MUI variables', async () => {

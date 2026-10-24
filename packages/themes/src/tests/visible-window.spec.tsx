@@ -3,8 +3,9 @@ import { dayGridView, timeGridView, timelineView } from '@calendar-tsx/core';
 import {
   DayGridView,
   DayGridViewDay,
-  DayGridViewWeek,
-  DayGridViewWeekEvent,
+  DayGridViewRow,
+  DayGridViewSection,
+  DayGridViewRowEvent,
   TimeGridView,
   TimeGridViewAxis,
   TimeGridViewAxisLabel,
@@ -29,19 +30,23 @@ const Calendar = () => {
   if (model.kind === 'dayGrid')
     return (
       <DayGridView model={model}>
-        {model.weeks.map(week => (
-          <DayGridViewWeek key={week.key} week={week}>
+        {model.sections.map(section => (
+          <DayGridViewSection key={section.key} section={section}>
+          {section.rows.map(week => (
+          <DayGridViewRow key={week.key} row={week}>
             {week.days.map(day => (
               <DayGridViewDay key={day.key} day={day}>
                 {day.date.day}
               </DayGridViewDay>
             ))}
             {week.segments.map(segment => (
-              <DayGridViewWeekEvent key={segment.key} segment={segment}>
+              <DayGridViewRowEvent key={segment.key} segment={segment}>
                 {segment.event.id}
-              </DayGridViewWeekEvent>
+              </DayGridViewRowEvent>
             ))}
-          </DayGridViewWeek>
+          </DayGridViewRow>
+          ))}
+          </DayGridViewSection>
         ))}
       </DayGridView>
     );
@@ -101,9 +106,9 @@ it('aligns month bars with five visible day cells', async () => {
     views: { month: dayGridView({ period: 'month', maxEventsPerDay: 3, hiddenDays: [6, 7] }) },
     events: [themesSetup_allDay('span', { start: '2026-03-06', end: '2026-03-09' })],
   });
-  const week = themesSetup_rect(themesSetup_part('month-week')[0]);
-  const day = themesSetup_rect(themesSetup_part('month-day')[0]);
-  const bar = themesSetup_rect(themesSetup_part('month-week-event')[0]);
+  const week = themesSetup_rect(themesSetup_part('day-grid-row')[0]);
+  const day = themesSetup_rect(themesSetup_part('day-grid-day')[0]);
+  const bar = themesSetup_rect(themesSetup_part('day-grid-row-event')[0]);
   expect(day.width).toBeCloseTo(week.width / 5, 0);
   expect(bar.left - week.left).toBeCloseTo((week.width * 4) / 5 + 2, 0);
   expect(bar.width).toBeCloseTo(week.width / 5 - 4, 0);

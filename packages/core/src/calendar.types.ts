@@ -141,58 +141,82 @@ export interface Calendar_TimelineRow_FeatureMap {
 }
 export interface Calendar_TimelineSegment_FeatureMap {}
 
-export type Calendar_DateViewSettings = {
-  /** Hidden ISO weekdays, Monday 1 through Sunday 7. Hiding all seven is invalid. */
-  hiddenDays?: readonly Calendar_DayOfWeek[];
-};
+export type Calendar_DateViewSettings = { hiddenDays?: readonly Calendar_DayOfWeek[] };
+export type Calendar_TimeViewSettings = Calendar_DateViewSettings & { timeWindow?: { startMinutes: number; endMinutes: number } };
 
-export type Calendar_TimeViewSettings = Calendar_DateViewSettings & {
-  /** Nominal clock minutes; an end beyond 1440 belongs to the anchor date's following morning. */
-  timeWindow?: { startMinutes: number; endMinutes: number };
-};
+export type Calendar_DayDuration =
+  | { days: number; weeks?: never; months?: never; period?: never }
+  | { weeks: number; days?: never; months?: never; period?: never };
 
-export type Calendar_DayGridViewSettings = Calendar_DateViewSettings & {
+export type Calendar_MonthDuration =
+  | { months: number; days?: never; weeks?: never; period?: never }
+  | { period: 'month' | 'quarter' | 'year'; days?: never; weeks?: never; months?: never };
+
+export type Calendar_DurationSettings = Calendar_DayDuration | Calendar_MonthDuration;
+export type Calendar_VisibilitySettings = Calendar_DateViewSettings;
+export type Calendar_ResourceGrouping = 'resource' | readonly ['resource'];
+export type Calendar_MonthGrouping =
+  | 'month'
+  | readonly ['month']
+  | readonly ['month', 'resource']
+  | readonly ['resource', 'month'];
+export type Calendar_DayGridGrouping = Calendar_ResourceGrouping | Calendar_MonthGrouping;
+
+type MonthPeriod = { period: 'month'; days?: never; weeks?: never; months?: never };
+
+export type Calendar_DayGridViewSettings = {
   maxEventsPerDay: number;
-  dayOverflow?: (date: Temporal.PlainDate) => boolean;
-} & (
-  | { period: 'month'; weeks?: never; fixedWeekCount?: boolean }
-  | { weeks: number; period?: never; fixedWeekCount?: never }
-);
+  dayOverflow?: (date: Temporal.PlainDate, resourceId?: string) => boolean;
+  groupOrder?: 'resource-first' | 'date-first';
+} & Calendar_VisibilitySettings &
+  (
+    | (Calendar_DayDuration & { groupBy?: Calendar_ResourceGrouping; fixedWeekCount?: never })
+    | (MonthPeriod & { groupBy?: Calendar_DayGridGrouping; fixedWeekCount?: boolean })
+    | (Calendar_MonthDuration & { groupBy: Calendar_MonthGrouping; fixedWeekCount?: boolean })
+    | (Calendar_MonthDuration & { groupBy?: Calendar_ResourceGrouping; fixedWeekCount?: never })
+  );
 
 /** How overlapping timed events share a column (D38). */
 export type Calendar_TimeGridOverlap = 'side-by-side' | 'cascade';
 
-export type Calendar_TimeGridViewSettings = Calendar_TimeViewSettings & {
-  days: number;
-  groupBy?: 'resource';
-  groupOrder?: 'resource-first' | 'date-first';
-  allDay?: boolean;
-  slotMinutes?: number;
-  minColumnWidth?: string;
-  /** Defaults to `'side-by-side'`; `'cascade'` lets later lanes cover up to half of an event (D38). */
-  overlap?: Calendar_TimeGridOverlap;
-  /** Shorter timed events are laid out this long, on screen and for lanes; defaults to 15, `0` turns it off (D39). */
-  minEventMinutes?: number;
-  /** Segments laid out shorter than this are flagged `isShort`; defaults to 30 (D39). */
-  shortEventMinutes?: number;
-};
+export type Calendar_TimeGridViewSettings = Calendar_DurationSettings &
+  Calendar_TimeViewSettings & {
+    groupBy?: Calendar_ResourceGrouping;
+    groupOrder?: 'resource-first' | 'date-first';
+    allDay?: boolean;
+    slotMinutes?: number;
+    minColumnWidth?: string;
+    /** Defaults to `'side-by-side'`; `'cascade'` lets later lanes cover up to half of an event (D38). */
+    overlap?: Calendar_TimeGridOverlap;
+    /** Shorter timed events are laid out this long, on screen and for lanes; defaults to 15, `0` turns it off (D39). */
+    minEventMinutes?: number;
+    /** Segments laid out shorter than this are flagged `isShort`; defaults to 30 (D39). */
+    shortEventMinutes?: number;
+  };
 
-/** A run of `days` days, or the calendar month or year containing the date (D36). */
-export type Calendar_ListViewSettings = Calendar_DateViewSettings &
-  ({ days: number; period?: never } | { period: 'month' | 'year'; days?: never });
+export type Calendar_ListViewSettings = Calendar_DurationSettings & Calendar_VisibilitySettings;
 
-export type Calendar_TimelineViewSettings = Calendar_TimeViewSettings & {
-  days: number;
-  groupBy?: 'resource';
-  slotMinutes?: number;
-  minSlotWidth?: string;
-};
+export type Calendar_TimelineViewSettings = Calendar_DurationSettings &
+  Calendar_TimeViewSettings & {
+    groupBy?: Calendar_ResourceGrouping;
+    slotMinutes?: number;
+    minSlotWidth?: string;
+  };
 
-export type Calendar_DayGridDay<TData, TFeatures = {}> = {
+export type Calendar_DayGridColumn<TResourceData = unknown> = {
   key: string;
   date: Temporal.PlainDate;
+  resource?: Calendar_Resource<TResourceData>;
+};
+
+export type Calendar_DayGridDay<
+  TData,
+  TResourceData = unknown,
+  TFeatures = {},
+> = Calendar_DayGridColumn<TResourceData> & {
   isOutside: boolean;
   isToday: boolean;
+  isUnavailable: boolean;
   /** Hidden rows crossing this day; not the true total when the input was truncated. */
   hiddenCount: number;
   hasMore: boolean;
@@ -219,20 +243,31 @@ export type Calendar_BackgroundEventSpan<TData> = {
   continuesAfter: boolean;
 };
 
-export type Calendar_DayGridWeek<TData, TFeatures = {}> = {
+export type Calendar_DayGridRow<TData, TResourceData = unknown, TFeatures = {}> = {
   key: string;
-  days: Calendar_DayGridDay<TData, TFeatures>[];
+  days: Calendar_DayGridDay<TData, TResourceData, TFeatures>[];
+  columnCount: number;
   segments: Calendar_BarSegment<TData, TFeatures>[];
   /** All-day background events only; timed ones shade time-grid columns (D37). */
   backgroundEvents: Calendar_BackgroundEventSpan<TData>[];
-  rows: number;
+  stackCount: number;
 };
 
-export type Calendar_DayGridLayout<TData, TFeatures = {}> = {
+export type Calendar_DayGridSection<TData, TResourceData = unknown, TFeatures = {}> = {
+  key: string;
+  period: Calendar_Range;
+  range: Calendar_Range;
+  month?: Temporal.PlainDate;
+  resource?: Calendar_Resource<TResourceData>;
+  columns: Calendar_DayGridColumn<TResourceData>[];
+  columnCount: number;
+  rows: Calendar_DayGridRow<TData, TResourceData, TFeatures>[];
+};
+
+export type Calendar_DayGridLayout<TData, TResourceData = unknown, TFeatures = {}> = {
   kind: 'dayGrid';
   coordinates: LayoutCoordinates_DateAxis;
-  weekdays: Temporal.PlainDate[];
-  weeks: Calendar_DayGridWeek<TData, TFeatures>[];
+  sections: Calendar_DayGridSection<TData, TResourceData, TFeatures>[];
 };
 
 export type Calendar_TimeGridSegment<TData, TFeatures = {}> = {
@@ -323,6 +358,8 @@ export type Calendar_TimelineDay = {
   isToday: boolean;
   colStart: number;
   colSpan: number;
+  start: number;
+  span: number;
 };
 
 export type Calendar_TimelineSlot = {
@@ -376,7 +413,7 @@ export type Calendar_TimelineLayout<TData, TResourceData, TFeatures = {}> = {
 
 /** Layout key → layout, given the features of the view it renders. Layout features extend it by declaration merging. */
 export interface Calendar_Layout_FeatureMap<TData, TResourceData, TFeatures> {
-  dayGridLayout: Calendar_DayGridLayout<TData, TFeatures>;
+  dayGridLayout: Calendar_DayGridLayout<TData, TResourceData, TFeatures>;
   timeGridLayout: Calendar_TimeGridLayout<TData, TResourceData, TFeatures>;
   listLayout: Calendar_ListLayout<TData, TFeatures>;
   timelineLayout: Calendar_TimelineLayout<TData, TResourceData, TFeatures>;
@@ -386,10 +423,10 @@ export type Calendar_LayoutKey = keyof Calendar_Layout_FeatureMap<unknown, unkno
 
 /** What a layout's `build` receives: the core pipeline's output for the active view. */
 export type Calendar_LayoutInput<TData, TResourceData> = {
+  firstDayOfWeek: Calendar_FirstDayOfWeek;
   range: Calendar_Range;
   period: Calendar_Range;
   inputRange: Calendar_Range;
-  firstDayOfWeek?: Calendar_FirstDayOfWeek;
   /** Normalised to `timeZone`, filtered to `inputRange`, sorted by `eventOrder`; no background events. */
   events: Calendar_Event<TData>[];
   /** The events with `display: 'background'`: normalised and clipped likewise, in input order (D37). */

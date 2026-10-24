@@ -5,10 +5,11 @@ import {
   CalendarProvider,
   DayGridView,
   DayGridViewDay,
-  DayGridViewWeek,
-  DayGridViewWeekEvent,
+  DayGridViewRow,
+  DayGridViewRowEvent,
   useCalendar,
   useCalendarSelector,
+  DayGridViewSection,
 } from '@calendar-tsx/react';
 import '@calendar-tsx/themes/default.css';
 import { useState } from 'react';
@@ -59,19 +60,23 @@ const Month = () => {
 
   return (
     <DayGridView model={layout}>
-      {layout.weeks.map(week => (
-        <DayGridViewWeek key={week.key} week={week}>
-          {week.days.map(day => (
-            <DayGridViewDay key={day.key} day={day}>
-              {day.date.day}
-            </DayGridViewDay>
+      {layout.sections.map(section => (
+        <DayGridViewSection key={section.key} section={section}>
+          {section.rows.map(week => (
+            <DayGridViewRow key={week.key} row={week}>
+              {week.days.map(day => (
+                <DayGridViewDay key={day.key} day={day}>
+                  {day.date.day}
+                </DayGridViewDay>
+              ))}
+              {week.segments.map(segment => (
+                <DayGridViewRowEvent key={segment.key} segment={segment}>
+                  {segment.event.data.title}
+                </DayGridViewRowEvent>
+              ))}
+            </DayGridViewRow>
           ))}
-          {week.segments.map(segment => (
-            <DayGridViewWeekEvent key={segment.key} segment={segment}>
-              {segment.event.data.title}
-            </DayGridViewWeekEvent>
-          ))}
-        </DayGridViewWeek>
+        </DayGridViewSection>
       ))}
     </DayGridView>
   );

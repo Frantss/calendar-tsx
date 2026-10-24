@@ -1,5 +1,5 @@
 import type { Calendar_DayOfWeek, Calendar_State } from '@calendar-tsx/core';
-import { createCalendarViews, listView, dayGridView, timeGridView } from '@calendar-tsx/core';
+import { createCalendarViews, listView, dayGridView, timeGridView, timelineView } from '@calendar-tsx/core';
 
 import type { Booking, Room } from './sample-data';
 
@@ -50,10 +50,18 @@ export const createPlaygroundViews = ({
 
   return createCalendarViews({
     month: dayGridView({ period: 'month', maxEventsPerDay, hiddenDays }),
+    year: dayGridView({ period: 'year', groupBy: 'month', maxEventsPerDay, hiddenDays }),
+    grid_days: dayGridView({ days: 3, maxEventsPerDay, hiddenDays }),
+    grid_rooms: dayGridView({ days: 1, groupBy: 'resource', maxEventsPerDay, hiddenDays }),
+    month_rooms: dayGridView({ period: 'quarter', groupBy: ['month', 'resource'], maxEventsPerDay, hiddenDays }),
+    room_months: dayGridView({ period: 'quarter', groupBy: ['resource', 'month'], maxEventsPerDay, hiddenDays }),
     week: timeGridView({ days: 7, ...timed }),
+    workweek: timeGridView({ weeks: 1, ...timed, hiddenDays: [6, 7] }),
     day: timeGridView({ days: 1, ...timed }),
     rooms: timeGridView({ days: 1, groupBy: 'resource', ...timed }),
     agenda: listView({ days: 7, hiddenDays }),
+    timeline_month: timelineView({ period: 'month', groupBy: 'resource', slotMinutes: 1440, hiddenDays }),
+    timeline_year: timelineView({ period: 'year', groupBy: 'resource', slotMinutes: 1440, hiddenDays }),
   });
 };
 

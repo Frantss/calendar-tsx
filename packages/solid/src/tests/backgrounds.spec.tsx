@@ -4,7 +4,7 @@ import { expect, it } from 'vitest';
 
 import type { Calendar_DayGridLayout, Calendar_TimeGridLayout } from '@calendar-tsx/core';
 import { backgroundFeature, createBackgroundLayer, dayGridView, timeGridView } from '@calendar-tsx/core';
-import { DayGridView, DayGridViewDay, DayGridViewDayBackground, DayGridViewWeek } from '#day-grid-view';
+import { DayGridView, DayGridViewDay, DayGridViewDayBackground, DayGridViewRow, DayGridViewSection } from '#day-grid-view';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { calendarSolidSetup_render } from '#tests/calendar-solid.setup';
 import { TimeGridView, TimeGridViewBackground, TimeGridViewBody, TimeGridViewColumn } from '#time-grid-view';
@@ -53,21 +53,27 @@ const TimeGridBody = () => {
 };
 
 const MonthBody = () => {
-  const month = useCalendarSelector(state => state.layout as Calendar_DayGridLayout<Fixtures_EventData, Features>);
+  const month = useCalendarSelector(state => state.layout as Calendar_DayGridLayout<Fixtures_EventData, unknown, Features>);
 
   return (
     <DayGridView model={month()}>
-      <For each={month().weeks}>
-        {week => (
-          <DayGridViewWeek week={week}>
-            <For each={week.days}>
-              {day => (
-                <DayGridViewDay day={day}>
-                  <For each={day.backgrounds}>{background => <DayGridViewDayBackground background={background} />}</For>
-                </DayGridViewDay>
+      <For each={month().sections}>
+        {section => (
+          <DayGridViewSection section={section}>
+            <For each={section.rows}>
+              {week => (
+                <DayGridViewRow row={week}>
+                  <For each={week.days}>
+                    {day => (
+                      <DayGridViewDay day={day}>
+                        <For each={day.backgrounds}>{background => <DayGridViewDayBackground background={background} />}</For>
+                      </DayGridViewDay>
+                    )}
+                  </For>
+                </DayGridViewRow>
               )}
             </For>
-          </DayGridViewWeek>
+          </DayGridViewSection>
         )}
       </For>
     </DayGridView>

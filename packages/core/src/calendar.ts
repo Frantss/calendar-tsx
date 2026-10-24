@@ -203,6 +203,7 @@ export const createCalendar = <
     const layout = resolve(definition, definition['~layout']) as Calendar_LayoutFeature;
     let model: Calendar_AnyLayout = layout.build(
       {
+        firstDayOfWeek: input.firstDayOfWeek ?? 7,
         range: viewContext.range,
         period: viewContext.period,
         inputRange: viewContext.inputRange,

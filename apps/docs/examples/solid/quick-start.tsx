@@ -5,10 +5,11 @@ import {
   CalendarProvider,
   DayGridView,
   DayGridViewDay,
-  DayGridViewWeek,
-  DayGridViewWeekEvent,
+  DayGridViewRow,
+  DayGridViewRowEvent,
   useCalendar,
   useCalendarSelector,
+  DayGridViewSection,
 } from '@calendar-tsx/solid';
 import '@calendar-tsx/themes/default.css';
 import { createSignal, For, Show } from 'solid-js';
@@ -65,14 +66,22 @@ const Month = () => {
     <Show when={month()}>
       {month => (
         <DayGridView model={month()}>
-          <For each={month().weeks}>
-            {week => (
-              <DayGridViewWeek week={week}>
-                <For each={week.days}>{day => <DayGridViewDay day={day}>{day.date.day}</DayGridViewDay>}</For>
-                <For each={week.segments}>
-                  {segment => <DayGridViewWeekEvent segment={segment}>{segment.event.data.title}</DayGridViewWeekEvent>}
+          <For each={month().sections}>
+            {section => (
+              <DayGridViewSection section={section}>
+                <For each={section.rows}>
+                  {week => (
+                    <DayGridViewRow row={week}>
+                      <For each={week.days}>{day => <DayGridViewDay day={day}>{day.date.day}</DayGridViewDay>}</For>
+                      <For each={week.segments}>
+                        {segment => (
+                          <DayGridViewRowEvent segment={segment}>{segment.event.data.title}</DayGridViewRowEvent>
+                        )}
+                      </For>
+                    </DayGridViewRow>
+                  )}
                 </For>
-              </DayGridViewWeek>
+              </DayGridViewSection>
             )}
           </For>
         </DayGridView>

@@ -13,7 +13,7 @@
     --calendar-bar-height: 1.125rem;
     --calendar-bar-gap: 1px;
     --calendar-overflow-height: 1.125rem;
-    --calendar-week-min-height: 4.5rem;
+    --calendar-row-min-height: 4.5rem;
     --calendar-slot-height: 2rem;
     --calendar-axis-width: 3.25rem;
   }

@@ -2,6 +2,8 @@
 
 > Status: **core, React and Solid adapters implemented** (`packages/core`, `packages/react`, `packages/solid`)
 
+> D41 records the current durations, grouping, visibility and view models. Earlier schemas remain as decision history.
+
 > Moved from guildara-frontend (`lib/calendar`) to this repository. References to `lib/calendar/core` and
 > `lib/calendar/react` now mean `packages/core` (`@calendar-tsx/core`) and `packages/react` (`@calendar-tsx/react`);
 > "app R…" requirements refer to guildara-frontend's `docs/calendar-spec.md`, the calendar page this library was built for.
@@ -26,7 +28,7 @@ A headless calendar library that satisfies `docs/calendar-spec.md` (R1–R11): a
 
 Library-level capabilities, each traced to the app spec. Draft; confirmed when the scope area closes.
 
-- **C1 — Views:** day grid for calendar months or whole weeks (D35, D40), day/week time grid with all-day row, list day/week/month/year (D36), resource time grid, resource timeline (D34). _(app R1.1–R1.4)_
+- **C1 — Views:** day grids with ordered month/resource grouping; time grids, lists and timelines; day/week/month counts and calendar month/quarter/year periods; hidden weekdays (D41). Time grids and timelines also support resources. _(app R1.1–R1.4)_
 - **C2 — Navigation:** current view and date, prev/next/today, go to date, change view; visible range and period derivable synchronously after any change. _(R2.3–R2.5, R3.2–R3.5, R8.1, R11.1)_
 - **C3 — Change notification:** a single subscription that reports view/date changes, so the app can sync the URL. _(R2.1–R2.2)_
 - **C4 — Time-grid layout:** overlapping timed events laid out side by side; rows do not stretch; slot labels formattable. _(R1.2, R1.7, R1.8)_
@@ -1187,6 +1189,24 @@ duplicate the established event and layer contracts.
 - **Documentation:** one day-grid view page covers both forms and their shared model and parts.
 
 Rejected: retaining separate month and week factories (two names for one layout); keeping month-named aliases (preserves the naming mismatch); a generic factory for every layout (time grids, lists and timelines retain different models and parts).
+
+### D41 — Expanded durations, ordered grouping and visible-date geometry
+
+**Serves:** C1, C2, C6, C7, C8, C9, C10. Accepted by the user; extends D4 and supersedes D35/D40's restricted day-grid model.
+
+**Why:** Durations and grouping are configuration of the four existing layout families. A day, N-day, workweek, resource grid, continuous year and multi-month overview reuse day cells and bars. Calendar-period timelines reuse the timeline renderer. No fifth factory or layout kind is introduced.
+
+- **Shared periods:** all four factories accept exactly one of positive integer `days`, `weeks`, `months`, or `period: 'month' | 'quarter' | 'year'`. `days` starts on the anchor date except that `days: 7` preserves existing week alignment. `weeks` starts on `firstDayOfWeek`; steps preserve the anchor's weekday. `months` starts with the anchor month. Calendar quarters start in January, April, July and October; calendar years start in January. Month-based steps land on the first day of the new period. `calendar-periods.ts` owns this calculation and validation; layout features retain control of padding and building.
+- **Day-grid grouping:** `groupBy` accepts `'month'`, `'resource'`, singleton tuples, `['month', 'resource']`, or `['resource', 'month']`. Keys are unique. Month grouping requires a month-based duration. A month key creates month sections; a final resource key creates columns inside each section. A resource key before month produces each resource's month sections, ordered by resource input and then date. `groupOrder` controls resource/date column order inside a row; it does not override the section order.
+- **Day-grid model:** one `{ kind: 'dayGrid', sections }` shape for every configuration. Each section contains its period, padded range, optional month/resource, header columns and rows. A day-count range is one row; week and month ranges use week rows. Each row exposes `days`, `segments`, `backgroundEvents`, `columnCount` and `stackCount`. `Calendar_DayGridLayout`, `Section`, `Row` and `Day` types take event data, resource data and features, in that order. Section keys are unique within the layout; row and cell keys are scoped to their parent.
+- **Padding:** month-based day grids pad to whole weeks. `fixedWeekCount` is allowed only for a single calendar month or when grouping by month; each month then has six rows. Padding is local to the month section, so a date may occur as an outside day in a neighbouring section. The context's range envelopes every section's range, including extra fixed weeks.
+- **Resources:** the existing time-grid matching rule applies to day-grid columns: assigned events appear in each named resource; unassigned events appear in none. Background events without resource IDs apply to every resource. `dayOverflow(date, resourceId?)` can distinguish resource cells. Day cells expose their resource and whether no availability overlaps that date. Background layers now apply resource scopes to these cells as well.
+- **Hidden weekdays:** `hiddenDays` is per view, using ISO weekdays 1–7, and leaves at least one weekday visible. It does not change the navigation period, inclusive fetch envelope or step. Day grids and time-grid all-day bars project spans onto visible columns; resource boundaries split bars where required. Lists omit hidden dates. A selected range containing no visible dates yields an empty visible model. Events occurring only on hidden dates do not occupy rows or lanes.
+- **Timeline scale:** a compressed axis contains only visible dates, using their actual zoned boundary instants. Events, availability, headers and now use this same scale. Timed slots advance through real instants; a repeated fall-back hour has a distinct key. `slotMinutes: 1440` means one calendar-day slot, including short and long DST days. Day and slot models retain integer column indices and add fractional `start`/`span` geometry. Weighted header tracks and slot-line masks follow those boundaries. The track's minimum size preserves `minSlotWidth` even for unequal daily slots.
+- **Bindings and themes:** `DayGridView` is a labelled region; `DayGridViewSection` is a grid. Consumers render section headers, column headers and rows with one part family in both adapters. Week-specific parts, types, selectors and the minimum-height token become row names. Sections and rows emit `--cal-columns`; styles no longer assume seven columns. The default theme arranges sections responsively, configurable through section minimum width and gap. `Calendar_LayoutInput` includes `firstDayOfWeek` so section builders use the same alignment as navigation.
+- **Migration:** replace `layout.weeks` with section/row iteration, `weekdays` with `section.columns`, week parts/types with row parts/types, `week` props with `row`, and the row model's `rows` count with `stackCount`. Header cells take `column` instead of `weekday`. Render headers and rows inside `DayGridViewSection`. Replace `day-grid-week-*` selectors and `--calendar-week-min-height` with row names. There are no legacy model aliases.
+
+Rejected: separate day, resource, workweek, year or multi-month factories (duplicate configuration around shared geometry); a separate `monthGrouping` option (duplicates `groupBy` and cannot express ordered composition); forcing time grids and timelines into one model (D34's geometry distinction remains); hiding dates with CSS (bars, overflow, availability and now would retain incorrect positions).
 
 ## Test cases
 

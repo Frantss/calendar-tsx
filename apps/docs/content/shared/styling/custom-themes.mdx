@@ -28,18 +28,20 @@ when true and absent otherwise.
 
 ### Day grid
 
-| `data-part`                      | Component                        | Attributes                                      |
-| -------------------------------- | -------------------------------- | ----------------------------------------------- |
-| `day-grid-root`                  | `DayGridView`                    |                                                 |
-| `day-grid-header`                | `DayGridViewHeader`              |                                                 |
-| `day-grid-header-cell`           | `DayGridViewHeaderCell`          | `data-weekday` (1–7, Monday–Sunday)             |
-| `day-grid-week`                  | `DayGridViewWeek`                |                                                 |
-| `day-grid-day`                   | `DayGridViewDay`                 | `data-today`, `data-outside`, `data-date`       |
-| `day-grid-day-trigger`           | `DayGridViewDayTrigger`          |                                                 |
-| `day-grid-week-event`            | `DayGridViewWeekEvent`           | `data-continues-before`, `data-continues-after` |
-| `day-grid-week-background-event` | `DayGridViewWeekBackgroundEvent` | `data-continues-before`, `data-continues-after` |
-| `day-grid-day-background`        | `DayGridViewDayBackground`       | `data-layer`, `data-kind`                       |
-| `day-grid-overflow`              | `DayGridViewOverflow`            | `data-hidden-count`                             |
+| `data-part`                     | Component                       | Attributes                                      |
+| ------------------------------- | ------------------------------- | ----------------------------------------------- |
+| `day-grid-section`              | `DayGridViewSection`            | `data-month`, `data-resource-id`                |
+| `day-grid-section-header`       | `DayGridViewSectionHeader`      |                                                 |
+| `day-grid-root`                 | `DayGridView`                   |                                                 |
+| `day-grid-header`               | `DayGridViewHeader`             |                                                 |
+| `day-grid-header-cell`          | `DayGridViewHeaderCell`         | `data-weekday` (1–7), `data-resource-id`        |
+| `day-grid-row`                  | `DayGridViewRow`                |                                                 |
+| `day-grid-day`                  | `DayGridViewDay`                | `data-today`, `data-outside`, `data-date`       |
+| `day-grid-day-trigger`          | `DayGridViewDayTrigger`         |                                                 |
+| `day-grid-row-event`            | `DayGridViewRowEvent`           | `data-continues-before`, `data-continues-after` |
+| `day-grid-row-background-event` | `DayGridViewRowBackgroundEvent` | `data-continues-before`, `data-continues-after` |
+| `day-grid-day-background`       | `DayGridViewDayBackground`      | `data-layer`, `data-kind`                       |
+| `day-grid-overflow`             | `DayGridViewOverflow`           | `data-hidden-count`                             |
 
 ### Time grid
 
@@ -109,7 +111,7 @@ Parts emit their layout as unitless `--cal-*` custom properties on their own ele
 | `time-grid-event`                                                             | `--cal-start`, `--cal-span` (fractions of the day), `--cal-lane`, `--cal-lanes`, `--cal-inline-start`, `--cal-inline-size` (fractions of the width) |
 | `time-grid-unavailable`, `time-grid-background`, `time-grid-background-event` | `--cal-start`, `--cal-span`                                                                                                                         |
 | `time-grid-now`                                                               | `--cal-now` (fraction of the day)                                                                                                                   |
-| `timeline-root`                                                               | `--cal-slots`, `--cal-min-slot-width`                                                                                                               |
+| `timeline-root`                                                               | `--cal-slots`, `--cal-min-slot-width`, `--cal-track-slots`, `--cal-slot-tracks`, `--cal-slot-lines`                                                 |
 | `timeline-day-header`                                                         | `--cal-col-start`, `--cal-col-span` (slot columns)                                                                                                  |
 | `timeline-slot-label`                                                         | `--cal-col-start`                                                                                                                                   |
 | `timeline-row`                                                                | `--cal-rows`: stack depth                                                                                                                           |

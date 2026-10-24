@@ -16,10 +16,14 @@ import {
   useCalendarSelector,
 } from '@calendar-tsx/react';
 
-import type { State } from '../core/setup';
+import type { Calendar_Event } from '@calendar-tsx/core';
+import type { Booking, State } from '../core/setup';
 
 // #region view
-export const Timeline = () => {
+export const Timeline = ({
+  locale = 'en-US',
+  onSelect,
+}: { locale?: string; onSelect?: (event: Calendar_Event<Booking>) => void } = {}) => {
   const timeline = useCalendarSelector((state: State) => state.layout);
 
   if (timeline.kind !== 'timeline') return null;
@@ -30,13 +34,13 @@ export const Timeline = () => {
         {timeline.days.map(day => (
           <TimelineViewDayHeader key={day.key} day={day}>
             <TimelineViewDayTrigger day={day} view='day'>
-              {day.date.toLocaleString('en-US', { weekday: 'short', day: 'numeric' })}
+              {day.date.toLocaleString(locale, { month: 'short', day: 'numeric' })}
             </TimelineViewDayTrigger>
           </TimelineViewDayHeader>
         ))}
         {timeline.slots.map(slot => (
           <TimelineViewSlotLabel key={slot.key} slot={slot}>
-            {slot.time.toLocaleString('en-US', { hour: 'numeric' })}
+            {slot.time.toLocaleString(locale, { hour: 'numeric' })}
           </TimelineViewSlotLabel>
         ))}
       </TimelineViewHeader>
@@ -55,7 +59,7 @@ export const Timeline = () => {
                 <TimelineViewUnavailable key={segment.key} segment={segment} />
               ))}
               {row.segments.map(segment => (
-                <TimelineViewEvent key={segment.key} segment={segment}>
+                <TimelineViewEvent key={segment.key} segment={segment} onClick={() => onSelect?.(segment.event)}>
                   {segment.event.data.title}
                 </TimelineViewEvent>
               ))}

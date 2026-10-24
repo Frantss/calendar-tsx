@@ -21,7 +21,7 @@ export const Column = (props: { column: Grid['columns'][number] }) => (
 );
 
 // in the month view: inside the day, beneath its content
-export const Day = (props: { day: Month['weeks'][number]['days'][number] }) => (
+export const Day = (props: { day: Month['sections'][number]['rows'][number]['days'][number] }) => (
   <DayGridViewDay day={props.day}>
     <For each={props.day.backgrounds}>{background => <DayGridViewDayBackground background={background} />}</For>
     {props.day.date.day}

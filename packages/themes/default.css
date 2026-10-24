@@ -29,12 +29,23 @@
     --calendar-bar-inset: 2px;
     --calendar-event-gap: 4px;
     --calendar-overflow-height: 1.5rem;
-    --calendar-week-min-height: 6rem;
+    --calendar-row-min-height: 6rem;
     --calendar-slot-height: 3rem;
     --calendar-axis-width: 4rem;
   }
 
   /* Roots */
+
+  :where([data-scope='calendar'][data-part='day-grid-root']) {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--calendar-section-min-width, 20rem)), 1fr));
+    align-items: start;
+    gap: var(--calendar-section-gap, 1rem);
+  }
+
+  :where([data-scope='calendar'][data-part='day-grid-section-header']) {
+    padding: 0.5rem;
+    font-weight: 600;
+  }
 
   :where([data-scope='calendar'][data-part$='-root']) {
     color: var(--calendar-text);
@@ -80,7 +91,7 @@
    */
   :where(
     [data-scope='calendar']:is(
-      [data-part='day-grid-week-event'],
+      [data-part='day-grid-row-event'],
       [data-part='time-grid-all-day-event'],
       [data-part='time-grid-event'],
       [data-part='timeline-event']
@@ -96,7 +107,7 @@
   /* Background events: a light accent wash, translucent so day numbers and slot lines show through */
   :where(
     [data-scope='calendar']:is(
-      [data-part='day-grid-week-background-event'],
+      [data-part='day-grid-row-background-event'],
       [data-part='time-grid-all-day-background-event'],
       [data-part='time-grid-background-event'],
       [data-part='timeline-background-event']
@@ -109,7 +120,7 @@
 
   :where(
     [data-scope='calendar']:is(
-      [data-part='day-grid-week-event'],
+      [data-part='day-grid-row-event'],
       [data-part='time-grid-all-day-event'],
       [data-part='timeline-event']
     )
@@ -153,7 +164,7 @@
     font-weight: 600;
   }
 
-  :where([data-scope='calendar'][data-part='day-grid-week'] + [data-part='day-grid-week']) {
+  :where([data-scope='calendar'][data-part='day-grid-row'] + [data-part='day-grid-row']) {
     border-block-start: 1px solid var(--calendar-border);
   }
 
@@ -514,7 +525,7 @@
     /* Background events: hatched like layers, in the highlight color so the two stay apart */
     :where(
       [data-scope='calendar']:is(
-        [data-part='day-grid-week-background-event'],
+        [data-part='day-grid-row-background-event'],
         [data-part='time-grid-all-day-background-event'],
         [data-part='time-grid-background-event'],
         [data-part='timeline-background-event']

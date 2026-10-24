@@ -1,5 +1,6 @@
 import { Temporal } from 'temporal-polyfill';
 
+import { calendarPeriods_groups } from '#calendar-periods';
 import { calendarEvents_dateSpan, calendarEvents_isAllDay, calendarEvents_overlaps } from '#calendar-events';
 import type {
   Calendar_BackgroundEventSegment,
@@ -27,21 +28,16 @@ import {
 import type { LayoutCoordinates_Fragment, LayoutCoordinates_Plan } from '#layout/layout-coordinates';
 import { layoutIntervals_complement } from '#layout/layout-intervals';
 import { layoutLanes_assign } from '#layout/layout-lanes';
+import {
+  layoutColumns_matches as matchesResource,
+  layoutColumns_matchesBackground as matchesBackgroundResource,
+  layoutColumns_place as placeAllDay,
+} from '#layout/layout-columns';
 
 const DEFAULT_SLOT_MINUTES = 30;
 const DEFAULT_MIN_EVENT_MINUTES = 15;
 const DEFAULT_SHORT_EVENT_MINUTES = 30;
 const MS_PER_MINUTE = 60_000;
-
-const matchesResource = <TData, TResourceData>(
-  event: Calendar_Event<TData>,
-  resource?: Calendar_Resource<TResourceData>,
-) => !resource || (event.resourceIds ?? []).includes(resource.id);
-
-const matchesBackgroundResource = <TData, TResourceData>(
-  event: Calendar_Event<TData>,
-  resource?: Calendar_Resource<TResourceData>,
-) => !resource || !event.resourceIds || event.resourceIds.includes(resource.id);
 
 type Projected<TData> = { event: Calendar_Event<TData>; fragments: readonly LayoutCoordinates_Fragment[] };
 
@@ -158,41 +154,6 @@ const buildColumn = <TData, TResourceData>({
   };
 };
 
-/**
- * Places all-day spans per resource group. Resource-first order keeps a resource's days adjacent
- * (D19), so a span crosses them; otherwise each column gets its own single-day spans.
- */
-const placeAllDay = <TData, TResourceData, TSpan extends { colStart: number }>(
-  columns: Calendar_TimeGridColumn<TData, TResourceData>[],
-  groups: (Calendar_Resource<TResourceData> | undefined)[],
-  eventsOf: (resource?: Calendar_Resource<TResourceData>) => Calendar_Event<TData>[],
-  place: (events: Calendar_Event<TData>[], dates: Temporal.PlainDate[], keyPrefix: string) => TSpan[],
-) =>
-  groups.flatMap(resource => {
-    const groupColumns = columns
-      .map((column, index) => ({ column, index }))
-      .filter(({ column }) => column.resource === resource);
-    const offset = groupColumns[0]?.index ?? 0;
-    const isContiguous = groupColumns.every(({ index }, position) => index === offset + position);
-    const groupEvents = eventsOf(resource);
-
-    if (isContiguous) {
-      return place(
-        groupEvents,
-        groupColumns.map(({ column }) => column.date),
-        `all-day:${resource?.id ?? 'all'}`,
-      ).map(span => ({ ...span, colStart: span.colStart + offset }));
-    }
-
-    return groupColumns.flatMap(({ column, index }) =>
-      place(
-        groupEvents.filter(event => calendarEvents_overlaps(event, { start: column.date, end: column.date })),
-        [column.date],
-        `all-day:${column.key}`,
-      ).map(span => ({ ...span, colStart: index })),
-    );
-  });
-
 const buildAllDay = <TData, TResourceData>(
   columns: Calendar_TimeGridColumn<TData, TResourceData>[],
   groups: (Calendar_Resource<TResourceData> | undefined)[],
@@ -261,7 +222,7 @@ export const layoutTimeGrid_build = <TData, TResourceData>({
     ]),
   );
   const groups: (Calendar_Resource<TResourceData> | undefined)[] =
-    definition.groupBy === 'resource' ? resources : [undefined];
+    calendarPeriods_groups(definition.groupBy).includes('resource') ? resources : [undefined];
 
   const pairs =
     definition.groupOrder === 'date-first'

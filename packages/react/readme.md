@@ -12,11 +12,12 @@ day-grid (`DayGridView*`), time-grid (`TimeGridView*`), list (`ListView*`) and t
 import {
   DayGridViewDay,
   DayGridView,
-  DayGridViewWeek,
-  DayGridViewWeekEvent,
+  DayGridViewRow,
+  DayGridViewRowEvent,
   CalendarProvider,
   useCalendar,
   useCalendarSelector,
+  DayGridViewSection,
 } from '@calendar-tsx/react';
 
 const Month = () => {
@@ -26,19 +27,23 @@ const Month = () => {
 
   return (
     <DayGridView model={layout}>
-      {layout.weeks.map(week => (
-        <DayGridViewWeek key={week.key} week={week}>
-          {week.days.map(day => (
-            <DayGridViewDay key={day.key} day={day}>
-              {day.date.day}
-            </DayGridViewDay>
+      {layout.sections.map(section => (
+        <DayGridViewSection key={section.key} section={section}>
+          {section.rows.map(week => (
+            <DayGridViewRow key={week.key} row={week}>
+              {week.days.map(day => (
+                <DayGridViewDay key={day.key} day={day}>
+                  {day.date.day}
+                </DayGridViewDay>
+              ))}
+              {week.segments.map(segment => (
+                <DayGridViewRowEvent key={segment.key} segment={segment}>
+                  {segment.event.id}
+                </DayGridViewRowEvent>
+              ))}
+            </DayGridViewRow>
           ))}
-          {week.segments.map(segment => (
-            <DayGridViewWeekEvent key={segment.key} segment={segment}>
-              {segment.event.id}
-            </DayGridViewWeekEvent>
-          ))}
-        </DayGridViewWeek>
+        </DayGridViewSection>
       ))}
     </DayGridView>
   );

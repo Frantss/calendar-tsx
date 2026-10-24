@@ -16,16 +16,22 @@
     display: grid;
   }
 
+  :where([data-scope='calendar'][data-part='day-grid-section']) {
+    display: grid;
+    grid-template-columns: repeat(var(--cal-columns, 7), minmax(0, 1fr));
+    min-inline-size: 0;
+  }
+
   :where([data-scope='calendar'][data-part='day-grid-header']),
-  :where([data-scope='calendar'][data-part='day-grid-week']) {
+  :where([data-scope='calendar'][data-part='day-grid-row']) {
     display: grid;
     grid-template-columns: repeat(var(--cal-columns, 7), minmax(0, 1fr));
   }
 
-  :where([data-scope='calendar'][data-part='day-grid-week']) {
+  :where([data-scope='calendar'][data-part='day-grid-row']) {
     position: relative;
     min-block-size: max(
-      var(--calendar-week-min-height, 6rem),
+      var(--calendar-row-min-height, 6rem),
       calc(
         var(--calendar-day-header-height, 2rem) + var(--cal-rows) *
           (var(--calendar-bar-height, 1.375rem) + var(--calendar-bar-gap, 2px)) +
@@ -55,7 +61,7 @@
     margin-block-start: auto;
   }
 
-  :where([data-scope='calendar'][data-part='day-grid-week-event']) {
+  :where([data-scope='calendar'][data-part='day-grid-row-event']) {
     position: absolute;
     inset-block-start: calc(
       var(--calendar-day-header-height, 2rem) + var(--cal-row) *
@@ -67,7 +73,7 @@
   }
 
   /* Positioned above the in-flow day cells, so it must let clicks through to their triggers; later bars paint over it */
-  :where([data-scope='calendar'][data-part='day-grid-week-background-event']) {
+  :where([data-scope='calendar'][data-part='day-grid-row-background-event']) {
     position: absolute;
     inset-block: 0;
     inset-inline-start: calc(var(--cal-col-start) / var(--cal-columns, 7) * 100%);

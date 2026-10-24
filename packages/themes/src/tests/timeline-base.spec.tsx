@@ -19,7 +19,7 @@ import {
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
 import '../../base.css';
 
-import { themesSetup_part, themesSetup_rect, themesSetup_render, themesSetup_timed } from '#tests/themes.setup';
+import { themesSetup_allDay, themesSetup_part, themesSetup_rect, themesSetup_render, themesSetup_timed } from '#tests/themes.setup';
 
 const views: Calendar_Views = {
   timeline: timelineView({ days: 1, groupBy: 'resource' }),
@@ -88,8 +88,22 @@ it('lines the day headers and slot labels up with the track', async () => {
   expect(days).toHaveLength(7);
   expect(days[0]?.left).toBeCloseTo(lane.left, 0);
   expect(days[6]?.right).toBeCloseTo(lane.right, 0);
-  expect(days[3]?.left).toBeCloseTo(slots[72]?.left ?? 0, 0);
-  expect(lane.width).toBeGreaterThanOrEqual(168 * 16 - 1);
+  expect(days[3]?.left).toBeCloseTo(slots[71]?.left ?? 0, 0);
+  expect(lane.width).toBeGreaterThanOrEqual(167 * 16 - 1);
+});
+
+it('aligns daily month headers and event bars across a short DST day', async () => {
+  await render({
+    views: { timeline: timelineView({ period: 'month', groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '2rem' }) },
+    events: [{ ...themesSetup_allDay('DST', { start: '2026-03-08', end: '2026-03-08' }), resourceIds: ['Ana'] }],
+  });
+  const shortDay = themesSetup_rect(themesSetup_part('timeline-day-header', '[data-date="2026-03-08"]')[0]);
+  const normalDay = themesSetup_rect(themesSetup_part('timeline-day-header', '[data-date="2026-03-09"]')[0]);
+  const bar = themesSetup_rect(event('DST'));
+  expect(bar.left).toBeCloseTo(shortDay.left, 0);
+  expect(bar.width).toBeCloseTo(shortDay.width, 0);
+  expect(shortDay.width / normalDay.width).toBeCloseTo(23 / 24, 2);
+  expect(shortDay.width).toBeGreaterThanOrEqual(31.9);
 });
 
 it('stacks overlapping events without overlap and grows the row', async () => {

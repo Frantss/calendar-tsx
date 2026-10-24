@@ -23,7 +23,7 @@ renders: define views at module scope and memoize arrays.
 
 ## Views and layouts
 
-A view is a key of your own (`month`, `week`, `rooms`, …) bound to one of four layouts: day grid, time grid, list or timeline. A day grid can cover a calendar month or whole weeks.
+A view is a key of your own (`month`, `week`, `rooms`, …) bound to one of four layouts: day grid, time grid, list or timeline. All four factories accept day, week and month counts or calendar month, quarter and year periods. Day grids can group those dates by month and resource.
 Several views can share a layout with different settings. You switch on `layout.kind` and render that layout's parts.
 
 ## Unstyled parts

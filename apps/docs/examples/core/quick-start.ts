@@ -34,30 +34,35 @@ const part = (tag: string, name: string, attributes: Record<string, string> = {}
 };
 
 const renderDayGrid = (layout: Calendar_DayGridLayout<Booking>) => {
-  const root = part('div', 'day-grid-root', { role: 'grid' });
+  const root = part('div', 'day-grid-root', { role: 'region', 'aria-label': 'Calendar' });
 
-  for (const week of layout.weeks) {
-    const row = part('div', 'day-grid-week', { role: 'row' });
+  for (const section of layout.sections) {
+    const grid = part('div', 'day-grid-section', { role: 'grid' });
+    grid.style.setProperty('--cal-columns', String(Math.max(1, section.columnCount)));
+    for (const week of section.rows) {
+      const row = part('div', 'day-grid-row', { role: 'row' });
 
-    row.style.setProperty('--cal-rows', String(week.rows));
-    for (const day of week.days) {
-      const cell = part('div', 'day-grid-day', { role: 'gridcell' });
+      row.style.setProperty('--cal-rows', String(week.stackCount));
+      for (const day of week.days) {
+        const cell = part('div', 'day-grid-day', { role: 'gridcell' });
 
-      if (day.isToday) cell.dataset['today'] = '';
-      if (day.isOutside) cell.dataset['outside'] = '';
-      cell.textContent = String(day.date.day);
-      row.append(cell);
+        if (day.isToday) cell.dataset['today'] = '';
+        if (day.isOutside) cell.dataset['outside'] = '';
+        cell.textContent = String(day.date.day);
+        row.append(cell);
+      }
+      for (const segment of week.segments) {
+        const bar = part('button', 'day-grid-row-event', { type: 'button' });
+
+        bar.style.setProperty('--cal-col-start', String(segment.colStart));
+        bar.style.setProperty('--cal-col-span', String(segment.colSpan));
+        bar.style.setProperty('--cal-row', String(segment.row));
+        bar.textContent = segment.event.data.title;
+        row.append(bar);
+      }
+      grid.append(row);
     }
-    for (const segment of week.segments) {
-      const bar = part('button', 'day-grid-week-event', { type: 'button' });
-
-      bar.style.setProperty('--cal-col-start', String(segment.colStart));
-      bar.style.setProperty('--cal-col-span', String(segment.colSpan));
-      bar.style.setProperty('--cal-row', String(segment.row));
-      bar.textContent = segment.event.data.title;
-      row.append(bar);
-    }
-    root.append(row);
+    root.append(grid);
   }
 
   return root;

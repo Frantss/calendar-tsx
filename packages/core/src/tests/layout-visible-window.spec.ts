@@ -139,22 +139,22 @@ it('uses overnight input coverage and shared geometry for background layers, bac
 
 it('compresses hidden dates in month bars and overflow while retaining all calendar week rows', () => {
   const grid = setup('month', '2026-03-11', [allDay('hidden', '2026-03-07'), allDay('visible', '2026-03-06', '2026-03-09')]).store.state.layout;
-  if (grid.kind !== 'month') throw new Error('expected month');
-  expect(grid.weeks).toHaveLength(6);
-  expect(grid.weeks[0].key).toBe('2026-03-01');
-  expect(grid.weekdays.map(day => day.dayOfWeek)).toEqual([1, 2, 3, 4, 5]);
-  expect(grid.weeks.every(week => week.days.length === 5)).toBe(true);
-  expect(grid.weeks[0].segments.map(segment => [segment.event.id, segment.colStart, segment.colSpan])).toEqual([['visible', 4, 1]]);
-  expect(grid.weeks[1].segments.map(segment => [segment.event.id, segment.colStart, segment.colSpan])).toEqual([['visible', 0, 1]]);
-  expect(grid.weeks.flatMap(week => week.days).every(day => day.hiddenCount === 0)).toBe(true);
+  if (grid.kind !== 'dayGrid') throw new Error('expected month');
+  expect(grid.sections[0].rows).toHaveLength(6);
+  expect(grid.sections[0].rows[0].key).toBe('2026-03-01');
+  expect(grid.sections[0].columns.map(column => column.date.dayOfWeek)).toEqual([1, 2, 3, 4, 5]);
+  expect(grid.sections[0].rows.every(week => week.days.length === 5)).toBe(true);
+  expect(grid.sections[0].rows[0].segments.map(segment => [segment.event.id, segment.colStart, segment.colSpan])).toEqual([['visible', 4, 1]]);
+  expect(grid.sections[0].rows[1].segments.map(segment => [segment.event.id, segment.colStart, segment.colSpan])).toEqual([['visible', 0, 1]]);
+  expect(grid.sections[0].rows.flatMap(week => week.days).every(day => day.hiddenCount === 0)).toBe(true);
 });
 
 it('hides weekdays in day grids and lists', () => {
   const events = [allDay('weekend', '2026-03-07'), allDay('weekday', '2026-03-09')];
   const days = setup('days', '2026-03-11', events).store.state.layout;
   const list = setup('list', '2026-03-11', events).store.state.layout;
-  if (days.kind !== 'month' || list.kind !== 'list') throw new Error('expected date layouts');
-  expect(days.weeks.map(week => week.days.length)).toEqual([5, 5]);
+  if (days.kind !== 'dayGrid' || list.kind !== 'list') throw new Error('expected date layouts');
+  expect(days.sections[0].rows.map(week => week.days.length)).toEqual([5, 5]);
   expect(list.days.map(day => day.date.toString())).toEqual(['2026-03-09']);
 });
 

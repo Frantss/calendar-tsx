@@ -5,13 +5,13 @@ date and calls `onNavigate` with them, and the calendar moves when you pass them
 
 ## Actions
 
-| Action                     | Next view and date                                                              |
-| -------------------------- | ------------------------------------------------------------------------------- |
-| `next()`, `prev()`         | One period forward or back: the configured calendar period, `weeks`, or `days`. |
-| `today()`                  | Today in `timeZone`, from the clock.                                            |
-| `goTo(date)`               | Same view, `date`.                                                              |
-| `setView(view, date?)`     | `view`, keeping the current date unless one is given.                           |
-| `navigate({ view, date })` | Either or both; omitted fields keep their current value.                        |
+| Action                     | Next view and date                                                                        |
+| -------------------------- | ----------------------------------------------------------------------------------------- |
+| `next()`, `prev()`         | One period forward or back: the configured calendar period, `months`, `weeks`, or `days`. |
+| `today()`                  | Today in `timeZone`, from the clock.                                                      |
+| `goTo(date)`               | Same view, `date`.                                                                        |
+| `setView(view, date?)`     | `view`, keeping the current date unless one is given.                                     |
+| `navigate({ view, date })` | Either or both; omitted fields keep their current value.                                  |
 
 `onNavigate` receives `{ view, date, range, period, inputRange }`. Because the next range arrives with the call, you can update the
 URL or start fetching events for it before the calendar re-renders.
@@ -24,16 +24,21 @@ URL or start fetching events for it before the calendar re-renders.
 
 Every view and date resolve to three inclusive date ranges on `state.context`:
 
-- **`period`** is the nominal span: a calendar month, `weeks` whole weeks, or `days` days. Use it for titles.
-- **`range`** is the anchor-date envelope, including month padding and hidden weekdays.
-- **`inputRange`** covers dates needed by the visible windows. Fetch events for it; an overnight window can need the following date.
+- **`period`** is the nominal span: a calendar period, `months` months, `weeks` whole weeks, or `days` days. Use it for titles.
+- **`range`** is what is visible. Month-based day grids extend to whole weeks; other views use the period itself. Hidden dates remain inside this anchor envelope.
 
-| View                         | Period                                      | Range                                                       |
-| ---------------------------- | ------------------------------------------- | ----------------------------------------------------------- |
-| Day grid, `period: 'month'`  | First to last day of `date`'s month         | Padded to full weeks; six weeks with `fixedWeekCount: true` |
-| Day grid, `weeks`            | `weeks` whole weeks from the week of `date` | Same as period                                              |
-| Time grid or list, `days: 7` | The week containing `date`                  | Same as period                                              |
-| Time grid or list, other     | `days` days starting at `date`              | Same as period                                              |
+- **`inputRange`** covers the source dates needed by visible windows, including the following morning for overnight windows. Fetch events for it.
+
+| View                           | Period                                      | Range                                                                 |
+| ------------------------------ | ------------------------------------------- | --------------------------------------------------------------------- |
+| Day grid, month-based duration | The calendar period or month count          | Padded to full weeks; six weeks per month with `fixedWeekCount: true` |
+| Day grid, `weeks`              | `weeks` whole weeks from the week of `date` | Same as period                                                        |
+| Time grid or list, `days: 7`   | The week containing `date`                  | Same as period                                                        |
+| Time grid or list, other       | `days` days starting at `date`              | Same as period                                                        |
+
+All four factories support `days`, `weeks`, `months`, and calendar `period` settings. Calendar quarters begin in January, April, July and October. A `months: 3` period starts with the anchor month instead.
+
+<include lang='ts'>../../../examples/core/view-variants.ts#periods</include>
 
 Weeks start on the `firstDayOfWeek` option, from `1` (Monday) to `7` (Sunday, the default). Input filtering uses `inputRange`; layout projection then clips to visible dates and hours.
 

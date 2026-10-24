@@ -14,11 +14,12 @@ import { For, Show } from 'solid-js';
 import {
   DayGridViewDay,
   DayGridView,
-  DayGridViewWeek,
-  DayGridViewWeekEvent,
+  DayGridViewRow,
+  DayGridViewRowEvent,
   CalendarProvider,
   useCalendar,
   useCalendarSelector,
+  DayGridViewSection,
 } from '@calendar-tsx/solid';
 
 const Month = () => {
@@ -33,14 +34,20 @@ const Month = () => {
     <Show when={month()}>
       {month => (
         <DayGridView model={month()}>
-          <For each={month().weeks}>
-            {week => (
-              <DayGridViewWeek week={week}>
-                <For each={week.days}>{day => <DayGridViewDay day={day}>{day.date.day}</DayGridViewDay>}</For>
-                <For each={week.segments}>
-                  {segment => <DayGridViewWeekEvent segment={segment}>{segment.event.id}</DayGridViewWeekEvent>}
+          <For each={month().sections}>
+            {section => (
+              <DayGridViewSection section={section}>
+                <For each={section.rows}>
+                  {week => (
+                    <DayGridViewRow row={week}>
+                      <For each={week.days}>{day => <DayGridViewDay day={day}>{day.date.day}</DayGridViewDay>}</For>
+                      <For each={week.segments}>
+                        {segment => <DayGridViewRowEvent segment={segment}>{segment.event.id}</DayGridViewRowEvent>}
+                      </For>
+                    </DayGridViewRow>
+                  )}
                 </For>
-              </DayGridViewWeek>
+              </DayGridViewSection>
             )}
           </For>
         </DayGridView>

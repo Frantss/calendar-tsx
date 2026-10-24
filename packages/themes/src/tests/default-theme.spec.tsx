@@ -22,9 +22,9 @@ import {
   DayGridViewDayTrigger,
   DayGridViewOverflow,
   DayGridView,
-  DayGridViewWeek,
-  DayGridViewWeekBackgroundEvent,
-  DayGridViewWeekEvent,
+  DayGridViewRow,
+  DayGridViewRowBackgroundEvent,
+  DayGridViewRowEvent,
   TimeGridViewAllDay,
   TimeGridViewAllDayBackgroundEvent,
   TimeGridViewAllDayEvent,
@@ -38,6 +38,7 @@ import {
   TimeGridViewNowIndicator,
   TimeGridView,
   useCalendarSelector,
+  DayGridViewSection,
 } from '@calendar-tsx/react';
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
 import '../../default.css';
@@ -102,28 +103,32 @@ const Month = () => {
 
   return (
     <DayGridView model={month}>
-      {month.weeks.map(week => (
-        <DayGridViewWeek key={week.key} week={week}>
-          {week.days.map(day => (
-            <DayGridViewDay key={day.key} day={day}>
-              {(day as { backgrounds?: Calendar_DayBackground[] }).backgrounds?.map(background => (
-                <DayGridViewDayBackground key={background.key} background={background} />
+      {month.sections.map(section => (
+        <DayGridViewSection key={section.key} section={section}>
+          {section.rows.map(week => (
+            <DayGridViewRow key={week.key} row={week}>
+              {week.days.map(day => (
+                <DayGridViewDay key={day.key} day={day}>
+                  {(day as { backgrounds?: Calendar_DayBackground[] }).backgrounds?.map(background => (
+                    <DayGridViewDayBackground key={background.key} background={background} />
+                  ))}
+                  <DayGridViewDayTrigger day={day} view='day'>
+                    {day.date.day}
+                  </DayGridViewDayTrigger>
+                  <DayGridViewOverflow day={day}>more</DayGridViewOverflow>
+                </DayGridViewDay>
               ))}
-              <DayGridViewDayTrigger day={day} view='day'>
-                {day.date.day}
-              </DayGridViewDayTrigger>
-              <DayGridViewOverflow day={day}>more</DayGridViewOverflow>
-            </DayGridViewDay>
+              {week.backgroundEvents.map(segment => (
+                <DayGridViewRowBackgroundEvent key={segment.key} segment={segment} />
+              ))}
+              {week.segments.map(segment => (
+                <DayGridViewRowEvent key={segment.key} segment={segment}>
+                  {segment.event.data.title}
+                </DayGridViewRowEvent>
+              ))}
+            </DayGridViewRow>
           ))}
-          {week.backgroundEvents.map(segment => (
-            <DayGridViewWeekBackgroundEvent key={segment.key} segment={segment} />
-          ))}
-          {week.segments.map(segment => (
-            <DayGridViewWeekEvent key={segment.key} segment={segment}>
-              {segment.event.data.title}
-            </DayGridViewWeekEvent>
-          ))}
-        </DayGridViewWeek>
+        </DayGridViewSection>
       ))}
     </DayGridView>
   );
@@ -236,11 +241,30 @@ it('spans a month bar across the days it covers', async () => {
   await themesSetup_render(<Month />, { view: 'month', events: [themesSetup_allDay('Fair', { start: '2026-03-10', end: '2026-03-12' })] });
   const first = themesSetup_rect(themesSetup_part('day-grid-day', '[data-date="2026-03-10"]')[0]);
   const last = themesSetup_rect(themesSetup_part('day-grid-day', '[data-date="2026-03-12"]')[0]);
-  const bar = themesSetup_rect(themesSetup_part('day-grid-week-event')[0]);
+  const bar = themesSetup_rect(themesSetup_part('day-grid-row-event')[0]);
 
   expect(bar.left - first.left).toBeCloseTo(2, 0);
   expect(last.right - bar.right).toBeCloseTo(2, 0);
   expect(bar.top).toBeGreaterThanOrEqual(first.top);
+});
+
+it('uses the visible column count for N-day event and background geometry', async () => {
+  await themesSetup_render(<Month />, {
+    views: { month: dayGridView({ days: 3, maxEventsPerDay: 3 }), day: timeGridView({ days: 1 }) },
+    view: 'month',
+    events: [
+      themesSetup_allDay('Fair', { start: '2026-03-11', end: '2026-03-12' }),
+      themesSetup_background(themesSetup_allDay('Holiday', { start: '2026-03-11', end: '2026-03-12' })),
+    ],
+  });
+  const cells = themesSetup_part('day-grid-day').map(themesSetup_rect);
+  const bar = themesSetup_rect(themesSetup_part('day-grid-row-event')[0]);
+  const background = themesSetup_rect(themesSetup_part('day-grid-row-background-event')[0]);
+  expect(cells).toHaveLength(3);
+  expect(bar.left - cells[0]!.left).toBeCloseTo(2, 0);
+  expect(cells[1]!.right - bar.right).toBeCloseTo(2, 0);
+  expect(background.left).toBeCloseTo(cells[0]!.left, 0);
+  expect(background.right).toBeCloseTo(cells[1]!.right, 0);
 });
 
 it('keeps the overflow trigger below the visible bars', async () => {
@@ -248,7 +272,7 @@ it('keeps the overflow trigger below the visible bars', async () => {
     view: 'month',
     events: ['A', 'B', 'C', 'D', 'E'].map(id => themesSetup_allDay(id, { start: '2026-03-11', end: '2026-03-11' })),
   });
-  const bars = themesSetup_part('day-grid-week-event').map(bar => themesSetup_rect(bar).bottom);
+  const bars = themesSetup_part('day-grid-row-event').map(bar => themesSetup_rect(bar).bottom);
   const overflow = themesSetup_rect(themesSetup_part('day-grid-overflow')[0]);
 
   expect(bars).toHaveLength(3);
@@ -330,7 +354,7 @@ it('leaves a gap between the day number and the first bar', async () => {
   const trigger = themesSetup_rect(
     themesSetup_part('day-grid-day', '[data-date="2026-03-11"]')[0]?.querySelector('[data-part="day-grid-day-trigger"]') ?? undefined,
   );
-  const bar = themesSetup_rect(themesSetup_part('day-grid-week-event')[0]);
+  const bar = themesSetup_rect(themesSetup_part('day-grid-row-event')[0]);
 
   // 0.25rem at the default 16px root size
   expect(bar.top - trigger.bottom).toBeCloseTo(4, 0);
@@ -473,7 +497,7 @@ it('tints month days under an all-day background event and keeps their triggers 
   });
   const first = themesSetup_rect(themesSetup_part('day-grid-day', '[data-date="2026-03-10"]')[0]);
   const last = themesSetup_rect(themesSetup_part('day-grid-day', '[data-date="2026-03-12"]')[0]);
-  const shade = themesSetup_rect(themesSetup_part('day-grid-week-background-event')[0]);
+  const shade = themesSetup_rect(themesSetup_part('day-grid-row-background-event')[0]);
   const trigger = themesSetup_part('day-grid-day', '[data-date="2026-03-11"]')[0]?.querySelector('[data-part="day-grid-day-trigger"]');
   const target = themesSetup_rect(trigger ?? undefined);
 

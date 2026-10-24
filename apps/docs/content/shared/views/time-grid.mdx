@@ -10,25 +10,32 @@ import { timeGridView } from '@calendar-tsx/core';
 
 timeGridView({ days: 7 }); // a week
 timeGridView({ days: 1 }); // a day
+timeGridView({ weeks: 1, hiddenDays: [6, 7] }); // a workweek
 ```
 
 ## Settings
 
-| Setting             | Type                                           | Default            | Description                                                          |
-| ------------------- | ---------------------------------------------- | ------------------ | -------------------------------------------------------------------- |
-| `days`              | `number`                                       | required           | Days shown. `7` starts on `firstDayOfWeek`; others start on `date`.  |
-| `allDay`            | `boolean`                                      | `true`             | `false` drops the all-day row from the layout.                       |
-| `slotMinutes`       | `number`                                       | `30`               | Positive integer slot length; the final slot may be shorter.         |
-| `minColumnWidth`    | `string`                                       | none               | Passed through for horizontal scrolling, for example `'8rem'`.       |
-| `groupBy`           | `'resource'`                                   | none               | One column per resource and day. See [resource view](resource-view). |
-| `groupOrder`        | `'resource-first' \| 'date-first'`             | `'resource-first'` | Column order when grouped.                                           |
-| `overlap`           | `'side-by-side' \| 'cascade'`                  | `'side-by-side'`   | How overlapping events share a column. See [overlap](#overlap).      |
-| `minEventMinutes`   | `number`                                       | `15`               | Shorter events are laid out this long. `0` turns it off.             |
-| `shortEventMinutes` | `number`                                       | `30`               | Events laid out shorter than this are flagged `isShort`.             |
-| `hiddenDays`        | `readonly Calendar_DayOfWeek[]`                | `[]`               | Hidden ISO weekdays.                                                 |
-| `timeWindow`        | `{ startMinutes: number; endMinutes: number }` | `[0, 1440)`        | Visible clock window, including overnight offsets.                   |
+Choose exactly one of `days`, `weeks`, `months`, or `period`. Counts must be positive integers.
 
-`next()` and `prev()` move by `days` days.
+| Duration    | Meaning                                                                |
+| ----------- | ---------------------------------------------------------------------- |
+| `days: N`   | N dates from `date`; `7` keeps its existing week alignment.            |
+| `weeks: N`  | N whole weeks from `firstDayOfWeek`.                                   |
+| `months: N` | N calendar months from the first day of the anchor month.              |
+| `period`    | `'month'`, `'quarter'`, or `'year'`, aligned to its calendar boundary. |
+
+`next()` and `prev()` advance the configured duration. Month-based steps land on the first day. `hiddenDays` omits ISO weekdays (`1` Monday to `7` Sunday) without changing the nominal period or its inclusive fetch range; at least one weekday must remain visible.
+
+| Setting             | Type                               | Default            | Description                                                          |
+| ------------------- | ---------------------------------- | ------------------ | -------------------------------------------------------------------- |
+| `allDay`            | `boolean`                          | `true`             | `false` drops the all-day row from the layout.                       |
+| `slotMinutes`       | `number`                           | `30`               | Positive integer slot length; the final slot may be shorter.                  |
+| `minColumnWidth`    | `string`                           | none               | Passed through for horizontal scrolling, for example `'8rem'`.       |
+| `groupBy`           | `'resource'` or `['resource']`     | none               | One column per resource and day. See [resource view](resource-view). |
+| `groupOrder`        | `'resource-first' \| 'date-first'` | `'resource-first'` | Column order when grouped.                                           |
+| `overlap`           | `'side-by-side' \| 'cascade'`      | `'side-by-side'`   | How overlapping events share a column. See [overlap](#overlap).      |
+| `minEventMinutes`   | `number`                           | `15`               | Shorter events are laid out this long. `0` turns it off.             |
+| `shortEventMinutes` | `number`                           | `30`               | Events laid out shorter than this are flagged `isShort`.             |
 
 ## Overlap
 

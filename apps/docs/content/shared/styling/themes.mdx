@@ -49,7 +49,7 @@ when those layers come after the calendar's. See [overriding rules](customizing#
 
 `base.css` expects the parts nested as the [view pages](../views/day-grid-view) show them:
 
-- `DayGridViewWeek` holds its `DayGridViewDay` cells and `DayGridViewWeekEvent` bars.
+- `DayGridView` holds sections; each `DayGridViewSection` holds its header and rows. `DayGridViewRow` holds its `DayGridViewDay` cells and `DayGridViewRowEvent` bars.
 - `TimeGridView` holds `TimeGridViewHeader`, an optional `TimeGridViewAllDay` and `TimeGridViewBody`.
 - `TimeGridViewBody` holds an optional `TimeGridViewAxis` and the `TimeGridViewColumn`s.
 
@@ -206,7 +206,7 @@ import '@calendar-tsx/themes/compact.css';
 | `--calendar-bar-height`        | `1.375rem`  | `1.125rem`  |
 | `--calendar-bar-gap`           | `2px`       | `1px`       |
 | `--calendar-overflow-height`   | `1.5rem`    | `1.125rem`  |
-| `--calendar-week-min-height`   | `6rem`      | `4.5rem`    |
+| `--calendar-row-min-height`    | `6rem`      | `4.5rem`    |
 | `--calendar-slot-height`       | `3rem`      | `2rem`      |
 | `--calendar-axis-width`        | `4rem`      | `3.25rem`   |
 

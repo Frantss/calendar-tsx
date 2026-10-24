@@ -5,7 +5,7 @@ import { page } from 'vitest/browser';
 import type { Calendar_DayGridLayout, Calendar_Views } from '@calendar-tsx/core';
 import { dayGridView, timeGridView } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
-import { fixtures_allDay, fixtures_background, fixtures_timed } from '#tests/calendar.fixtures';
+import { fixtures_allDay, fixtures_background, fixtures_resource, fixtures_timed } from '#tests/calendar.fixtures';
 import {
   DayGridViewDay,
   DayGridViewDayTrigger,
@@ -13,9 +13,10 @@ import {
   DayGridViewHeaderCell,
   DayGridViewOverflow,
   DayGridView,
-  DayGridViewWeek,
-  DayGridViewWeekBackgroundEvent,
-  DayGridViewWeekEvent,
+  DayGridViewRow,
+  DayGridViewRowBackgroundEvent,
+  DayGridViewRowEvent,
+  DayGridViewSection,
 } from '#day-grid-view';
 import { useCalendarSelector } from '#use-calendar';
 import type { CalendarSolidSetup_Overrides } from '#tests/calendar-solid.setup';
@@ -26,25 +27,31 @@ const MonthBody = (props: { onTriggerClick?: (event: MouseEvent) => void }) => {
 
   return (
     <DayGridView model={month()}>
-      <DayGridViewHeader>
-        <For each={month().weekdays}>{weekday => <DayGridViewHeaderCell weekday={weekday} />}</For>
-      </DayGridViewHeader>
-      <For each={month().weeks}>
-        {week => (
-          <DayGridViewWeek week={week}>
-            <For each={week.days}>
-              {day => (
-                <DayGridViewDay day={day}>
-                  <DayGridViewDayTrigger day={day} view='day' onClick={event => props.onTriggerClick?.(event)}>
-                    {day.date.day}
-                  </DayGridViewDayTrigger>
-                  <DayGridViewOverflow day={day}>see all</DayGridViewOverflow>
-                </DayGridViewDay>
+      <For each={month().sections}>
+        {section => (
+          <DayGridViewSection section={section}>
+            <DayGridViewHeader>
+              <For each={section.columns}>{column => <DayGridViewHeaderCell column={column} />}</For>
+            </DayGridViewHeader>
+            <For each={section.rows}>
+              {week => (
+                <DayGridViewRow row={week}>
+                  <For each={week.days}>
+                    {day => (
+                      <DayGridViewDay day={day}>
+                        <DayGridViewDayTrigger day={day} view='day' onClick={event => props.onTriggerClick?.(event)}>
+                          {day.date.day}
+                        </DayGridViewDayTrigger>
+                        <DayGridViewOverflow day={day}>see all</DayGridViewOverflow>
+                      </DayGridViewDay>
+                    )}
+                  </For>
+                  <For each={week.backgroundEvents}>{segment => <DayGridViewRowBackgroundEvent segment={segment} />}</For>
+                  <For each={week.segments}>{segment => <DayGridViewRowEvent segment={segment}>{segment.event.data.title}</DayGridViewRowEvent>}</For>
+                </DayGridViewRow>
               )}
             </For>
-            <For each={week.backgroundEvents}>{segment => <DayGridViewWeekBackgroundEvent segment={segment} />}</For>
-            <For each={week.segments}>{segment => <DayGridViewWeekEvent segment={segment}>{segment.event.data.title}</DayGridViewWeekEvent>}</For>
-          </DayGridViewWeek>
+          </DayGridViewSection>
         )}
       </For>
     </DayGridView>
@@ -74,7 +81,7 @@ it('exposes grid semantics and part attributes', async () => {
   const { ui } = setup();
 
   await expect.element(ui.grid).toHaveAttribute('data-scope', 'calendar');
-  await expect.element(ui.grid).toHaveAttribute('data-part', 'day-grid-root');
+  await expect.element(ui.grid).toHaveAttribute('data-part', 'day-grid-section');
   // header row + 5 weeks for March 2026
   expect(ui.rows.elements()).toHaveLength(6);
   expect(ui.cells.elements()).toHaveLength(35);
@@ -97,6 +104,30 @@ it('positions bars with custom properties and marks continuations', async () => 
   expect(first?.getAttribute('style')).toBe('--cal-col-start: 5; --cal-col-span: 2; --cal-row: 0;');
   expect(first?.hasAttribute('data-continues-after')).toBe(true);
   expect(second?.hasAttribute('data-continues-before')).toBe(true);
+});
+
+it('renders variable columns and resource state through the shared parts', async () => {
+  const { ui } = setup({
+    view: 'resource_days',
+    views: { day: timeGridView({ days: 1 }), resource_days: dayGridView({ days: 3, groupBy: 'resource', maxEventsPerDay: 3 }) },
+    resources: [fixtures_resource('a'), fixtures_resource('b')],
+  });
+  expect(ui.cells.elements()).toHaveLength(6);
+  expect(ui.grid.element().getAttribute('style')).toContain('--cal-columns: 6');
+  const headers = document.querySelectorAll('[data-part="day-grid-header-cell"]');
+  expect([...headers].map(header => header.getAttribute('data-resource-id'))).toEqual(['a', 'a', 'a', 'b', 'b', 'b']);
+  expect(ui.cells.elements().every(cell => cell.hasAttribute('data-unavailable'))).toBe(true);
+});
+
+it('renders month sections in the requested resource order', async () => {
+  const { ui } = setup({
+    view: 'months',
+    views: { day: timeGridView({ days: 1 }), months: dayGridView({ months: 2, groupBy: ['resource', 'month'], maxEventsPerDay: 3 }) },
+    resources: [fixtures_resource('b'), fixtures_resource('a')],
+  });
+  expect(ui.grid.elements()).toHaveLength(4);
+  expect(ui.grid.elements().map(section => section.getAttribute('data-resource-id'))).toEqual(['b', 'b', 'a', 'a']);
+  expect(ui.grid.elements().map(section => section.getAttribute('data-month'))).toEqual(['2026-03-01', '2026-04-01', '2026-03-01', '2026-04-01']);
 });
 
 it('renders the overflow trigger only for days with more, with the hidden count', async () => {
@@ -150,7 +181,7 @@ it('renders a one-week day grid with the day-grid parts', async () => {
     events: [fixtures_allDay('Fair', { start: '2026-03-10', end: '2026-03-12' })],
   });
 
-  await expect.element(ui.grid).toHaveAttribute('data-part', 'day-grid-root');
+  await expect.element(ui.grid).toHaveAttribute('data-part', 'day-grid-section');
   // header row + 1 week
   expect(ui.rows.elements()).toHaveLength(2);
   expect(ui.cells.elements()).toHaveLength(7);
@@ -174,7 +205,7 @@ it('renders a rolling four-week day grid and a fixed six-week month', async () =
 
 it('positions all-day background events across the week row', async () => {
   await setup({ events: [fixtures_background(fixtures_allDay('Break', { start: '2026-03-06', end: '2026-03-09' }))] });
-  const [first, second] = document.querySelectorAll('[data-part="day-grid-week-background-event"]');
+  const [first, second] = document.querySelectorAll('[data-part="day-grid-row-background-event"]');
 
   expect(first?.getAttribute('style')).toBe('--cal-col-start: 5; --cal-col-span: 2;');
   expect(first?.getAttribute('aria-hidden')).toBe('true');

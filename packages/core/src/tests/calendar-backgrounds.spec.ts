@@ -69,9 +69,11 @@ const days = (calendar: ReturnType<typeof setup>) => {
   const layout = calendar.store.state.layout as Calendar_DayGridLayout<unknown>;
 
   return Object.fromEntries(
-    layout.weeks.flatMap(week =>
-      week.days.map(day => [day.key, (day as { backgrounds?: Calendar_DayBackground[] }).backgrounds?.map(background => background.kind)]),
-    ),
+    layout.sections
+      .flatMap(section => section.rows)
+      .flatMap(week =>
+        week.days.map(day => [day.key, (day as { backgrounds?: Calendar_DayBackground[] }).backgrounds?.map(background => background.kind)]),
+      ),
   );
 };
 

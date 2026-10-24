@@ -1,5 +1,5 @@
 import { Temporal } from 'temporal-polyfill';
-
+import { calendarPeriods_groups } from '#calendar-periods';
 import { calendarEvents_dateSpan, calendarEvents_isAllDay } from '#calendar-events';
 import type {
   Calendar_BackgroundEventSegment,
@@ -35,13 +35,10 @@ const matchesResource = <TData, TResourceData>(
 /** Each item takes the lowest stack row where it overlaps nothing; touching intervals do not overlap (D34). */
 const stack = <T extends Interval>(items: T[]) => {
   const rows: Interval[][] = [];
-
   return items.map(item => {
     let row = 0;
-
     while (rows[row]?.some(other => other.startMs < item.endMs && item.startMs < other.endMs)) row++;
     (rows[row] ??= []).push(item);
-
     return { ...item, row };
   });
 };
@@ -188,7 +185,7 @@ export const layoutTimeline_build = <TData, TResourceData>({
   const dates = plan.dates.dates;
   const slotMinutes = definition.slotMinutes ?? DEFAULT_SLOT_MINUTES;
   const slots = layoutCoordinates_slots(plan.dates, slotMinutes);
-  const groups = definition.groupBy === 'resource' ? resources : [undefined];
+  const groups = calendarPeriods_groups(definition.groupBy).includes('resource') ? resources : [undefined];
   const clock = layoutCoordinates_projectInstant(plan, now.toInstant());
   const project = (event: Calendar_Event<TData>) => ({
     event,
@@ -209,6 +206,8 @@ export const layoutTimeline_build = <TData, TResourceData>({
       isToday: date.equals(now.toPlainDate()),
       colStart: index * slots.length,
       colSpan: slots.length,
+      start: index / dates.length,
+      span: 1 / dates.length,
     })),
     slots: dates.flatMap((date, day) =>
       slots.map((slot, index) => ({

@@ -8,20 +8,28 @@ import { timelineView } from '@calendar-tsx/core';
 
 timelineView({ days: 7, groupBy: 'resource' }); // a week, one row per resource
 timelineView({ days: 1, groupBy: 'resource', slotMinutes: 30 }); // a day
+timelineView({ period: 'month', groupBy: 'resource', slotMinutes: 1440 });
+timelineView({ period: 'year', slotMinutes: 1440 });
 ```
 
 ## Settings
 
-| Setting        | Type                                           | Default     | Description                                                          |
-| -------------- | ---------------------------------------------- | ----------- | -------------------------------------------------------------------- |
-| `days`         | `number`                                       | required    | Days shown. `7` starts on `firstDayOfWeek`; others start on `date`.  |
-| `groupBy`      | `'resource'`                                   | none        | One row per resource. Without it, the layout has one row.            |
-| `slotMinutes`  | `number`                                       | `60`        | Positive integer slot length; the final slot may be shorter.         |
-| `minSlotWidth` | `string`                                       | none        | Passed through as the slot columns' minimum width, such as `'3rem'`. |
-| `hiddenDays`   | `readonly Calendar_DayOfWeek[]`                | `[]`        | Hidden ISO weekdays.                                                 |
-| `timeWindow`   | `{ startMinutes: number; endMinutes: number }` | `[0, 1440)` | Visible clock window, including overnight offsets.                   |
+Choose exactly one of `days`, `weeks`, `months`, or `period`. Counts must be positive integers.
 
-`next()` and `prev()` move by `days` days.
+| Duration    | Meaning                                                                |
+| ----------- | ---------------------------------------------------------------------- |
+| `days: N`   | N dates from `date`; `7` keeps its existing week alignment.            |
+| `weeks: N`  | N whole weeks from `firstDayOfWeek`.                                   |
+| `months: N` | N calendar months from the first day of the anchor month.              |
+| `period`    | `'month'`, `'quarter'`, or `'year'`, aligned to its calendar boundary. |
+
+`next()` and `prev()` advance the configured duration. Month-based steps land on the first day. `hiddenDays` omits ISO weekdays (`1` Monday to `7` Sunday) without changing the nominal period or its inclusive fetch range; at least one weekday must remain visible.
+
+| Setting        | Type                           | Default | Description                                                          |
+| -------------- | ------------------------------ | ------- | -------------------------------------------------------------------- |
+| `groupBy`      | `'resource'` or `['resource']` | none    | One row per resource. Without it, the layout has one row.            |
+| `slotMinutes`  | `number`                       | `60`    | Positive integer slot length; the final slot may be shorter.                       |
+| `minSlotWidth` | `string`                       | none    | Passed through as the slot columns' minimum width, such as `'3rem'`. |
 
 - An event appears in every row whose resource it names.
 - All-day events have no separate row. They stack with the timed events, from the start of their first day to the
@@ -55,11 +63,11 @@ Hiding all seven weekdays is invalid. A controlled date with no visible weekdays
 concatenated visible windows**. The default has 24 clock hours per displayed date. Dates keep equal
 widths across daylight-saving transitions. Repeated hours share clock positions; visually overlapping events stack.
 
-- `days` holds one `{ key, date, isToday, colStart, colSpan }` per day, for the header. `colStart` and `colSpan` count
+- `days` holds one `{ key, date, isToday, colStart, colSpan, start, span }` per day, for the header. `colStart` and `colSpan` count
   slot columns.
 - `slots` holds `{ key, date, time, dayOffset, col, start, span }` per slot. Fractional bounds give partial slots their actual width.
 - `rows` holds one row per resource, or a single row without `groupBy`.
-- `now` is the current time's fraction of the range, only while the clock is inside it.
+- `now` is the current time's fraction of the visible scale, omitted on hidden dates and outside the range.
 
 | Row field          | Description                                                      |
 | ------------------ | ---------------------------------------------------------------- |

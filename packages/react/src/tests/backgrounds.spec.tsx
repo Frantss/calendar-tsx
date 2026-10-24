@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 
 import type { Calendar_DayGridLayout, Calendar_TimeGridLayout } from '@calendar-tsx/core';
 import { backgroundFeature, createBackgroundLayer, dayGridView, timeGridView } from '@calendar-tsx/core';
-import { DayGridView, DayGridViewDay, DayGridViewDayBackground, DayGridViewWeek } from '#day-grid-view';
+import { DayGridView, DayGridViewDay, DayGridViewDayBackground, DayGridViewRow, DayGridViewSection } from '#day-grid-view';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { calendarReactSetup_render } from '#tests/calendar-react.setup';
 import { TimeGridView, TimeGridViewBackground, TimeGridViewBody, TimeGridViewColumn } from '#time-grid-view';
@@ -52,20 +52,24 @@ const TimeGridBody = () => {
 };
 
 const MonthBody = () => {
-  const month = useCalendarSelector(state => state.layout) as Calendar_DayGridLayout<Fixtures_EventData, Features>;
+  const month = useCalendarSelector(state => state.layout) as Calendar_DayGridLayout<Fixtures_EventData, unknown, Features>;
 
   return (
     <DayGridView model={month}>
-      {month.weeks.map(week => (
-        <DayGridViewWeek key={week.key} week={week}>
-          {week.days.map(day => (
-            <DayGridViewDay key={day.key} day={day}>
-              {day.backgrounds.map(background => (
-                <DayGridViewDayBackground key={background.key} background={background} />
+      {month.sections.map(section => (
+        <DayGridViewSection key={section.key} section={section}>
+          {section.rows.map(week => (
+            <DayGridViewRow key={week.key} row={week}>
+              {week.days.map(day => (
+                <DayGridViewDay key={day.key} day={day}>
+                  {day.backgrounds.map(background => (
+                    <DayGridViewDayBackground key={background.key} background={background} />
+                  ))}
+                </DayGridViewDay>
               ))}
-            </DayGridViewDay>
+            </DayGridViewRow>
           ))}
-        </DayGridViewWeek>
+        </DayGridViewSection>
       ))}
     </DayGridView>
   );

@@ -114,7 +114,7 @@ createCalendar({
 
 - Time grid: `column.backgroundEvents` segments (all-day ones cover the whole column) and `allDay.backgroundEvents`
   spans.
-- Day grid: `week.backgroundEvents` spans, for all-day background events only.
+- Day grid: `section.rows[].backgroundEvents` spans, for all-day background events only.
 - List: left out.
 - Without `resourceIds`, a background event shades every resource column.
 
@@ -182,6 +182,6 @@ const views = createCalendarViews({
 createCalendar({ ...options, views: views.views, features: { ...views.features }, backgrounds });
 ```
 
-Time-grid columns get `backgrounds: { key, layer, kind, start, span }[]`, as fractions of the day. Day-grid days get
+Time-grid columns get `backgrounds: { key, layer, kind, start, span }[]`, as fractions of the day. Day-grid cells get
 `backgrounds: { key, layer, kind }[]` from all-day ranges, and from inverse layers on the days none of their ranges
 touch. Render them with `TimeGridViewBackground` and `DayGridViewDayBackground`.

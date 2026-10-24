@@ -113,25 +113,28 @@ const timeGrid_decorate = (
   };
 };
 
-/**
- * A month day takes a layer's all-day ranges; timed ranges only matter to inverse layers, which shade the days
- * nothing in the layer touches (a business-hours layer shades the closed days). Month days have no resource, so
- * layers limited to resources are skipped.
- */
-const dayGrid_decorate = (grid: Calendar_DayGridLayout<unknown>, layers: Calendar_BackgroundLayer[], timeZone: string) => {
+/** All-day ranges shade cells; inverse layers shade untouched days, within the layer's resource scope. */
+const dayGrid_decorate = (
+  grid: Calendar_DayGridLayout<unknown>,
+  layers: Calendar_BackgroundLayer[],
+  timeZone: string,
+) => {
   const range = grid.coordinates.dates.length ? grid.coordinates.inputRange : undefined;
-  const resolved = range ? layers_resolve(layers, range, timeZone).filter(({ layer }) => !layer.resourceIds) : [];
+  const resolved = range ? layers_resolve(layers, range, timeZone) : [];
 
   return {
     ...grid,
-    weeks: grid.weeks.map(week => ({
-      ...week,
-      days: week.days.map(day => {
-        const interval = layoutIntervals_day(day.date, timeZone);
-        const touches = (item: LayoutIntervals_Interval) =>
-          item.startMs < interval.endMs && item.endMs > interval.startMs;
+    sections: grid.sections.map(section => ({
+      ...section,
+      rows: section.rows.map(row => ({
+        ...row,
+        days: row.days.map(day => {
+          const interval = layoutIntervals_day(day.date, timeZone);
+          const touches = (item: LayoutIntervals_Interval) =>
+            item.startMs < interval.endMs && item.endMs > interval.startMs;
 
         const backgrounds = resolved.flatMap(({ layer, ranges }): Calendar_DayBackground[] => {
+            if (!appliesTo(layer, day.resource?.id)) return [];
           const allDayTouches = (range: Extract<Calendar_BackgroundRange, { allDay: true }>) =>
             Temporal.PlainDate.compare(range.start, day.date) <= 0 &&
             Temporal.PlainDate.compare(range.end ?? range.start, day.date) >= 0;
@@ -143,11 +146,12 @@ const dayGrid_decorate = (grid: Calendar_DayGridLayout<unknown>, layers: Calenda
               )
             : ranges.some(range => 'allDay' in range && allDayTouches(range));
 
-          return shaded ? [{ key: `${day.key}:${layer.id}`, layer: layer.id, kind: layer.kind }] : [];
-        });
+            return shaded ? [{ key: `${day.key}:${layer.id}`, layer: layer.id, kind: layer.kind }] : [];
+          });
 
-        return { ...day, backgrounds };
-      }),
+          return { ...day, backgrounds };
+        }),
+      })),
     })),
   };
 };

@@ -33,6 +33,8 @@ import '@calendar-tsx/themes/compact.css';
 
 ## Customizing
 
+The default theme lays month sections out in a responsive grid. `--calendar-section-min-width` defaults to `20rem` and `--calendar-section-gap` to `1rem`; override them or the root grid to choose a different arrangement.
+
 Override any `--calendar-*` token on an ancestor of the calendar:
 
 ```css
@@ -47,22 +49,22 @@ Override any `--calendar-*` token on an ancestor of the calendar:
 the focus ring and the events, which are tints of it unless `--calendar-event` is set. Set `--calendar-accent-contrast`
 with it for the numbers on today's marker. Use a `light-dark()` pair so each mode gets a fitting shade.
 
-| Token                                                                                      | Default (light, dark)                                 |
-| ------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
-| `--calendar-surface`, `--calendar-surface-muted`                                           | `#ffffff` `#f5f4f1`, `#171615` `#201f1d`              |
-| `--calendar-text`, `--calendar-text-muted`                                                 | `#1c1b19` `#5f5c56`, `#f2efe9` `#a9a49b`              |
-| `--calendar-border`                                                                        | `#dedbd4`, `#34322e`                                  |
-| `--calendar-accent`, `--calendar-accent-contrast`                                          | `#b4441e` `#ffffff`, `#f08a5d` `#1a0d07`              |
-| `--calendar-event`, `--calendar-event-border`                                              | unset: the accent tinted 16% and 24% into the surface |
-| `--calendar-event-text`, `--calendar-focus-ring`                                           | unset: fall back to the text and the accent           |
-| `--calendar-background`                                                                    | unset: the text at 6% over the surface                |
-| `--calendar-background-event`                                                              | unset: the accent at 10% over transparent             |
-| `--calendar-radius`, `--calendar-bar-radius`                                               | `0.375rem`, `0.25rem`                                 |
-| `--calendar-font-size`, `--calendar-font-size-sm`, `--calendar-font-size-xs`               | `0.875rem`, `0.75rem`, `0.6875rem`                    |
-| `--calendar-slot-height`, `--calendar-axis-width`                                          | `3rem`, `4rem`                                        |
-| `--calendar-bar-height`, `--calendar-bar-gap`, `--calendar-bar-inset`                      | `1.375rem`, `2px`, `2px`                              |
-| `--calendar-event-gap`                                                                     | `4px`: space after each time-grid event, both axes    |
-| `--calendar-day-header-height`, `--calendar-overflow-height`, `--calendar-week-min-height` | `2.25rem`, `1.5rem`, `6rem`                           |
+| Token                                                                                     | Default (light, dark)                                 |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `--calendar-surface`, `--calendar-surface-muted`                                          | `#ffffff` `#f5f4f1`, `#171615` `#201f1d`              |
+| `--calendar-text`, `--calendar-text-muted`                                                | `#1c1b19` `#5f5c56`, `#f2efe9` `#a9a49b`              |
+| `--calendar-border`                                                                       | `#dedbd4`, `#34322e`                                  |
+| `--calendar-accent`, `--calendar-accent-contrast`                                         | `#b4441e` `#ffffff`, `#f08a5d` `#1a0d07`              |
+| `--calendar-event`, `--calendar-event-border`                                             | unset: the accent tinted 16% and 24% into the surface |
+| `--calendar-event-text`, `--calendar-focus-ring`                                          | unset: fall back to the text and the accent           |
+| `--calendar-background`                                                                   | unset: the text at 6% over the surface                |
+| `--calendar-background-event`                                                             | unset: the accent at 10% over transparent             |
+| `--calendar-radius`, `--calendar-bar-radius`                                              | `0.375rem`, `0.25rem`                                 |
+| `--calendar-font-size`, `--calendar-font-size-sm`, `--calendar-font-size-xs`              | `0.875rem`, `0.75rem`, `0.6875rem`                    |
+| `--calendar-slot-height`, `--calendar-axis-width`                                         | `3rem`, `4rem`                                        |
+| `--calendar-bar-height`, `--calendar-bar-gap`, `--calendar-bar-inset`                     | `1.375rem`, `2px`, `2px`                              |
+| `--calendar-event-gap`                                                                    | `4px`: space after each time-grid event, both axes    |
+| `--calendar-day-header-height`, `--calendar-overflow-height`, `--calendar-row-min-height` | `2.25rem`, `1.5rem`, `6rem`                           |
 
 The theme sets no font family; the calendar inherits the page's. The event tokens, `--calendar-focus-ring` and `--calendar-background` are
 left unset on purpose: a token declared as `var(--other)` resolves where it is declared, so a default on `:root`
@@ -169,7 +171,7 @@ utilities:
 
 - It beats preflight, whose button reset (`background-color: transparent`, `border-radius: 0`) would otherwise strip
   every event, trigger and overflow, since parts render native buttons.
-- Utilities beat it: `<DayGridViewWeekEvent className='bg-sky-600 text-white'>` overrides the theme.
+- Utilities beat it: `<DayGridViewRowEvent className='bg-sky-600 text-white'>` overrides the theme.
 
 Imported without `layer(components)`, the theme's layers come after `utilities` and override every utility class on
 a part.
@@ -210,8 +212,8 @@ attributes as variants. Boolean attributes (`data-today`, `data-outside`, `data-
 
 ## Expected composition
 
-The layout assumes the part nesting shown in the [React readme](../react/readme.md): `DayGridViewWeek` holds its
-`DayGridViewDay` cells and `DayGridViewWeekEvent` bars; `TimeGridView` holds `TimeGridViewHeader`, an optional
+The layout assumes the part nesting shown in the [React readme](../react/readme.md): `DayGridView` contains `DayGridViewSection` grids; each section contains its header and rows. `DayGridViewRow` holds its
+`DayGridViewDay` cells and `DayGridViewRowEvent` bars; `TimeGridView` holds `TimeGridViewHeader`, an optional
 `TimeGridViewAllDay` and `TimeGridViewBody`, and the body holds an optional `TimeGridViewAxis` and the
 `TimeGridViewColumn`s.
 

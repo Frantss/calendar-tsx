@@ -22,7 +22,7 @@ export const Column = ({ column }: { column: Grid['columns'][number] }) => (
 );
 
 // in the month view: inside the day, beneath its content
-export const Day = ({ day }: { day: Month['weeks'][number]['days'][number] }) => (
+export const Day = ({ day }: { day: Month['sections'][number]['rows'][number]['days'][number] }) => (
   <DayGridViewDay day={day}>
     {day.backgrounds.map(background => (
       <DayGridViewDayBackground key={background.key} background={background} />

@@ -6,8 +6,8 @@ import {
   DayGridView,
   DayGridViewDay,
   DayGridViewDayTrigger,
-  DayGridViewWeek,
-  DayGridViewWeekEvent,
+  DayGridViewRow,
+  DayGridViewRowEvent,
   TimeGridView,
   TimeGridViewBody,
   TimeGridViewColumn,
@@ -18,6 +18,7 @@ import {
   TimelineViewLane,
   TimelineViewRow,
   useCalendarSelector,
+  DayGridViewSection,
 } from '@calendar-tsx/react';
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
 import '../../high-contrast.css';
@@ -49,21 +50,25 @@ const Month = () => {
 
   return (
     <DayGridView model={month}>
-      {month.weeks.map(week => (
-        <DayGridViewWeek key={week.key} week={week}>
-          {week.days.map(day => (
-            <DayGridViewDay key={day.key} day={day}>
-              <DayGridViewDayTrigger day={day} view='month'>
-                {day.date.day}
-              </DayGridViewDayTrigger>
-            </DayGridViewDay>
+      {month.sections.map(section => (
+        <DayGridViewSection key={section.key} section={section}>
+          {section.rows.map(week => (
+            <DayGridViewRow key={week.key} row={week}>
+              {week.days.map(day => (
+                <DayGridViewDay key={day.key} day={day}>
+                  <DayGridViewDayTrigger day={day} view='month'>
+                    {day.date.day}
+                  </DayGridViewDayTrigger>
+                </DayGridViewDay>
+              ))}
+              {week.segments.map(segment => (
+                <DayGridViewRowEvent key={segment.key} segment={segment}>
+                  {segment.event.data.title}
+                </DayGridViewRowEvent>
+              ))}
+            </DayGridViewRow>
           ))}
-          {week.segments.map(segment => (
-            <DayGridViewWeekEvent key={segment.key} segment={segment}>
-              {segment.event.data.title}
-            </DayGridViewWeekEvent>
-          ))}
-        </DayGridViewWeek>
+        </DayGridViewSection>
       ))}
     </DayGridView>
   );
@@ -110,7 +115,7 @@ it.each([
 
 it('dashes the edge where a bar continues into the next week', async () => {
   await themesSetup_render(<Month />, { view: 'month', events: [themesSetup_allDay('Fair', { start: '2026-03-14', end: '2026-03-16' })] });
-  const [before, after] = themesSetup_part('day-grid-week-event').map(bar => getComputedStyle(bar));
+  const [before, after] = themesSetup_part('day-grid-row-event').map(bar => getComputedStyle(bar));
 
   expect([before?.borderRightStyle, before?.borderLeftStyle]).toEqual(['dashed', 'solid']);
   expect([after?.borderLeftStyle, after?.borderRightStyle]).toEqual(['dashed', 'solid']);

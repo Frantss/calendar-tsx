@@ -83,5 +83,5 @@ it('lists the calendar year containing the date and steps to the next 1 January'
 
 it('takes either days or a period, not both', () => {
   // @ts-expect-error -- `days` and `period` are exclusive (D36)
-  listView({ days: 7, period: 'month' });
+  expect(() => listView({ days: 7, period: 'month' })).toThrow('provide exactly one');
 });

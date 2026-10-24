@@ -48,8 +48,8 @@ it('starts a 7-day timeline on the first day of the week and honours slotMinutes
   });
 
   expect(utils.state().context.range.start.toString()).toBe('2026-03-08');
-  expect(utils.layout.slots).toHaveLength(7 * 48);
-  expect(utils.layout.days.map(day => day.colStart)).toEqual([0, 48, 96, 144, 192, 240, 288]);
+  expect(utils.layout.slots).toHaveLength(7 * 48 - 2);
+  expect(utils.layout.days.map(day => day.colStart)).toEqual([0, 46, 94, 142, 190, 238, 286]);
 });
 
 it('steps by the number of days', async () => {

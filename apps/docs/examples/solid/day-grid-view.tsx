@@ -1,13 +1,15 @@
 import {
+  DayGridViewSectionHeader,
   DayGridView,
   DayGridViewDay,
   DayGridViewDayTrigger,
   DayGridViewHeader,
   DayGridViewHeaderCell,
   DayGridViewOverflow,
-  DayGridViewWeek,
-  DayGridViewWeekBackgroundEvent,
-  DayGridViewWeekEvent,
+  DayGridViewRow,
+  DayGridViewRowBackgroundEvent,
+  DayGridViewRowEvent,
+  DayGridViewSection,
 } from '@calendar-tsx/solid';
 import { For, Show } from 'solid-js';
 
@@ -21,37 +23,52 @@ export const DayGrid = (props: { onOverflow: (date: string) => void }) => {
     <Show when={grid()}>
       {grid => (
         <DayGridView model={grid()}>
-          <DayGridViewHeader>
-            <For each={grid().weekdays}>
-              {weekday => (
-                <DayGridViewHeaderCell weekday={weekday}>
-                  {weekday.toLocaleString('en-US', { weekday: 'short' })}
-                </DayGridViewHeaderCell>
-              )}
-            </For>
-          </DayGridViewHeader>
-          <For each={grid().weeks}>
-            {week => (
-              <DayGridViewWeek week={week}>
-                <For each={week.days}>
-                  {day => (
-                    <DayGridViewDay day={day}>
-                      <DayGridViewDayTrigger day={day} view='day'>
-                        {day.date.day}
-                      </DayGridViewDayTrigger>
-                      <DayGridViewOverflow day={day} onClick={() => props.onOverflow(day.date.toString())}>
-                        {day.hiddenCount} more
-                      </DayGridViewOverflow>
-                    </DayGridViewDay>
+          <For each={grid().sections}>
+            {section => (
+              <DayGridViewSection section={section}>
+                {section.month || section.resource ? (
+                  <DayGridViewSectionHeader>
+                    {section.resource?.title}{' '}
+                    {section.month?.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
+                  </DayGridViewSectionHeader>
+                ) : null}
+
+                <DayGridViewHeader>
+                  <For each={section.columns}>
+                    {column => (
+                      <DayGridViewHeaderCell column={column}>
+                        {column.resource?.title} {column.date.toLocaleString('en-US', { weekday: 'short' })}
+                      </DayGridViewHeaderCell>
+                    )}
+                  </For>
+                </DayGridViewHeader>
+                <For each={section.rows}>
+                  {week => (
+                    <DayGridViewRow row={week}>
+                      <For each={week.days}>
+                        {day => (
+                          <DayGridViewDay day={day}>
+                            <DayGridViewDayTrigger day={day} view='day'>
+                              {day.date.day}
+                            </DayGridViewDayTrigger>
+                            <DayGridViewOverflow day={day} onClick={() => props.onOverflow(day.date.toString())}>
+                              {day.hiddenCount} more
+                            </DayGridViewOverflow>
+                          </DayGridViewDay>
+                        )}
+                      </For>
+                      <For each={week.backgroundEvents}>
+                        {segment => <DayGridViewRowBackgroundEvent segment={segment} />}
+                      </For>
+                      <For each={week.segments}>
+                        {segment => (
+                          <DayGridViewRowEvent segment={segment}>{segment.event.data.title}</DayGridViewRowEvent>
+                        )}
+                      </For>
+                    </DayGridViewRow>
                   )}
                 </For>
-                <For each={week.backgroundEvents}>
-                  {segment => <DayGridViewWeekBackgroundEvent segment={segment} />}
-                </For>
-                <For each={week.segments}>
-                  {segment => <DayGridViewWeekEvent segment={segment}>{segment.event.data.title}</DayGridViewWeekEvent>}
-                </For>
-              </DayGridViewWeek>
+              </DayGridViewSection>
             )}
           </For>
         </DayGridView>

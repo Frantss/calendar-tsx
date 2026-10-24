@@ -10,13 +10,13 @@ import { calendarSetup_create, calendarSetup_defaults } from '#tests/calendar.se
 const setup = async (overrides: CalendarSetup_Overrides = {}) => {
   const utils = await calendarSetup_create({ view: 'month', ...overrides });
   const layout = utils.state().layout as Calendar_DayGridLayout<unknown>;
-  const days = layout.weeks.flatMap(week => week.days);
+  const days = layout.sections.flatMap(section => section.rows).flatMap(week => week.days);
 
   return {
     ...utils,
     layout,
     day: (date: string) => days.find(day => day.key === date),
-    week: (date: string) => layout.weeks.find(week => week.days.some(day => day.key === date)),
+    week: (date: string) => layout.sections.flatMap(section => section.rows).find(week => week.days.some(day => day.key === date)),
   };
 };
 
@@ -34,7 +34,7 @@ it('caps rows per day and reports the hidden count', async () => {
 
   expect(utils.day('2026-03-25')).toMatchObject({ hiddenCount: 2, hasMore: true });
   expect(utils.week('2026-03-25')?.segments).toHaveLength(4);
-  expect(utils.week('2026-03-25')?.rows).toBe(4);
+  expect(utils.week('2026-03-25')?.stackCount).toBe(4);
 });
 
 it('renders a multi-day event as one bar in its week row', async () => {
@@ -91,7 +91,7 @@ it('marks padding days and today', async () => {
 
   expect(utils.day('2026-04-04')).toMatchObject({ isOutside: true });
   expect(utils.day('2026-03-11')).toMatchObject({ isToday: true, isOutside: false });
-  expect(utils.layout.weekdays.map(weekday => weekday.dayOfWeek)).toEqual([7, 1, 2, 3, 4, 5, 6]);
+  expect(utils.layout.sections.flatMap(section => section.columns).map(column => column.date.dayOfWeek)).toEqual([7, 1, 2, 3, 4, 5, 6]);
 });
 
 it('shows six weeks with fixedWeekCount and pads them as outside days', async () => {
@@ -100,8 +100,8 @@ it('shows six weeks with fixedWeekCount and pads them as outside days', async ()
   const variable = await setup({ date: february });
   const fixed = await setup({ view: 'fixed', views, date: february });
 
-  expect(variable.layout.weeks).toHaveLength(4);
-  expect(fixed.layout.weeks).toHaveLength(6);
+  expect(variable.layout.sections.flatMap(section => section.rows)).toHaveLength(4);
+  expect(fixed.layout.sections.flatMap(section => section.rows)).toHaveLength(6);
   expect(fixed.state().context.range).toMatchObject({ start: Temporal.PlainDate.from('2026-02-01'), end: Temporal.PlainDate.from('2026-03-14') });
   expect(fixed.day('2026-02-28')?.isOutside).toBe(false);
   expect(fixed.day('2026-03-01')?.isOutside).toBe(true);
@@ -123,6 +123,6 @@ it('spans all-day background events across week rows without taking rows', async
   expect(utils.week('2026-03-25')?.backgroundEvents).toEqual([
     expect.objectContaining({ colStart: 0, colSpan: 4, continuesBefore: true, continuesAfter: false }),
   ]);
-  expect(utils.week('2026-03-25')?.rows).toBe(4);
+  expect(utils.week('2026-03-25')?.stackCount).toBe(4);
   expect(utils.day('2026-03-25')?.hiddenCount).toBe(2);
 });

@@ -7,6 +7,8 @@ export type {
 } from '#calendar-factory';
 export { ListViewDay, ListViewDayHeader, ListViewEmpty, ListViewEvent, ListView } from '#list-view';
 export {
+  DayGridViewSection,
+  DayGridViewSectionHeader,
   DayGridViewDay,
   DayGridViewDayBackground,
   DayGridViewDayTrigger,
@@ -14,9 +16,9 @@ export {
   DayGridViewHeaderCell,
   DayGridViewOverflow,
   DayGridView,
-  DayGridViewWeek,
-  DayGridViewWeekBackgroundEvent,
-  DayGridViewWeekEvent,
+  DayGridViewRow,
+  DayGridViewRowBackgroundEvent,
+  DayGridViewRowEvent,
 } from '#day-grid-view';
 export {
   TimeGridViewAllDay,
