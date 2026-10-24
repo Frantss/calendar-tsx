@@ -23,6 +23,7 @@ eventStore.store.subscribe(({ events }) => calendar['~update']({ ...calendar.opt
 eventStore.add([
   {
     id: 'review',
+    kind: 'timed',
     start: Temporal.ZonedDateTime.from(`2026-03-11T14:00[${timeZone}]`),
     end: Temporal.ZonedDateTime.from(`2026-03-11T15:00[${timeZone}]`),
     data: { title: 'Review' },

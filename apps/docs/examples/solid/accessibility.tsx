@@ -18,7 +18,7 @@ export const GermanCalendar = (props: { calendar: AppCalendar; children: JSX.Ele
 export const Event = (props: { segment: Calendar_TimeGridSegment<Booking> }) => {
   const label = () => {
     const event = props.segment.event;
-    const start = 'allDay' in event ? '' : event.start.toLocaleString('en-US', { timeStyle: 'short' });
+    const start = event.kind === 'allDay' ? '' : event.start.toLocaleString('en-US', { timeStyle: 'short' });
 
     return `${event.data.title}, ${start}`;
   };

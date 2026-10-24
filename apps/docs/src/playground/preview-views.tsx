@@ -40,7 +40,7 @@ const time = (value: Formattable, locale: string) =>
 
 /** What an event click reports, as one line of text. */
 export const describeEvent = (event: Calendar_Event<Booking>, locale: string) =>
-  'allDay' in event
+  event.kind === 'allDay'
     ? `${event.data.title}, all day from ${event.start.toLocaleString(locale, { dateStyle: 'medium' })}`
     : `${event.data.title}, ${event.start.toLocaleString(locale, { dateStyle: 'medium' })} from ${time(event.start, locale)} to ${time(event.end, locale)}`;
 
@@ -140,7 +140,7 @@ export const PreviewLayout = ({ onSelect }: { onSelect: (event: Calendar_Event<B
           <ListViewDayHeader day={day}>{day.date.toLocaleString(locale, { dateStyle: 'full' })}</ListViewDayHeader>
           {day.events.map(event => (
             <ListViewEvent key={event.id} event={event} onClick={() => onSelect(event)}>
-              {'allDay' in event ? 'All day' : time(event.start, locale)} · {event.data.title}
+              {event.kind === 'allDay' ? 'All day' : time(event.start, locale)} · {event.data.title}
             </ListViewEvent>
           ))}
         </ListViewDay>

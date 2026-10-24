@@ -24,6 +24,7 @@ const sampleEvents = (anchor: Temporal.PlainDate, timeZone: string): Calendar_Ev
     date.toZonedDateTime({ timeZone, plainTime: Temporal.PlainTime.from(time) });
   const timed = (date: Temporal.PlainDate, id: string, start: string, end: string, title: string, room: string) => ({
     id: `${id}-${date.toString()}`,
+    kind: 'timed' as const,
     start: at(date, start),
     end: at(end < start ? date.add({ days: 1 }) : date, end),
     resourceIds: [room],
@@ -44,7 +45,7 @@ const sampleEvents = (anchor: Temporal.PlainDate, timeZone: string): Calendar_Ev
     if (date.day === 12) {
       events.push({
         id: `offsite-${date.toString()}`,
-        allDay: true,
+        kind: 'allDay',
         start: date,
         end: date.add({ days: 1 }),
         data: { title: 'Team offsite' },
@@ -75,6 +76,7 @@ const busyEvents = (anchor: Temporal.PlainDate, timeZone: string): Calendar_Even
     ...(isWeekday(date)
       ? meetings.map(([id, start, end, title, room]) => ({
           id: `${id}-${date.toString()}`,
+          kind: 'timed' as const,
           start: at(date, start),
           end: at(date, end),
           resourceIds: [room],
@@ -85,7 +87,7 @@ const busyEvents = (anchor: Temporal.PlainDate, timeZone: string): Calendar_Even
       ? [
           {
             id: `on-call-${date.toString()}`,
-            allDay: true as const,
+            kind: 'allDay' as const,
             start: date,
             end: date.add({ days: 4 }),
             data: { title: 'On call' },
@@ -104,7 +106,7 @@ export const playgroundEvents = (events: PlaygroundEvent[], timeZone: string): C
     if (event.allDay) {
       return {
         id: event.id,
-        allDay: true,
+        kind: 'allDay',
         start: date,
         end: date.add({ days: event.days - 1 }),
         resourceIds,
@@ -117,6 +119,7 @@ export const playgroundEvents = (events: PlaygroundEvent[], timeZone: string): C
 
     return {
       id: event.id,
+      kind: 'timed',
       start,
       end: endDate.toZonedDateTime({ timeZone, plainTime: Temporal.PlainTime.from(event.end) }),
       resourceIds,

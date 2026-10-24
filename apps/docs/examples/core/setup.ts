@@ -31,6 +31,7 @@ const at = (value: string) => Temporal.ZonedDateTime.from(`${value}[${timeZone}]
 export const bookings: Calendar_EventInput<Booking>[] = [
   {
     id: 'standup',
+    kind: 'timed',
     start: at('2026-03-11T09:00'),
     end: at('2026-03-11T09:15'),
     resourceIds: ['room-a'],
@@ -38,7 +39,7 @@ export const bookings: Calendar_EventInput<Booking>[] = [
   },
   {
     id: 'offsite',
-    allDay: true,
+    kind: 'allDay',
     start: Temporal.PlainDate.from('2026-03-12'),
     end: Temporal.PlainDate.from('2026-03-13'),
     data: { title: 'Offsite' },

@@ -1,13 +1,13 @@
 <section id='input'>
 
-An event is timed or all-day. Both carry a unique `id` and a `data` payload of your own type.
+An event is timed or all-day, as its `kind` says. Both carry a unique `id` and a `data` payload of your own type.
 
 <include lang='ts'>../../../examples/core/setup.ts#events</include>
 
 | Field         | Timed                    | All-day                                              |
 | ------------- | ------------------------ | ---------------------------------------------------- |
 | `id`          | `string`, unique         | `string`, unique                                     |
-| `allDay`      | omitted                  | `true`                                               |
+| `kind`        | `'timed'`                | `'allDay'`                                           |
 | `start`       | `Temporal.ZonedDateTime` | `Temporal.PlainDate`                                 |
 | `end`         | `Temporal.ZonedDateTime` | `Temporal.PlainDate`, inclusive; defaults to `start` |
 | `resourceIds` | `string[]`, optional     | `string[]`, optional                                 |

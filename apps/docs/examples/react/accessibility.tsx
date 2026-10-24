@@ -16,7 +16,8 @@ export const GermanCalendar = ({ calendar, children }: { calendar: AppCalendar; 
 
 // #region label
 export const Event = ({ segment }: { segment: Calendar_TimeGridSegment<Booking> }) => {
-  const start = 'allDay' in segment.event ? '' : segment.event.start.toLocaleString('en-US', { timeStyle: 'short' });
+  const start =
+    segment.event.kind === 'allDay' ? '' : segment.event.start.toLocaleString('en-US', { timeStyle: 'short' });
 
   return (
     <TimeGridViewEvent segment={segment} aria-label={`${segment.event.data.title}, ${start}`}>

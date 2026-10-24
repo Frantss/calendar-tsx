@@ -17,7 +17,7 @@ const calendar = createCalendar({
   features: { ...views.features },
   view: 'month',
   date: Temporal.Now.plainDateISO(),
-  events: [{ id: 'standup', allDay: true, start: Temporal.Now.plainDateISO(), data: { title: 'Standup' } }],
+  events: [{ id: 'standup', kind: 'allDay', start: Temporal.Now.plainDateISO(), data: { title: 'Standup' } }],
   // `view` and `date` are controlled: apply the next ones yourself
   onNavigate: next => calendar['~update']({ ...calendar.options, view: next.view, date: next.date }),
 });
