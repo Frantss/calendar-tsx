@@ -52,6 +52,7 @@ export type Calendar_LayoutInteractionContext<
   TModel extends Calendar_AnyLayout = Calendar_AnyLayout,
   TSettings = any,
 > = {
+  scheduling?: import('#features/interaction/scheduling.types').Calendar_SchedulingEffect;
   model: TModel;
   input: Calendar_LayoutInput<unknown, unknown>;
   settings: TSettings;

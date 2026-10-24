@@ -67,10 +67,10 @@ const timelineSelection = (selected: Calendar_Selection, plan: LayoutCoordinates
 };
 
 export const layoutTimeline_project = (
-  { model, input, settings }: Timeline,
-  original: Calendar_InteractionProposal,
+  { model, input, settings, scheduling }: Timeline,
+  _original: Calendar_InteractionProposal,
 ): Calendar_LayoutProjection<'timeline'> => {
-  const proposal = dateProposal(original);
+  const proposal = dateProposal(scheduling);
   if (!proposal) return { status: 'unavailable', reason: 'unsupported-proposal' };
   const geometry =
     proposal.kind === 'select'

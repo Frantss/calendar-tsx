@@ -21,7 +21,6 @@ const event = { id: 'a', kind: 'timed' as const, start: at(9), end: at(10), data
 const target = (hour: number, resourceId = 'a'): Calendar_DateTarget => ({ kind: 'timed', at: at(hour), resourceId });
 const features = {
   interactionFeature: interactionFeature(),
-  pointerFeature: pointerFeature(),
   eventMoveFeature: eventMoveFeature(),
   eventResizeFeature: eventResizeFeature(),
   dateSelectionFeature: dateSelectionFeature(),
@@ -108,9 +107,9 @@ it('enforces merged allowed windows, business hours, resources and all-day overl
   calendar['~update']({ ...calendar.options, constraints: { preventOverlap: false }, events: [event] });
   const session = calendar.api.move.begin('a');
   if (session.status !== 'active') throw new Error('start');
-  calendar.api.interactions.update(session.token, target(11));
+  session.session.update(target(11));
   calendar['~update']({ ...calendar.options, constraints: { allow: () => 'policy-changed' } });
-  expect(calendar.api.interactions.commit(session.token)).toBe('rejected');
+  expect(session.session.commit().status).toBe('rejected');
   expect(calendar.api.interactions.store.state.candidate).toMatchObject({ reason: 'policy-changed' });
 });
 
@@ -119,16 +118,17 @@ it('creates from external input without movement or selection and rechecks accep
   const registered = interactionTestViews({
     grid: timeGridView({
       days: 1,
-      features: { interactionFeature: interactionFeature(), pointerFeature: pointerFeature(), externalDropFeature: externalDropFeature() },
+      features: { interactionFeature: interactionFeature(), externalDropFeature: externalDropFeature() },
     }),
   });
   const calendar = createCalendar({ ...base, ...registered, events: [], onExternalDrop });
   expect('move' in calendar.api).toBe(false);
+  expect('pointer' in calendar.api).toBe(false);
   const session = calendar.api.externalDrop.begin(event, { origin: 'palette' });
   if (session.status !== 'active') throw new Error('begin');
-  calendar.api.interactions.update(session.token, target(12));
+  session.session.update(target(12));
   expect(calendar.api.interactions.store.state.preview?.status).toBe('valid');
-  expect(calendar.api.interactions.commit(session.token)).toBe('committed');
+  expect(session.session.commit().status).toBe('committed');
   expect(onExternalDrop).toHaveBeenCalledOnce();
   expect(onExternalDrop.mock.calls[0]![0]).toMatchObject({ kind: 'create', metadata: { origin: 'palette' } });
   expect(calendar.options.events).toEqual([]);
@@ -140,23 +140,23 @@ it('emits one atomic transfer from the source and keeps both input arrays unchan
   const onEventTransfer = vi.fn();
   const source = createCalendar({ ...base, crossCalendar: { id: 'source' }, onEventTransfer });
   const destination = createCalendar({ ...base, events: [] as typeof base.events, crossCalendar: { id: 'destination' } });
-  const transfer = source.api.crossCalendar.prepare('a', 'a')!;
+  const transfer = source.api.transfer.prepare('a', 'a')!;
   expect(source.api.move.begin('a').status).toBe('busy');
   const session = destination.api.transfer.begin(transfer);
   if (session.status !== 'active') throw new Error('begin');
-  destination.api.interactions.update(session.token, target(12));
-  expect(destination.api.interactions.commit(session.token)).toBe('committed');
-  expect(destination.api.interactions.commit(session.token)).toBe('stale-token');
+  session.session.update(target(12));
+  expect(session.session.commit().status).toBe('committed');
+  expect(session.session.commit().status).toBe('stale-session');
   expect(onEventTransfer).toHaveBeenCalledOnce();
   expect(onEventTransfer.mock.calls[0]![0]).toMatchObject({ kind: 'transfer', sourceId: 'source', destinationId: 'destination', before: event });
   expect(source.options.events).toEqual([event]);
   expect(destination.options.events).toEqual([]);
   expect(source.api.interactions.store.state.session).toBeNull();
-  const changed = source.api.crossCalendar.prepare('a')!;
+  const changed = source.api.transfer.prepare('a')!;
   const next = destination.api.transfer.begin(changed);
   if (next.status !== 'active') throw new Error('begin');
   source['~update']({ ...source.options, events: [{ ...event, data: { title: 'Changed' } }] });
-  expect(destination.api.interactions.commit(next.token)).toBe('stale-token');
+  expect(next.session.commit().status).toBe('stale-session');
   expect(onEventTransfer).toHaveBeenCalledOnce();
 });
 
@@ -224,7 +224,7 @@ it('receives transfers without registering movement on the destination', () => {
   });
   const destination = createCalendar({ ...base, ...registered, events: [] as typeof base.events, crossCalendar: { id: 'destination' } });
   expect('move' in destination.api).toBe(false);
-  const transfer = source.api.crossCalendar.prepare('a')!;
+  const transfer = source.api.transfer.prepare('a')!;
   const result = destination.api.transfer.evaluate(transfer, target(11));
   expect(result.status).toBe('valid');
   transfer.release();

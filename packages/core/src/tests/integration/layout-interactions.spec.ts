@@ -50,7 +50,7 @@ const base = {
 };
 const tokenOf = (result: Calendar_InteractionStart) => {
   if (result.status !== 'active') throw new Error(result.status);
-  return result.token;
+  return result.session;
 };
 const geometryOf = (result: Calendar_LayoutProjection) => {
   if (result.status !== 'valid' || (result.kind !== 'timeGrid' && result.kind !== 'timeline')) throw new Error('expected date geometry');
@@ -125,29 +125,29 @@ for (const view of ['grid', 'timeline'] as const) {
     const baseChanged = vi.fn();
     const subscription = calendar.store.subscribe(baseChanged);
     let token = tokenOf(calendar.api.selection.begin(target('10:00')));
-    calendar.api.interactions.update(token, target('11:00'));
+    token.update(target('11:00'));
     const selected = geometryOf(calendar.api.interactions.store.state.preview!);
     expect(selected).toHaveLength(1);
     expect(selected[0]!.start).toBeCloseTo(10 / (view === 'grid' ? 24 : 48));
     expect(selected[0]!.span).toBeCloseTo(1 / (view === 'grid' ? 24 : 48));
-    calendar.api.interactions.cancel(token);
+    token.cancel();
     expect(calendar.api.interactions.store.state.preview).toBeNull();
     token = tokenOf(calendar.api.move.begin('event'));
-    calendar.api.interactions.update(token, target('11:00'));
+    token.update(target('11:00'));
     expect(geometryOf(calendar.api.interactions.store.state.preview!)[0]!.start).toBeCloseTo(11 / (view === 'grid' ? 24 : 48));
-    calendar.api.interactions.cancel(token);
+    token.cancel();
     token = tokenOf(calendar.api.resize.begin('event', 'end'));
-    calendar.api.interactions.update(token, target('12:00'));
+    token.update(target('12:00'));
     expect(geometryOf(calendar.api.interactions.store.state.preview!)[0]!.span).toBeCloseTo(3 / (view === 'grid' ? 24 : 48));
     const snapshot = calendar.api.interactions.store.state;
-    expect(calendar.api.interactions.update(token, target('12:00'))).toBe('unchanged');
+    expect(token.update(target('12:00')).status).toBe('unchanged');
     expect(calendar.api.interactions.store.state).toBe(snapshot);
     expect(calendar.store.state.layout).toBe(model);
     expect(gridBuild.mock.calls.length + timelineBuild.mock.calls.length).toBe(count);
     expect(baseChanged).not.toHaveBeenCalled();
-    calendar.api.interactions.update(token, target('08:00'));
+    token.update(target('08:00'));
     expect(calendar.api.interactions.store.state.preview).toBeNull();
-    calendar.api.interactions.cancel(token);
+    token.cancel();
     subscription.unsubscribe();
     const only = interactionTestViews({
       only:
@@ -157,7 +157,7 @@ for (const view of ['grid', 'timeline'] as const) {
     });
     const independent = createCalendar({ ...base, ...only, view: 'only' });
     const resize = tokenOf(independent.api.resize.begin('event', 'end'));
-    independent.api.interactions.update(resize, target('12:00'));
+    resize.update(target('12:00'));
     expect(geometryOf(independent.api.interactions.store.state.preview!)).toHaveLength(1);
     expect('selection' in independent.api).toBe(false);
     expect('move' in independent.api).toBe(false);
@@ -220,9 +220,9 @@ it('returns unavailable for missing capabilities while semantic operations still
     reason: 'locate-unsupported',
   });
   const token = tokenOf(calendar.api.move.begin('event'));
-  calendar.api.interactions.update(token, target('11:00'));
+  token.update(target('11:00'));
   expect(calendar.api.interactions.store.state.preview).toEqual({ status: 'unavailable', reason: 'project-unsupported' });
-  expect(calendar.api.interactions.commit(token)).toBe('committed');
+  expect(token.commit().status).toBe('committed');
   expect(calendar.api.interactions.store.state.preview).toBeNull();
 });
 
@@ -237,7 +237,7 @@ for (const mode of ['internal', 'controlled', 'external'] as const) {
       mode === 'controlled' ? { mode, read: () => semantic, onChange: ownerChanged } : mode === 'external' ? { mode, atom } : { mode };
     const calendar = createCalendar({ ...base, interactionOwnership: ownership });
     const token = tokenOf(calendar.api.resize.begin('event', 'end'));
-    calendar.api.interactions.update(token, target('09:02'));
+    token.update(target('09:02'));
     expect(geometryOf(calendar.api.interactions.store.state.preview!)[0]!.span).toBeCloseTo(15 / 1440);
     calendar['~update']({ ...calendar.options, views: { ...base.views, grid: { ...base.views.grid, minEventMinutes: 45 } } });
     expect(geometryOf(calendar.api.interactions.store.state.preview!)[0]!.span).toBeCloseTo(45 / 1440);
@@ -361,11 +361,11 @@ it('dispatches third-party points, primitive targets and custom preview geometry
   expect(initial).toEqual({ status: 'valid', kind: 'matrix', geometry: { marked: 5, active: true } });
   if (initial.status === 'valid' && initial.kind === 'matrix') expectTypeOf(initial.geometry.active).toEqualTypeOf<boolean>();
   const token = tokenOf(calendar.api.mark());
-  calendar.api.interactions.update(token, located.target);
+  token.update(located.target);
   expect(calendar.api.interactions.store.state.preview).toEqual({ status: 'valid', kind: 'matrix', geometry: { marked: 5, active: false } });
   calendar['~update']({ ...calendar.options, events: [...base.events, { ...event, id: 'second' }] });
   expect(calendar.api.interactions.store.state.preview).toEqual({ status: 'valid', kind: 'matrix', geometry: { marked: 6, active: false } });
-  calendar.api.interactions.cancel(token);
+  token.cancel();
   expect(calendar.api.interactions.store.state.preview).toBeNull();
   const project = vi.fn(matrixLayout.project!);
   const replacement = createCalendar({

@@ -11,7 +11,7 @@ packages/{react,solid}/
       calendar.types.ts
       tests/calendar.spec.tsx
     interactions/
-      use-calendar-interactions.ts
+      use-calendar-interaction-bindings.ts
       tests/interactions.spec.tsx
     events/
       use-calendar-event-store.ts

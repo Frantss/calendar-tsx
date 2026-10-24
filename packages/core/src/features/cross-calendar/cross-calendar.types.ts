@@ -14,7 +14,7 @@ export type Calendar_TransferProposal<D = unknown> = {
 };
 
 export type Calendar_TransferSource<D = unknown> = {
-  token: number;
+  session: import('#features/interaction/interaction.types').Calendar_InteractionHandle<'move', D>;
   id: string;
   sourceResourceId?: string;
   read: () => Calendar_EventInput<D> | undefined;
@@ -24,16 +24,18 @@ export type Calendar_TransferSource<D = unknown> = {
 
 export type Calendar_TransferIntent = { kind: 'transfer'; source: Calendar_TransferSource };
 
-export type Calendar_CrossCalendarSettings = { id: string; enabled?: boolean; accept?: (sourceId: string) => boolean };
+export type Calendar_CrossCalendarSettings = {
+  id: string;
+  enabled?: boolean;
+  accept?: (sourceId: string) => boolean;
+  placement?: import('#features/interaction/scheduling.types').Calendar_PlacementSettings;
+};
 
 export type Calendar_TransferApi<D> = {
-  begin: (source: Calendar_TransferSource<D>) => Calendar_InteractionStart;
+  prepare: (eventId: string, sourceResourceId?: string) => Calendar_TransferSource<D> | undefined;
+  begin: (source: Calendar_TransferSource<D>) => Calendar_InteractionStart<'transfer', D>;
   evaluate: (
     source: Calendar_TransferSource<D>,
     target: Calendar_DateTarget,
   ) => Calendar_InteractionEvaluation<Calendar_TransferProposal<D>>;
-};
-
-export type Calendar_CrossCalendarApi<D> = {
-  prepare: (eventId: string, sourceResourceId?: string) => Calendar_TransferSource<D> | undefined;
 };

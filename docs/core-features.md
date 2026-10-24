@@ -137,7 +137,7 @@ Each layout owns its `locate` and `project` implementation in its `*-interaction
 its existing `*.types.ts` file. `layouts/interaction.types.ts` owns the common capability contracts and extension
 map; `layouts/shared/interaction-geometry.ts` owns the shared clock and selection geometry helpers.
 
-`interactions/dom.ts` owns browser transport and host coordination. Its public host and surface contracts live in
+`interactions/dom.ts` assembles public host and ref bindings. `dom-host.ts` owns browser transport and scoped host coordination; `event-bindings.ts` maps built-in operations to that transport. `dom-operation.ts` adapts typed extension descriptors. Its public host and surface contracts live in
 `interactions/dom.types.ts`. Cross-feature editing and layout tests live in `tests/integration/`; reusable setup
 and the third-party operation fixture live in `tests/support/`.
 

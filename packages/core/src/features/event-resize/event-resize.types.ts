@@ -15,7 +15,7 @@ export type Calendar_ResizeProposal<TData = unknown> = {
 };
 
 export type Calendar_ResizeApi<D> = {
-  begin: (eventId: string, edge: Calendar_ResizeIntent['edge']) => Calendar_InteractionStart;
+  begin: (eventId: string, edge: Calendar_ResizeIntent['edge']) => Calendar_InteractionStart<'resize', D>;
   evaluate: (
     eventId: string,
     edge: Calendar_ResizeIntent['edge'],

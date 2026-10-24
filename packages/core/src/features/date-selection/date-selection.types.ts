@@ -14,7 +14,7 @@ export type Calendar_SelectIntent = { kind: 'select'; anchor: Calendar_DateTarge
 export type Calendar_SelectProposal = { kind: 'select'; range: Calendar_Selection };
 
 export type Calendar_SelectionApi = {
-  begin: (anchor: Calendar_DateTarget) => Calendar_InteractionStart;
+  begin: (anchor: Calendar_DateTarget) => Calendar_InteractionStart<'select', unknown>;
   evaluate: (
     anchor: Calendar_DateTarget,
     target: Calendar_DateTarget,

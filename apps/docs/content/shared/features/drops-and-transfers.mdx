@@ -11,14 +11,16 @@ Attach a palette item after its element mounts:
 
 <include lang='ts'>../../../examples/core/interaction-commands.ts#external</include>
 
-Call the returned cleanup on unmount. `makeEvent` runs when a gesture begins; give each new event a unique ID.
+Create a `scope` with `createCalendarInteractionScope()` and pass it to the receiving hook as
+`useCalendarInteractionBindings(calendar, { scope })`. The palette uses that same scope and its own pointer/touch
+activation settings. Call the returned cleanup on unmount. `makeEvent` runs when a gesture begins; give each new event a unique ID.
 The payload preserves your event data type. Metadata is optional and arrives on the proposal.
 
 `externalDrop.accept(event, metadata)` can reject a source. `externalDrop.placement` uses the movement policy
 shape independently of movement: conversion is opt-in and resource assignment defaults to replacing the list.
 Duplicate destination IDs are rejected.
 
-For a keyboard equivalent, call `api.externalDrop.begin(event, metadata?)`, update the returned active token with
+For a keyboard equivalent, call `api.externalDrop.begin(event, metadata?)`, update the returned active session with
 a date target, then commit. The application still inserts the emitted `after` event.
 
 ## Cross-calendar transfers
@@ -27,16 +29,15 @@ Register `interactionFeature()`, `pointerFeature()` and `crossCalendarFeature()`
 a unique `crossCalendar: { id }`. The source also needs `eventMoveFeature()`; the receiver can accept transfers
 without movement or selection.
 
+Pass the same `{ scope }` to both calendars' binding hooks. Hosts without an explicit scope are isolated.
 Mount each calendar's bindings and register its event sources and surfaces. Dragging an event onto another
 calendar reserves the source movement session and validates the destination proposal. The receiver applies its
-own constraints and movement placement settings. Duplicate IDs in the destination are rejected.
+own constraints and `crossCalendar.placement` settings. Duplicate IDs in the destination are rejected.
 
 Commit calls `onEventTransfer` once on the **source**, with:
 
 ```ts
-{
-  kind: ('transfer', sourceId, destinationId, before, after);
-}
+({ kind: 'transfer', sourceId, destinationId, before, after });
 ```
 
 Remove `before.id` from the source and add `after` to the destination in one application transaction.
@@ -45,7 +46,7 @@ apply only half of a transfer. Use `crossCalendar.accept(sourceId)` on the desti
 
 ## Programmatic transfers
 
-The source prepares a handle; the receiver begins a session with that handle. Release prepared handles when
+Programmatic creation and transfer require no `pointerFeature`. The source uses `api.transfer.prepare` to prepare a handle; the receiver begins a session with that handle. Release prepared handles when
 abandoning a transfer. The DOM driver manages these lifetimes for pointer gestures.
 
 This helper assumes the default internal draft owner. Controlled ownership must acknowledge pending snapshots

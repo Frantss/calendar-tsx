@@ -1,18 +1,19 @@
 import { createExternalDraggable } from '@calendar-tsx/core';
 import type {
   Calendar_DateTarget,
-  Calendar_DomCalendar,
+  Calendar_EventDomCalendar,
   Calendar_EventInput,
   Calendar_InteractionStart,
+  Calendar_InteractionScope,
   Calendar_LayoutProjection,
 } from '@calendar-tsx/core';
-import type { useCalendarInteractions } from '@calendar-tsx/react';
+import type { useCalendarInteractionBindings } from '@calendar-tsx/react';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Temporal } from 'temporal-polyfill';
 import type { PlaygroundConfig } from './config';
 import type { Booking } from './sample-data';
 
-export type PreviewBindings = ReturnType<typeof useCalendarInteractions<Booking>>;
+export type PreviewBindings = ReturnType<typeof useCalendarInteractionBindings<Booking>>;
 
 export function DraftOverlay({
   preview,
@@ -86,6 +87,7 @@ const reasons: Record<string, string> = {
 export const interactionReason = (reason: string) => reasons[reason] ?? reason.replaceAll('-', ' ');
 
 export function InteractionTools({
+  scope,
   calendar,
   config,
   selected,
@@ -93,7 +95,8 @@ export function InteractionTools({
   onMessage,
   onTransfer,
 }: {
-  calendar: Calendar_DomCalendar<Booking>;
+  scope: Calendar_InteractionScope;
+  calendar: Calendar_EventDomCalendar<Booking>;
   config: PlaygroundConfig;
   selected?: Calendar_EventInput<Booking>;
   message: string;
@@ -125,23 +128,23 @@ export function InteractionTools({
   }, [config.date, timeZone]);
   useEffect(() => {
     if (!external.current || !config.interactions.externalDrop) return;
-    return createExternalDraggable(external.current, () => ({ event: newEvent() }));
-  }, [config.interactions.externalDrop, newEvent]);
+    return createExternalDraggable(external.current, () => ({ event: newEvent() }), { scope, pointer: {} });
+  }, [config.interactions.externalDrop, newEvent, scope]);
   const complete = (start: Calendar_InteractionStart | undefined, target: Calendar_DateTarget) => {
     if (!start || start.status !== 'active') {
       onMessage('Enable this operation before editing.');
       return;
     }
-    calendar.api.interactions.update(start.token, target);
+    start.session.update(target);
     const candidate = calendar.api.interactions.store.state.candidate;
-    const result = calendar.api.interactions.commit(start.token);
-    if (result !== 'committed') {
+    const result = start.session.commit();
+    if (result.status !== 'committed') {
       onMessage(
         candidate && candidate.status !== 'valid'
           ? interactionReason(candidate.reason)
           : 'The edit could not be applied.',
       );
-      calendar.api.interactions.cancel(start.token);
+      start.session.cancel();
     }
   };
   const edit = (operation: 'move' | 'resize', direction: -1 | 1, edge: 'start' | 'end' = 'end') => {

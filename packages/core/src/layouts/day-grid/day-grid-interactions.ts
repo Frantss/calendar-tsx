@@ -43,10 +43,10 @@ export const layoutDayGrid_locate = (
 };
 
 export const layoutDayGrid_project = (
-  { model, input, settings }: DayGrid,
-  original: Calendar_InteractionProposal,
+  { model, input, settings, scheduling }: DayGrid,
+  _original: Calendar_InteractionProposal,
 ): Calendar_LayoutProjection<'dayGrid'> => {
-  const proposal = dateProposal(original);
+  const proposal = dateProposal(scheduling);
   if (!proposal) return { status: 'unavailable', reason: 'unsupported-proposal' };
   if (proposal.kind === 'select') {
     const selected = proposal.range;

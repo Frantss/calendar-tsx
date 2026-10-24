@@ -1,3 +1,4 @@
+import type { Calendar_Operation } from '#features/interaction/operation.internal';
 import { createStore } from '@tanstack/store';
 import type { Calendar_FeatureContext, Calendar_Features } from '#features/feature.types';
 import { calendarFeatures_active } from '#features/calendar-features';
@@ -13,7 +14,8 @@ import type {
   Calendar_InteractionOwnership,
   Calendar_InteractionInput,
   Calendar_OperationSpec,
-  Calendar_Operation,
+  Calendar_InteractionResult,
+  Calendar_InteractionHandle,
 } from '#features/interaction/interaction.types';
 import type {
   Calendar_ActiveLayout,
@@ -24,10 +26,11 @@ import type {
 
 type Envelope = { kind: string };
 
-/** Erases typed descriptors for registry dispatch; kind and target are checked before creation. */
 export const createInteractionOperation = <const K extends Calendar_OperationKind>(
   spec: Calendar_OperationSpec<K>,
-): Calendar_Operation & { kind: K } => ({
+): Calendar_OperationSpec<K> => spec;
+
+const eraseOperation = <K extends Calendar_OperationKind>(spec: Calendar_OperationSpec<K>): Calendar_Operation => ({
   kind: spec.kind,
   enabled: spec.enabled,
   source: spec.source ? (intent, input) => spec.source!(intent as Calendar_InteractionIntent<K>, input) : undefined,
@@ -37,12 +40,18 @@ export const createInteractionOperation = <const K extends Calendar_OperationKin
     : undefined,
   create: (intent, target, input) =>
     spec.create(intent as Calendar_InteractionIntent<K>, target as Calendar_OperationTarget<K>, input),
-  bind: commands =>
-    spec.api?.({
-      begin: intent => commands.begin(intent),
-      evaluate: (intent, target) =>
-        commands.evaluate(intent, target) as Calendar_InteractionEvaluation<Calendar_InteractionProposal<unknown, K>>,
-    }) ?? {},
+  scheduling: spec.scheduling
+    ? proposal => spec.scheduling!(proposal as Calendar_InteractionProposal<unknown, K>)
+    : undefined,
+  bind: (commands, context) =>
+    spec.api?.(
+      {
+        begin: intent => commands.begin(intent) as Calendar_InteractionStart<K>,
+        evaluate: (intent, target) =>
+          commands.evaluate(intent, target) as Calendar_InteractionEvaluation<Calendar_InteractionProposal<unknown, K>>,
+      },
+      context,
+    ) ?? {},
   emit: (proposal, context, intent) =>
     spec.emit?.(proposal as Calendar_InteractionProposal<unknown, K>, context, intent as Calendar_InteractionIntent<K>),
 });
@@ -65,6 +74,16 @@ export const calendarInteractions_create = (host: {
   ownership?: Calendar_InteractionOwnership;
   layout?: () => Calendar_ActiveLayout;
 }) => {
+  const registry = new Map<string, { key: string; operation: Calendar_Operation }>();
+  for (const [key, feature] of Object.entries(host.features))
+    if (feature.interaction?.operation) {
+      if (registry.has(feature.interaction.operation.kind))
+        throw new Error(`duplicate operation: ${feature.interaction.operation.kind}`);
+      registry.set(feature.interaction.operation.kind, {
+        key,
+        operation: eraseOperation(feature.interaction.operation as Calendar_OperationSpec<Calendar_OperationKind>),
+      });
+    }
   const ownership = host.ownership ?? { mode: 'internal' };
   let internal: InternalSnapshot = interactionIdle();
   let sequence = 0;
@@ -79,7 +98,12 @@ export const calendarInteractions_create = (host: {
   const store = createStore<Calendar_InteractionSnapshot>(read() as Calendar_InteractionSnapshot);
   const project = (proposal: Calendar_InteractionProposal): Calendar_LayoutProjection => {
     const layout = host.layout?.();
-    return layout?.feature.project?.(layout, proposal) ?? { status: 'unavailable', reason: 'project-unsupported' };
+    return (
+      layout?.feature.project?.(
+        { ...layout, scheduling: registry.get(proposal.kind)?.operation.scheduling?.(proposal) },
+        proposal,
+      ) ?? { status: 'unavailable', reason: 'project-unsupported' }
+    );
   };
   const readonlyStore = createStore((): Calendar_InteractionState => {
     const snapshot = store.state;
@@ -101,13 +125,6 @@ export const calendarInteractions_create = (host: {
     else internal = next;
     notify();
   };
-  const registry = new Map<string, { key: string; operation: Calendar_Operation }>();
-  for (const [key, feature] of Object.entries(host.features))
-    if (feature.interaction?.operation) {
-      if (registry.has(feature.interaction.operation.kind))
-        throw new Error(`duplicate operation: ${feature.interaction.operation.kind}`);
-      registry.set(feature.interaction.operation.kind, { key, operation: feature.interaction.operation });
-    }
   const operationFor = (kind: string, input: Calendar_InteractionInput) => {
     const entry = registry.get(kind);
     return entry && activeKeys(host.features, input).includes(entry.key) && entry.operation.enabled?.(input) !== false
@@ -128,16 +145,20 @@ export const calendarInteractions_create = (host: {
     if (result.status !== 'valid') return result;
     if (result.proposal.kind !== operation.kind) return { status: 'rejected', reason: 'operation-result-mismatch' };
     for (const feature of active) {
-      const reason = feature.interaction?.validate?.(result.proposal as Calendar_InteractionProposal, input);
+      const reason = feature.interaction?.validate?.(
+        result.proposal as Calendar_InteractionProposal,
+        input,
+        operation.scheduling?.(result.proposal),
+      );
       if (reason) return { status: 'rejected', reason };
     }
     return result;
   };
-  const cancel = (token: number, reason = 'cancelled') => {
-    if (lease !== token) return 'stale-token';
+  const cancel = (token: number, reason = 'cancelled'): Calendar_InteractionResult => {
+    if (lease !== token) return { status: 'stale-session' };
     lease = null;
     publish({ ...interactionIdle(), outcome: reason });
-    return reason;
+    return { status: 'cancelled', reason };
   };
   const refresh = () => {
     if (read() === pending) pending = null;
@@ -188,15 +209,15 @@ export const calendarInteractions_create = (host: {
     context = input;
     dependencies = depsFor(input);
     publish({ session: { token, intent, source }, candidate: null, outcome: null });
-    return { status: 'active', token } as const;
+    return { status: 'active', session: handle(token) } as const;
   };
-  const update = (token: number, target: Calendar_OperationTarget) => {
-    if (lease !== token) return 'stale-token';
+  const update = (token: number, target: unknown): Calendar_InteractionResult => {
+    if (lease !== token) return { status: 'stale-session' };
     refresh();
-    if (lease !== token) return 'stale-token';
-    if (pending || read().session?.token !== token) return 'awaiting-owner';
+    if (lease !== token) return { status: 'stale-session' };
+    if (pending || read().session?.token !== token) return { status: 'awaiting-owner' };
     const current = read();
-    if (!current.session) return current.outcome;
+    if (!current.session) return { status: 'stale-session' };
     const operation = operationFor(current.session.intent.kind, host.read());
     if (
       current.session.target !== undefined &&
@@ -204,32 +225,42 @@ export const calendarInteractions_create = (host: {
       operation.acceptsTarget(target) &&
       (operation.sameTarget?.(current.session.target, target) ?? Object.is(current.session.target, target))
     )
-      return 'unchanged';
+      return { status: 'unchanged' };
     publish({
       ...current,
       session: { ...current.session, target },
       candidate: evaluate(current.session.intent, target),
     });
-    return pending ? 'awaiting-owner' : read().candidate?.status;
+    if (lease !== token) return { status: 'stale-session' };
+    return pending
+      ? { status: 'awaiting-owner' }
+      : ((read().candidate as Calendar_InteractionEvaluation | null) ?? { status: 'stale-session' });
   };
-  const commit = (token: number) => {
-    if (lease !== token) return 'stale-token';
+  const commit = (token: number): Calendar_InteractionResult => {
+    if (lease !== token) return { status: 'stale-session' };
     refresh();
-    if (lease !== token) return 'stale-token';
-    if (pending || read().session?.token !== token) return 'awaiting-owner';
+    if (lease !== token) return { status: 'stale-session' };
+    if (pending || read().session?.token !== token) return { status: 'awaiting-owner' };
     const { session } = read();
-    if (!session) return read().outcome;
-    if (session.target === undefined) return 'no-target';
+    if (!session) return { status: 'stale-session' };
+    if (session.target === undefined) return { status: 'no-target' };
     const result = evaluate(session.intent, session.target);
     if (result.status !== 'valid') {
       publish({ ...read(), candidate: result });
-      return result.status;
+      return result as Calendar_InteractionEvaluation;
     }
     lease = null;
     publish({ ...interactionIdle(), outcome: 'committed' });
     host.emit(result.proposal as Calendar_InteractionProposal, session.intent as Calendar_InteractionIntent);
-    return 'committed';
+    return { status: 'committed', proposal: result.proposal as Calendar_InteractionProposal };
   };
+  const handle = (token: number): Calendar_InteractionHandle => ({
+    update: target => update(token, target),
+    commit: () => commit(token),
+    cancel: reason => cancel(token, reason),
+    unavailable: reason => runtime.unavailable(token, reason),
+    isActive: () => lease === token,
+  });
   const runtime = {
     isActive: (token: number) => lease === token,
     store: readonlyStore,
@@ -245,10 +276,10 @@ export const calendarInteractions_create = (host: {
       target: NoInfer<Calendar_OperationTarget<I['kind']>>,
     ) => Calendar_InteractionEvaluation<Calendar_InteractionProposal<unknown, I['kind']>>,
     begin: begin as (intent: Calendar_InteractionIntent) => Calendar_InteractionStart,
-    bind() {
+    bind(context: Calendar_FeatureContext) {
       const api: Record<string, unknown> = {};
-      for (const feature of Object.values(host.features)) {
-        Object.assign(api, feature.interaction?.operation?.bind?.({ begin, evaluate }));
+      for (const { operation } of registry.values()) {
+        Object.assign(api, operation.bind?.({ begin, evaluate }, context));
       }
       return api;
     },
@@ -256,16 +287,16 @@ export const calendarInteractions_create = (host: {
       registry.get(proposal.kind)?.operation.emit?.(proposal, context, intent);
     },
     update,
-    unavailable: (token: number, reason: string) => {
-      if (lease !== token) return 'stale-token';
-      if (pending || read().session?.token !== token) return 'awaiting-owner';
+    unavailable: (token: number, reason: string): Calendar_InteractionResult => {
+      if (lease !== token) return { status: 'stale-session' };
+      if (pending || read().session?.token !== token) return { status: 'awaiting-owner' };
       const current = read();
       publish({
         ...current,
         session: { ...current.session!, target: undefined },
         candidate: { status: 'unavailable', reason },
       });
-      return 'unavailable';
+      return { status: 'unavailable', reason };
     },
     commit,
     cancel,

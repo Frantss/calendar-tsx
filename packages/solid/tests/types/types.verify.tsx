@@ -1,5 +1,5 @@
 import { calendarFeatures, calendarViews } from '@calendar-tsx/core';
-import { useCalendarInteractions } from '@calendar-tsx/solid';
+import { useCalendarInteractionBindings } from '@calendar-tsx/solid';
 import { useSelector } from '@tanstack/solid-store';
 import { eventPriorityFeature } from '../../../core/tests/types/third-party/public-priority';
 import type { ComponentProps } from 'solid-js';
@@ -32,7 +32,7 @@ export const DisplayOnlyTypingProbe = () => {
   const options = { ...base, ...display, view: 'list' as const };
   const calendar = useCalendar(() => options);
   // @ts-expect-error display-only calendars cannot mount pointer bindings
-  useCalendarInteractions(calendar);
+  useCalendarInteractionBindings(calendar);
   const props: ComponentProps<typeof CalendarProvider> = { value: calendar, children: null };
   const view = useCalendarSelector((state: Calendar_StateOf<typeof calendar>) => {
     // @ts-expect-error importing selection declarations must not add unregistered state
@@ -143,6 +143,22 @@ export const ResizeOnlyTypingProbe = () => {
     events: [{ id: 'appointment', kind: 'allDay' as const, start: date, data: { title: 'Appointment' } }],
   };
   const calendar = useCalendar(() => options);
+  const started = calendar.api.resize.begin('appointment', 'end');
+  if (started.status === 'active') {
+    const updated = started.session.update({ kind: 'allDay', at: date });
+    if (updated.status === 'valid') {
+      const title: string = updated.proposal.after.data.title;
+      void title;
+      // @ts-expect-error session proposals preserve event data
+      void updated.proposal.after.data.missing;
+    }
+    // @ts-expect-error resizing cannot consume third-party priority targets
+    started.session.update({ kind: 'priority', value: 'high' });
+  }
+  // @ts-expect-error semantic resizing does not install pointer input
+  void calendar.api.pointer;
+  // @ts-expect-error raw token commands are internal to the session runtime
+  void calendar.api.interactions.update;
   const result = calendar.api.resize.evaluate('appointment', 'end', { kind: 'allDay', at: date });
   if (result.status === 'valid') {
     const title: string = result.proposal.after.data.title;
@@ -185,6 +201,17 @@ export const PriorityOnlyTypingProbe = () => {
   const outcome = useSelector(calendar.api.interactions.store, state => state.outcome);
   const value: string | null = outcome();
   void value;
+  const started = calendar.api.priority.begin('a', 'review');
+  if (started.status === 'active') {
+    started.session.update({ kind: 'priority', value: 'high' });
+    // @ts-expect-error third-party sessions reject date targets
+    started.session.update({ kind: 'allDay', at: date });
+    const committed = started.session.commit();
+    if (committed.status === 'committed') {
+      const bookingId: number = committed.proposal.event.data.bookingId;
+      void bookingId;
+    }
+  }
   const result = calendar.api.priority.evaluate('a', 'Customer request', { kind: 'priority', value: 'high' });
   if (result.status === 'valid') {
     const title: string = result.proposal.event.data.title;

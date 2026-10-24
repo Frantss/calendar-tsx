@@ -9,12 +9,16 @@ import type {
   Calendar_Atom,
   Calendar_PickFeatures,
 } from '#features/feature.types';
-import { calendarInteractions_create } from '#features/interaction/interaction-runtime';
+import type { ReadonlyStore } from '@tanstack/store';
+import type {
+  Calendar_LayoutPoint,
+  Calendar_LayoutLocation,
+  Calendar_LayoutProjection,
+} from '#layouts/interaction.types';
+import type { Calendar_SchedulingEffect } from '#features/interaction/scheduling.types';
 import type { Calendar_Options } from '#calendar/calendar.types';
 import type { Calendar_Views, Calendar_View } from '#views/view.types';
 import type { Calendar_ViewSettings_FeatureMap } from '#features/feature-maps.types';
-
-export type Calendar_InteractionRuntime = ReturnType<typeof calendarInteractions_create>;
 
 export interface Calendar_OperationMap<TData = unknown>
   extends
@@ -52,8 +56,22 @@ export type Calendar_InteractionEvaluation<T = Calendar_InteractionProposal> =
   | { status: 'valid'; proposal: T }
   | { status: 'rejected' | 'unavailable'; reason: string };
 
-export type Calendar_InteractionStart =
-  | { status: 'active'; token: number }
+export type Calendar_InteractionResult<P = Calendar_InteractionProposal> =
+  | Calendar_InteractionEvaluation<P>
+  | { status: 'committed'; proposal: P }
+  | { status: 'cancelled'; reason: string }
+  | { status: 'stale-session' | 'awaiting-owner' | 'unchanged' | 'no-target' };
+
+export type Calendar_InteractionHandle<K extends Calendar_OperationKind = Calendar_OperationKind, D = unknown> = {
+  update: (target: Calendar_OperationTarget<K>) => Calendar_InteractionResult<Calendar_InteractionProposal<D, K>>;
+  commit: () => Calendar_InteractionResult<Calendar_InteractionProposal<D, K>>;
+  cancel: (reason?: string) => Calendar_InteractionResult<Calendar_InteractionProposal<D, K>>;
+  unavailable: (reason: string) => Calendar_InteractionResult<Calendar_InteractionProposal<D, K>>;
+  isActive: () => boolean;
+};
+
+export type Calendar_InteractionStart<K extends Calendar_OperationKind = Calendar_OperationKind, D = unknown> =
+  | { status: 'active'; session: Calendar_InteractionHandle<K, D> }
   | { status: 'busy' | 'awaiting-owner' | 'unavailable' };
 
 export type Calendar_InteractionSession = {
@@ -98,7 +116,7 @@ export type Calendar_InteractionInput<TData = unknown> = Calendar_Options<
 };
 
 export type Calendar_OperationCommands<K extends Calendar_OperationKind> = {
-  begin: (intent: Calendar_InteractionIntent<K>) => Calendar_InteractionStart;
+  begin: (intent: Calendar_InteractionIntent<K>) => Calendar_InteractionStart<K>;
   evaluate: (
     intent: Calendar_InteractionIntent<K>,
     target: Calendar_OperationTarget<K>,
@@ -116,7 +134,8 @@ export type Calendar_OperationSpec<K extends Calendar_OperationKind> = {
     target: Calendar_OperationTarget<K>,
     input: Calendar_InteractionInput,
   ) => Calendar_InteractionEvaluation<Calendar_InteractionProposal<unknown, K>>;
-  api?: (commands: Calendar_OperationCommands<K>) => Record<string, unknown>;
+  scheduling?: (proposal: Calendar_InteractionProposal<unknown, K>) => Calendar_SchedulingEffect;
+  api?: (commands: Calendar_OperationCommands<K>, context: Calendar_FeatureContext) => Record<string, unknown>;
   emit?: (
     proposal: Calendar_InteractionProposal<unknown, K>,
     context: Calendar_FeatureContext,
@@ -124,34 +143,24 @@ export type Calendar_OperationSpec<K extends Calendar_OperationKind> = {
   ) => void;
 };
 
-type Commands = {
-  begin: (intent: Envelope) => Calendar_InteractionStart;
-  evaluate: (intent: Envelope, target: unknown) => Calendar_InteractionEvaluation<Envelope>;
-};
-
-export type Calendar_Operation = {
-  kind: string;
-  enabled?: (input: Calendar_InteractionInput) => boolean;
-  source?: (intent: Envelope, input: Calendar_InteractionInput) => unknown;
-  acceptsTarget: (target: unknown) => boolean;
-  sameTarget?: (a: unknown, b: unknown) => boolean;
-  create: (
-    intent: Envelope,
-    target: unknown,
-    input: Calendar_InteractionInput,
-  ) => Calendar_InteractionEvaluation<Envelope>;
-  bind?: (commands: Commands) => Record<string, unknown>;
-  emit?: (proposal: Envelope, context: Calendar_FeatureContext, intent: Envelope) => void;
-};
+export type Calendar_OperationDefinition = {
+  [K in Calendar_OperationKind]: Calendar_OperationSpec<K>;
+}[Calendar_OperationKind];
 
 export type Calendar_InteractionContribution = {
   settings?: string;
-  operation?: Calendar_Operation;
-  validate?: (proposal: Calendar_InteractionProposal, input: Calendar_InteractionInput) => string | undefined;
+  operation?: Calendar_OperationDefinition;
+  validate?: (
+    proposal: Calendar_InteractionProposal,
+    input: Calendar_InteractionInput,
+    scheduling?: Calendar_SchedulingEffect,
+  ) => string | undefined;
   deps?: (input: Calendar_InteractionInput) => readonly unknown[];
 };
 
-export type Calendar_InteractionControls = Pick<
-  Calendar_InteractionRuntime,
-  'store' | 'locate' | 'project' | 'update' | 'unavailable' | 'commit' | 'cancel' | 'refresh' | 'isActive'
->;
+export type Calendar_InteractionControls = {
+  store: ReadonlyStore<Calendar_InteractionState>;
+  locate: <P extends Calendar_LayoutPoint>(point: P) => Calendar_LayoutLocation<P['kind']>;
+  project: (proposal: Calendar_InteractionProposal) => Calendar_LayoutProjection;
+  refresh: () => void;
+};

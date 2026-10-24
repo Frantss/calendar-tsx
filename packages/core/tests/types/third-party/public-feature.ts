@@ -14,7 +14,7 @@ declare module '@calendar-tsx/core' {
   interface Calendar_Api_FeatureMap<TData, TResourceData> {
     approvalFeature: {
       approval: {
-        begin: (eventId: string) => Calendar_InteractionStart;
+        begin: (eventId: string) => Calendar_InteractionStart<'approve', TData>;
         evaluate: (eventId: string, accepted: boolean) => Calendar_InteractionEvaluation<ApprovalProposal<TData>>;
       };
     };

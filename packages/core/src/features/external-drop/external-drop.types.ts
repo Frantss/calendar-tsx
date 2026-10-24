@@ -15,12 +15,12 @@ export type Calendar_CreateProposal<D = unknown> = {
 
 export type Calendar_ExternalDropSettings<D = unknown> = {
   enabled?: boolean;
-  placement?: import('#features/event-move/event-move.types').Calendar_MovementSettings;
+  placement?: import('#features/interaction/scheduling.types').Calendar_PlacementSettings;
   accept?: (event: Calendar_EventInput<D>, metadata: unknown) => boolean;
 };
 
 export type Calendar_ExternalDropApi<D> = {
-  begin: (event: Calendar_EventInput<D>, metadata?: unknown) => Calendar_InteractionStart;
+  begin: (event: Calendar_EventInput<D>, metadata?: unknown) => Calendar_InteractionStart<'create', D>;
   evaluate: (
     event: Calendar_EventInput<D>,
     target: Calendar_DateTarget,

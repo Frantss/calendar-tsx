@@ -1,3 +1,5 @@
+import { createCalendarInteractionScope } from '#interactions/dom-host';
+import { createCalendarDomOperation } from '#interactions/dom-operation';
 import { interactionTestViews } from '#tests/support/interaction.setup';
 import { Temporal } from 'temporal-polyfill';
 import { afterEach, expect, it, vi } from 'vitest';
@@ -15,13 +17,14 @@ import { touchFeature } from '#features/touch/touch-feature';
 import { autoScrollFeature } from '#features/auto-scroll/auto-scroll-feature';
 import { externalDropFeature } from '#features/external-drop/external-drop-feature';
 import { crossCalendarFeature } from '#features/cross-calendar/cross-calendar-feature';
-import { createCalendarInteractionHost, createExternalDraggable, timeGridSurface, timelineSurface } from '#interactions/dom';
+import { createCalendarDomHost, createCalendarInteractionHost, createExternalDraggable, timeGridSurface, timelineSurface } from '#interactions/dom';
 import type { Calendar_InteractionSnapshot } from '#features/interaction/interaction.types';
 
 const date = Temporal.PlainDate.from('2026-10-23');
 const at = (hour: number) => date.toZonedDateTime({ timeZone: 'UTC', plainTime: `${String(hour).padStart(2, '0')}:00` });
 const event = { id: 'a', kind: 'timed' as const, start: at(9), end: at(10), data: { title: 'A' } };
 const base = { date, timeZone: 'UTC', view: 'day' as const, events: [event], onNavigate: () => {} };
+const scope = createCalendarInteractionScope();
 const cleanups: (() => void)[] = [];
 afterEach(() => {
   cleanups
@@ -51,7 +54,7 @@ const pointer = (element: Element, type: string, x: number, y: number, pointerTy
     }),
   );
 const setup = (calendar: Parameters<typeof createCalendarInteractionHost<any>>[0], root = surface()) => {
-  const host = createCalendarInteractionHost(calendar);
+  const host = createCalendarInteractionHost(calendar, { scope });
   host.surface(root, timeGridSurface(`all:${date.toString()}`));
   cleanups.push(host.mount(root));
   return { host, root };
@@ -198,7 +201,7 @@ it('scrolls a nested viewport and updates the target while the pointer stays sti
   const track = document.createElement('div');
   track.style.height = '480px';
   root.append(track);
-  const host = createCalendarInteractionHost(calendar);
+  const host = createCalendarInteractionHost(calendar, { scope });
   host.surface(track, timeGridSurface(`all:${date.toString()}`));
   cleanups.push(host.mount(root));
   pointer(track, 'pointerdown', 150, 80);
@@ -282,12 +285,12 @@ it('receives an external source in a timeline without installing movement', () =
   const calendar = createCalendar({ ...base, ...views, events: [], onExternalDrop });
   const root = surface(300);
   root.style.width = '480px';
-  const host = createCalendarInteractionHost(calendar);
+  const host = createCalendarInteractionHost(calendar, { scope });
   host.surface(root, timelineSurface('all'));
   cleanups.push(host.mount(root));
   const palette = surface();
   const source = child(palette, 0);
-  cleanups.push(createExternalDraggable(source, () => ({ event, metadata: { palette: true } })));
+  cleanups.push(createExternalDraggable(source, () => ({ event, metadata: { palette: true } }), { scope, pointer: {} }));
   pointer(source, 'pointerdown', 20, 10);
   pointer(root, 'pointermove', 540, 20);
   pointer(root, 'pointerup', 540, 20);
@@ -325,9 +328,20 @@ it('transports third-party operations without assuming an event or date target',
   });
   const onPriorityChange = vi.fn();
   const calendar = createCalendar({ ...base, ...views, onPriorityChange });
-  const { root, host } = setup(calendar);
+  const root = surface();
+  const host = createCalendarDomHost({ api: { pointer: calendar.api.pointer, interactions: calendar.api.interactions } });
+  host.surface(root, timeGridSurface(`all:${date.toString()}`));
+  cleanups.push(host.mount(root));
   const source = child(root);
-  host.source(source, { begin: () => calendar.api.priority.begin('a', 'review'), target: () => ({ kind: 'priority', value: 'high' }) });
+  host.source(
+    source,
+    createCalendarDomOperation<'priority'>({
+      acceptsTarget: (value): value is import('#tests/support/priority').PriorityTarget =>
+        !!value && typeof value === 'object' && 'kind' in value && value.kind === 'priority',
+      begin: () => calendar.api.priority.begin('a', 'review'),
+      target: () => ({ kind: 'priority', value: 'high' }),
+    }),
+  );
   pointer(source, 'pointerdown', 20, 180);
   pointer(root, 'pointermove', 20, 220);
   pointer(root, 'pointerup', 20, 220);
@@ -371,7 +385,7 @@ it('stops autoscroll at release while a controlled selection awaits acknowledgme
   const track = document.createElement('div');
   track.style.height = '480px';
   root.append(track);
-  const host = createCalendarInteractionHost(calendar);
+  const host = createCalendarInteractionHost(calendar, { scope });
   host.surface(track, timeGridSurface(`all:${date.toString()}`));
   cleanups.push(host.mount(root));
   pointer(track, 'pointerdown', 150, 80);
@@ -382,4 +396,54 @@ it('stops autoscroll at release while a controlled selection awaits acknowledgme
   await new Promise(resolve => setTimeout(resolve, 40));
   expect(root.scrollTop).toBe(stopped);
   await vi.waitFor(() => expect(onSelectionChange).toHaveBeenCalledOnce());
+});
+
+it('isolates drag scopes and uses the external source activation settings', () => {
+  const firstScope = createCalendarInteractionScope();
+  const secondScope = createCalendarInteractionScope();
+  const onFirst = vi.fn(),
+    onSecond = vi.fn();
+  const views = interactionTestViews({
+    day: timeGridView({
+      days: 1,
+      features: {
+        interactionFeature: interactionFeature(),
+        pointerFeature: pointerFeature({ distance: 0 }),
+        externalDropFeature: externalDropFeature(),
+      },
+    }),
+  });
+  const first = createCalendar({ ...base, ...views, events: [], onExternalDrop: onFirst });
+  const second = createCalendar({ ...base, ...views, events: [], onExternalDrop: onSecond });
+  const firstRoot = surface(),
+    secondRoot = surface(300);
+  for (const [calendar, root, scope] of [
+    [first, firstRoot, firstScope],
+    [second, secondRoot, secondScope],
+  ] as const) {
+    const host = createCalendarInteractionHost(calendar, { scope });
+    host.surface(root, timeGridSurface(`all:${date.toString()}`));
+    cleanups.push(host.mount(root));
+  }
+  const palette = surface(600),
+    source = child(palette, 0);
+  cleanups.push(createExternalDraggable(source, () => ({ event }), { scope: secondScope, pointer: { distance: 50 } }));
+  pointer(source, 'pointerdown', 610, 10);
+  pointer(firstRoot, 'pointermove', 10, 240);
+  pointer(firstRoot, 'pointerup', 10, 240);
+  expect(onFirst).not.toHaveBeenCalled();
+  expect(onSecond).not.toHaveBeenCalled();
+  pointer(source, 'pointerdown', 610, 10);
+  pointer(secondRoot, 'pointermove', 320, 240);
+  pointer(secondRoot, 'pointerup', 320, 240);
+  expect(onSecond).toHaveBeenCalledOnce();
+  expect(onFirst).not.toHaveBeenCalled();
+  onSecond.mockClear();
+  source.style.position = 'fixed';
+  source.style.left = '300px';
+  source.style.top = '180px';
+  pointer(source, 'pointerdown', 320, 180);
+  pointer(secondRoot, 'pointermove', 320, 200);
+  pointer(secondRoot, 'pointerup', 320, 200);
+  expect(onSecond).not.toHaveBeenCalled();
 });

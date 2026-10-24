@@ -1,4 +1,4 @@
-import { calendarMovement_place } from '#features/event-move/movement';
+import { calendarPlacement_place } from '#features/interaction/placement';
 import type { Calendar_ConfiguredFeature } from '#features/feature.types';
 import { createInteractionOperation } from '#features/interaction/interaction-runtime';
 import type { Calendar_InteractionEvaluation } from '#features/interaction/interaction.types';
@@ -17,16 +17,14 @@ const moveOperation = createInteractionOperation({
     const before = input.events.find(event => event.id === intent.eventId);
     if (!before) return { status: 'rejected', reason: 'source-removed' };
     if (before['~source']) return { status: 'unavailable', reason: 'source-unsupported' };
-    const after = calendarMovement_place(
-      before,
-      target,
-      { ...input.movement, ...input.views[input.view].movement },
-      intent.sourceResourceId,
-    );
+    const settings = { ...input.movement, ...input.views[input.view].movement };
+    if (settings.canMove?.(before) === false) return { status: 'unavailable', reason: 'event-not-editable' };
+    const after = calendarPlacement_place(before, target, settings, intent.sourceResourceId);
     return typeof after === 'string'
       ? { status: 'unavailable', reason: after }
       : { status: 'valid', proposal: { kind: 'move', before, after } };
   },
+  scheduling: proposal => ({ kind: 'event', event: proposal.after, excludeEventId: proposal.before.id }),
   api: commands => ({
     move: {
       begin: (eventId: string, sourceResourceId?: string) =>

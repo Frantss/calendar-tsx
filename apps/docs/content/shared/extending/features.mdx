@@ -121,7 +121,7 @@ selectors. Providers accept calendars independently of which feature-state maps 
 
 `interactionFeature()` constructs one transient runtime from the resolved descriptors. Register operation features
 independently with `dateSelectionFeature()`, `eventMoveFeature()` and `eventResizeFeature()`. Their programmatic APIs install
-through `constructApi` on both core and adapter instances. Mount `useCalendarInteractions` or the core DOM host to attach pointer listeners.
+through `constructApi` on both core and adapter instances. Mount `useCalendarInteractionBindings` or the core DOM host to attach pointer listeners.
 
 Third-party features declare their intent, target and result in `Calendar_OperationMap<TData>`, provide a descriptor
 with `createInteractionOperation`, and add `interaction: { operation, validate?, deps? }`. A `settings` key on this
@@ -164,3 +164,14 @@ dispatches to that descriptor without a builtin-kind switch. Controlled/external
 snapshots only; preview geometry derives locally from the draft and base model.
 
 </section>
+
+An operation's API returns `Calendar_InteractionStart<'operationKind', TData>`. An active result contains a typed
+session; `update` accepts that operation's target, and `commit` returns a structured result with the consumer's
+proposal type. Describe scheduling participation with `scheduling(proposal)`: return `{ kind: 'range', range }`
+or `{ kind: 'event', event, excludeEventId? }`. Built-in constraints and previews consume that description.
+Non-date operations can omit it and provide custom layout projection instead.
+
+For browser input, use `createCalendarDomOperation({ acceptsTarget, begin, target? })`. The optional target mapping
+converts a layout hit into the operation's typed target. `createCalendarDomHost` accepts only interaction controls
+and pointer settings; it requires no event array or time zone. The event-aware host adds built-in convenience
+bindings using the same gesture engine.

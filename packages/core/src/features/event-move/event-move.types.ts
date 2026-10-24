@@ -14,7 +14,7 @@ export type Calendar_MoveProposal<TData = unknown> = {
 };
 
 export type Calendar_MoveApi<D = unknown> = {
-  begin: (eventId: string, sourceResourceId?: string) => Calendar_InteractionStart;
+  begin: (eventId: string, sourceResourceId?: string) => Calendar_InteractionStart<'move', D>;
   evaluate: (
     eventId: string,
     target: Calendar_DateTarget,
@@ -22,12 +22,7 @@ export type Calendar_MoveApi<D = unknown> = {
   ) => Calendar_InteractionEvaluation<Calendar_MoveProposal<D>>;
 };
 
-export type Calendar_MovementSettings = {
+export type Calendar_MovementSettings = import('#features/interaction/scheduling.types').Calendar_PlacementSettings & {
   enabled?: boolean;
-  allowConversion?: boolean;
-  conversionDuration?: 'reset' | 'preserve';
-  defaultTimedMinutes?: number;
-  allowResourceChange?: boolean;
-  resourceMode?: 'replace-all' | 'replace-source';
   canMove?: (event: Calendar_EventInput<unknown>) => boolean;
 };

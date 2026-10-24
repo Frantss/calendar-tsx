@@ -215,7 +215,7 @@ it('installs registered interaction APIs, syncs source changes, and cancels on u
   const views = { features, views: calendarViews({ features, views: { day: listView({ days: 1 }) } }) };
   const onEventResize = vi.fn();
   let inspect: (() => { outcome: string | null; keys: string[]; complete: () => unknown }) | undefined;
-  let token = 0;
+  let token: import('@calendar-tsx/core').Calendar_InteractionHandle<'resize', typeof defaults.yoga.data> | undefined;
   const Harness = () => {
     const [events, setEvents] = createSignal([defaults.yoga]);
     const calendar = useCalendar(() => ({
@@ -234,7 +234,7 @@ it('installs registered interaction APIs, syncs source changes, and cancels on u
       inspect = () => ({
         outcome: calendar.api.interactions.store.state.outcome,
         keys: Object.keys(calendar.api),
-        complete: () => calendar.api.interactions.commit(token),
+        complete: () => token?.commit(),
       });
     });
     return (
@@ -244,14 +244,14 @@ it('installs registered interaction APIs, syncs source changes, and cancels on u
           onClick={() => {
             const result = calendar.api.resize.begin(defaults.yoga.id, 'end');
             if (result.status === 'active') {
-              token = result.token;
-              calendar.api.interactions.update(token, { kind: 'timed', at: defaults.yoga.end.add({ hours: 1 }) });
+              token = result.session;
+              token.update({ kind: 'timed', at: defaults.yoga.end.add({ hours: 1 }) });
             }
           }}
         >
           draft resize
         </button>
-        <button onClick={() => calendar.api.interactions.commit(token)}>complete resize</button>
+        <button onClick={() => token?.commit()}>complete resize</button>
         <button onClick={() => setEvents(current => current.map(event => ({ ...event })))}>replace source</button>
       </CalendarProvider>
     );
@@ -269,7 +269,7 @@ it('installs registered interaction APIs, syncs source changes, and cancels on u
   await page.getByRole('button', { name: 'draft resize' }).click();
   screen.unmount();
   expect(inspect!().outcome).toBe('unmounted');
-  expect(inspect!().complete()).toBe('stale-token');
+  expect(inspect!().complete()).toMatchObject({ status: 'stale-session' });
   expect(onEventResize).toHaveBeenCalledOnce();
 });
 
@@ -299,7 +299,7 @@ for (const kind of ['timeGrid', 'timeline'] as const) {
             ? calendar.api.interactions.locate({ kind: 'timeGrid', surface: { kind: 'column', key: 'all:2026-03-11' }, fraction: 11 / 24 })
             : calendar.api.interactions.locate({ kind: 'timeline', surface: { kind: 'lane', key: 'all' }, fraction: 11 / 24 });
         if (point.status !== 'valid') throw new Error(point.reason);
-        calendar.api.interactions.update(result.token, point.target);
+        result.session.update(point.target);
       };
       const value = () => {
         const current = preview();

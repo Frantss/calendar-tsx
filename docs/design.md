@@ -1699,6 +1699,50 @@ autoscroll, source removal, external creation, transfers and third-party operati
 exercise native Chromium drags in time-grid and timeline surfaces, payload types and lifecycle cleanup. Public
 compiler fixtures verify the DOM export and independent feature prerequisites.
 
+### D61 — Typed interaction sessions and a shared DOM adapter
+
+**Serves:** D2, D55, D58–D60; independent operation opt-ins and third-party extensibility.
+
+**Decision:** keep the DOM adapter in the existing core package and single entry. Semantic creation and transfer
+require only `interactionFeature`. Pointer, touch and scrolling remain independent settings features; browser
+listeners are installed only by a mounted adapter. Source transfer preparation retains movement permissions and a
+movement lease. Receiver placement belongs to `crossCalendar.placement`; shared placement arithmetic belongs to
+`features/interaction/placement.ts`.
+
+Operation `begin` returns a typed session handle. Its `update`, `commit`, `cancel`, `unavailable` and `isActive`
+methods close over the runtime lease. Targets stay correlated with the operation; update and commit proposals
+retain consumer event data. Results discriminate by `status`, including pending controlled acknowledgment and stale
+sessions. Ownership snapshots retain semantic session state and numeric tokens; command handles close over the
+runtime instead of becoming the snapshot session itself. Shared controls expose observation, geometry and refresh. Public descriptors retain their typed spec;
+registry dispatch erasure is internal.
+
+`api.transfer` owns preparation and receiving commands. The unused `onEventReceive` option is removed. Transfer
+still emits one source callback and leaves both event arrays under application ownership.
+
+The DOM engine owns measurement, activation, capture, scrolling and cancellation. Built-in event bindings own
+operation choice, source interpretation and movement grab offsets. They share pure DST candidate resolution with
+layout hit testing. Third-party bindings use `createCalendarDomOperation` with a target guard and typed begin/target
+mapping. The generic host needs only interaction controls and pointer settings; the event host adds built-in
+convenience bindings. Explicit scopes group calendars and external sources. Default host scopes are isolated;
+external sources own activation settings independently of host registration order.
+
+React/Solid expose `useCalendarInteractionBindings`. They manage refs, subscriptions and lifecycle, and do not
+return `mount`. Consumers observe programmatic drafts through existing selectors without requiring pointer input.
+The playground and compiled documentation examples use typed sessions and explicit shared drag scopes.
+
+Operation descriptors may provide a scheduling effect: a range or event with an optional overlap exclusion ID.
+Constraints and built-in layouts consume that effect without switching on operation kinds. Non-date operations
+omit it. Third-party layouts continue to receive the original proposal and can define custom geometry.
+
+**Alternatives:** renaming the old controls would retain token/target type loss and browser prerequisites.
+A separate DOM package would add packaging and release work without being required for this responsibility split.
+Duplicating browser handling in React and Solid would split gesture lifetime and transfer coordination.
+
+**Verification:** source and built-package compiler fixtures exercise independent operations and typed session
+payloads in core, React and Solid. Runtime tests exercise a third-party boolean operation with built-in scheduling
+constraints and time-grid/timeline previews. Browser tests cover isolated scopes, external activation settings,
+independent operations, third-party transport and existing controlled/touch/scroll/cancellation behavior.
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.

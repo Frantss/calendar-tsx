@@ -8,7 +8,7 @@ import { userEvent } from 'vitest/browser';
 import { createCalendar, timeGridView, timelineView, interactionFeature, pointerFeature, eventResizeFeature } from '@calendar-tsx/core';
 import { timeGridSurface, timelineSurface } from '@calendar-tsx/core';
 import { useCalendar } from '#calendar/calendar';
-import { useCalendarInteractions } from '#interactions/use-calendar-interactions';
+import { useCalendarInteractionBindings } from '#interactions/use-calendar-interaction-bindings';
 const date = Temporal.PlainDate.from('2026-10-23');
 const at = (hour: number) => date.toZonedDateTime({ timeZone: 'UTC', plainTime: `${String(hour).padStart(2, '0')}:00` });
 const event = { id: 'a', kind: 'timed' as const, start: at(9), end: at(10), data: { title: 'A' } };
@@ -41,7 +41,7 @@ for (const layout of ['grid', 'timeline'] as const) {
     let instance: ReturnType<typeof createCalendar<typeof event.data, unknown, typeof views.views, typeof views.features>>;
     const Harness = () => {
       const calendar = useCalendar(options);
-      const bindings = useCalendarInteractions(calendar);
+      const bindings = useCalendarInteractionBindings(calendar);
       useLayoutEffect(() => {
         instance = calendar;
       }, [calendar]);

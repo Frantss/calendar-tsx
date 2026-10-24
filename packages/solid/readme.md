@@ -122,13 +122,13 @@ Parts render no styles: position them with CSS reading `--cal-*` custom properti
 ## Interaction refs
 
 Register `interactionFeature()`, `pointerFeature()` and the operations you need with `calendarFeatures`. Pass the
-calendar to `useCalendarInteractions(calendar)`. Attach `bindings.root` to the calendar container,
+calendar to `useCalendarInteractionBindings(calendar)`. Attach `bindings.root` to the calendar container,
 `bindings.surface(timeGridSurface(column.key))` to each measured track, and
 `bindings.source(segment.key, { eventId: segment.event.id })` to event elements. A resize handle adds
 `edge: 'start'` or `'end'` and a distinct ref key. Resizing works without movement or selection.
 
 The hook owns driver mounting and cleanup. Refs remain stable while descriptors update. Use `bindings.operation`
-for a third-party operation's `begin/target` binding. Render the derived `bindings.preview()` geometry as an overlay;
+for a typed third-party binding made with `createCalendarDomOperation`. Render the derived `bindings.preview()` geometry as an overlay;
 preview elements should not intercept pointer hits. All-day tracks, timeline lanes and day-grid rows use the exported
 `timeGridSurface()`, `timelineSurface(row.key)` and `dayGridSurface(section.key, row.key)` helpers. Register track
 bounds without axis labels or gutters. Touch and autoscroll remain separate opt-in features.
@@ -139,3 +139,7 @@ external sources, transfers and scheduling policies. Display-only calendars do n
 The docs include a [Solid interaction setup and rendering guide](../../apps/docs/content/docs/solid/features/interactions.mdx),
 [editing policies](../../apps/docs/content/docs/solid/features/editing-policies.mdx), and
 [external drops and transfers](../../apps/docs/content/docs/solid/features/drops-and-transfers.mdx).
+
+Pass `{ scope: createCalendarInteractionScope() }` to group hosts for transfers or external sources; reuse that scope
+across the participating calendars. The binding hook owns mounting. Programmatic interaction previews can use the
+existing store selector without installing pointer input.

@@ -12,12 +12,13 @@ import shadcnCss from '@calendar-tsx/themes/shadcn.css?url';
 import stripeCss from '@calendar-tsx/themes/stripe.css?url';
 import type {
   Calendar_EventInput,
-  Calendar_DomCalendar,
+  Calendar_InteractionScope,
+  Calendar_EventDomCalendar,
   Calendar_Selection,
   Calendar_WeeklyRule,
 } from '@calendar-tsx/core';
-import { fixedClock } from '@calendar-tsx/core';
-import { CalendarProvider, useCalendar, useCalendarInteractions } from '@calendar-tsx/react';
+import { fixedClock, createCalendarInteractionScope } from '@calendar-tsx/core';
+import { CalendarProvider, useCalendar, useCalendarInteractionBindings } from '@calendar-tsx/react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Temporal } from 'temporal-polyfill';
@@ -84,7 +85,7 @@ function Preview() {
   const [config, setConfig] = useState<PlaygroundConfig | null>(null);
   const api = useRef<Api | null>(null);
   const embedded = useRef(false);
-  const calendars = useRef<Partial<Record<PlaygroundCalendarId, Calendar_DomCalendar<Booking>>>>({});
+  const calendars = useRef<Partial<Record<PlaygroundCalendarId, Calendar_EventDomCalendar<Booking>>>>({});
 
   useEffect(() => {
     embedded.current = window.parent !== window;
@@ -108,6 +109,7 @@ function Preview() {
     };
   }, []);
 
+  const [scope] = useState(createCalendarInteractionScope);
   const scheme = useEffectiveScheme(config?.scheme);
   const overrides = config ? tokenOverridesCss(config.tokens) : '';
   const loaded = config !== null;
@@ -180,6 +182,7 @@ function Preview() {
           <PreviewCalendar
             key={`${id}|${config.now}|${config.timeZone}|${JSON.stringify(config.interactions)}`}
             id={id}
+            scope={scope}
             config={config}
             onEdit={onEdit}
             onApi={value => {
@@ -196,6 +199,7 @@ function Preview() {
 }
 
 function PreviewCalendar({
+  scope,
   config,
   onApi,
   onNavigate,
@@ -203,12 +207,13 @@ function PreviewCalendar({
   onEdit,
   otherCalendar,
 }: {
+  scope: Calendar_InteractionScope;
   config: PlaygroundConfig;
-  onApi: (calendar: Calendar_DomCalendar<Booking> & { api: Api }) => void;
+  onApi: (calendar: Calendar_EventDomCalendar<Booking> & { api: Api }) => void;
   onNavigate: (view: PlaygroundConfig['view'], date: string) => void;
   id: PlaygroundCalendarId;
   onEdit: (change: PlaygroundChange) => void;
-  otherCalendar: () => Calendar_DomCalendar<Booking> | undefined;
+  otherCalendar: () => Calendar_EventDomCalendar<Booking> | undefined;
 }) {
   const [timeZone] = useState(() => config.timeZone || Temporal.Now.timeZoneId());
   const [clock] = useState(() =>
@@ -285,7 +290,14 @@ function PreviewCalendar({
         resourceMode: config.interactions.replaceSource ? 'replace-source' : 'replace-all',
       },
     },
-    crossCalendar: { id },
+    crossCalendar: {
+      id,
+      placement: {
+        allowConversion: config.interactions.allowConversion,
+        conversionDuration: config.interactions.preserveDuration ? 'preserve' : 'reset',
+        resourceMode: config.interactions.replaceSource ? 'replace-source' : 'replace-all',
+      },
+    },
     onSelectionChange: range => {
       setSelection(range);
       setMessage(
@@ -300,7 +312,7 @@ function PreviewCalendar({
       setMessage(`Transferred ${proposal.after.data.title} to the other calendar.`);
     },
   });
-  const bindings = useCalendarInteractions(calendar);
+  const bindings = useCalendarInteractionBindings(calendar, { scope });
   function changed(event: Calendar_EventInput<Booking>, action: string) {
     onEdit(storeEvent(event, id));
     setSelectedId(event.id);
@@ -365,13 +377,14 @@ function PreviewCalendar({
         <InteractionTools
           key={config.date}
           calendar={calendar}
+          scope={scope}
           config={config}
           selected={events.find(event => event.id === selectedId)}
           message={message}
           onMessage={setMessage}
           onTransfer={event => {
             const destination = otherCalendar();
-            const source = calendar.api.crossCalendar?.prepare(event.id, event.resourceIds?.[0]);
+            const source = calendar.api.transfer?.prepare(event.id, event.resourceIds?.[0]);
             if (!destination || !source) {
               setMessage('Enable movement and transfers on both calendars.');
               return;
@@ -382,20 +395,19 @@ function PreviewCalendar({
                 setMessage('The other calendar is busy.');
                 return;
               }
-              destination.api.interactions.update(
-                start.token,
+              start.session.update(
                 event.kind === 'timed'
                   ? { kind: 'timed', at: event.start, resourceId: event.resourceIds?.[0] }
                   : { kind: 'allDay', at: event.start, resourceId: event.resourceIds?.[0] },
               );
               const candidate = destination.api.interactions.store.state.candidate;
-              if (destination.api.interactions.commit(start.token) !== 'committed') {
+              if (start.session.commit().status !== 'committed') {
                 setMessage(
                   candidate && candidate.status !== 'valid'
                     ? interactionReason(candidate.reason)
                     : 'Transfer rejected.',
                 );
-                destination.api.interactions.cancel(start.token);
+                start.session.cancel();
               }
             } finally {
               source.release();

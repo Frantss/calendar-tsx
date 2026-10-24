@@ -25,10 +25,10 @@ Read signals inside the accessor (`view: view()`), not outside it, or changes wo
   and `onNavigate` widen to `string`. Type `events` instead, for example as `Calendar_EventInput<Booking>[]`.
 </Callout>
 
-## `useCalendarInteractions`
+## `useCalendarInteractionBindings`
 
 ```tsx
-const bindings = useCalendarInteractions(calendar);
+const bindings = useCalendarInteractionBindings(calendar);
 const preview = () => bindings.preview();
 ```
 

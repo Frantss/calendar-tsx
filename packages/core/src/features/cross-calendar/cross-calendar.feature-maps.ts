@@ -6,9 +6,6 @@ export interface CrossCalendar_Options_FeatureMap<TData> {
     onEventTransfer?: (
       proposal: import('#features/cross-calendar/cross-calendar.types').Calendar_TransferProposal<TData>,
     ) => void;
-    onEventReceive?: (
-      proposal: import('#features/cross-calendar/cross-calendar.types').Calendar_TransferProposal<TData>,
-    ) => void;
   };
 }
 
@@ -21,7 +18,6 @@ export interface CrossCalendar_ViewSettings_FeatureMap {
 export interface CrossCalendar_Api_FeatureMap<TData> {
   crossCalendarFeature: {
     transfer: import('#features/cross-calendar/cross-calendar.types').Calendar_TransferApi<TData>;
-    crossCalendar: import('#features/cross-calendar/cross-calendar.types').Calendar_CrossCalendarApi<TData>;
   };
 }
 

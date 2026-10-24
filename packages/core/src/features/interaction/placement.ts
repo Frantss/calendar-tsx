@@ -1,15 +1,14 @@
 import { Temporal } from 'temporal-polyfill';
 import type { Calendar_EventInput } from '#events/event.types';
 import type { Calendar_DateTarget } from '#features/interaction/date-target.types';
-import type { Calendar_MovementSettings } from '#features/event-move/event-move.types';
+import type { Calendar_PlacementSettings } from '#features/interaction/scheduling.types';
 
-export const calendarMovement_place = (
+export const calendarPlacement_place = (
   before: Calendar_EventInput<unknown>,
   target: Calendar_DateTarget,
-  settings: Calendar_MovementSettings,
+  settings: Calendar_PlacementSettings,
   sourceResourceId?: string,
 ): Calendar_EventInput<unknown> | string => {
-  if (settings.canMove?.(before) === false) return 'event-not-editable';
   let resourceIds = before.resourceIds;
   if (target.resourceId) {
     if (settings.allowResourceChange === false && !before.resourceIds?.includes(target.resourceId))

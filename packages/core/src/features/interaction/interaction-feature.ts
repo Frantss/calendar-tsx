@@ -61,14 +61,9 @@ export const interactionFeature = (config: {} = {}) =>
           store: runtime.store,
           locate: runtime.locate,
           project: runtime.project,
-          update: runtime.update,
-          unavailable: runtime.unavailable,
-          commit: runtime.commit,
-          cancel: runtime.cancel,
-          isActive: runtime.isActive,
           refresh: runtime.refresh,
         },
-        ...runtime.bind(),
+        ...runtime.bind(context),
       };
     },
   }) as const satisfies Calendar_ConfiguredFeature;

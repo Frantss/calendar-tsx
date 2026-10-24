@@ -10,7 +10,7 @@ import {
   TimeGridViewColumn,
   TimeGridViewEvent,
   useCalendar,
-  useCalendarInteractions,
+  useCalendarInteractionBindings,
   useCalendarSelector,
 } from '@calendar-tsx/react';
 import { useState } from 'react';
@@ -37,7 +37,7 @@ export function EditableCalendar() {
     onEventMove: ({ after }) => replaceEvent(after),
     onEventResize: ({ after }) => replaceEvent(after),
   });
-  const bindings = useCalendarInteractions(calendar);
+  const bindings = useCalendarInteractionBindings(calendar);
 
   return (
     <CalendarProvider value={calendar}>
@@ -52,7 +52,7 @@ export function EditableCalendar() {
 }
 // #endregion setup
 
-type Bindings = ReturnType<typeof useCalendarInteractions<Booking>>;
+type Bindings = ReturnType<typeof useCalendarInteractionBindings<Booking>>;
 type Column = EditingState['layout']['columns'][number];
 
 function EditableDay({ bindings }: { bindings: Bindings }) {

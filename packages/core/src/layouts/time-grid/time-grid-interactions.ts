@@ -51,10 +51,10 @@ export const layoutTimeGrid_locate = (
 };
 
 export const layoutTimeGrid_project = (
-  { model, input, settings }: Grid,
-  original: Calendar_InteractionProposal,
+  { model, input, settings, scheduling }: Grid,
+  _original: Calendar_InteractionProposal,
 ): Calendar_LayoutProjection<'timeGrid'> => {
-  const proposal = dateProposal(original);
+  const proposal = dateProposal(scheduling);
   if (!proposal) return { status: 'unavailable', reason: 'unsupported-proposal' };
   let geometry: Calendar_DatePreview[];
   if (proposal.kind === 'select') {

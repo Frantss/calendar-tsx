@@ -292,15 +292,17 @@ const calendar = createCalendar({
 });
 const session = calendar.api.resize.begin('appointment', 'end');
 if (session.status === 'active') {
-  calendar.api.interactions.update(session.token, { kind: 'timed', at: newEnd });
-  calendar.api.interactions.commit(session.token);
+  session.session.update({ kind: 'timed', at: newEnd });
+  session.session.commit();
 }
 ```
 
 Register `dateSelectionFeature` for `selection.begin/evaluate` and persistent `selectedRange`; register
-`eventMoveFeature` for `move.begin/evaluate`. `resize.begin/evaluate` requires neither of those. Shared controls
-observe `store`, `update`, `unavailable`, `commit`, `cancel`, `refresh` and `isActive(token)`. The latter checks the runtime lease even while controlled snapshot acknowledgment is pending. Callbacks and evaluation results retain the
-consumer's event data. Events change only when the application applies a proposal. Selection writes through D29's
+`eventMoveFeature` for `move.begin/evaluate`. `resize.begin/evaluate` requires neither of those. Shared controls expose `store`, `locate`, `project` and `refresh`. An active start returns `session`, with
+`update(target)`, `commit()`, `cancel(reason?)`, `unavailable(reason)` and `isActive()`. The handle retains its
+operation's target and event-data types. Commands return discriminated results; valid updates and committed
+results contain their typed proposal. `isActive()` checks the runtime lease while controlled acknowledgment is pending.
+Callbacks and evaluation results also retain the consumer's event data. Events change only when the application applies a proposal. Selection writes through D29's
 internal/controlled/external state ownership and reports `onSelectionChange`.
 
 The [React guide](../../apps/docs/content/docs/react/features/interactions.mdx) and
@@ -353,7 +355,7 @@ const hit = calendar.api.interactions.locate({
   fraction: 9 / 24,
 });
 if (hit.status === 'valid') {
-  // Pass hit.target to the owning operation's begin/evaluate, or interactions.update(token, hit.target).
+  // Pass hit.target to the owning operation's begin/evaluate, or session.update(hit.target).
 }
 const preview = calendar.api.interactions.store.state.preview;
 if (preview?.status === 'valid' && preview.kind === 'timeGrid') {
@@ -400,7 +402,7 @@ axis labels and gutters. Coordinates account for RTL and clipping; previews rema
 Mouse activation uses `pointer.distance`, default four pixels. Touch movement before activation yields to scrolling.
 Each driver reads active per-view settings. Without a mounted host, feature registration adds no browser listeners.
 
-External palettes attach `createExternalDraggable(element, () => ({ event, metadata }))` and release its returned
+External palettes attach `createExternalDraggable(element, () => ({ event, metadata }), { scope, pointer: {} })` and release its returned
 cleanup. Receivers register `externalDropFeature`; `onExternalDrop` receives `{ kind: 'create', after, metadata }`.
 `externalDrop.accept` can reject sources, and `externalDrop.placement` configures conversion/resources independently
 of movement. Duplicate destination IDs are rejected. Events retain their consumer payload type.
@@ -408,8 +410,25 @@ of movement. Duplicate destination IDs are rejected. Events retain their consume
 Register `crossCalendarFeature` and a unique `crossCalendar.id` on both hosts; the source also needs movement.
 `onEventTransfer` fires once on the source with `{ kind: 'transfer', sourceId, destinationId, before, after }`.
 Apply both sides in your application transaction. The library changes neither input array. Receivers validate their
-own constraints. Programmatic coordination uses `crossCalendar.prepare(eventId, resourceId?)`, then the receiver's
+own constraints. Programmatic coordination uses `transfer.prepare(eventId, resourceId?)`, then the receiver's
 `transfer.begin/evaluate`; always call the prepared handle's `release()` when abandoning a transfer.
 
-Third-party operations bind `{ begin, target? }` through `host.source`; they need no event/date shape. Custom surface
+Third-party operations bind `createCalendarDomOperation({ acceptsTarget, begin, target? })` through `host.source`; they need no event/date shape. Custom surface
 resolvers return their own `Calendar_LayoutPoint` variant. Missing layout capabilities remain unavailable.
+
+The DOM adapter stays in `@calendar-tsx/core`. `createCalendarInteractionScope()` creates an explicit drag group.
+Pass the same `{ scope }` to participating hosts or framework binding hooks and external draggables. Omitted host
+scopes are isolated. External draggables own their `pointer` and optional `touch` activation settings; receiving
+calendars provide their own scrolling policy. Programmatic creation and transfer require no pointer feature.
+Receiver placement uses `crossCalendar.placement`, independently of movement settings.
+
+`createCalendarDomHost` accepts only pointer settings and interaction controls. It binds custom operations without
+requiring events or a time zone. `createCalendarInteractionHost` adds built-in event and selection bindings.
+React/Solid expose `useCalendarInteractionBindings`; the hook owns mounting and returns refs, cancel and preview.
+Subscribe directly to `interactions.store` to observe programmatic edits without browser input.
+
+An operation's optional `scheduling(proposal)` describes either `{ kind: 'range', range }` or
+`{ kind: 'event', event, excludeEventId? }`. Constraints validate this description; built-in layouts project it.
+Custom layouts still receive the original proposal and may use their own geometry. Operations without scheduling
+participation remain independent of built-in date policies. The typed descriptor is public; registry erasure stays
+inside the runtime.

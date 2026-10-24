@@ -15,7 +15,7 @@ export type PriorityProposal<D = unknown> = {
   reason: string;
 };
 export type PriorityApi<D> = {
-  begin: (eventId: string, reason: string) => Start;
+  begin: (eventId: string, reason: string) => Start<'priority', D>;
   evaluate: (eventId: string, reason: string, target: PriorityTarget) => Evaluation<PriorityProposal<D>>;
 };
 

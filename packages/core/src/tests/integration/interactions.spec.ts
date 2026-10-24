@@ -14,7 +14,7 @@ import { eventResizeFeature } from '#features/event-resize/event-resize-feature'
 import { constraintsFeature } from '#features/constraints/constraints-feature';
 import { interactionFeature } from '#features/interaction/interaction-feature';
 import { interactionIdle } from '#features/interaction/interaction-runtime';
-import type { Calendar_InteractionSnapshot } from '#features/interaction/interaction.types';
+import type { Calendar_InteractionSnapshot, Calendar_InteractionStart, Calendar_OperationKind } from '#features/interaction/interaction.types';
 import { eventPriorityFeature } from '#tests/support/priority';
 
 const date = Temporal.PlainDate.from('2026-10-23');
@@ -31,9 +31,9 @@ const operations = {
 };
 const views = interactionTestViews({ day: timeGridView({ days: 1, features: operations }), list: listView({ days: 1 }) });
 const setup = () => createCalendar({ ...base, ...views });
-const start = (value: ReturnType<ReturnType<typeof setup>['api']['move']['begin']>) => {
+const start = <K extends Calendar_OperationKind, D>(value: Calendar_InteractionStart<K, D>) => {
   if (value.status !== 'active') throw new Error(`expected active; got ${value.status}`);
-  return value.token;
+  return value.session;
 };
 
 it('installs APIs from resolved descriptors independently of feature order', () => {
@@ -89,10 +89,10 @@ it('emits the latest callback once and leaves events as consumer input', () => {
   const after = vi.fn();
   const calendar = createCalendar({ ...base, ...views, onEventMove: before });
   const token = start(calendar.api.move.begin('a'));
-  calendar.api.interactions.update(token, target(11));
+  token.update(target(11));
   calendar['~update']({ ...calendar.options, onEventMove: after });
-  expect(calendar.api.interactions.commit(token)).toBe('committed');
-  expect(calendar.api.interactions.commit(token)).toBe('stale-token');
+  expect(token.commit().status).toBe('committed');
+  expect(token.commit().status).toBe('stale-session');
   expect(before).not.toHaveBeenCalled();
   expect(after).toHaveBeenCalledOnce();
   expect(after.mock.calls[0][0].after.start.equals(at(11))).toBe(true);
@@ -117,9 +117,9 @@ it('publishes drafts without deriving or notifying the base layout', () => {
   const unsubscribe = calendar.api.interactions.store.subscribe(draft);
   const count = build.mock.calls.length;
   const token = start(calendar.api.resize.begin('a', 'end'));
-  calendar.api.interactions.update(token, target(11));
+  token.update(target(11));
   const publications = draft.mock.calls.length;
-  expect(calendar.api.interactions.update(token, target(11))).toBe('unchanged');
+  expect(token.update(target(11)).status).toBe('unchanged');
   expect(draft).toHaveBeenCalledTimes(publications);
   expect(calendar.store.state.layout).toBe(layout);
   expect(build).toHaveBeenCalledTimes(count);
@@ -131,37 +131,37 @@ it('publishes drafts without deriving or notifying the base layout', () => {
 it('persists selection through uncontrolled, controlled and external D29 slices', () => {
   const uncontrolled = setup();
   let token = start(uncontrolled.api.selection.begin(target(10)));
-  uncontrolled.api.interactions.update(token, target(11));
-  uncontrolled.api.interactions.commit(token);
+  token.update(target(11));
+  token.commit();
   expect(uncontrolled.store.state.selectedRange?.start.equals(at(10))).toBe(true);
   const callback = vi.fn();
   const controlled = createCalendar({ ...base, ...views, state: { selectedRange: null }, onSelectionChange: callback });
   token = start(controlled.api.selection.begin(target(10)));
-  controlled.api.interactions.update(token, target(11));
-  controlled.api.interactions.commit(token);
+  token.update(target(11));
+  token.commit();
   expect(controlled.store.state.selectedRange).toBeNull();
   controlled['~update']({ ...controlled.options, state: { selectedRange: callback.mock.calls[0][0] } });
   expect(controlled.store.state.selectedRange?.start.equals(at(10))).toBe(true);
   const atom = createStore<ReturnType<typeof setup>['store']['state']['selectedRange']>(null);
   const external = createCalendar({ ...base, ...views, atoms: { selectedRange: atom } });
   token = start(external.api.selection.begin(target(10)));
-  external.api.interactions.update(token, target(11));
-  external.api.interactions.commit(token);
+  token.update(target(11));
+  token.commit();
   expect(atom.state?.start.equals(at(10))).toBe(true);
 });
 
 it('refreshes validation on options sync, rechecks commit, and cancels replaced sources', () => {
   const calendar = setup();
   let token = start(calendar.api.move.begin('a'));
-  calendar.api.interactions.update(token, target(11));
+  token.update(target(11));
   calendar['~update']({ ...calendar.options, events: [event, { ...event, id: 'blocking', start: at(11), end: at(12) }] });
   expect(calendar.api.interactions.store.state.candidate).toEqual({ status: 'rejected', reason: 'overlap' });
-  expect(calendar.api.interactions.commit(token)).toBe('rejected');
-  calendar.api.interactions.cancel(token);
-  token = start(calendar.api.resize.begin('a', 'start'));
+  expect(token.commit().status).toBe('rejected');
+  token.cancel();
+  const resizing = start(calendar.api.resize.begin('a', 'start'));
   calendar['~update']({ ...calendar.options, events: [{ ...event }] });
   expect(calendar.api.interactions.store.state.outcome).toBe('source-changed');
-  expect(calendar.api.interactions.commit(token)).toBe('stale-token');
+  expect(resizing.commit().status).toBe('stale-session');
 });
 
 it('applies per-view activation/settings and cancels navigation or disabling', () => {
@@ -169,7 +169,7 @@ it('applies per-view activation/settings and cancels navigation or disabling', (
   const token = start(calendar.api.resize.begin('a', 'end'));
   calendar['~update']({ ...calendar.options, resizing: { enabled: false } });
   expect(calendar.api.interactions.store.state.outcome).toBe('operation-disabled');
-  expect(calendar.api.interactions.commit(token)).toBe('stale-token');
+  expect(token.commit().status).toBe('stale-session');
   calendar['~update']({ ...calendar.options, view: 'list' });
   expect(calendar.api.selection.begin(target(10)).status).toBe('unavailable');
   calendar['~update']({
@@ -212,7 +212,7 @@ it('cancels even an unacknowledged lease on the last unmount and supports remoun
   expect(calendar.api.move.begin('a').status).toBe('busy');
   releaseSecond();
   expect(pending.outcome).toBe('unmounted');
-  expect(calendar.api.interactions.commit(token)).toBe('stale-token');
+  expect(token.commit().status).toBe('stale-session');
   state = pending;
   const releaseThird = calendar['~mount']();
   expect(calendar.api.move.begin('a').status).toBe('active');
@@ -231,7 +231,7 @@ it('observes external drafts only while mounted and preserves store subscribers 
   expect(notified).toHaveBeenCalledOnce();
   const token = start(calendar.api.move.begin('a'));
   release();
-  expect(calendar.api.interactions.commit(token)).toBe('stale-token');
+  expect(token.commit().status).toBe('stale-session');
   const count = notified.mock.calls.length;
   atom.setState(() => interactionIdle());
   expect(notified).toHaveBeenCalledTimes(count);
@@ -268,12 +268,12 @@ it('installs a third-party non-date API through the same feature lifecycle', () 
   expect('move' in calendar.api).toBe(false);
   expect('selectedRange' in calendar.store.state).toBe(false);
   const token = start(calendar.api.priority.begin('a', 'Customer request'));
-  calendar.api.interactions.update(token, { kind: 'priority', value: 'high' });
+  token.update({ kind: 'priority', value: 'high' });
   calendar['~update']({ ...calendar.options, priority: { allowHigh: false } });
   expect(calendar.api.interactions.store.state.candidate?.status).toBe('rejected');
-  expect(calendar.api.interactions.commit(token)).toBe('rejected');
-  calendar.api.interactions.update(token, { kind: 'priority', value: 'low' });
-  expect(calendar.api.interactions.commit(token)).toBe('committed');
+  expect(token.commit().status).toBe('rejected');
+  token.update({ kind: 'priority', value: 'low' });
+  expect(token.commit().status).toBe('committed');
   expect(onPriorityChange).toHaveBeenCalledOnce();
   expect(onPriorityChange.mock.calls[0][0].value).toBe('low');
 });
@@ -281,7 +281,7 @@ it('installs a third-party non-date API through the same feature lifecycle', () 
 it('does not republish a draft when inline settings retain the same values', () => {
   const calendar = createCalendar({ ...base, ...views, resizing: { enabled: true }, constraints: { preventOverlap: false } });
   const token = start(calendar.api.resize.begin('a', 'end'));
-  calendar.api.interactions.update(token, target(11));
+  token.update(target(11));
   const draft = calendar.api.interactions.store.state;
   const changed = vi.fn();
   const subscription = calendar.api.interactions.store.subscribe(changed);
@@ -330,7 +330,7 @@ it('resolves operation settings and prerequisites by identity with consumer alia
   if (result.status === 'valid') expectTypeOf(result.proposal.after.data).toEqualTypeOf<typeof event.data>();
   const token = start(calendar.api.move.begin('a'));
   calendar['~update']({ ...calendar.options, view: 'list' });
-  expect(calendar.api.interactions.commit(token)).toBe('stale-token');
+  expect(token.commit().status).toBe('stale-session');
   expect(calendar.api.move.begin('a').status).toBe('unavailable');
   expect('selection' in calendar.api).toBe(false);
 });

@@ -60,7 +60,7 @@ if (created.status === 'valid') {
   const title: string = created.proposal.after.data.title;
   void title;
 }
-const source = calendar.api.crossCalendar.prepare('a');
+const source = calendar.api.transfer.prepare('a');
 if (source) {
   const result = calendar.api.transfer.evaluate(source, { kind: 'allDay', at: date });
   if (result.status === 'valid') {
@@ -99,3 +99,57 @@ const missing = (() => {
 })();
 // @ts-expect-error touch requires pointer in the same active view
 createCalendar({ ...missing, view: 'day', date, timeZone: 'UTC', events: [event], onNavigate: () => {} });
+
+const creatingFeatures = calendarFeatures({ interactions: interactionFeature(), create: externalDropFeature() });
+const creating = createCalendar({
+  features: creatingFeatures,
+  views: calendarViews({ features: creatingFeatures, views: { day: timeGridView({ days: 1 }) } }),
+  date,
+  timeZone: 'UTC',
+  view: 'day',
+  events: [event],
+  onNavigate: () => {},
+});
+const creatingStart = creating.api.externalDrop.begin(event);
+if (creatingStart.status === 'active') {
+  const result = creatingStart.session.update({ kind: 'allDay', at: date });
+  if (result.status === 'valid') {
+    const title: string = result.proposal.after.data.title;
+    void title;
+  }
+  // @ts-expect-error creation sessions reject non-date targets
+  creatingStart.session.update(true);
+}
+// @ts-expect-error programmatic creation does not install pointer
+void creating.api.pointer;
+// @ts-expect-error creation does not install movement
+void creating.api.move;
+const receivingFeatures = calendarFeatures({
+  interactions: interactionFeature(),
+  transfer: crossCalendarFeature({ id: 'receiver' }),
+});
+const receiving = createCalendar({
+  features: receivingFeatures,
+  views: calendarViews({ features: receivingFeatures, views: { day: timeGridView({ days: 1 }) } }),
+  date,
+  timeZone: 'UTC',
+  view: 'day',
+  events: [event],
+  onNavigate: () => {},
+});
+if (source) {
+  const start = receiving.api.transfer.begin(source);
+  if (start.status === 'active') {
+    const result = start.session.commit();
+    if (result.status === 'committed') {
+      const title: string = result.proposal.after.data.title;
+      void title;
+    }
+  }
+}
+// @ts-expect-error a receiver does not install movement
+void receiving.api.move;
+// @ts-expect-error a receiver does not install pointer
+void receiving.api.pointer;
+// @ts-expect-error transfer preparation has one namespace
+void receiving.api.crossCalendar;

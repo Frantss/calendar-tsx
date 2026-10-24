@@ -41,6 +41,7 @@ const selectOperation = createInteractionOperation({
     }
     return { status: 'unavailable', reason: 'different-date-kinds' };
   },
+  scheduling: proposal => ({ kind: 'range', range: proposal.range }),
   api: commands => ({
     selection: {
       begin: (anchor: Calendar_DateTarget) => commands.begin({ kind: 'select', anchor }),

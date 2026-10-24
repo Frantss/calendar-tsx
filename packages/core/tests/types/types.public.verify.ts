@@ -159,3 +159,26 @@ if (located.status === 'valid') {
 }
 // @ts-expect-error builtin layout points reject an invalid surface
 calendar.api.interactions.locate({ kind: 'timeGrid', surface: { kind: 'lane', key: 'all' }, fraction: 0 });
+
+import { createCalendarDomOperation } from '@calendar-tsx/core';
+const startedApproval = approved.api.approval.begin('appointment');
+if (startedApproval.status === 'active') {
+  startedApproval.session.update(true);
+  // @ts-expect-error boolean operations reject date targets after begin
+  startedApproval.session.update({ kind: 'allDay', at: date });
+  const result = startedApproval.session.commit();
+  if (result.status === 'committed') {
+    const bookingId: number = result.proposal.event.data.bookingId;
+    void bookingId;
+    // @ts-expect-error session commit preserves event data
+    void result.proposal.event.data.missing;
+  }
+}
+createCalendarDomOperation<'approve'>({
+  acceptsTarget: (target): target is boolean => typeof target === 'boolean',
+  begin: () => approved.api.approval.begin('appointment'),
+  // @ts-expect-error a DOM binding must produce its operation's target
+  target: () => ({ kind: 'allDay', at: date }),
+});
+// @ts-expect-error the typed descriptor does not expose erased runtime binding
+void approvalFeature.interaction.operation.bind;

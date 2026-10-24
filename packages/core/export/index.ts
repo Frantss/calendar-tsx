@@ -153,6 +153,8 @@ export type {
   Calendar_InteractionProposal,
   Calendar_InteractionEvaluation,
   Calendar_InteractionStart,
+  Calendar_InteractionHandle,
+  Calendar_InteractionResult,
   Calendar_InteractionSession,
   Calendar_InteractionSnapshot,
   Calendar_InteractionState,
@@ -160,7 +162,7 @@ export type {
   Calendar_InteractionInput,
   Calendar_OperationCommands,
   Calendar_OperationSpec,
-  Calendar_Operation,
+  Calendar_OperationDefinition,
   Calendar_InteractionContribution,
   Calendar_InteractionControls,
 } from '#features/interaction/interaction.types';
@@ -227,7 +229,6 @@ export type {
   Calendar_TransferIntent,
   Calendar_CrossCalendarSettings,
   Calendar_TransferApi,
-  Calendar_CrossCalendarApi,
 } from '#features/cross-calendar/cross-calendar.types';
 export type { Calendar_MovementSettings } from '#features/event-move/event-move.types';
 export type { Calendar_ResizeSettings } from '#features/event-resize/event-resize.types';
@@ -249,4 +250,18 @@ export type {
   Calendar_DomSurface,
   Calendar_DomSource,
   Calendar_DomOperation,
+} from '#interactions/dom.types';
+
+export type { Calendar_SchedulingEffect, Calendar_PlacementSettings } from '#features/interaction/scheduling.types';
+
+export { createCalendarInteractionScope } from '#interactions/dom-host';
+export { createCalendarDomOperation } from '#interactions/dom-operation';
+export { createCalendarDomHost } from '#interactions/dom';
+export type {
+  Calendar_DomOperationSpec,
+  Calendar_EventDomCalendar,
+  Calendar_InteractionScope,
+  Calendar_DomOptions,
+  Calendar_DomBindings,
+  Calendar_ExternalDragOptions,
 } from '#interactions/dom.types';

@@ -51,6 +51,7 @@ const resizeOperation = createInteractionOperation({
     }
     return { status: 'unavailable', reason: 'conversion-unsupported' };
   },
+  scheduling: proposal => ({ kind: 'event', event: proposal.after, excludeEventId: proposal.before.id }),
   api: commands => ({
     resize: {
       begin: (eventId: string, edge: Calendar_ResizeIntent['edge']) =>

@@ -1,5 +1,7 @@
 # Interaction foundation
 
+Current API: D61 in [the design spec](design.md#d61--typed-interaction-sessions-and-a-shared-dom-adapter) supersedes the token-based command sketch below.
+
 Status: **implemented** (D58–D60). Production features install selection, movement, resizing, input drivers,
 external creation and cross-calendar transfers. Layout capabilities provide day-grid, time-grid and timeline
 location/projection. Core and adapter browser tests verify the shared runtime and bindings. Source/public compiler
