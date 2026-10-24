@@ -18,7 +18,7 @@ export const periods = createCalendarViews({
   workweek: timeGridView({ weeks: 1, hiddenDays: [6, 7] }),
   threeMonths: listView({ months: 3 }),
   quarter: listView({ period: 'quarter' }),
-  monthTimeline: timelineView({ period: 'month', groupBy: 'resource', slotMinutes: 1440 }),
-  yearTimeline: timelineView({ period: 'year', slotMinutes: 1440 }),
+  monthTimeline: timelineView({ period: 'month', groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '6rem' }),
+  yearTimeline: timelineView({ period: 'year', slotMinutes: 1440, minSlotWidth: '6rem' }),
 });
 // #endregion periods

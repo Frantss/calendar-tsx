@@ -8,8 +8,8 @@ import { timelineView } from '@calendar-tsx/core';
 
 timelineView({ days: 7, groupBy: 'resource' }); // a week, one row per resource
 timelineView({ days: 1, groupBy: 'resource', slotMinutes: 30 }); // a day
-timelineView({ period: 'month', groupBy: 'resource', slotMinutes: 1440 });
-timelineView({ period: 'year', slotMinutes: 1440 });
+timelineView({ period: 'month', groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '6rem' });
+timelineView({ period: 'year', slotMinutes: 1440, minSlotWidth: '6rem' });
 ```
 
 ## Settings
@@ -30,6 +30,8 @@ Choose exactly one of `days`, `weeks`, `months`, or `period`. Counts must be pos
 | `groupBy`      | `'resource'` or `['resource']` | none    | One row per resource. Without it, the layout has one row.            |
 | `slotMinutes`  | `number`                       | `60`    | Positive integer slot length; the final slot may be shorter.                       |
 | `minSlotWidth` | `string`                       | none    | Passed through as the slot columns' minimum width, such as `'3rem'`. |
+
+Set `minSlotWidth` for month and year timelines to keep daily columns readable. With the supplied themes, the timeline scrolls horizontally when the columns exceed its width.
 
 - An event appears in every row whose resource it names.
 - All-day events have no separate row. They stack with the timed events, from the start of their first day to the

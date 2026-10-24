@@ -60,8 +60,8 @@ export const createPlaygroundViews = ({
     day: timeGridView({ days: 1, ...timed }),
     rooms: timeGridView({ days: 1, groupBy: 'resource', ...timed }),
     agenda: listView({ days: 7, hiddenDays }),
-    timeline_month: timelineView({ period: 'month', groupBy: 'resource', slotMinutes: 1440, hiddenDays }),
-    timeline_year: timelineView({ period: 'year', groupBy: 'resource', slotMinutes: 1440, hiddenDays }),
+    timeline_month: timelineView({ period: 'month', groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '6rem', hiddenDays }),
+    timeline_year: timelineView({ period: 'year', groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '6rem', hiddenDays }),
   });
 };
 
