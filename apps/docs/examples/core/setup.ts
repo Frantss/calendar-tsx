@@ -30,7 +30,7 @@ export const views = calendarViews({
     day: timeGridView({ days: 1 }),
     rooms: timeGridView({ days: 1, groupBy: 'resource' }),
     agenda: listView({ days: 7 }),
-    timeline: timelineView({ days: 7, groupBy: 'resource' }),
+    timeline: timelineView({ days: 7, groupBy: 'resource', minSlotWidth: '4rem' }),
   },
 });
 // #endregion views

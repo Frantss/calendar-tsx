@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["vite/client", "node"],
+    "noEmit": true,
+    "declaration": false,
+    "emitDeclarationOnly": false
+  },
+  "include": [".storybook/**/*.ts", "stories/**/*.tsx", "vite.config.ts", "vitest.config.ts"]
+}

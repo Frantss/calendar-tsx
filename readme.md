@@ -53,6 +53,14 @@ pnpm run test
 pnpm --filter @calendar-tsx/docs run dev
 ```
 
+Storybook provides React calendar examples and per-story screenshot tests. See
+[the Storybook setup](apps/storybook/readme.md) for screenshot parameters, filtering, and baseline updates.
+
+```bash
+pnpm run storybook
+pnpm run test:storybook
+```
+
 The docs dev server loads core and React from their source entries, so edits hot reload without rebuilding packages. Production docs builds use the packages' generated exports.
 
 With the docs dev server running, check that workspace rebuilds preserve the preview:

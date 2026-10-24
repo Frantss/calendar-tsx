@@ -43,3 +43,36 @@ jobs:
 
       - name: Run tests
         run: pnpm run test
+
+  storybook:
+    runs-on: ubuntu-24.04-arm
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --ipc=host
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test stories and screenshots
+        run: pnpm run test:storybook
+
+      - name: Upload screenshot failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-screenshot-failures
+          path: apps/storybook/.vitest/attachments
+          include-hidden-files: true
+          if-no-files-found: ignore

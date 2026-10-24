@@ -8,7 +8,10 @@
   "type": "module",
   "scripts": {
     "build": "vp run -r build",
-    "build:dev": "vp run -r build --watch",
+    "build:dev": "vp run -r --filter '!@calendar-tsx/storybook' build --watch",
+    "storybook": "vp run @calendar-tsx/storybook#dev",
+    "build:storybook": "vp run @calendar-tsx/storybook#build",
+    "test:storybook": "vp run @calendar-tsx/storybook#test",
     "postbuild": "vp fmt --write",
     "test": "vp run @calendar-tsx/core#test && vp run @calendar-tsx/react#test && vp run @calendar-tsx/solid#test && vp run @calendar-tsx/themes#test && vp run @calendar-tsx/rrule#test && vp run @calendar-tsx/docs#test",
     "check:package": "vp run @calendar-tsx/core#check:package && vp run @calendar-tsx/react#check:package && vp run @calendar-tsx/solid#check:package && vp run @calendar-tsx/themes#check:package && vp run @calendar-tsx/rrule#check:package",
