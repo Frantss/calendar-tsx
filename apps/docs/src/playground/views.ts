@@ -48,10 +48,16 @@ export const createPlaygroundViews = ({
     timeWindow: { startMinutes, endMinutes: endClockMinutes + (endClockMinutes <= startMinutes ? 1440 : 0) },
   };
 
+  const resourceTimed = { ...timed, minColumnWidth: timed.minColumnWidth ?? '8rem' };
+
   return createCalendarViews({
     month: dayGridView({ period: 'month', maxEventsPerDay, hiddenDays }),
     year: dayGridView({ period: 'year', groupBy: 'month', fixedWeekCount: true, maxEventsPerDay, hiddenDays }),
+    year_continuous: dayGridView({ period: 'year', maxEventsPerDay, hiddenDays }),
+    year_stack: dayGridView({ period: 'year', groupBy: 'month', fixedWeekCount: true, maxEventsPerDay, hiddenDays }),
     grid_days: dayGridView({ days: 3, maxEventsPerDay, hiddenDays }),
+    grid_week: dayGridView({ weeks: 1, maxEventsPerDay, hiddenDays }),
+    grid_workweek: dayGridView({ weeks: 1, hiddenDays: [6, 7], maxEventsPerDay, hiddenDays }),
     grid_rooms: dayGridView({ days: 1, groupBy: 'resource', maxEventsPerDay, hiddenDays }),
     month_rooms: dayGridView({ period: 'quarter', groupBy: ['month', 'resource'], maxEventsPerDay, hiddenDays }),
     room_months: dayGridView({ period: 'quarter', groupBy: ['resource', 'month'], maxEventsPerDay, hiddenDays }),
@@ -59,9 +65,28 @@ export const createPlaygroundViews = ({
     workweek: timeGridView({ weeks: 1, ...timed, hiddenDays: [6, 7] }),
     day: timeGridView({ days: 1, ...timed }),
     rooms: timeGridView({ days: 1, groupBy: 'resource', ...timed }),
+    rooms_week: timeGridView({ weeks: 1, groupBy: 'resource', ...resourceTimed }),
+    rooms_workweek: timeGridView({
+      weeks: 1,
+      groupBy: 'resource',
+      ...resourceTimed,
+      hiddenDays: [6, 7],
+    }),
+    rooms_week_dates: timeGridView({
+      weeks: 1,
+      groupBy: 'resource',
+      groupOrder: 'date-first',
+      ...resourceTimed,
+    }),
     agenda: listView({ days: 7, hiddenDays }),
-    timeline_month: timelineView({ period: 'month', groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '6rem', hiddenDays }),
-    timeline_year: timelineView({ period: 'year', groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '6rem', hiddenDays }),
+    agenda_day: listView({ days: 1, hiddenDays }),
+    agenda_month: listView({ period: 'month', hiddenDays }),
+    agenda_year: listView({ period: 'year', hiddenDays }),
+    timeline_day: timelineView({ days: 1, groupBy: 'resource', slotMinutes, minSlotWidth: '4rem', ...timed }),
+    timeline_week: timelineView({ weeks: 1, groupBy: 'resource', slotMinutes, minSlotWidth: '4rem', ...timed }),
+    timeline_month: timelineView({ period: 'month', groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '6rem', hiddenDays, timeWindow: timed.timeWindow }),
+    timeline_quarter: timelineView({ period: 'quarter', groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '6rem', hiddenDays, timeWindow: timed.timeWindow }),
+    timeline_year: timelineView({ period: 'year', groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '6rem', hiddenDays, timeWindow: timed.timeWindow }),
   });
 };
 

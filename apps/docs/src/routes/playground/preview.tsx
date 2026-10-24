@@ -243,7 +243,7 @@ function PreviewCalendar({
 
   return (
     <CalendarProvider value={calendar} locale={config.locale}>
-      <PreviewLayout onSelect={setSelected} />
+      <PreviewLayout view={config.view} onSelect={setSelected} />
       <p role='status' style={{ marginBlock: '0.75rem 0', minBlockSize: '1.5em', fontSize: '0.875rem' }}>
         {selected ? describeEvent(selected, config.locale) : 'Select an event to see its details.'}
       </p>

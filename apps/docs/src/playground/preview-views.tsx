@@ -31,10 +31,11 @@ import {
   DayGridViewSection,
 } from '@calendar-tsx/react';
 import type { Calendar_Event } from '@calendar-tsx/core';
+import type { CSSProperties } from 'react';
 import { Timeline } from '../../examples/react/timeline-view';
 
 import type { Booking } from './sample-data';
-import type { PlaygroundState } from './views';
+import type { PlaygroundState, PlaygroundView } from './views';
 
 type Formattable = { toLocaleString: (locale: string, options: Intl.DateTimeFormatOptions) => string };
 
@@ -48,7 +49,13 @@ export const describeEvent = (event: Calendar_Event<Booking>, locale: string) =>
     : `${event.data.title}, ${event.start.toLocaleString(locale, { dateStyle: 'medium' })} from ${time(event.start, locale)} to ${time(event.end, locale)}`;
 
 /** Renders the active view's layout with the React parts, the way the docs' view pages compose them. */
-export const PreviewLayout = ({ onSelect }: { onSelect: (event: Calendar_Event<Booking>) => void }) => {
+export const PreviewLayout = ({
+  view,
+  onSelect,
+}: {
+  view: PlaygroundView;
+  onSelect: (event: Calendar_Event<Booking>) => void;
+}) => {
   const layout = useCalendarSelector((state: PlaygroundState) => state.layout);
   const { instance, locale } = useCalendarContext();
 
@@ -56,7 +63,7 @@ export const PreviewLayout = ({ onSelect }: { onSelect: (event: Calendar_Event<B
 
   if (layout.kind === 'dayGrid') {
     return (
-      <DayGridView model={layout}>
+      <DayGridView model={layout} data-month-stack={view === 'year_stack' ? '' : undefined}>
         {layout.sections.map(section => (
           <DayGridViewSection key={section.key} section={section}>
             {section.month || section.resource ? (
@@ -77,7 +84,9 @@ export const PreviewLayout = ({ onSelect }: { onSelect: (event: Calendar_Event<B
                 {week.days.map(day => (
                   <DayGridViewDay key={day.key} day={day}>
                     <DayGridViewDayTrigger day={day} view='day'>
-                      {day.date.day}
+                      {view === 'year_continuous' && day.date.day === 1
+                        ? day.date.toLocaleString(locale, { month: 'short', day: 'numeric' })
+                        : day.date.day}
                     </DayGridViewDayTrigger>
                     <DayGridViewOverflow
                       day={day}
@@ -102,17 +111,14 @@ export const PreviewLayout = ({ onSelect }: { onSelect: (event: Calendar_Event<B
 
   if (layout.kind === 'timeGrid') {
     return (
-      <TimeGridView model={layout}>
+      <TimeGridView model={layout} style={{ '--cal-min-column-width': layout.minColumnWidth } as CSSProperties}>
         <TimeGridViewHeader>
           {layout.columns.map(column => (
             <TimeGridViewColumnHeader key={column.key} column={column}>
-              {column.resource ? (
-                column.resource.title
-              ) : (
-                <TimeGridViewColumnTrigger column={column} view='day'>
-                  {column.date.toLocaleString(locale, { weekday: 'short', day: 'numeric' })}
-                </TimeGridViewColumnTrigger>
-              )}
+              {column.resource && <span>{column.resource.title} </span>}
+              <TimeGridViewColumnTrigger column={column} view='day'>
+                {column.date.toLocaleString(locale, { weekday: 'short', day: 'numeric' })}
+              </TimeGridViewColumnTrigger>
             </TimeGridViewColumnHeader>
           ))}
         </TimeGridViewHeader>
@@ -171,7 +177,7 @@ export const PreviewLayout = ({ onSelect }: { onSelect: (event: Calendar_Event<B
           ))}
         </ListViewDay>
       ))}
-      <ListViewEmpty>No events this week. Move to another week to see some.</ListViewEmpty>
+      <ListViewEmpty>No events in this period. Add an event or choose another date.</ListViewEmpty>
     </ListView>
   );
 };

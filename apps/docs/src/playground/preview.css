@@ -11,6 +11,10 @@ body {
   font-family: system-ui, sans-serif;
 }
 
+[data-scope='calendar'][data-part='day-grid-root'][data-month-stack] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 /* Keep the time grid inside the frame, scrolling, with room for the status line below it */
 [data-scope='calendar'][data-part='time-grid-root'] {
   max-block-size: calc(100dvh - 5rem);
