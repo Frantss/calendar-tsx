@@ -4,6 +4,10 @@ Status: target API, not implemented. This document records the assembly syntax a
 discussion. The current packages still export `createCalendarViews` and feature constants. See D54 in the
 [design spec](./design.md) for the decision and its relationship to D29 and D53.
 
+The implemented [core feature organization and exports](./core-features.md) defines feature-owned modules and the
+`@calendar-tsx/core/background` and `@calendar-tsx/core/recurrence` entry points. Root also re-exports their public
+symbols. These import paths exist today; the factory assembly shown below remains unimplemented.
+
 ## Assembly
 
 Build the configuration in three stages:
@@ -93,17 +97,9 @@ Definitions stay at module scope so their references remain stable.
 import { useState, type ReactNode } from 'react';
 import { Temporal } from 'temporal-polyfill';
 
-import {
-  backgroundFeature,
-  calendarFeatures,
-  calendarViews,
-  createBackgroundLayer,
-  createEvent,
-  createWeeklyRanges,
-  dayGridView,
-  recurrenceFeature,
-  timeGridView,
-} from '@calendar-tsx/core';
+import { calendarFeatures, calendarViews, createEvent, dayGridView, timeGridView } from '@calendar-tsx/core';
+import { backgroundFeature, createBackgroundLayer, createWeeklyRanges } from '@calendar-tsx/core/background';
+import { recurrenceFeature } from '@calendar-tsx/core/recurrence';
 import { CalendarProvider, useCalendar } from '@calendar-tsx/react';
 
 const timeZone = 'America/Montevideo';

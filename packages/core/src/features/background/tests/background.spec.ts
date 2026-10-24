@@ -2,7 +2,8 @@ import { Temporal } from 'temporal-polyfill';
 import { expect, it, vi } from 'vitest';
 
 import { createCalendar } from '#calendar';
-import { backgroundFeature, createBackgroundLayer, createWeeklyRanges } from '#calendar-backgrounds';
+import { backgroundFeature } from '#features/background/background-feature';
+import { createBackgroundLayer, createWeeklyRanges } from '#features/background/background-ranges';
 import { fixedClock } from '#calendar-clock';
 import { dayGridView, timeGridView, createCalendarViews } from '#calendar-views';
 import type {

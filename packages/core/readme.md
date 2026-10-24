@@ -6,6 +6,17 @@
 Framework-agnostic calendar engine that powers [`@calendar-tsx/react`](../react). It derives day-grid, time-grid,
 list and timeline layouts from controlled view/date options and event input, in a single time zone.
 
+Built-in features, helpers and their types are available from direct subpaths:
+
+```ts
+import { backgroundFeature, createBackgroundLayer, createWeeklyRanges } from '@calendar-tsx/core/background';
+import { recurrenceFeature, createRecurringEvent } from '@calendar-tsx/core/recurrence';
+```
+
+Root also re-exports these symbols. Features still use the constant-based registration shown below; the
+[factory assembly API](../../docs/calendar-assembly.md) is a planned follow-up. See
+[core feature organization and exports](../../docs/core-features.md) for module ownership and public entries.
+
 ## Quick example
 
 ```ts

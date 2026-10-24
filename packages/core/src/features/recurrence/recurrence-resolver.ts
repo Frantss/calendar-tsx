@@ -1,28 +1,11 @@
 import { Temporal } from 'temporal-polyfill';
 
-import type { Calendar_Event, Calendar_EventSourceContext, Calendar_Feature } from '#calendar.types';
-import { checkDate, dateCompare, dateKey, fail } from '#calendar-recurrence-dates';
-import type { RecurrenceDate } from '#calendar-recurrence-dates';
-import { compileRule, expandRule } from '#calendar-recurrence-rules';
-import type { CompiledRule } from '#calendar-recurrence-rules';
-import type {
-  Calendar_RecurringAllDayEventInput,
-  Calendar_RecurringEventDefinition,
-  Calendar_RecurringEventInput,
-  Calendar_RecurringTimedEventInput,
-} from '#calendar-recurrence.types';
-
-export function createRecurringEvent<TData>(
-  event: Omit<Calendar_RecurringTimedEventInput<TData>, '~source'>,
-): Calendar_RecurringTimedEventInput<TData>;
-export function createRecurringEvent<TData>(
-  event: Omit<Calendar_RecurringAllDayEventInput<TData>, '~source'>,
-): Calendar_RecurringAllDayEventInput<TData>;
-export function createRecurringEvent<TData>(
-  event: Calendar_RecurringEventDefinition<TData>,
-): Calendar_RecurringEventInput<TData> {
-  return { ...event, '~source': 'recurrenceFeature' };
-}
+import type { Calendar_Event, Calendar_EventSourceContext } from '#calendar.types';
+import { checkDate, dateCompare, dateKey, fail } from '#features/recurrence/recurrence-dates';
+import type { RecurrenceDate } from '#features/recurrence/recurrence-dates';
+import { compileRule, expandRule } from '#features/recurrence/recurrence-rules';
+import type { CompiledRule } from '#features/recurrence/recurrence-rules';
+import type { Calendar_RecurringEventInput } from '#features/recurrence/recurrence.types';
 
 type Compiled = {
   rule: CompiledRule;
@@ -84,7 +67,7 @@ const prepare = (source: Calendar_RecurringEventInput<unknown>): Compiled => {
   return result;
 };
 
-const resolve = (
+export const recurrence_resolve = (
   source: Calendar_RecurringEventInput<unknown>,
   { range, timeZone }: Calendar_EventSourceContext,
 ): Calendar_Event<unknown>[] => {
@@ -126,7 +109,3 @@ const resolve = (
   plan.queries.set(key, events);
   return events;
 };
-
-export const recurrenceFeature = {
-  resolveEvents: (source, context) => resolve(source as Calendar_RecurringEventInput<unknown>, context),
-} satisfies Calendar_Feature;

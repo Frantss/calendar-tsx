@@ -2,7 +2,7 @@ import { Temporal } from 'temporal-polyfill';
 import { expect, it } from 'vitest';
 
 import { createCalendar } from '#calendar';
-import { backgroundFeature } from '#calendar-backgrounds';
+import { backgroundFeature } from '#features/background/background-feature';
 import { fixedClock } from '#calendar-clock';
 import { createCalendarViews, timeGridView, timelineView } from '#calendar-views';
 import type { Calendar_BackgroundLayer, Calendar_EventInput, Calendar_Resource } from '#calendar.types';

@@ -1,3 +1,23 @@
+export type * from '#features/background/background.types';
+export type * from '#features/recurrence/recurrence.types';
+import type {
+  Calendar_EventInput_FeatureMap,
+  Calendar_Options_FeatureMap,
+  Calendar_ViewSettings_FeatureMap,
+  Calendar_State_FeatureMap,
+  Calendar_Api_FeatureMap,
+  Calendar_DayGridDay_FeatureMap,
+  Calendar_BarSegment_FeatureMap,
+  Calendar_TimeGridColumn_FeatureMap,
+  Calendar_TimeGridSegment_FeatureMap,
+  Calendar_ListDay_FeatureMap,
+  Calendar_TimelineRow_FeatureMap,
+  Calendar_TimelineSegment_FeatureMap,
+  Calendar_Layout_FeatureMap,
+} from '#features/feature-maps.types';
+export type * from '#features/feature-maps.types';
+import type { Calendar_Features } from '#features/feature.types';
+export type * from '#features/feature.types';
 import type { ReadonlyStore } from '@tanstack/store';
 import type { Temporal } from 'temporal-polyfill';
 import type {
@@ -5,8 +25,6 @@ import type {
   LayoutCoordinates_Fragment,
   LayoutCoordinates_Plan,
 } from '#layout/layout-coordinates';
-
-import type { Calendar_RecurringEventInput } from '#calendar-recurrence.types';
 
 /** `'background'` shades the range under the other events instead of laying it out as one (D37). */
 export type Calendar_EventDisplay = 'auto' | 'background';
@@ -41,11 +59,6 @@ export type Calendar_EventInput<TData> = Calendar_TimedEventInput<TData> | Calen
 
 /** A definition resolved by the feature registered under `~source` (D50). */
 export type Calendar_EventSource<TData> = { id: string; data: TData; '~source': string };
-
-/** Feature-owned event definitions, keyed by the feature's export name. */
-export interface Calendar_EventInput_FeatureMap<TData> {
-  recurrenceFeature: Calendar_RecurringEventInput<TData>;
-}
 
 /** One-off inputs plus definitions supported by the registered features. */
 export type Calendar_EventDefinition<TData, TFeatures = Calendar_Features> =
@@ -88,37 +101,6 @@ export type Calendar_FirstDayOfWeek = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 /** ISO day of the week: 1 is Monday, 7 is Sunday. */
 export type Calendar_DayOfWeek = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
-/** A range a background layer shades (D33); all-day ranges cover whole days, `end` inclusive and defaulting to `start`. */
-export type Calendar_BackgroundRange =
-  | { start: Temporal.ZonedDateTime; end: Temporal.ZonedDateTime }
-  | { allDay: true; start: Temporal.PlainDate; end?: Temporal.PlainDate };
-
-/** One kind of shading (D33). Create layers with `createBackgroundLayer` to keep `kind` a literal. */
-export type Calendar_BackgroundLayer<TKind extends string = string> = {
-  id: string;
-  /** Emitted as `data-kind`. */
-  kind: TKind;
-  /** Shade what the ranges leave uncovered. */
-  inverse?: boolean;
-  /** Limits the layer to these resources' columns or rows; omitted, it shades all resources. */
-  resourceIds?: string[];
-  /** A list, or a function of the input date envelope and `timeZone`; both are compared by reference. */
-  ranges: Calendar_BackgroundRange[] | ((range: Calendar_Range, timeZone: string) => Calendar_BackgroundRange[]);
-};
-
-/** Opening hours on some days of the week, in the calendar's `timeZone`; an `endTime` at or before `startTime` ends the next day. */
-export type Calendar_WeeklyRule = {
-  daysOfWeek: Calendar_DayOfWeek[];
-  startTime: Temporal.PlainTime;
-  endTime: Temporal.PlainTime;
-};
-
-/** A shaded span, as fractions of a time-grid column or timeline track. */
-export type Calendar_BackgroundSegment = { key: string; layer: string; kind: string; start: number; span: number };
-
-/** A layer that shades a whole day-grid cell. */
-export type Calendar_DayBackground = { key: string; layer: string; kind: string };
-
 type UnionToIntersection<U> = (U extends unknown ? (union: U) => void : never) extends (intersection: infer I) => void
   ? I
   : never;
@@ -138,37 +120,6 @@ export type Calendar_PickFeatures<TMap, TFeatures> = string extends keyof TFeatu
       ? {}
       : TPicked
     : never;
-
-/*
- * Feature maps (D29). Features extend them by declaration merging, keyed by the feature's export name; each map is
- * filtered by the features a calendar or view registers.
- */
-
-/** Calendar options a feature adds. */
-// oxlint-disable-next-line no-unused-vars -- merges must repeat the generics
-export interface Calendar_Options_FeatureMap<TData, TResourceData> {
-  backgroundFeature: { backgrounds?: Calendar_BackgroundLayer[] };
-}
-/** Per-view settings a feature adds; a view accepts them only when it lists the feature. */
-export interface Calendar_ViewSettings_FeatureMap {}
-/** State slices a feature owns; each is uncontrolled, controlled through `state`, or external through `atoms`. */
-export interface Calendar_State_FeatureMap {}
-/** Actions a feature merges onto `api`. */
-export interface Calendar_Api_FeatureMap {}
-/** Model fields a feature adds to the layouts of the views that list it. */
-export interface Calendar_DayGridDay_FeatureMap {
-  backgroundFeature: { backgrounds: Calendar_DayBackground[] };
-}
-export interface Calendar_BarSegment_FeatureMap {}
-export interface Calendar_TimeGridColumn_FeatureMap {
-  backgroundFeature: { backgrounds: Calendar_BackgroundSegment[] };
-}
-export interface Calendar_TimeGridSegment_FeatureMap {}
-export interface Calendar_ListDay_FeatureMap {}
-export interface Calendar_TimelineRow_FeatureMap {
-  backgroundFeature: { backgrounds: Calendar_BackgroundSegment[] };
-}
-export interface Calendar_TimelineSegment_FeatureMap {}
 
 export type Calendar_DateViewSettings = { hiddenDays?: readonly Calendar_DayOfWeek[] };
 export type Calendar_TimeViewSettings = Calendar_DateViewSettings & {
@@ -474,14 +425,6 @@ export type Calendar_TimelineLayout<TData, TResourceData, TFeatures = {}> = {
   minSlotWidth?: string;
 };
 
-/** Layout key → layout, given the features of the view it renders. Layout features extend it by declaration merging. */
-export interface Calendar_Layout_FeatureMap<TData, TResourceData, TFeatures> {
-  dayGridLayout: Calendar_DayGridLayout<TData, TResourceData, TFeatures>;
-  timeGridLayout: Calendar_TimeGridLayout<TData, TResourceData, TFeatures>;
-  listLayout: Calendar_ListLayout<TData, TResourceData, TFeatures>;
-  timelineLayout: Calendar_TimelineLayout<TData, TResourceData, TFeatures>;
-}
-
 export type Calendar_LayoutKey = keyof Calendar_Layout_FeatureMap<unknown, unknown, {}>;
 
 /** What a layout's `build` receives: the core pipeline's output for the active view. */
@@ -503,59 +446,6 @@ export type Calendar_NavigationOptions = { firstDayOfWeek: Calendar_FirstDayOfWe
 
 /** A layout model as features see it; layout features know their own shape. */
 export type Calendar_AnyLayout = { kind: string };
-
-/** What feature hooks receive. */
-export type Calendar_FeatureContext = {
-  readonly options: Calendar_Options<any, any, Calendar_Views, Calendar_Features>;
-  /** The active view. */
-  readonly view: Calendar_View & Record<string, unknown>;
-  readonly api: Calendar_Api<Calendar_Views, Calendar_Features>;
-  getState: <TValue = unknown>(key: string) => TValue;
-  /** Writes an uncontrolled slice or an external atom; a controlled slice only changes when `state` changes. */
-  setState: <TValue = unknown>(key: string, updater: (previous: TValue) => TValue) => void;
-  /** Feature defaults, then the calendar option `key`, then the active view's `key`; shallow-merged per layer. */
-  settings: <TSettings extends object>(key: string, defaults: TSettings) => TSettings;
-};
-
-/** A pipeline stage; it reruns when its input or one of its `deps` changes. */
-export type Calendar_FeatureStage<TValue> = {
-  deps?: (context: Calendar_FeatureContext) => unknown[];
-  run: (value: TValue, context: Calendar_FeatureContext) => TValue;
-};
-
-/** A constant with no arguments; configuration lives in options and view settings (D29). */
-export type Calendar_Feature = {
-  getInitialState?: () => Record<string, unknown>;
-  /** Option keys that re-derive the layout when their reference changes; other feature options are read untracked. */
-  trackedOptions?: readonly string[];
-  /** Actions merged onto `api`. */
-  constructApi?: (context: Calendar_FeatureContext) => Record<string, unknown>;
-  /** Resolves this feature's definitions before normalization, filtering and background splitting (D50). */
-  resolveEvents?: (
-    source: Calendar_EventSource<unknown>,
-    context: Calendar_EventSourceContext,
-  ) => Calendar_Event<unknown>[];
-  /** Runs after the core sort, in registration order, in the views that list the feature. */
-  events?: Calendar_FeatureStage<Calendar_Event<unknown>[]>;
-  /** Adds model fields to the built layout, in the views that list the feature. */
-  decorate?: Calendar_FeatureStage<Calendar_AnyLayout>;
-};
-
-/** A feature that also supplies a view kind: navigation and the layout builder. */
-export type Calendar_LayoutFeature<TKind extends string = string, TSettings = any> = Calendar_Feature & {
-  kind: TKind;
-  /** The nominal period around `date`. */
-  period: (date: Temporal.PlainDate, settings: TSettings, options: Calendar_NavigationOptions) => Calendar_Range;
-  /** The anchor-date envelope for `period`, padding included. */
-  range: (period: Calendar_Range, settings: TSettings, options: Calendar_NavigationOptions) => Calendar_Range;
-  /** Coarse input dates, including the following morning for overnight windows. Defaults to range. */
-  inputRange?: (range: Calendar_Range, settings: TSettings) => Calendar_Range;
-  /** The date one period before or after `date`. */
-  step: (date: Temporal.PlainDate, settings: TSettings, direction: 1 | -1) => Temporal.PlainDate;
-  build: (input: Calendar_LayoutInput<any, any>, settings: TSettings) => Calendar_AnyLayout;
-};
-
-export type Calendar_Features = Record<string, Calendar_Feature>;
 
 /** A view: its settings plus the layout and features it uses. Create views with the `*View` factories (`dayGridView`, …). */
 export type Calendar_View<

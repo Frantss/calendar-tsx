@@ -1441,6 +1441,46 @@ each view is unnecessary because views only override configuration and share the
 **Still open:** general object-option merging, disabling syntax, duplicate feature registrations and updating
 configured defaults after creation. The documented examples do not establish those contracts.
 
+### D55 — Core features own their modules and explicit public entries
+
+**Status:** source organization and explicit public entries implemented; D54 factory assembly remains unimplemented.
+The complete structure, module responsibilities and export map are in
+[Core feature organization and exports](./core-features.md).
+
+**Serves:** D21, D29, D30, D54.
+
+**Decision:** group common feature contracts, extension maps, registry assembly and runtime mechanics in
+`src/features/`. Give each built-in feature its own folder containing its factory, public types, helpers,
+implementation and tests. Move feature-owned declarations out of the central calendar type module. Calendar
+orchestration stays in `calendar.ts`; layouts remain supplied by views.
+
+**Exports:** publish `@calendar-tsx/core/background` and `@calendar-tsx/core/recurrence`, backed by
+`export/background.ts` and `export/recurrence.ts`. Root re-exports the same public factories, helpers and types.
+Shared feature contracts and extension maps remain public at root for third-party authors. Runtime machinery and
+feature internals stay private. Declare package paths explicitly and build matching JavaScript and declaration
+entries. The public paths omit `/features/`, as requested by the user.
+
+**Dependencies:** registry and runtime machinery do not import built-in feature implementations. Shared extension
+maps compose feature-owned interfaces through type-only imports. Root and feature entries reference the same
+shared contracts and implementations. Stable configured identities independent of registration aliases remain
+part of D54; this migration preserves existing source resolution and activation rules.
+
+**Alternatives considered:** a flat source directory preserves scattered feature ownership. Separate feature
+packages add publishing and dependency management. Root-only exports omit direct feature imports; wildcard
+exports can expose internal files. `/features/background` and `/features/recurrence` were shortened at the user's
+request. Root re-exports retain the assembly examples' single-import option.
+
+**Implementation:** feature-specific types and contributions live with the implementations and tests in
+`src/features/background` and `src/features/recurrence`. The common contracts, registry and runtime have separate
+modules in `src/features`. Built-in type contributions use interface inheritance: internal module augmentations
+were emitted with unresolved source paths by the declaration bundler. Public declaration merging stays supported.
+Three build entries produce root, background and recurrence exports backed by shared implementation and type chunks.
+
+**Verification:** built root and subpath imports must retain implementation identity, model and event-input
+contributions, public declaration merging and independent state across calendar instances. Existing tests guard
+activation, settings precedence, stage caching, recurrence and adapter behavior. D54 will separately verify aliases
+and the new override syntax.
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.

@@ -1,7 +1,7 @@
 import { Temporal } from 'temporal-polyfill';
 import { expect, it, vi } from 'vitest';
 import { createCalendar } from '#calendar';
-import { backgroundFeature } from '#calendar-backgrounds';
+import { backgroundFeature } from '#features/background/background-feature';
 import { createCalendarViews, dayGridView, listView, timeGridView, timelineView } from '#calendar-views';
 import type {
   Calendar_DayGridLayout,

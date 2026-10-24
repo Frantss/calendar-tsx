@@ -6,14 +6,15 @@ import { fixedClock } from '#calendar-clock';
 import { createEventStore } from '#calendar-event-store';
 import { createEvent } from '#calendar-events';
 import { createCalendarViews, listView, dayGridView, timeGridView, timelineView } from '#calendar-views';
-import { createRecurringEvent, recurrenceFeature } from '#calendar-recurrence';
+import { recurrenceFeature } from '#features/recurrence/recurrence-feature';
+import { createRecurringEvent } from '#features/recurrence/recurrence-events';
 import type { Calendar_Event, Calendar_EventDefinition, Calendar_Feature, Calendar_Clock } from '#calendar.types';
 import type {
   Calendar_RecurrenceOptions,
   Calendar_RecurringTimedEventInput,
   Calendar_RecurringAllDayEventInput,
   Calendar_RecurrenceExclusion,
-} from '#calendar-recurrence.types';
+} from '#features/recurrence/recurrence.types';
 
 const zdt = (value: string) => Temporal.ZonedDateTime.from(value.includes('[') ? value : `${value}[America/New_York]`);
 const date = (value: string) => Temporal.PlainDate.from(value);

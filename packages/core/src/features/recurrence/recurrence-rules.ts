@@ -1,8 +1,8 @@
 import { Temporal } from 'temporal-polyfill';
 
-import { checkDate, dateCompare, fail, occurrenceDate } from '#calendar-recurrence-dates';
-import type { RecurrenceDate, RecurrenceSeed } from '#calendar-recurrence-dates';
-import type { Calendar_RecurrenceExclusion, Calendar_RecurrenceOptions } from '#calendar-recurrence.types';
+import { checkDate, dateCompare, fail, occurrenceDate } from '#features/recurrence/recurrence-dates';
+import type { RecurrenceDate, RecurrenceSeed } from '#features/recurrence/recurrence-dates';
+import type { Calendar_RecurrenceExclusion, Calendar_RecurrenceOptions } from '#features/recurrence/recurrence.types';
 
 const weekdays = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
 
