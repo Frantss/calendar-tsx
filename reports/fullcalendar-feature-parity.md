@@ -242,3 +242,180 @@ cover the behavioral differences verified in [FullCalendar DST rendering compari
   `reports/fullcalendar-dst-behavior.md:28`; `reports/fullcalendar-dst-behavior.md:58`.
 - **Why it matters:** resolving label alignment under the chosen contract does not establish FullCalendar DST
   behavior parity. The comparison report records the exact v7.1.3 sources and published-release browser checks.
+
+### 13. Input filtering currently uses the anchor-date range
+
+- **What:** before a layout runs, the core filters events against `viewContext.range`; the overlap helper compares
+  the event's date span to that range. A Monday-only range excludes an event wholly on Tuesday, even if a future
+  Monday overnight display window extends into Tuesday morning.
+- **Where:** `packages/core/src/calendar.ts:190`; `packages/core/src/calendar-events.ts:43`;
+  `packages/core/src/calendar-navigation.ts:50`.
+- **Why it matters:** overnight geometry depends on input coverage as well as position calculations. Events removed
+  before layout cannot contribute to that visible overnight portion.
+
+## Coordinate integration after D41: 2026-10-23
+
+- **What:** built-in views now accept hidden ISO weekdays; time-grid and timeline views also accept visible clock
+  windows, including overnight windows. Navigation exposes the required input dates, and layouts, background rules,
+  availability, labels and now use shared coordinates. Month bars use visible cell indices and retain week rows.
+- **Where:** `packages/core/src/calendar.types.ts`; `packages/core/src/calendar-navigation.ts`;
+  `packages/core/src/layout/layout-coordinates.ts`; `packages/core/src/tests/layout-visible-window.spec.ts`;
+  `packages/themes/src/tests/visible-window.spec.tsx`; `docs/design.md` (D41).
+- **Why it matters:** hidden weekdays and visible-hour windows are no longer remaining geometry gaps. Findings 12
+  and 13 describe the earlier implementation. D40's chosen DST policy remains distinct from FullCalendar's timed
+  Timeline and some TimeGrid crossing-event behavior, as recorded in the separate DST comparison.
+
+## Remaining geometry audit after D41: 2026-10-23
+
+This pass inspected the current working tree, whose committed base is `fd13cd8`; D41's implementation remains
+uncommitted. It compares rendering and layout behavior with FullCalendar v7.1.3. The
+[upstream geometry evidence](fullcalendar-geometry-upstream.md) records official documentation and tagged source.
+API names, option units, toolbars, resource-label content, popovers and consumer-controlled scrolling are excluded.
+
+### Coverage closed by the coordinate integration
+
+- **What:** hidden weekdays, ordinary cropped hours, overnight windows up to 24 nominal hours, next-date input
+  coverage, compressed date bars, partial slots and overnight now placement are wired through the layouts and
+  both adapters. Source fragments retain DST offsets and occurrences separately from D40 rectangles. Existing
+  overlap expansion, minimum sizing, month/day-grid overflow and time-grid shading remain implemented.
+- **Where:** `packages/core/src/calendar-navigation.ts:53`; `packages/core/src/calendar.ts:191`;
+  `packages/core/src/layout/layout-coordinates.ts:84`; `packages/core/src/layout/layout-time-grid.ts:240`;
+  `packages/core/src/layout/layout-timeline.ts:152`; `packages/core/src/tests/layout-visible-window.spec.ts:1`;
+  `packages/themes/src/tests/visible-window.spec.tsx:1`.
+- **Why it matters:** these no longer belong on the remaining geometry backlog. The original full-day and
+  contiguous-column findings above describe older snapshots.
+
+### 14. Stack limits remain absent outside month/day-grid bars
+
+- **What:** time-grid timed lanes, its all-day section and timeline rows still place every matching event. Their
+  models have no overflow geometry or hidden-event counts for those surfaces. Month/day-grid row caps remain
+  covered. FullCalendar supplies these additional packing limits through
+  [eventMaxStack](https://fullcalendar.io/docs/eventMaxStack) and
+  [dayMaxEventRows](https://fullcalendar.io/docs/dayMaxEventRows).
+- **Where:** `packages/core/src/calendar.types.ts:169`; `packages/core/src/layout/layout-time-grid.ts:126`;
+  `packages/core/src/layout/layout-time-grid.ts:218`; `packages/core/src/layout/layout-timeline.ts:34`;
+  `packages/core/src/layout/layout-timeline.ts:104`.
+- **Why it matters:** dense columns and resource rows can grow without a layout cap. The absent capability is
+  overflow packing/data, independently of any consumer-owned popup.
+
+### 15. Timeline still omits background events and background layers
+
+- **What:** the timeline feature passes foreground events to its builder, and the background decorator handles
+  only month and time-grid models. Timeline resource availability remains implemented. FullCalendar's tagged
+  resource-timeline renderer draws both background-event and business-hour fills; the exact source is linked in
+  the upstream evidence report.
+- **Where:** `packages/core/src/calendar-layouts.ts:130`; `packages/core/src/layout/layout-timeline.ts:158`;
+  `packages/core/src/calendar-backgrounds.ts:163`.
+- **Why it matters:** closures supplied as background events or layers disappear when switching to timeline even
+  though the coordinate plan can project their intervals. Shading is a remaining layout capability.
+
+### 16. Resource geometry remains flat and excludes DayGrid
+
+- **What:** resources contain identity, title, availability and payload. Timelines map them directly to flat rows;
+  month/day-grid models have no resource grouping. FullCalendar supports
+  [resource DayGrid](https://fullcalendar.io/docs/vertical-resource-view),
+  [group rows](https://fullcalendar.io/docs/resourceGroupField) and
+  [expandable resource hierarchies](https://fullcalendar.io/docs/resourcesInitiallyExpanded).
+- **Where:** `packages/core/src/calendar.types.ts:43`; `packages/core/src/calendar.types.ts:152`;
+  `packages/core/src/calendar.types.ts:160`; `packages/core/src/layout/layout-timeline.ts:156`;
+  `packages/core/src/layout/layout-timeline.ts:187`.
+- **Why it matters:** resource/date column composition is covered for TimeGrid, but resource DayGrid cells,
+  group-row placement and visible tree-row geometry remain outside the built-in model. Label and header content
+  itself is consumer-owned and is not counted here.
+
+### 17. Multi-month layout and broader built-in periods remain separate gaps
+
+- **What:** month layout produces one month's padded weeks, DayGrid takes whole weeks, and timeline periods step
+  by a fixed day count. FullCalendar includes a responsive
+  [multi-month grid/stack](https://fullcalendar.io/docs/multimonth-grid), arbitrary
+  [DayGrid periods](https://fullcalendar.io/docs/daygrid-view) and calendar-month/year
+  [timelines](https://fullcalendar.io/docs/timeline-view).
+- **Where:** `packages/core/src/calendar-layouts.ts:30`; `packages/core/src/calendar-layouts.ts:58`;
+  `packages/core/src/calendar-layouts.ts:124`; `packages/core/src/layout/layout-month.ts:42`;
+  `packages/core/src/calendar.types.ts:152`.
+- **Why it matters:** multiple separately bounded month panels require layout structure not produced here. By
+  contrast, N-day DayGrid and calendar-aligned timeline periods are narrower built-in view coverage: custom layout
+  features can already supply ranges and stepping. They are not evidence of missing coordinate projection math.
+
+### 18. Valid-date bounds are not represented by the shared coordinate model
+
+- **What:** D41 filters recurring weekdays and local clock windows, but no built-in setting declares a valid date
+  interval. Navigation emits the requested date without date-bound eligibility checks, and day models do not carry
+  bound-derived disabled state. FullCalendar's [validRange](https://fullcalendar.io/docs/validRange) defines those
+  limits independently of view duration or hidden weekdays.
+- **Where:** `packages/core/src/calendar.types.ts:142`; `packages/core/src/calendar.types.ts:195`;
+  `packages/core/src/calendar.ts:232`; `packages/core/src/calendar.ts:236`.
+- **Why it matters:** cropping daily hours does not limit which calendar dates are valid. A custom layout may
+  choose its range, and an application may reject navigation, but those do not establish built-in bounded-date
+  layout behavior. Toolbar button styling and editing enforcement are outside this rendering audit.
+
+### 19. Extended TimeGrid windows exceed the accepted D41 contract
+
+- **What:** the coordinate builder rejects negative starts, starts at or beyond 24:00 and spans longer than 24
+  nominal hours. FullCalendar TimeGrid constructs slots from negative `slotMinTime` through extended
+  `slotMaxTime`, including spans longer than a day. Its tagged slot loop and date-profile coverage logic are linked
+  in the upstream evidence. FullCalendar timed Timeline caps individual civil windows to 24 hours, so this report
+  does not claim equivalent overlapping anchor windows there.
+- **Where:** `packages/core/src/layout/layout-coordinates.ts:90`; `docs/design.md:1122`;
+  `reports/fullcalendar-geometry-upstream.md:69`.
+- **Why it matters:** normal overnight display is covered, but pre-anchor and overlapping per-day clock windows
+  remain unavailable. This is a deliberate initial scope limit, rather than a defect within D41's accepted bounds.
+
+### 20. Resource timeline viewport virtualization remains absent
+
+- **What:** coordinate construction visits every visible date, timeline slots cover every date/window and rows map
+  every resource. There is no viewport or overscan input to the built-in pipeline. FullCalendar v7 ships
+  [resource timeline virtualization](https://fullcalendar.io/docs/virtual-rendering) horizontally for slots/headers
+  and vertically for resource/group rows. Its other view families and resource-free timeline are not claimed here.
+- **Where:** `packages/core/src/layout/layout-coordinates.ts:110`;
+  `packages/core/src/layout/layout-timeline.ts:169`; `packages/core/src/layout/layout-timeline.ts:176`;
+  `packages/core/src/layout/layout-timeline.ts:187`.
+- **Why it matters:** cached coordinates reduce repeated date/time construction, but do not bound layout or DOM
+  work to the scroll viewport. The shipped upstream capability is narrower than general virtualization of every view.
+
+### 21. Sub-minute axis configuration is not representable
+
+- **What:** source instants and projected event fragments retain nanosecond precision, but visible window bounds
+  and `slotMinutes` must be integers. FullCalendar TimeGrid's duration parser and slot loop preserve second and
+  millisecond offsets, including 30-second slots and window bounds such as 08:00:30. Tagged sources and the timed
+  Timeline slot-count caveat are recorded in the upstream evidence report.
+- **Where:** `packages/core/src/layout/layout-coordinates.ts:91`;
+  `packages/core/src/layout/layout-coordinates.ts:408`;
+  `packages/core/src/tests/layout-coordinates.spec.ts:215`.
+- **Why it matters:** exact event timestamps do not establish a sub-minute display axis. This is a limit on
+  representable geometry, independently of whether duration options are spelled as minutes or duration objects.
+
+### Existing sizing defect, distinct from missing features
+
+The [minimum-column-width report](time-grid-min-column-width.md) now includes a passing Chromium probe: in a 700px
+container, configuring `minColumnWidth: '480px'` still produced columns below 480px. A root-property control produced
+columns at least 480px wide. D41 did not close this existing CSS-variable propagation defect. FullCalendar's
+[dayMinWidth](https://fullcalendar.io/docs/dayMinWidth) establishes minimum-width horizontal scrolling upstream.
+
+### Deliberate policy differences and exclusions
+
+- D40's fixed clock Timeline and transition-enclosing TimeGrid bars still differ from FullCalendar's DST rendering.
+  They are accepted policy choices, not unfinished coordinate work. The
+  [version-pinned DST comparison](fullcalendar-dst-behavior.md) remains applicable.
+- Label cadence can be selected from explicit slots without moving their geometry. DOM refs allow consumer-owned
+  scrolling. Neither is counted as a missing geometry feature merely because an upstream option name is absent.
+- Pointer drag/resize/selection, snapping and interaction constraints remain separate missing interaction work;
+  the coordinate resolver supplies a basis but does not implement those engines. Recurrence and data fetching are
+  outside this geometry audit.
+
+### Audit verification
+
+- Focused coordinate, visible-window and DST suites: **64 tests passed** in Chromium.
+- Minimum-column-width browser probe: **1 test passed**, using the existing theme harness. Its temporary spec was
+  removed after execution; the observations are recorded above and in the sizing report.
+- Upstream official documentation and tagged v7.1.3 source were inspected. No upstream runtime tests were run.
+- This audit changes reports only. Runtime code and accepted D40/D41 decisions are unchanged. Full builds, type
+  checks and package validation are unnecessary for these report-only additions.
+
+### Minimum-column-width status update: 2026-10-23
+
+The sizing defect recorded above is closed in both adapters. The root now exposes the minimum width consumed by
+the shared track template (`packages/react/src/time-grid-view.tsx:46`; `packages/solid/src/time-grid-view.tsx:47`).
+The permanent Chromium regression at `packages/themes/src/tests/default-theme.spec.tsx:134` verifies seven columns
+of at least 480px inside a 700px container, header and all-day bar alignment, and horizontal scrolling. It failed
+against the previous code with 90.5625px columns. See the [verification record](time-grid-min-column-width.md).
