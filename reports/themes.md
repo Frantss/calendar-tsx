@@ -30,3 +30,13 @@
 - **Why it matters:** `base.css` is described as falling back to the theme's defaults, so a custom theme on `base.css`
   alone lays out month weeks with the older, tighter header. It may be intentional, since the gap exists for the default
   theme's day-number circle; nothing records either way.
+
+## The geometry table omits the visible-window variables
+
+- **What:** the custom-themes geometry table lists `--cal-slots` for `time-grid-root`, `time-grid-body` and
+  `timeline-root`, but not `--cal-slot-units`, `--cal-days`, `--cal-day-slot-units` or `--cal-slot-columns`, which the
+  parts emit and `base.css`/`default.css` read since visible time windows landed.
+- **Where:** `apps/docs/content/shared/styling/custom-themes.mdx` (Geometry table); emitted at
+  `packages/react/src/time-grid-view.tsx` and `packages/react/src/timeline-view.tsx` (and the Solid equivalents).
+- **Why it matters:** a custom theme written from the table sizes the time-grid body and timeline track from
+  `--cal-slots`, which is wrong for a window with a final partial slot.
