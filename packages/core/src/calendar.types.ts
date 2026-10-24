@@ -269,6 +269,9 @@ export type Calendar_BarSegment<TData, TFeatures = {}> = {
   colStart: number;
   colSpan: number;
   row: number;
+  isAllDay: boolean;
+  /** The event covers more than one date, before clipping to the columns. */
+  isMultiDay: boolean;
   continuesBefore: boolean;
   continuesAfter: boolean;
 } & Calendar_PickFeatures<Calendar_BarSegment_FeatureMap, TFeatures>;
@@ -369,6 +372,10 @@ export type Calendar_TimeGridLayout<TData, TResourceData, TFeatures = {}> = {
   coordinates: LayoutCoordinates_Plan;
   /** Visible duration divided by slotMinutes; may include a final partial slot. */
   slotUnits: number;
+  /** The length of each slot. */
+  slotMinutes: number;
+  /** Slot units from the start of the visible window to its first hour; 0 when it starts on the hour. */
+  hourOffset: number;
   slots: Calendar_TimeGridSlot[];
   columns: Calendar_TimeGridColumn<TData, TResourceData, TFeatures>[];
   allDay?: {
@@ -433,6 +440,8 @@ export type Calendar_TimelineSegment<TData, TFeatures = {}> = {
   /** Stack row within its timeline row. */
   row: number;
   isAllDay: boolean;
+  /** The event covers more than one date, before clipping to the range. */
+  isMultiDay: boolean;
   continuesBefore: boolean;
   continuesAfter: boolean;
 } & Calendar_PickFeatures<Calendar_TimelineSegment_FeatureMap, TFeatures>;
@@ -453,6 +462,10 @@ export type Calendar_TimelineLayout<TData, TResourceData, TFeatures = {}> = {
   kind: 'timeline';
   coordinates: LayoutCoordinates_Plan;
   slotUnits: number;
+  /** The length of each slot. */
+  slotMinutes: number;
+  /** Slot units from the start of each day's visible window to its first hour; 0 when it starts on the hour. */
+  hourOffset: number;
   days: Calendar_TimelineDay[];
   slots: Calendar_TimelineSlot[];
   rows: Calendar_TimelineRow<TData, TResourceData, TFeatures>[];

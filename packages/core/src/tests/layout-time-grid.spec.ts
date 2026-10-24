@@ -221,9 +221,25 @@ it('emits half-hour slots and the minimum column width', async () => {
   const views = { ...calendarSetup_defaults.views, week: timeGridView({ days: 7, minColumnWidth: '110px' }) };
   const utils = await setup({ view: 'week', views });
 
+  expect(utils.layout.slotMinutes).toBe(30);
+  expect(utils.layout.hourOffset).toBe(0);
   expect(utils.layout.slots).toHaveLength(48);
   expect(utils.layout.slots[19]?.time.toString()).toBe('09:30:00');
   expect(utils.layout.minColumnWidth).toBe('110px');
+});
+
+it.each([
+  [8 * 60 + 20, 15, 8 / 3],
+  [8 * 60 + 30, 30, 1],
+  [22 * 60, 60, 0],
+])('counts slot units to the first hour of a window starting at minute %i', async (startMinutes, slotMinutes, hourOffset) => {
+  const views = {
+    ...calendarSetup_defaults.views,
+    day: timeGridView({ days: 1, slotMinutes, timeWindow: { startMinutes, endMinutes: startMinutes + 8 * 60 } }),
+  };
+  const utils = await setup({ views });
+
+  expect(utils.layout.hourOffset).toBeCloseTo(hourOffset);
 });
 
 it('shades a timed background event under the events without taking a lane', async () => {

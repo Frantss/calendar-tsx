@@ -52,6 +52,29 @@ it('splits a bar at week boundaries and marks the continuation', async () => {
   expect(utils.week('2026-03-09')?.segments[0]).toMatchObject({ colStart: 0, colSpan: 2, continuesBefore: true });
 });
 
+it('flags all-day and multi-day bars', async () => {
+  const utils = await setup({
+    events: [
+      fixtures_allDay('holiday', { start: '2026-03-17' }),
+      fixtures_allDay('retreat', { start: '2026-03-18', end: '2026-03-19' }),
+      fixtures_timed('standup', { date: '2026-03-17', start: '09:00', end: '09:30' }),
+      fixtures_timed('late', { date: '2026-03-18', start: '22:00', end: '00:00', endDate: '2026-03-19' }),
+      fixtures_timed('deploy', { date: '2026-03-19', start: '22:00', end: '02:00', endDate: '2026-03-20' }),
+    ],
+  });
+  const flags = Object.fromEntries(
+    (utils.week('2026-03-17')?.segments ?? []).map(segment => [segment.event.id, [segment.isAllDay, segment.isMultiDay]]),
+  );
+
+  expect(flags).toEqual({
+    holiday: [true, false],
+    retreat: [true, true],
+    standup: [false, false],
+    late: [false, false],
+    deploy: [false, true],
+  });
+});
+
 it('counts a hidden bar on every day it crosses', async () => {
   const events = [...busyDay(4, '2026-03-17'), fixtures_allDay('retreat', { start: '2026-03-16', end: '2026-03-18' })];
   const utils = await setup({ events });

@@ -1,6 +1,6 @@
 import { Temporal } from 'temporal-polyfill';
 import { calendarPeriods_groups } from '#calendar-periods';
-import { calendarEvents_dateSpan, calendarEvents_isAllDay } from '#calendar-events';
+import { calendarEvents_dateSpan, calendarEvents_isAllDay, calendarEvents_isMultiDay } from '#calendar-events';
 import type {
   Calendar_BackgroundEventSegment,
   Calendar_Event,
@@ -18,6 +18,7 @@ import {
   layoutCoordinates_coverage,
   layoutCoordinates_coverFragments,
   layoutCoordinates_dateColumns,
+  layoutCoordinates_hourOffset,
   layoutCoordinates_length,
   layoutCoordinates_plan,
   layoutCoordinates_projectInstant,
@@ -112,6 +113,7 @@ const buildRow = <TData, TResourceData>({
     span: (item.endMs - item.startMs) / total,
     row: item.row,
     isAllDay: item.isAllDay,
+    isMultiDay: calendarEvents_isMultiDay(item.event),
     continuesBefore: item.continuesBefore,
     continuesAfter: item.continuesAfter,
   }));
@@ -202,6 +204,8 @@ export const layoutTimeline_build = <TData, TResourceData>({
     kind: 'timeline',
     coordinates: plan,
     slotUnits: (dates.length * layoutCoordinates_length(plan)) / 60_000 / slotMinutes,
+    slotMinutes,
+    hourOffset: layoutCoordinates_hourOffset(plan.dates, slotMinutes),
     days: dates.map((date, index) => ({
       key: date.toString(),
       date,

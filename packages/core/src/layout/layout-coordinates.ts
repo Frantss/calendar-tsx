@@ -417,6 +417,14 @@ export const layoutCoordinates_slots = (axis: LayoutCoordinates_DateAxis, slotMi
   return slots;
 };
 
+/** Slot units from the start of the visible clock window to its first hour boundary. */
+export const layoutCoordinates_hourOffset = (axis: LayoutCoordinates_DateAxis, slotMinutes: number) => {
+  const hour = 60n * NS_PER_MINUTE;
+  const remainder = ((axis.clock.start % hour) + hour) % hour;
+
+  return Number((hour - remainder) % hour) / Number(BigInt(slotMinutes) * NS_PER_MINUTE);
+};
+
 export const layoutCoordinates_length = (plan: LayoutCoordinates_Plan) =>
   Number(plan.dates.clock.end - plan.dates.clock.start) / 1_000_000;
 

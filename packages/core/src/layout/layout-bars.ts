@@ -1,6 +1,6 @@
 import type { Temporal } from 'temporal-polyfill';
 
-import { calendarEvents_dateSpan } from '#calendar-events';
+import { calendarEvents_dateSpan, calendarEvents_isAllDay, calendarEvents_isMultiDay } from '#calendar-events';
 import type { Calendar_BackgroundEventSpan, Calendar_BarSegment, Calendar_Event } from '#calendar.types';
 import { layoutCoordinates_dateColumns } from '#layout/layout-coordinates';
 
@@ -55,6 +55,8 @@ export const layoutBars_build = <TData>(
     colStart: span.colStart,
     colSpan: span.colEnd - span.colStart + 1,
     row: rows[index] ?? 0,
+    isAllDay: calendarEvents_isAllDay(span.event),
+    isMultiDay: calendarEvents_isMultiDay(span.event),
     continuesBefore: span.continuesBefore,
     continuesAfter: span.continuesAfter,
   }));

@@ -40,6 +40,13 @@ export const calendarEvents_dateSpan = <TData>(event: Calendar_Event<TData>): Ca
   return { start, end: endsAtMidnight ? end.subtract({ days: 1 }) : end };
 };
 
+/** The event covers more than one date in the calendar's `timeZone`; a timed event ending at midnight does not. */
+export const calendarEvents_isMultiDay = <TData>(event: Calendar_Event<TData>) => {
+  const span = calendarEvents_dateSpan(event);
+
+  return Temporal.PlainDate.compare(span.end, span.start) > 0;
+};
+
 export const calendarEvents_overlaps = <TData>(event: Calendar_Event<TData>, range: Calendar_Range) => {
   const span = calendarEvents_dateSpan(event);
 

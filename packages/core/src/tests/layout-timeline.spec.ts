@@ -48,6 +48,8 @@ it('starts a 7-day timeline on the first day of the week and honours slotMinutes
   });
 
   expect(utils.state().context.range.start.toString()).toBe('2026-03-08');
+  expect(utils.layout.slotMinutes).toBe(30);
+  expect(utils.layout.hourOffset).toBe(0);
   expect(utils.layout.slots).toHaveLength(7 * 48);
   expect(utils.layout.days.map(day => day.colStart)).toEqual([0, 48, 96, 144, 192, 240, 288]);
 });
@@ -204,6 +206,8 @@ it('spans all-day events from midnight to midnight in the same stack', async () 
   const fair = utils.row('all')?.segments.find(segment => segment.event.id === 'fair');
 
   expect(fair?.isAllDay).toBe(true);
+  expect(fair?.isMultiDay).toBe(true);
+  expect(utils.row('all')?.segments.find(segment => segment.event.id === 'yoga')?.isMultiDay).toBe(false);
   expect(fair?.start).toBeCloseTo(fractionOf(fixtures_at('2026-03-10', '00:00'), weekStart, weekEnd));
   expect((fair?.start ?? 0) + (fair?.span ?? 0)).toBeCloseTo(fractionOf(fixtures_at('2026-03-12', '00:00'), weekStart, weekEnd));
   expect(utils.stacks('all')).toEqual(['fair:0', 'yoga:1']);

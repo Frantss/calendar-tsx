@@ -19,6 +19,7 @@ import { layoutBars_background, layoutBars_build, layoutBars_rows } from '#layou
 import {
   layoutCoordinates_bounds,
   layoutCoordinates_coverFragments,
+  layoutCoordinates_hourOffset,
   layoutCoordinates_length,
   layoutCoordinates_plan,
   layoutCoordinates_projectInstant,
@@ -252,6 +253,8 @@ export const layoutTimeGrid_build = <TData, TResourceData>({
     kind: 'timeGrid',
     coordinates: plan,
     slotUnits: layoutCoordinates_length(plan) / MS_PER_MINUTE / slotMinutes,
+    slotMinutes,
+    hourOffset: layoutCoordinates_hourOffset(plan.dates, slotMinutes),
     slots: layoutCoordinates_slots(plan.dates, slotMinutes).map(({ position, ...slot }) => ({
       ...slot,
       key: slot.dayOffset ? `${slot.dayOffset}:${slot.time.toString()}` : slot.time.toString(),
