@@ -318,11 +318,19 @@ Registering `constraintsFeature()` prevents overlap by default. Set `preventOver
 while permitting overlap. Keep rule arrays and predicates stable until their contents change; reference changes
 trigger draft revalidation. See the [policy guide](../../apps/docs/content/docs/react/features/editing-policies.mdx).
 
-Moves preserve elapsed timed duration or inclusive all-day length. Opt into `movement.allowConversion` to reset
+Moves preserve elapsed timed duration or inclusive all-day length. Opt into `eventRelocationPolicy.allowConversion` to reset
 conversion to one all-day date or one timed hour; `defaultTimedMinutes` and `conversionDuration: 'preserve'` override
 that policy. Resource moves replace the entire list by default. `resourceMode: 'replace-source'` replaces only the
 assignment passed to `move.begin/evaluate`; `allowResourceChange: false` preserves assignments. Use `canMove`,
 `resizing.canResize` and `resizing.fromStart` for editing permissions. Resize never converts event kinds.
+
+`createEventRelocationPolicy({ ... })` types shared conversion and resource settings while preserving literal types.
+It returns the object unchanged. Pass it once as the calendar's `eventRelocationPolicy`; movement, external creation
+and transfer receiving inherit those defaults. Each feature accepts a partial `relocationPolicy` override. Fields
+resolve from library defaults through calendar policy, factory configuration, live feature settings, view alias
+overrides and direct view settings. Omitted or `undefined` fields inherit; `false` overrides. Changes to effective
+policy values revalidate active drafts and previews. Equal policy objects do not trigger revalidation. Each
+operation remains an independent opt-in.
 
 Drafts live in a separate store and do not derive the base layout. `interactionOwnership` chooses internal,
 controlled (`read` / `onChange`) or external (`atom`) ownership. Mode and atom are fixed at creation. Controlled
@@ -404,7 +412,7 @@ Each driver reads active per-view settings. Without a mounted host, feature regi
 
 External palettes attach `createExternalDraggable(element, () => ({ event, metadata }), { dragScope, pointer: {} })` and release its returned
 cleanup. Receivers register `externalDropFeature`; `onExternalDrop` receives `{ kind: 'create', after, metadata }`.
-`externalDrop.accept` can reject sources, and `externalDrop.placement` configures conversion/resources independently
+`externalDrop.accept` can reject sources, and `externalDrop.relocationPolicy` overrides calendar conversion/resource defaults independently
 of movement. Duplicate destination IDs are rejected. Events retain their consumer payload type.
 
 Register `crossCalendarFeature` and a unique `crossCalendar.id` on both hosts; the source also needs movement.
@@ -420,7 +428,8 @@ The DOM adapter stays in `@calendar-tsx/core`. `createCalendarDragScope()` creat
 Pass the same `{ dragScope }` to participating hosts or framework binding hooks and external draggables. Omitted host
 scopes are isolated. External draggables own their `pointer` and optional `touch` activation settings; receiving
 calendars provide their own scrolling policy. Programmatic creation and transfer require no pointer feature.
-Receiver placement uses `crossCalendar.placement`, independently of movement settings.
+Transfer receiving uses its calendar's `eventRelocationPolicy` and `crossCalendar.relocationPolicy` overrides,
+independently of the source calendar and movement settings.
 
 `createCalendarDomHost` accepts only pointer settings and interaction controls. It binds custom operations without
 requiring events or a time zone. `createCalendarInteractionHost` adds built-in event and selection bindings.

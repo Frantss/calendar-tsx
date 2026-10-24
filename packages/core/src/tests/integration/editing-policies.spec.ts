@@ -46,7 +46,7 @@ it('converts only when opted in, with reset defaults and precise same-kind durat
   const calendar = createCalendar(base);
   const allDay = { kind: 'allDay' as const, at: date.add({ days: 1 }) };
   expect(calendar.api.move.evaluate('a', allDay)).toMatchObject({ status: 'unavailable', reason: 'conversion-unsupported' });
-  calendar['~update']({ ...calendar.options, movement: { allowConversion: true } });
+  calendar['~update']({ ...calendar.options, movement: { relocationPolicy: { allowConversion: true } } });
   const converted = calendar.api.move.evaluate('a', allDay);
   if (converted.status !== 'valid' || converted.proposal.after.kind !== 'allDay') throw new Error('conversion');
   expect(converted.proposal.after.start.equals(allDay.at)).toBe(true);
@@ -65,11 +65,11 @@ it('supports resource replacement modes and independent permission checks', () =
   const calendar = createCalendar(base);
   const full = calendar.api.move.evaluate('a', target(11, 'c'));
   expect(full.status === 'valid' && full.proposal.after.resourceIds).toEqual(['c']);
-  calendar['~update']({ ...calendar.options, movement: { resourceMode: 'replace-source' } });
+  calendar['~update']({ ...calendar.options, movement: { relocationPolicy: { resourceMode: 'replace-source' } } });
   expect(calendar.api.move.evaluate('a', target(11, 'c'))).toMatchObject({ reason: 'source-resource-required' });
   const replaced = calendar.api.move.evaluate('a', target(11, 'c'), 'a');
   expect(replaced.status === 'valid' && replaced.proposal.after.resourceIds).toEqual(['c', 'b']);
-  calendar['~update']({ ...calendar.options, movement: { allowResourceChange: false }, resizing: { fromStart: false } });
+  calendar['~update']({ ...calendar.options, movement: { relocationPolicy: { allowResourceChange: false } }, resizing: { fromStart: false } });
   expect(calendar.api.move.evaluate('a', target(11, 'c'))).toMatchObject({ reason: 'resource-change-disabled' });
   const retained = calendar.api.move.evaluate('a', target(11, 'a'));
   expect(retained.status === 'valid' && retained.proposal.after.resourceIds).toEqual(['a', 'b']);

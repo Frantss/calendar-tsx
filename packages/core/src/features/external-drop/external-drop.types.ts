@@ -15,7 +15,7 @@ export type Calendar_CreateProposal<D = unknown> = {
 
 export type Calendar_ExternalDropSettings<D = unknown> = {
   enabled?: boolean;
-  placement?: import('#features/interaction/scheduling.types').Calendar_PlacementSettings;
+  relocationPolicy?: import('#features/interaction/scheduling.types').Calendar_EventRelocationPolicy;
   accept?: (event: Calendar_EventInput<D>, metadata: unknown) => boolean;
 };
 

@@ -5,7 +5,7 @@ export type Calendar_SchedulingEffect =
   | { kind: 'range'; range: Calendar_Selection }
   | { kind: 'event'; event: Calendar_EventInput<unknown>; excludeEventId?: string };
 
-export type Calendar_PlacementSettings = {
+export type Calendar_EventRelocationPolicy = {
   allowConversion?: boolean;
   conversionDuration?: 'reset' | 'preserve';
   defaultTimedMinutes?: number;

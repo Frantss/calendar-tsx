@@ -1,10 +1,22 @@
-import { calendarPlacement_place } from '#features/interaction/placement';
+import type { Calendar_InteractionInput } from '#features/interaction/interaction.types';
+import {
+  calendarPlacement_place,
+  calendarRelocation_mergeSettings,
+  calendarRelocation_resolve,
+} from '#features/interaction/placement';
 import type { Calendar_ConfiguredFeature } from '#features/feature.types';
 import { createInteractionOperation } from '#features/interaction/interaction-runtime';
 import type { Calendar_InteractionEvaluation } from '#features/interaction/interaction.types';
 import type { Calendar_DateTarget } from '#features/interaction/date-target.types';
 import type { Calendar_MoveProposal } from '#features/event-move/event-move.types';
 import { isDateTarget, calendarDateTarget_equal } from '#features/interaction/date-target';
+
+const relocationPolicy = (input: Calendar_InteractionInput) =>
+  calendarRelocation_resolve(
+    input,
+    input.movement?.relocationPolicy,
+    input.views[input.view].movement?.relocationPolicy,
+  );
 
 const moveOperation = createInteractionOperation({
   enabled: input => (input.views[input.view].movement?.enabled ?? input.movement?.enabled) !== false,
@@ -19,7 +31,7 @@ const moveOperation = createInteractionOperation({
     if (before['~source']) return { status: 'unavailable', reason: 'source-unsupported' };
     const settings = { ...input.movement, ...input.views[input.view].movement };
     if (settings.canMove?.(before) === false) return { status: 'unavailable', reason: 'event-not-editable' };
-    const after = calendarPlacement_place(before, target, settings, intent.sourceResourceId);
+    const after = calendarPlacement_place(before, target, relocationPolicy(input), intent.sourceResourceId);
     return typeof after === 'string'
       ? { status: 'unavailable', reason: after }
       : { status: 'valid', proposal: { kind: 'move', before, after } };
@@ -45,15 +57,13 @@ export const eventMoveFeature = (
     requires: ['interactionFeature'],
     interaction: {
       settings: 'movement',
+      mergeSettings: calendarRelocation_mergeSettings,
       deps: input => [
         input.movement?.enabled,
-        input.movement?.allowConversion,
-        input.movement?.conversionDuration,
-        input.movement?.defaultTimedMinutes,
-        input.movement?.resourceMode,
-        input.movement?.allowResourceChange,
         input.movement?.canMove,
-        ...Object.values(input.views[input.view].movement ?? {}),
+        input.views[input.view].movement?.enabled,
+        input.views[input.view].movement?.canMove,
+        ...Object.values(relocationPolicy(input)),
       ],
       operation: moveOperation,
     },

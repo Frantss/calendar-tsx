@@ -76,13 +76,15 @@ export const calendarFeatures_createRuntime = (features: Calendar_Features, inpu
         const match = Object.entries(features).find(([, feature]) => feature.interaction?.settings === key);
         const configured = match ? (match[1] as Calendar_ConfiguredFeature)['~config'] : undefined;
         const override = match ? (input.view as { features?: Record<string, object> }).features?.[match[0]] : undefined;
-        return {
-          ...defaults,
-          ...configured,
-          ...((input.options as Record<string, unknown>)[key] as object | undefined),
-          ...override,
-          ...(input.view[key] as object | undefined),
-        };
+        const layers = [
+          defaults,
+          configured,
+          (input.options as Record<string, unknown>)[key],
+          override,
+          input.view[key],
+        ];
+        const merge = match?.[1].interaction?.mergeSettings;
+        return (merge ? merge(layers) : Object.assign({}, ...layers)) as typeof defaults;
       },
       get options() {
         return input.options;

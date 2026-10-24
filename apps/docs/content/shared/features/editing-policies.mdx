@@ -15,6 +15,30 @@ array during every draft render can repeatedly revalidate the session.
 
 ## Movement and resources
 
+Use `createEventRelocationPolicy` to define shared conversion and resource settings with inferred literal types.
+Pass it once as the calendar's `eventRelocationPolicy`. Movement, external creation and transfer receiving inherit
+it. Each feature accepts a partial `relocationPolicy` override. The helper returns the supplied object unchanged;
+the policy installs no operations.
+
+<include lang='ts' meta='title="core/interaction-placement.ts"'>
+  ../../../examples/core/interaction-placement.ts#placement
+</include>
+
+Fields resolve in this order, with later defined values winning: library defaults, calendar policy, feature factory
+configuration, live feature settings, per-view `features[alias]`, then direct view settings. Omitted and `undefined`
+fields inherit; `false` overrides `true`. Policy objects merge by field, so overriding resource behavior preserves
+the inherited conversion settings.
+
+In this example, movement inherits the calendar policy. External creation rejects kind conversion. Transfer
+receiving replaces only the dragged resource assignment. A transfer uses the receiving calendar's policy.
+
+Updating the calendar policy or a feature override revalidates an active draft and updates its preview. A policy
+that makes the proposal unavailable clears the preview and prevents commit; restoring permission revalidates the
+same session. Recreating a policy object with equal effective values does not trigger revalidation.
+
+Conversion and resource fields below belong to `eventRelocationPolicy` or a feature's `relocationPolicy`.
+`enabled` and `canMove` remain movement settings.
+
 | Setting               | Default         | Effect                                                   |
 | --------------------- | --------------- | -------------------------------------------------------- |
 | `enabled`             | `true`          | Allows movement while the feature is registered.         |

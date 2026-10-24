@@ -16,8 +16,9 @@ Create a `dragScope` with `createCalendarDragScope()` and pass it to the receivi
 activation settings. Call the returned cleanup on unmount. `makeEvent` runs when a gesture begins; give each new event a unique ID.
 The payload preserves your event data type. Metadata is optional and arrives on the proposal.
 
-`externalDrop.accept(event, metadata)` can reject a source. `externalDrop.placement` uses the movement policy
-shape independently of movement: conversion is opt-in and resource assignment defaults to replacing the list.
+`externalDrop.accept(event, metadata)` can reject a source. `externalDrop.relocationPolicy` overrides the
+calendar's `eventRelocationPolicy` by field, independently of movement. Without a policy, conversion is opt-in
+and resource assignment defaults to replacing the list.
 Duplicate destination IDs are rejected.
 
 For a keyboard equivalent, call `api.externalDrop.begin(event, metadata?)`, update the returned active session with
@@ -32,7 +33,7 @@ without movement or selection.
 Pass the same `{ dragScope }` to both calendars' binding hooks. Hosts without an explicit scope are isolated.
 Mount each calendar's bindings and register its event sources and surfaces. Dragging an event onto another
 calendar reserves the source movement session and validates the destination proposal. The receiver applies its
-own constraints and `crossCalendar.placement` settings. Duplicate IDs in the destination are rejected.
+own constraints and `eventRelocationPolicy` defaults and `crossCalendar.relocationPolicy` overrides. Duplicate IDs in the destination are rejected.
 
 Commit calls `onEventTransfer` once on the **source**, with:
 

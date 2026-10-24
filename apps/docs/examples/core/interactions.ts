@@ -7,6 +7,7 @@ import {
   dateSelectionFeature,
   eventMoveFeature,
   eventResizeFeature,
+  createEventRelocationPolicy,
 } from '@calendar-tsx/core';
 import type { Calendar_EventInput, Calendar_State } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
@@ -22,6 +23,11 @@ export const features = calendarFeatures({
 export const views = calendarViews({
   features,
   views: { day: timeGridView({ days: 1, allDay: false, slotMinutes: 30 }) },
+});
+export const eventRelocationPolicy = createEventRelocationPolicy({
+  allowConversion: true,
+  conversionDuration: 'reset',
+  resourceMode: 'replace-all',
 });
 // #endregion registry
 

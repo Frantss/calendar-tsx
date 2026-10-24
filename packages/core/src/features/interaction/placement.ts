@@ -1,12 +1,43 @@
 import { Temporal } from 'temporal-polyfill';
 import type { Calendar_EventInput } from '#events/event.types';
 import type { Calendar_DateTarget } from '#features/interaction/date-target.types';
-import type { Calendar_PlacementSettings } from '#features/interaction/scheduling.types';
+import type { Calendar_EventRelocationPolicy } from '#features/interaction/scheduling.types';
+import type { Calendar_InteractionInput } from '#features/interaction/interaction.types';
+
+/** Returns the settings unchanged, preserving literals without applying defaults or registering features. */
+export const createEventRelocationPolicy = <const TSettings extends Calendar_EventRelocationPolicy>(
+  settings: TSettings,
+): TSettings => settings;
+
+const mergePolicy = (layers: readonly (Calendar_EventRelocationPolicy | undefined)[]): Calendar_EventRelocationPolicy =>
+  Object.assign(
+    {},
+    ...layers.map(layer => Object.fromEntries(Object.entries(layer ?? {}).filter(([, value]) => value !== undefined))),
+  );
+
+export const calendarRelocation_mergeSettings = (layers: readonly unknown[]): object => ({
+  ...Object.assign({}, ...layers),
+  relocationPolicy: mergePolicy(
+    layers.map(layer => (layer as { relocationPolicy?: Calendar_EventRelocationPolicy } | undefined)?.relocationPolicy),
+  ),
+});
+
+export const calendarRelocation_resolve = (
+  input: Calendar_InteractionInput,
+  ...overrides: (Calendar_EventRelocationPolicy | undefined)[]
+): Required<Calendar_EventRelocationPolicy> => ({
+  allowConversion: false,
+  conversionDuration: 'reset',
+  defaultTimedMinutes: 60,
+  allowResourceChange: true,
+  resourceMode: 'replace-all',
+  ...mergePolicy([input.eventRelocationPolicy, ...overrides]),
+});
 
 export const calendarPlacement_place = (
   before: Calendar_EventInput<unknown>,
   target: Calendar_DateTarget,
-  settings: Calendar_PlacementSettings,
+  settings: Required<Calendar_EventRelocationPolicy>,
   sourceResourceId?: string,
 ): Calendar_EventInput<unknown> | string => {
   let resourceIds = before.resourceIds;
@@ -56,7 +87,7 @@ export const calendarPlacement_place = (
   const minutes =
     settings.conversionDuration === 'preserve' && before.kind === 'allDay'
       ? (before.start.until(before.end ?? before.start).days + 1) * 1440
-      : (settings.defaultTimedMinutes ?? 60);
+      : settings.defaultTimedMinutes;
   if (!Number.isSafeInteger(minutes) || minutes <= 0) return 'invalid-conversion-duration';
   return { ...before, kind: 'timed', start: target.at, end: target.at.add({ minutes }), resourceIds };
 };

@@ -27,10 +27,12 @@ export const features = calendarFeatures({
   touch: touchFeature({ delay: 500, tolerance: 8 }),
   scroll: autoScrollFeature({ edge: 40, speed: 600 }),
   movement: eventMoveFeature({
-    allowConversion: true,
-    conversionDuration: 'reset',
-    defaultTimedMinutes: 60,
-    resourceMode: 'replace-all',
+    relocationPolicy: {
+      allowConversion: true,
+      conversionDuration: 'reset',
+      defaultTimedMinutes: 60,
+      resourceMode: 'replace-all',
+    },
   }),
   resizing: eventResizeFeature({ fromStart: true }),
   constraints: constraintsFeature({

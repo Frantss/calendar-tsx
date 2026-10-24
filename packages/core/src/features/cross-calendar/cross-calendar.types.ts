@@ -28,7 +28,7 @@ export type Calendar_CrossCalendarSettings = {
   id: string;
   enabled?: boolean;
   accept?: (sourceId: string) => boolean;
-  placement?: import('#features/interaction/scheduling.types').Calendar_PlacementSettings;
+  relocationPolicy?: import('#features/interaction/scheduling.types').Calendar_EventRelocationPolicy;
 };
 
 export type Calendar_TransferApi<D> = {

@@ -1706,8 +1706,18 @@ compiler fixtures verify the DOM export and independent feature prerequisites.
 **Decision:** keep the DOM adapter in the existing core package and single entry. Semantic creation and transfer
 require only `interactionFeature`. Pointer, touch and scrolling remain independent settings features; browser
 listeners are installed only by a mounted adapter. Source transfer preparation retains movement permissions and a
-movement lease. Receiver placement belongs to `crossCalendar.placement`; shared placement arithmetic belongs to
+movement lease. Receiver policy overrides belong to `crossCalendar.relocationPolicy`; shared relocation logic belongs to
 `features/interaction/placement.ts`.
+
+`createEventRelocationPolicy` types reusable conversion and resource settings, preserving their literal types.
+It returns the supplied object unchanged. The calendar's `eventRelocationPolicy` supplies defaults for movement,
+external creation and transfer receiving; each independently registered feature accepts `relocationPolicy` overrides.
+Fields resolve from library defaults through calendar policy, feature factory, live settings, view alias overrides
+and direct view settings. Omitted or `undefined` fields inherit; `false` overrides. Transfers use receiver policy.
+The relocation module owns merging and application. Features supply `interaction.mergeSettings` for nested policy
+merging; the generic settings resolver passes ordered layers without knowing policy fields. Each operation tracks
+effective policy values in its dependencies, revalidating active drafts and previews when values change without
+invalidating drafts for equal policy objects. Defining a policy installs no operations.
 
 Operation `begin` returns a typed session handle. Its `update`, `commit`, `cancel`, `unavailable` and `isActive`
 methods close over the runtime lease. Targets stay correlated with the operation; update and commit proposals

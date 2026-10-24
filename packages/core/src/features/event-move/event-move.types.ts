@@ -22,7 +22,8 @@ export type Calendar_MoveApi<D = unknown> = {
   ) => Calendar_InteractionEvaluation<Calendar_MoveProposal<D>>;
 };
 
-export type Calendar_MovementSettings = import('#features/interaction/scheduling.types').Calendar_PlacementSettings & {
+export type Calendar_MovementSettings = {
+  relocationPolicy?: import('#features/interaction/scheduling.types').Calendar_EventRelocationPolicy;
   enabled?: boolean;
   canMove?: (event: Calendar_EventInput<unknown>) => boolean;
 };

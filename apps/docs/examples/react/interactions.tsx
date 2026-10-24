@@ -15,7 +15,7 @@ import {
 } from '@calendar-tsx/react';
 import { useState } from 'react';
 import type { Booking, EditingState } from '../core/interactions';
-import { features, views, initialDate, initialEvents } from '../core/interactions';
+import { features, views, initialDate, initialEvents, eventRelocationPolicy } from '../core/interactions';
 
 // #region setup
 export function EditableCalendar({ dragScope }: { dragScope?: Calendar_DragScope }) {
@@ -28,6 +28,7 @@ export function EditableCalendar({ dragScope }: { dragScope?: Calendar_DragScope
   const calendar = useCalendar({
     features,
     views,
+    eventRelocationPolicy,
     view: 'day',
     date,
     timeZone: 'UTC',

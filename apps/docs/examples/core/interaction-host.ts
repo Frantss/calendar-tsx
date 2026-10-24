@@ -1,6 +1,6 @@
 import { createCalendar, createCalendarInteractionBindings, timeGridSurface } from '@calendar-tsx/core';
 import type { Calendar_EventInput } from '@calendar-tsx/core';
-import { features, views, initialDate, initialEvents } from './interactions';
+import { features, views, initialDate, initialEvents, eventRelocationPolicy } from './interactions';
 import type { Booking } from './interactions';
 
 // #region setup
@@ -13,6 +13,7 @@ export function mountEditableCalendar(root: HTMLElement) {
   const calendar = createCalendar({
     features,
     views,
+    eventRelocationPolicy,
     view: 'day',
     date: initialDate,
     timeZone: 'UTC',

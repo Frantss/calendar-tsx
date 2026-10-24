@@ -3,12 +3,24 @@ import type { Calendar_EventInput } from '#events/event.types';
 import type { Calendar_ConfiguredFeature } from '#features/feature.types';
 import type { Calendar_DateTarget } from '#features/interaction/date-target.types';
 import { isDateTarget, calendarDateTarget_equal } from '#features/interaction/date-target';
-import { calendarPlacement_place } from '#features/interaction/placement';
+import type { Calendar_InteractionInput } from '#features/interaction/interaction.types';
+import {
+  calendarPlacement_place,
+  calendarRelocation_mergeSettings,
+  calendarRelocation_resolve,
+} from '#features/interaction/placement';
 import { createInteractionOperation } from '#features/interaction/interaction-runtime';
 import type {
   Calendar_TransferSource,
   Calendar_CrossCalendarSettings,
 } from '#features/cross-calendar/cross-calendar.types';
+
+const relocationPolicy = (input: Calendar_InteractionInput) =>
+  calendarRelocation_resolve(
+    input,
+    input.crossCalendar?.relocationPolicy,
+    input.views[input.view].crossCalendar?.relocationPolicy,
+  );
 
 const transferOperation = createInteractionOperation({
   kind: 'transfer',
@@ -25,7 +37,7 @@ const transferOperation = createInteractionOperation({
     if (!settings.id || settings.id === intent.source.id) return { status: 'rejected', reason: 'same-calendar' };
     if (settings.accept?.(intent.source.id) === false) return { status: 'rejected', reason: 'calendar-rejected' };
     if (input.events.some(event => event.id === before.id)) return { status: 'rejected', reason: 'duplicate-event-id' };
-    const after = calendarPlacement_place(before, target, settings.placement ?? {}, intent.source.sourceResourceId);
+    const after = calendarPlacement_place(before, target, relocationPolicy(input), intent.source.sourceResourceId);
     return typeof after === 'string'
       ? { status: 'unavailable', reason: after }
       : {
@@ -102,13 +114,16 @@ export const crossCalendarFeature = (config: Partial<Calendar_CrossCalendarSetti
     requires: ['interactionFeature'],
     interaction: {
       settings: 'crossCalendar',
+      mergeSettings: calendarRelocation_mergeSettings,
       operation: transferOperation,
       deps: input => [
         input.crossCalendar?.enabled,
         input.crossCalendar?.id,
         input.crossCalendar?.accept,
-        input.crossCalendar?.placement,
-        ...Object.values(input.views[input.view].crossCalendar ?? {}),
+        input.views[input.view].crossCalendar?.enabled,
+        input.views[input.view].crossCalendar?.id,
+        input.views[input.view].crossCalendar?.accept,
+        ...Object.values(relocationPolicy(input)),
       ],
     },
   }) as const satisfies Calendar_ConfiguredFeature;

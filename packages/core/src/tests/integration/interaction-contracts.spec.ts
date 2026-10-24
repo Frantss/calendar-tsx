@@ -84,7 +84,7 @@ it('transfers without pointer and uses receiver placement independently of movem
   });
   const destinationFeatures = calendarFeatures({
     interactions: interactionFeature(),
-    transfer: crossCalendarFeature({ id: 'destination', placement: { allowConversion: true } }),
+    transfer: crossCalendarFeature({ id: 'destination', relocationPolicy: { allowConversion: true } }),
   });
   const event = { id: 'a', kind: 'timed' as const, start: at(10), end: at(11), data: { bookingId: 42 } };
   const onEventTransfer = vi.fn();

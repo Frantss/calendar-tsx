@@ -149,6 +149,8 @@ export type Calendar_OperationDefinition = {
 
 export type Calendar_InteractionContribution = {
   settings?: string;
+  /** Layers run from factory defaults to direct view settings; nested merges belong to the feature. */
+  mergeSettings?: (layers: readonly unknown[]) => object;
   operation?: Calendar_OperationDefinition;
   validate?: (
     proposal: Calendar_InteractionProposal,

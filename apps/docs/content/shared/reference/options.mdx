@@ -87,20 +87,25 @@ Where feature state lives; see [feature state](../extending/features#state).
 
 These fields are available when their corresponding features are registered:
 
-| Feature                                               | Live settings                    | Callback                                                                    |
-| ----------------------------------------------------- | -------------------------------- | --------------------------------------------------------------------------- |
-| `dateSelectionFeature`                                | `selection`                      | `onSelectionChange(range)`                                                  |
-| `eventMoveFeature`                                    | `movement`                       | `onEventMove({ before, after })`                                            |
-| `eventResizeFeature`                                  | `resizing`                       | `onEventResize({ before, after, edge })`                                    |
-| `constraintsFeature`                                  | `constraints`                    | Custom validation through `constraints.allow`                               |
-| `pointerFeature`, `touchFeature`, `autoScrollFeature` | `pointer`, `touch`, `autoScroll` | None                                                                        |
-| `externalDropFeature`                                 | `externalDrop`                   | `onExternalDrop({ after, metadata })`                                       |
-| `crossCalendarFeature`                                | `crossCalendar`                  | `onEventTransfer({ sourceId, destinationId, before, after })` on the source |
-| `interactionFeature`                                  | `interactionOwnership`           | Controlled ownership uses its `onChange`                                    |
+| Feature                                               | Live settings                                   | Callback                                                                    |
+| ----------------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
+| `dateSelectionFeature`                                | `selection`                                     | `onSelectionChange(range)`                                                  |
+| `eventMoveFeature`                                    | `movement`                                      | `onEventMove({ before, after })`                                            |
+| `eventResizeFeature`                                  | `resizing`                                      | `onEventResize({ before, after, edge })`                                    |
+| `constraintsFeature`                                  | `constraints`                                   | Custom validation through `constraints.allow`                               |
+| `pointerFeature`, `touchFeature`, `autoScrollFeature` | `pointer`, `touch`, `autoScroll`                | None                                                                        |
+| `externalDropFeature`                                 | `externalDrop`                                  | `onExternalDrop({ after, metadata })`                                       |
+| `crossCalendarFeature`                                | `crossCalendar`                                 | `onEventTransfer({ sourceId, destinationId, before, after })` on the source |
+| `interactionFeature`                                  | `interactionOwnership`, `eventRelocationPolicy` | Controlled ownership uses its `onChange`                                    |
 
 Callbacks and proposal results preserve the event input's data type. Apply accepted event proposals to your input
 array; the runtime does not mutate events. Feature factories can supply setting defaults, and per-view overrides
 take precedence over live settings. Keep rule arrays and predicate functions stable between changes.
+
+`eventRelocationPolicy` supplies calendar-wide conversion and resource defaults. Movement, external creation and
+transfer receiving can override individual fields through their `relocationPolicy` settings. Effective policy
+changes revalidate the active draft and preview without re-deriving the base event layout. Defining defaults does
+not register any of these operations.
 
 See [selection and editing](../features/interactions), [policies](../features/editing-policies), and
 [external drops and transfers](../features/drops-and-transfers).

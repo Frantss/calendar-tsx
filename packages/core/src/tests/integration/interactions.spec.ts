@@ -313,7 +313,7 @@ it('keeps concrete editing usable beside recurring definitions without editing a
 
 it('resolves operation settings and prerequisites by identity with consumer aliases', () => {
   const features = calendarFeatures({
-    edit: eventMoveFeature({ enabled: false, allowConversion: true }),
+    edit: eventMoveFeature({ enabled: false, relocationPolicy: { allowConversion: true } }),
     runtime: interactionFeature(),
     rules: constraintsFeature({ preventOverlap: false }),
   });

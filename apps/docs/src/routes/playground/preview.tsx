@@ -269,7 +269,7 @@ function PreviewCalendar({
     firstDayOfWeek: config.firstDayOfWeek,
     ...(clock ? { clock } : {}),
     onNavigate: next => onNavigate(next.view, next.date.toString()),
-    movement: {
+    eventRelocationPolicy: {
       allowConversion: config.interactions.allowConversion,
       conversionDuration: config.interactions.preserveDuration ? 'preserve' : 'reset',
       resourceMode: config.interactions.replaceSource ? 'replace-source' : 'replace-all',
@@ -283,21 +283,7 @@ function PreviewCalendar({
           }
         : {}),
     },
-    externalDrop: {
-      placement: {
-        allowConversion: config.interactions.allowConversion,
-        conversionDuration: config.interactions.preserveDuration ? 'preserve' : 'reset',
-        resourceMode: config.interactions.replaceSource ? 'replace-source' : 'replace-all',
-      },
-    },
-    crossCalendar: {
-      id,
-      placement: {
-        allowConversion: config.interactions.allowConversion,
-        conversionDuration: config.interactions.preserveDuration ? 'preserve' : 'reset',
-        resourceMode: config.interactions.replaceSource ? 'replace-source' : 'replace-all',
-      },
-    },
+    crossCalendar: { id },
     onSelectionChange: range => {
       setSelection(range);
       setMessage(
