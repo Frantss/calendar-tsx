@@ -17,6 +17,7 @@
     "shadcn.css",
     "revenuecat.css",
     "stripe.css",
+    "fullcalendar.css",
     "compact.css",
     "print.css"
   ],
@@ -36,6 +37,7 @@
     "./shadcn.css": "./shadcn.css",
     "./revenuecat.css": "./revenuecat.css",
     "./stripe.css": "./stripe.css",
+    "./fullcalendar.css": "./fullcalendar.css",
     "./compact.css": "./compact.css",
     "./print.css": "./print.css",
     "./package.json": "./package.json"

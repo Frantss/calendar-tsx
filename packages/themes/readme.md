@@ -22,6 +22,7 @@ import '@calendar-tsx/themes/default.css';
 | `material-ui.css`   | The default look with its tokens read from Material UI's CSS theme variables. See [Material UI](#material-ui).  |
 | `revenuecat.css`    | The default layout in RevenueCat's brand colors. See [RevenueCat](#revenuecat).                                 |
 | `stripe.css`        | The default layout in Stripe's colors. See [Stripe](#stripe).                                                   |
+| `fullcalendar.css`  | FullCalendar's classic theme, for apps migrating from it. See [FullCalendar classic](#fullcalendar-classic).    |
 | `compact.css`       | Density only: smaller slots, bars and text. Import it after any theme.                                          |
 | `print.css`         | Print only: paper colors, outlined events, no scrolling. Import it after any theme. See [Print](#print).        |
 
@@ -183,6 +184,54 @@ one step stronger than Stripe's quiet borders, which at 1.2:1 lose the grid.
 
 This theme is not affiliated with or endorsed by Stripe. Stripe's [Marks Usage Terms](https://stripe.com/marks/legal)
 cover its names, design elements and trade dress.
+
+## FullCalendar classic
+
+```ts
+import '@calendar-tsx/themes/fullcalendar.css';
+```
+
+`fullcalendar.css` reproduces FullCalendar's classic theme (v7.1.3) on the calendar's parts, so an app moving off
+FullCalendar keeps its look while it migrates.
+
+- Today washes its cell and time-grid column in yellow (`#facc1526`) instead of taking a marker, and day numbers sit at
+  the top end of the cell, underlined on hover.
+- Events are solid `#3788d8` with white 12px text and a 4px radius. A timed single-day event in a day grid is an 8px dot
+  and a bold title, with no fill, and list rows lead with a 10px dot.
+- Weekends are unshaded, outside-month dates are faint (`#9ca3af`), non-business time is a flat faint fill and
+  background events are a 15% green wash with no edge.
+- The time grid has 25px slots with dotted slot lines and solid hour lines, and a 1px red (`#ef4444`) now line with an
+  arrow at its start. List days are a full-width bold header band above their events.
+- Borders are `#ddd`, text `#030712`, corners square.
+
+The tokens read FullCalendar's own `--fc-classic-*` variables first, with the classic palette as the fallback, so an
+app that customized FullCalendar's palette keeps its colors. Set those variables on `:root` or on the element that
+carries `data-color-scheme`, as FullCalendar does. `data-color-scheme="dark"` switches to the classic dark palette, as
+it does in FullCalendar; `color-scheme: dark` works too.
+
+| Token                                                       | FullCalendar variable                                                       |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `--calendar-surface`, `--calendar-surface-muted`            | `--fc-classic-background`, `--fc-classic-muted`                             |
+| `--calendar-text`, `--calendar-text-muted`                  | `--fc-classic-foreground`, `--fc-classic-muted-foreground`                  |
+| `--calendar-border`, `--calendar-border-strong`             | `--fc-classic-border`, `--fc-classic-strong-border`                         |
+| `--calendar-accent`, `--calendar-focus-ring`                | `--fc-classic-primary`                                                      |
+| `--calendar-event-color`, `--calendar-event-color-contrast` | `--fc-classic-event`, `--fc-classic-event-contrast`                         |
+| `--calendar-now`, `--calendar-background-event-color`       | `--fc-classic-now`, `--fc-classic-background-event`                         |
+| today's wash, non-business fill, outside-month dates        | `--fc-classic-today`, `--fc-classic-faint`, `--fc-classic-faint-foreground` |
+
+Where it differs from FullCalendar:
+
+- Event content is yours: FullCalendar renders times such as "9a" and "+2 more", and the calendar renders what you put
+  in each part.
+- FullCalendar gives timed events a 15px minimum height (`eventMinHeight`); set `minEventMinutes: 18` on the view for
+  the same height at 25px slots. At the default 15 minutes, short events drop their top and bottom borders so their
+  11px line still fits.
+- List rows keep a 44px minimum height for touch, where FullCalendar's are about 37px.
+- Timeline slot lines are solid rather than dotted.
+- Outside-month dates are 2.54:1 against white, below WCAG AA, as in FullCalendar. Set
+  `--fc-classic-faint-foreground` to raise them.
+
+This theme is not affiliated with or endorsed by FullCalendar.
 
 ## Print
 

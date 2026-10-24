@@ -12,6 +12,7 @@ export const playgroundThemes = [
   { id: 'material-ui', label: 'Material UI' },
   { id: 'revenuecat', label: 'RevenueCat' },
   { id: 'stripe', label: 'Stripe' },
+  { id: 'fullcalendar', label: 'FullCalendar classic' },
   { id: 'base', label: 'Base only (positioning)' },
 ] as const;
 
