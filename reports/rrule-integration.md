@@ -88,3 +88,44 @@ The findings above describe the replaced `rrule` 2.8.1 dependency. The current i
   `rrule-temporal@2.2.8/dist/src-vjCiI_-u.js:1`, constructor and `jumpAlignedDtstart`.
 - **Why it matters:** the old stall no longer applies, while budget exhaustion remains an explicit failure rather
   than a silently partial recurrence set. Query bounds alone still do not promise a fixed CPU-time cost.
+
+## FullCalendar 7.1.3 source check, 2026-10-23
+
+### 9. Sibling exclusions are processed for string rules despite the documented restriction
+
+- **What:** the documentation says sibling `exdate`/`exrule` properties work only with object-form `rrule`.
+  Published 7.1.3 parses either a string or object into an RRuleSet, then applies both exclusion-property loops
+  unconditionally after those branches. Its package still uses `rrule`, with peer range `^2.6.0`.
+- **Where:** `@fullcalendar/rrule@7.1.3/index.js:42`; `@fullcalendar/rrule@7.1.3/index.js:56`;
+  `@fullcalendar/rrule@7.1.3/index.js:65` in the
+  [published plugin source](https://cdn.jsdelivr.net/npm/@fullcalendar/rrule@7.1.3/index.js);
+  [RRule plugin documentation, Exclusion Properties](https://fullcalendar.io/docs/rrule-plugin#exclusion-properties).
+- **Why it matters:** the documented object-only restriction does not describe the published control flow.
+  Feature comparisons based only on that text can understate string-rule exclusion support.
+
+### 10. Exclusion rules cannot currently have independent start bounds
+
+- **What:** FullCalendar's documented `exrule` accepts its own `dtstart` and `until`. The current calendar-tsx
+  exclusion compiler always seeds each rule from the parent series start. For four weekly dates January 5–26,
+  2026, an exclusion with only `until: January 26` removes all four; an independently bounded January 19–26
+  exclusion would leave January 5 and 12. A direct check of the committed build returned an empty array.
+- **Where:** `packages/rrule/src/rrule-rules.ts:80`; `packages/rrule/src/rrule-rules.ts:200`;
+  `packages/rrule/src/rrule.types.ts:20`;
+  [FullCalendar's exclusion-rule example](https://fullcalendar.io/docs/rrule-plugin#exclusion-properties).
+- **Why it matters:** EXRULE presence alone does not establish behavioral parity. Independently bounded exclusion
+  recurrences are not expressible through the current exclusion-rule input.
+
+## Independently bounded exclusions, verified 2026-10-24
+
+### 11. Exclusion seeds now own their bounds, recurrence phase and zone
+
+Finding 10 describes the earlier implementation and is superseded by this verification.
+
+- **What:** object-form exclusions now accept a Temporal `start`; omitted starts retain the parent seed. The
+  January 5–26 weekly example with a January 19–26 exclusion returns January 5 and 12. Exclusion COUNT and
+  INTERVAL follow their own seed, and timed seeds retain their own timezone and explicit fold offset. The full
+  suite passed 307 tests; packaged Node ESM checks matched under UTC, Los Angeles and Tokyo host zones.
+- **Where:** `packages/rrule/src/rrule-rules.ts:150`; `packages/rrule/src/rrule.ts:77`;
+  `packages/rrule/src/tests/rrule.spec.ts:320`; `packages/rrule/src/tests/rrule.spec.ts:356`.
+- **Why it matters:** independently bounded exclusion recurrences are now expressible without removing earlier
+  parent occurrences or changing a cross-zone exclusion's wall-clock schedule.

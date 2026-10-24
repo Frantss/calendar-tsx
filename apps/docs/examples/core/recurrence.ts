@@ -48,3 +48,18 @@ export const holiday = createRRuleEvent({
   data: { title: 'Holiday' },
 });
 // #endregion all-day
+
+// #region bounded-exclusions
+export const boundedReview = createRRuleEvent({
+  id: 'weekly-review',
+  kind: 'allDay',
+  start: Temporal.PlainDate.from('2026-01-05'),
+  rrule: { freq: 'WEEKLY', count: 4 },
+  exrule: {
+    freq: 'WEEKLY',
+    start: Temporal.PlainDate.from('2026-01-19'),
+    until: Temporal.PlainDate.from('2026-01-26'),
+  },
+  data: { title: 'Review' },
+});
+// #endregion bounded-exclusions

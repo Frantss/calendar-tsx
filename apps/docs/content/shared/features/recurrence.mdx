@@ -32,6 +32,16 @@ accept complete VCALENDAR/VEVENT documents or RDATE periods.
 over all inclusions and do not replenish COUNT. A UTC UNTIL ending in `Z` is inclusive and compares actual instants.
 Timed exception dates may use another zone. All-day exceptions and UNTIL use `Temporal.PlainDate`.
 
+Each object-form `exrule` may set its own Temporal `start`; otherwise it inherits the series seed. COUNT and
+INTERVAL run from that seed. UNTIL is inclusive. Timed seeds retain their own zone and clock time; all-day seeds
+use `PlainDate`. Exclusion starts and bounds must match the parent event's date kind.
+
+<include lang='ts'>../../../examples/core/recurrence.ts#bounded-exclusions</include>
+
+This leaves January 5 and 12. Arrays can combine exclusions with different seeds and bounds. Exclusions remove
+matching occurrence starts; they do not trim event durations. Timed matching compares instants across zones.
+String exclusions and inline EXRULE lines inherit the parent seed.
+
 ## Time zones and duration
 
 Timed occurrences keep the seed zone's wall-clock schedule. Changing the calendar's display zone converts the

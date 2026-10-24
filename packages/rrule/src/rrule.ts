@@ -74,16 +74,21 @@ const prepare = (source: Calendar_RRuleEventInput<unknown>): Compiled => {
   return result;
 };
 
-const expand = (
-  rule: CompiledRule,
-  lower: Temporal.ZonedDateTime,
-  upper: Temporal.ZonedDateTime,
-  source: Calendar_RRuleEventInput<unknown>,
-): RecurrenceDate[] =>
-  rule.engine
-    .between(lower, upper, true)
-    .map(date => fromEngine(date, source))
+const expand = (rule: CompiledRule, lower: Temporal.ZonedDateTime, upper: Temporal.ZonedDateTime): RecurrenceDate[] => {
+  // Padding admits nominal starts shifted across a date boundary by compatible DST disambiguation.
+  const start =
+    rule.seed.kind === 'allDay'
+      ? lower.toPlainDateTime()
+      : lower.withTimeZone(rule.seed.start.timeZoneId).toPlainDateTime().subtract({ days: 1 });
+  const end =
+    rule.seed.kind === 'allDay'
+      ? upper.toPlainDateTime()
+      : upper.withTimeZone(rule.seed.start.timeZoneId).toPlainDateTime().add({ days: 1 });
+  return rule.engine
+    .between(toEngine(start), toEngine(end), true)
+    .map(date => fromEngine(date, rule.seed))
     .filter(date => !rule.until || dateCompare(date, rule.until) <= 0);
+};
 
 const resolve = (
   source: Calendar_RRuleEventInput<unknown>,
@@ -95,28 +100,16 @@ const resolve = (
   if (cached) return cached;
   const viewStart = range.start.toZonedDateTime(timeZone);
   const viewEnd = range.end.add({ days: 1 }).toZonedDateTime(timeZone);
-  // Padding admits nominal starts shifted across a date boundary by compatible DST disambiguation.
   const lower =
     source.kind === 'allDay'
-      ? toEngine(range.start.subtract({ days: plan.days - 1 }).toPlainDateTime())
-      : toEngine(
-          viewStart
-            .subtract(plan.duration)
-            .withTimeZone(source.start.timeZoneId)
-            .toPlainDateTime()
-            .subtract({ days: 1 }),
-        );
-  const upper =
-    source.kind === 'allDay'
-      ? toEngine(range.end.toPlainDateTime())
-      : toEngine(viewEnd.withTimeZone(source.start.timeZoneId).toPlainDateTime().add({ days: 1 }));
+      ? range.start.subtract({ days: plan.days - 1 }).toZonedDateTime('UTC')
+      : viewStart.subtract(plan.duration);
+  const upper = source.kind === 'allDay' ? range.end.toZonedDateTime('UTC') : viewEnd;
   const exclusions = new Set(
-    [...plan.rules.excludedDates, ...plan.rules.exclusions.flatMap(rule => expand(rule, lower, upper, source))].map(
-      dateKey,
-    ),
+    [...plan.rules.excludedDates, ...plan.rules.exclusions.flatMap(rule => expand(rule, lower, upper))].map(dateKey),
   );
   const dates = new Map<string, RecurrenceDate>();
-  for (const date of [...plan.rules.rules.flatMap(rule => expand(rule, lower, upper, source)), ...plan.rules.dates])
+  for (const date of [...plan.rules.rules.flatMap(rule => expand(rule, lower, upper)), ...plan.rules.dates])
     if (!exclusions.has(dateKey(date))) dates.set(dateKey(date), date);
 
   const common = { resourceIds: source.resourceIds, display: source.display, data: source.data };

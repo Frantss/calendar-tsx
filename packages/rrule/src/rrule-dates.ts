@@ -1,8 +1,9 @@
 import { Temporal } from 'temporal-polyfill';
 
-import type { Calendar_RRuleEventInput } from '#rrule.types';
-
 export type RecurrenceDate = Temporal.PlainDate | Temporal.ZonedDateTime;
+export type RecurrenceSeed =
+  | { kind: 'timed'; start: Temporal.ZonedDateTime }
+  | { kind: 'allDay'; start: Temporal.PlainDate };
 
 export const fail = (message: string): never => {
   throw new RangeError(`[calendar/rrule] ${message}`);
@@ -13,7 +14,7 @@ export const plain = (date: RecurrenceDate): Temporal.PlainDateTime => date.toPl
 /** UTC holds nominal wall fields so compatible DST resolution remains owned by the calendar (D50). */
 export const toEngine = (date: Temporal.PlainDateTime): Temporal.ZonedDateTime => date.toZonedDateTime('UTC');
 
-export const fromEngine = (date: Temporal.ZonedDateTime, source: Calendar_RRuleEventInput<unknown>): RecurrenceDate => {
+export const fromEngine = (date: Temporal.ZonedDateTime, source: RecurrenceSeed): RecurrenceDate => {
   const value = date.toPlainDateTime();
   if (source.kind === 'allDay') return value.toPlainDate();
   return value.equals(source.start.toPlainDateTime())
@@ -31,7 +32,7 @@ export const dateCompare = (a: RecurrenceDate, b: RecurrenceDate): number => {
   return fail('date kind must match the series kind');
 };
 
-export const checkDate = (date: RecurrenceDate, source: Calendar_RRuleEventInput<unknown>): RecurrenceDate => {
+export const checkDate = (date: RecurrenceDate, source: RecurrenceSeed): RecurrenceDate => {
   if (!date || date.calendarId !== 'iso8601') return fail('recurrence dates must use the ISO 8601 calendar');
   if (source.kind === 'timed' && date instanceof Temporal.ZonedDateTime)
     return date.withTimeZone(source.start.timeZoneId);
@@ -51,7 +52,7 @@ export const parseDateParts = (value: string) => {
   return { date, hasTime: hour !== undefined, utc: !!utc };
 };
 
-export const parseDate = (value: string, source: Calendar_RRuleEventInput<unknown>, tzid?: string): RecurrenceDate => {
+export const parseDate = (value: string, source: RecurrenceSeed, tzid?: string): RecurrenceDate => {
   const { date, hasTime, utc } = parseDateParts(value);
   if (source.kind === 'allDay') {
     if (hasTime || tzid || utc) return fail('all-day recurrence dates must be DATE values');

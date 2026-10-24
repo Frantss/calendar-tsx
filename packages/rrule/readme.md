@@ -88,6 +88,29 @@ createRRuleEvent({
 both RRULE and RDATE. Exclusions do not replenish COUNT. Timed exception dates identify instants and may use another
 zone. All-day exception dates must be `Temporal.PlainDate`.
 
+Each options-object exclusion can set its own `start`. If omitted, it inherits the parent seed. A timed exclusion
+uses its start's own zone and clock time; an all-day exclusion uses a `PlainDate`. `start` and `until` must match
+the parent event's date kind. COUNT and INTERVAL are measured from the exclusion's seed; UNTIL is inclusive.
+
+```ts
+createRRuleEvent({
+  id: 'weekly-review',
+  kind: 'allDay',
+  start: Temporal.PlainDate.from('2026-01-05'),
+  rrule: { freq: 'WEEKLY', count: 4 },
+  exrule: {
+    freq: 'WEEKLY',
+    start: Temporal.PlainDate.from('2026-01-19'),
+    until: Temporal.PlainDate.from('2026-01-26'),
+  },
+  data: { title: 'Review' },
+});
+```
+
+This leaves January 5 and 12. Each entry in an exclusion array can use a different seed and bounds. Timed rules
+exclude matching instants, even when the exclusion and parent use different zones. An exclusion starting after
+its UNTIL produces no excluded dates. String exclusions and inline EXRULE lines inherit the parent seed.
+
 A string may contain DTSTART, multiple RRULE lines, RDATE, EXDATE and EXRULE. DATE and DATE-TIME values use RFC basic
 notation, for example `EXDATE;TZID=America/New_York:20260227T090000` or `EXDATE:20260227T140000Z`. Folded lines are
 supported. Whole VCALENDAR/VEVENT documents and RDATE periods are not accepted.

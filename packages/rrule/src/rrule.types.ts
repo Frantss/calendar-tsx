@@ -13,11 +13,15 @@ export type Calendar_RRuleOptions = Omit<
 
 export type Calendar_RRule = string | Calendar_RRuleOptions;
 
+/** Exclusions inherit the series seed unless `start` supplies their own date, time and zone. */
+export type Calendar_RRuleExclusion<
+  TDate extends Temporal.ZonedDateTime | Temporal.PlainDate = Temporal.ZonedDateTime | Temporal.PlainDate,
+> = string | (Omit<Calendar_RRuleOptions, 'until'> & { start?: TDate; until?: TDate });
+
 type Shared<TData> = {
   id: string;
   '~source': 'rruleFeature';
   rrule: Calendar_RRule;
-  exrule?: Calendar_RRule | Calendar_RRule[];
   resourceIds?: string[];
   display?: Calendar_EventDisplay;
   data: TData;
@@ -25,6 +29,7 @@ type Shared<TData> = {
 
 export type Calendar_RRuleTimedEventInput<TData> = Shared<TData> & {
   kind: 'timed';
+  exrule?: Calendar_RRuleExclusion<Temporal.ZonedDateTime> | Calendar_RRuleExclusion<Temporal.ZonedDateTime>[];
   start: Temporal.ZonedDateTime;
   /** Elapsed time; years and months are not supported. */
   duration: Temporal.Duration;
@@ -34,6 +39,7 @@ export type Calendar_RRuleTimedEventInput<TData> = Shared<TData> & {
 
 export type Calendar_RRuleAllDayEventInput<TData> = Shared<TData> & {
   kind: 'allDay';
+  exrule?: Calendar_RRuleExclusion<Temporal.PlainDate> | Calendar_RRuleExclusion<Temporal.PlainDate>[];
   start: Temporal.PlainDate;
   /** Positive whole weeks/days; defaults to one day. The generated end is inclusive. */
   duration?: Temporal.Duration;

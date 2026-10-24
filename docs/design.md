@@ -1305,6 +1305,27 @@ Large or complex queries still do not have a fixed CPU-time guarantee.
 DST, nanoseconds, overlap lookback, stable IDs, store ownership, memoization and all layouts. Adapter tests render
 occurrences and remove a series through each framework's event store.
 
+### D42 — Exclusion rules may own a Temporal seed
+
+**Decision:** each options-object `exrule` accepts an optional `start`, a `ZonedDateTime` for timed series or a
+`PlainDate` for all-day series. Omitting it retains the parent seed. String exclusions and inline EXRULE lines
+continue to inherit the parent seed. `Calendar_RRuleExclusion<TDate>` keeps exclusion starts and UNTIL values tied
+to the parent date kind. Non-ISO dates and mismatched kinds are rejected.
+
+An exclusion's COUNT and INTERVAL start at its own seed, including candidates before the parent series starts.
+UNTIL remains inclusive; an upper bound before the seed yields an empty exclusion set. Timed seeds retain their
+own zone, clock time and explicit offset. Each compiled rule resolves and queries in that zone, with the existing
+compatible DST policy. Normalizing an exclusion seed to the parent zone would change its future wall schedule.
+
+Exclusions compare timed instants or all-day dates and win over both RRULE and RDATE. They do not replenish the
+parent's COUNT or trim event durations. The query lookback still includes parent occurrences beginning before the
+view; query bounds are converted for each rule separately before engine expansion. Stores retain definitions and
+surviving occurrences keep their IDs.
+
+**Verification:** recurrence tests cover independently bounded all-day and timed windows, omitted seeds, COUNT and
+INTERVAL alignment, multiple exclusion seeds, RDATE precedence, inclusive nanosecond bounds, cross-zone DST,
+overlapping prior starts, empty bounds and date-kind validation.
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.

@@ -15,7 +15,7 @@ import { Temporal } from 'temporal-polyfill';
 import { expect, expectTypeOf, it, vi } from 'vitest';
 
 import { createRRuleEvent, rruleFeature } from '#rrule';
-import type { Calendar_RRuleTimedEventInput, Calendar_RRuleAllDayEventInput } from '#rrule.types';
+import type { Calendar_RRuleTimedEventInput, Calendar_RRuleAllDayEventInput, Calendar_RRuleExclusion } from '#rrule.types';
 
 const zdt = (value: string) => Temporal.ZonedDateTime.from(value.includes('[') ? value : `${value}[America/New_York]`);
 const date = (value: string) => Temporal.PlainDate.from(value);
@@ -315,4 +315,126 @@ it('returns an empty set for unreachable subdaily interval selectors', () => {
 it('propagates work-budget exhaustion instead of returning a partial recurrence set', () => {
   const source = timed({ rrule: { freq: 'MONTHLY', count: 10, byDay: ['2FR'], maxIterations: 1 } });
   expect(() => expand(source)).toThrow(/Maximum iterations/);
+});
+
+it('bounds all-day exclusions independently and keeps the parent seed when start is omitted', () => {
+  const source = allDay({
+    start: date('2026-01-05'),
+    rrule: { freq: 'WEEKLY', count: 4 },
+    exrule: { freq: 'WEEKLY', start: date('2026-01-19'), until: date('2026-01-26') },
+  });
+  expect(dates(expand(source))).toEqual(['2026-01-05', '2026-01-12']);
+  expect(dates(expand(allDay({ ...source, exrule: { freq: 'WEEKLY', until: date('2026-01-26') } })))).toEqual([]);
+});
+
+it('counts and aligns exclusions from their own seed, including candidates before the parent', () => {
+  const source = allDay({
+    start: date('2026-01-05'),
+    rrule: { freq: 'WEEKLY', count: 6 },
+    exrule: { freq: 'WEEKLY', interval: 2, start: date('2026-01-12'), count: 2 },
+  });
+  expect(dates(expand(source))).toEqual(['2026-01-05', '2026-01-19', '2026-02-02', '2026-02-09']);
+  expect(dates(expand(source, '2026-01-19', '2026-02-09'))).toEqual(['2026-01-19', '2026-02-02', '2026-02-09']);
+  expect(
+    dates(expand(allDay({ ...source, rrule: { freq: 'WEEKLY', count: 4 }, exrule: { freq: 'WEEKLY', start: date('2025-12-29'), count: 2 } }))),
+  ).toEqual(['2026-01-12', '2026-01-19', '2026-01-26']);
+});
+
+it('unions independently seeded exclusions and applies them to RDATE without replenishing parent COUNT', () => {
+  const source = allDay({
+    start: date('2026-01-05'),
+    rrule: { freq: 'WEEKLY', count: 4 },
+    rdate: [date('2026-01-19'), date('2026-02-02')],
+    exrule: [
+      { freq: 'WEEKLY', start: date('2026-01-19'), count: 2 },
+      { freq: 'WEEKLY', start: date('2026-01-12'), until: date('2026-01-12') },
+    ],
+  });
+  expect(dates(expand(source))).toEqual(['2026-01-05', '2026-02-02']);
+});
+
+it('keeps a timed exclusion in its own zone across DST and display-zone changes', () => {
+  const source = timed({
+    start: zdt('2026-03-02T09:00'),
+    rrule: { freq: 'WEEKLY', count: 4 },
+    exrule: { freq: 'WEEKLY', start: zdt('2026-03-02T14:00[UTC]'), until: zdt('2026-03-16T14:00[UTC]') },
+  });
+  const expected = ['2026-03-09', '2026-03-16', '2026-03-23'];
+  expect(dates(expand(source))).toEqual(expected);
+  expect(dates(expand(source, '2026-03-01', '2026-03-31', 'Asia/Tokyo'))).toEqual(expected);
+});
+
+it('checks an independent timed UNTIL inclusively at nanosecond precision', () => {
+  const start = zdt('2026-01-19T09:00:00.123456789');
+  const until = start.add({ weeks: 1 });
+  const source = timed({
+    start: zdt('2026-01-05T09:00:00.123456789'),
+    rrule: { freq: 'WEEKLY', count: 4 },
+    exrule: { freq: 'WEEKLY', start, until },
+  });
+  expect(dates(expand(source))).toEqual(['2026-01-05', '2026-01-12']);
+  expect(dates(expand(timed({ ...source, exrule: { freq: 'WEEKLY', start, until: until.subtract({ nanoseconds: 1 }) } })))).toEqual([
+    '2026-01-05',
+    '2026-01-12',
+    '2026-01-26',
+  ]);
+});
+
+it('excludes overlapping prior starts using bounds in the exclusion zone', () => {
+  const start = zdt('2026-01-19T08:30[Asia/Tokyo]');
+  const source = timed({
+    start: zdt('2026-01-18T23:30[UTC]'),
+    duration: duration({ hours: 2 }),
+    rrule: { freq: 'WEEKLY', count: 2 },
+    exrule: { freq: 'WEEKLY', start, until: start },
+  });
+  expect(expand(source, '2026-01-19', '2026-01-19', 'UTC')).toEqual([]);
+  expect(dates(expand(source, '2026-01-26', '2026-01-26', 'UTC'))).toEqual(['2026-01-25']);
+});
+
+it('retains compatible gap resolution and exclusion COUNT with an independent seed', () => {
+  const source = timed({
+    start: zdt('2026-03-06T02:30'),
+    rrule: { freq: 'DAILY', count: 5 },
+    exrule: { freq: 'DAILY', start: zdt('2026-03-07T02:30'), count: 2 },
+  });
+  expect(dates(expand(source))).toEqual(['2026-03-06', '2026-03-09', '2026-03-10']);
+  expect(expand(source, '2026-03-08', '2026-03-08')).toEqual([]);
+});
+
+it('returns no exclusions when their independent start is after UNTIL', () => {
+  const source = allDay({
+    start: date('2026-01-05'),
+    rrule: { freq: 'WEEKLY', count: 2 },
+    exrule: { freq: 'WEEKLY', start: date('2026-01-19'), until: date('2026-01-12') },
+  });
+  expect(dates(expand(source))).toEqual(['2026-01-05', '2026-01-12']);
+});
+
+it('requires exclusion starts and bounds to match the parent date kind and ISO calendar', () => {
+  const invalid = [
+    timed({ exrule: { freq: 'DAILY', start: date('2026-01-02') } as never }),
+    allDay({ exrule: { freq: 'DAILY', start: zdt('2026-01-02T09:00') } as never }),
+    timed({ exrule: { freq: 'DAILY', start: zdt('2026-01-02T09:00').withCalendar('gregory') } }),
+    allDay({ exrule: { freq: 'DAILY', start: date('2026-01-02'), until: zdt('2026-01-03T09:00') } as never }),
+    timed({ exrule: { freq: 'DAILY', start: null } as never }),
+  ];
+  for (const source of invalid) expect(() => expand(source)).toThrow();
+  expectTypeOf<{ freq: 'WEEKLY'; start: Temporal.PlainDate; until: Temporal.PlainDate }>().toExtend<Calendar_RRuleExclusion<Temporal.PlainDate>>();
+  expectTypeOf<{ freq: 'WEEKLY'; start: Temporal.ZonedDateTime }>().not.toExtend<Calendar_RRuleExclusion<Temporal.PlainDate>>();
+});
+
+it('preserves an exclusion seed choosing the later fold without excluding the earlier instant', () => {
+  const later = zdt('2026-11-01T01:30-05:00[America/New_York]');
+  const source = timed({
+    start: zdt('2026-10-31T01:30'),
+    rrule: { freq: 'DAILY', count: 3 },
+    rdate: [later],
+    exrule: { freq: 'DAILY', start: later, count: 1 },
+  });
+  expect(starts(expand(source))).toEqual([
+    '2026-10-31T01:30:00-04:00[America/New_York]',
+    '2026-11-01T01:30:00-04:00[America/New_York]',
+    '2026-11-02T01:30:00-05:00[America/New_York]',
+  ]);
 });

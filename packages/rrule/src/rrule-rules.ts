@@ -2,10 +2,19 @@ import { RRuleTemporal, allowedFreq, allowedWeekdays } from 'rrule-temporal';
 import { Temporal } from 'temporal-polyfill';
 
 import { checkDate, dateCompare, fail, parseDate, parseDateParts, plain, toEngine } from '#rrule-dates';
-import type { RecurrenceDate } from '#rrule-dates';
-import type { Calendar_RRule, Calendar_RRuleEventInput, Calendar_RRuleOptions } from '#rrule.types';
+import type { RecurrenceDate, RecurrenceSeed } from '#rrule-dates';
+import type {
+  Calendar_RRule,
+  Calendar_RRuleEventInput,
+  Calendar_RRuleOptions,
+  Calendar_RRuleExclusion,
+} from '#rrule.types';
 
-export type CompiledRule = { engine: RRuleTemporal<Temporal.ZonedDateTime>; until?: RecurrenceDate };
+export type CompiledRule = {
+  engine: RRuleTemporal<Temporal.ZonedDateTime>;
+  until?: RecurrenceDate;
+  seed: RecurrenceSeed;
+};
 export type RuleSet = {
   rules: CompiledRule[];
   exclusions: CompiledRule[];
@@ -65,7 +74,7 @@ const validateParts = (options: Partial<ValidatableOptions>) => {
   }
 };
 
-const validate = (options: ValidatableOptions, source: Calendar_RRuleEventInput<unknown>) => {
+const validate = (options: ValidatableOptions, source: RecurrenceSeed) => {
   validateParts(options);
   if (!allowedFreq.includes(options.freq)) fail('freq must be an rrule-temporal frequency');
   if (
@@ -76,7 +85,7 @@ const validate = (options: ValidatableOptions, source: Calendar_RRuleEventInput<
     fail('all-day rules must use daily or coarser frequencies and midnight selectors');
 };
 
-const parseRule = (value: Calendar_RRule, source: Calendar_RRuleEventInput<unknown>): CompiledRule => {
+const parseRule = (value: Calendar_RRule, source: RecurrenceSeed): CompiledRule => {
   const dtstart = toEngine(plain(source.start));
   if (dtstart.year < 1 || dtstart.year > 9999) fail('recurrence supports start years 1 through 9999');
   const shared = { dtstart, tzid: 'UTC', temporal: Temporal, cache: false };
@@ -111,7 +120,7 @@ const parseRule = (value: Calendar_RRule, source: Calendar_RRuleEventInput<unkno
     validateParts(parts);
     const engine = new RRuleTemporal({ ...shared, rruleString: ruleFields.join(';'), until: bound });
     validate(engine.options(), source);
-    return { engine, until };
+    return { engine, until, seed: source };
   }
   if (!value || (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null))
     return fail('rrule must be a string or plain options object, not a rule instance');
@@ -135,7 +144,19 @@ const parseRule = (value: Calendar_RRule, source: Calendar_RRuleEventInput<unkno
   const bound = until
     ? toEngine(plain(checkDate(until, source)).add({ days: source.kind === 'timed' ? 1 : 0 }))
     : undefined;
-  return { engine: new RRuleTemporal({ ...options, ...shared, until: bound }), until };
+  return { engine: new RRuleTemporal({ ...options, ...shared, until: bound }), until, seed: source };
+};
+
+const parseExclusion = (value: Calendar_RRuleExclusion, source: RecurrenceSeed): CompiledRule => {
+  if (typeof value === 'string') return parseRule(value, source);
+  if (!value || (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null))
+    return fail('exrule must be a string or plain options object, not a rule instance');
+  const { start, ...options } = value;
+  if (start === undefined) return parseRule(options, source);
+  checkDate(start, source);
+  const seed: RecurrenceSeed =
+    start instanceof Temporal.ZonedDateTime ? { kind: 'timed', start } : { kind: 'allDay', start };
+  return parseRule(options, seed);
 };
 
 const lines = (value: string) =>
@@ -198,7 +219,7 @@ export const compileRules = (source: Calendar_RRuleEventInput<unknown>): RuleSet
     }
   if (!result.rules.length) fail('rrule must contain at least one RRULE');
   for (const value of source.exrule === undefined ? [] : Array.isArray(source.exrule) ? source.exrule : [source.exrule])
-    result.exclusions.push(parseRule(value, source));
+    result.exclusions.push(parseExclusion(value, source));
   for (const date of source.rdate ?? []) result.dates.push(checkDate(date, source));
   for (const date of source.exdate ?? []) result.excludedDates.push(checkDate(date, source));
   return result;
