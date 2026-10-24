@@ -3,6 +3,7 @@ import compactCss from '@calendar-tsx/themes/compact.css?url';
 import defaultCss from '@calendar-tsx/themes/default.css?url';
 import highContrastCss from '@calendar-tsx/themes/high-contrast.css?url';
 import materialUiCss from '@calendar-tsx/themes/material-ui.css?url';
+import printCss from '@calendar-tsx/themes/print.css?url';
 import revenuecatCss from '@calendar-tsx/themes/revenuecat.css?url';
 import shadcnCss from '@calendar-tsx/themes/shadcn.css?url';
 import stripeCss from '@calendar-tsx/themes/stripe.css?url';
@@ -146,6 +147,7 @@ function Preview() {
       <link rel='stylesheet' href={themeCss[config.theme]} />
       {config.density === 'compact' && <link rel='stylesheet' href={compactCss} />}
       {(config.theme === 'shadcn' || config.theme === 'material-ui') && <link rel='stylesheet' href={standInsCss} />}
+      <link rel='stylesheet' href={printCss} />
       {overrides && <style>{overrides}</style>}
       {/* a new clock needs a new instance: the clock is read at creation and on mount */}
       <PreviewCalendar

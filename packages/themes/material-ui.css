@@ -7,7 +7,7 @@
  */
 @import './default.css';
 
-@layer calendar.base, calendar.theme, calendar.density;
+@layer calendar.base, calendar.theme, calendar.density, calendar.print;
 
 @layer calendar.theme {
   :where(:root, .light, .dark, [data-light], [data-dark], [data-mui-color-scheme]) {

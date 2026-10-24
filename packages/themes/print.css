@@ -1,0 +1,109 @@
+/*
+ * Print: applies only when printing, on top of any theme; import it after the theme (and density). Browsers drop
+ * backgrounds when printing unless the reader opts in, so nothing here relies on a fill: events are outlined in their
+ * event color, today's marker is an outline, and neutrals are black on white even when the app is in dark mode.
+ * Scrolling and sticky positioning are undone so the whole grid prints, the now line is hidden, and weeks, days and
+ * events are kept from breaking across pages. A height limit the app sets outside these layers still applies.
+ */
+@layer calendar.base, calendar.theme, calendar.density, calendar.print;
+
+@media print {
+  @layer calendar.print {
+    /* Paper neutrals on the roots, so an override on a part below still wins; the event hues are the theme's */
+    :where(
+      [data-scope='calendar']:is(
+        [data-part='day-grid-root'],
+        [data-part='time-grid-root'],
+        [data-part='timeline-root'],
+        [data-part='list-root']
+      )
+    ) {
+      color-scheme: light;
+      --calendar-surface: #ffffff;
+      --calendar-surface-muted: #ffffff;
+      --calendar-text: #000000;
+      --calendar-text-muted: #404040;
+      --calendar-border: #b3b3b3;
+      --calendar-accent: #000000;
+      --calendar-accent-contrast: #ffffff;
+      /* Clip rather than scroll, so a root prints from its start; an unlayered height limit still cuts it cleanly */
+      max-block-size: none;
+      overflow: clip;
+    }
+
+    /* Outlined events, unless the app sets the event tokens */
+    :where(
+      [data-scope='calendar']:is(
+        [data-part='day-grid-row-event'],
+        [data-part='time-grid-all-day-event'],
+        [data-part='time-grid-event'],
+        [data-part='timeline-event']
+      )
+    ) {
+      --_calendar-event: var(--calendar-event, var(--calendar-surface));
+      --_calendar-event-border: var(--calendar-event-border, var(--calendar-event-color));
+      --_calendar-event-text: var(--calendar-event-text, var(--calendar-text));
+      break-inside: avoid;
+    }
+
+    :where(
+      [data-scope='calendar'][data-today]
+        :is(
+          [data-part='day-grid-day-trigger'],
+          [data-part='time-grid-column-trigger'],
+          [data-part='timeline-day-trigger']
+        )
+    ) {
+      background: none;
+      color: var(--calendar-text);
+      outline: 2px solid var(--calendar-accent);
+      outline-offset: -2px;
+    }
+
+    /* Light patterns that carry meaning, slot and hour lines included: printed as drawn, whatever the reader's setting */
+    :where(
+      [data-scope='calendar']:is(
+        [data-part='time-grid-column'],
+        [data-part='timeline-lane'],
+        [data-part='time-grid-unavailable'],
+        [data-part='timeline-unavailable'],
+        [data-part='time-grid-background'],
+        [data-part='day-grid-day-background'],
+        [data-part='timeline-background'],
+        [data-part='day-grid-row-background-event'],
+        [data-part='time-grid-all-day-background-event'],
+        [data-part='time-grid-background-event'],
+        [data-part='timeline-background-event']
+      )
+    ) {
+      print-color-adjust: exact;
+    }
+
+    :where([data-scope='calendar']:is([data-part='time-grid-now'], [data-part='timeline-now'])) {
+      display: none;
+    }
+
+    :where(
+      [data-scope='calendar']:is(
+        [data-part='time-grid-header'],
+        [data-part='timeline-header'],
+        [data-part='timeline-resource'],
+        [data-part='timeline-day-trigger']
+      )
+    ),
+    :where([data-scope='calendar'][data-part='timeline-header'])::before {
+      position: static;
+    }
+
+    :where(
+      [data-scope='calendar']:is(
+        [data-part='day-grid-section'],
+        [data-part='day-grid-row'],
+        [data-part='timeline-row'],
+        [data-part='list-day']
+      )
+    ) {
+      break-inside: avoid;
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
   "name": "@calendar-tsx/themes",
   "version": "0.2.0",
-  "description": "Stylesheets for @calendar-tsx parts: a positioning base, themes and density.",
+  "description": "Stylesheets for @calendar-tsx parts: a positioning base, themes, density and print.",
   "license": "MIT",
   "author": "Frantss <frantss.bongiovanni@gmail.com>",
   "repository": {
@@ -17,7 +17,8 @@
     "shadcn.css",
     "revenuecat.css",
     "stripe.css",
-    "compact.css"
+    "compact.css",
+    "print.css"
   ],
   "type": "module",
   "sideEffects": [
@@ -36,6 +37,7 @@
     "./revenuecat.css": "./revenuecat.css",
     "./stripe.css": "./stripe.css",
     "./compact.css": "./compact.css",
+    "./print.css": "./print.css",
     "./package.json": "./package.json"
   },
   "scripts": {

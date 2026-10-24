@@ -19,3 +19,10 @@ body {
 [data-scope='calendar'][data-part='time-grid-root'] {
   max-block-size: calc(100dvh - 5rem);
 }
+
+/* Printed, the whole day: the limit above is unlayered, so it beats `print.css` */
+@media print {
+  [data-scope='calendar'][data-part='time-grid-root'] {
+    max-block-size: none;
+  }
+}

@@ -23,6 +23,7 @@ import '@calendar-tsx/themes/default.css';
 | `revenuecat.css`    | The default layout in RevenueCat's brand colors. See [RevenueCat](#revenuecat).                                 |
 | `stripe.css`        | The default layout in Stripe's colors. See [Stripe](#stripe).                                                   |
 | `compact.css`       | Density only: smaller slots, bars and text. Import it after any theme.                                          |
+| `print.css`         | Print only: paper colors, outlined events, no scrolling. Import it after any theme. See [Print](#print).        |
 
 Import `base.css` alone to write your own look on top of working layout.
 
@@ -89,7 +90,8 @@ would ignore an override of the token it points to.
 borders, and the default theme restores today's marker, the now line, slot lines, unavailable hatching,
 background layers (hatched the other way) and outside-month dates with system colors.
 
-**Overriding rules.** The files use cascade layers (`calendar.base`, `calendar.theme`, `calendar.density`) and
+**Overriding rules.** The files use cascade layers (`calendar.base`, `calendar.theme`, `calendar.density`,
+`calendar.print`) and
 zero-specificity selectors. Unlayered CSS always wins over them without `!important`. Layered CSS wins only if its layer comes later:
 CSS that declares its own layers after importing the theme beats it, and anything earlier loses. Tailwind is
 layered, so see [Tailwind](#tailwind).
@@ -181,6 +183,31 @@ one step stronger than Stripe's quiet borders, which at 1.2:1 lose the grid.
 
 This theme is not affiliated with or endorsed by Stripe. Stripe's [Marks Usage Terms](https://stripe.com/marks/legal)
 cover its names, design elements and trade dress.
+
+## Print
+
+```ts
+import '@calendar-tsx/themes/default.css';
+import '@calendar-tsx/themes/print.css';
+```
+
+`print.css` applies only when printing, on top of any theme and density, so the printed calendar needs no separate
+view. It fills a fourth layer, `calendar.print`, and changes nothing on screen.
+
+- Browsers leave backgrounds out of a print unless the reader opts in, so nothing relies on a fill. Events are outlined
+  in their event color with the text in black, solid all-day bars included, and today's marker is a black outline.
+- Neutrals are black on white with `color-scheme: light`, so an app in dark mode still prints on paper. Event, now and
+  background-event colors stay the theme's. With shadcn/ui or Material UI the event colors follow the app's dark
+  variables, because those themes switch on a class rather than `color-scheme`.
+- Slot and hour lines, unavailable hatching, background layers and background events print as drawn
+  (`print-color-adjust: exact`).
+- The now line is hidden.
+- The time grid, timeline and list stop scrolling, drop a height limit set in a layer, and their headers stop sticking,
+  so every hour prints from the top. A height limit in your own unlayered CSS, on the calendar or its container, still
+  cuts it; lift it in a `@media print` rule.
+- Month weeks, months in a year view, list days, timeline rows and events avoid breaking across pages.
+- A timeline prints at the width it lays out, so a long range is cut at the page edge. Use landscape, a shorter range or
+  a smaller `minSlotWidth` on the view.
 
 ## Tailwind
 

@@ -3,7 +3,7 @@
  * Theme-independent: every theme imports it, and a custom theme can import it alone (D26).
  * Sizes come from `--calendar-*` tokens, with fallbacks so this file works on its own.
  */
-@layer calendar.base, calendar.theme, calendar.density;
+@layer calendar.base, calendar.theme, calendar.density, calendar.print;
 
 @layer calendar.base {
   :where([data-scope='calendar']) {

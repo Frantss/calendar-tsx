@@ -8,11 +8,12 @@ JavaScript and no class names.
 npm i @calendar-tsx/themes
 ```
 
-Import one theme, and optionally a density after it:
+Import one theme, and optionally a density and the print layer after it:
 
 ```ts
 import '@calendar-tsx/themes/default.css';
 import '@calendar-tsx/themes/compact.css';
+import '@calendar-tsx/themes/print.css';
 ```
 
 ## Files
@@ -27,6 +28,7 @@ import '@calendar-tsx/themes/compact.css';
 | `revenuecat.css`    | The default look in RevenueCat's brand colors.                                                      |
 | `stripe.css`        | The default look in Stripe's colors.                                                                |
 | `compact.css`       | Density only: smaller slots, bars and text. Import it after any theme.                              |
+| `print.css`         | Print only: paper colors, outlined events, no scrolling. Import it after any theme.                 |
 
 Import `base.css` alone to write
 [your own look](custom-themes) on top of working layout.
@@ -36,11 +38,11 @@ Import `base.css` alone to write
 Every file declares the same cascade layers, in this order:
 
 ```css
-@layer calendar.base, calendar.theme, calendar.density;
+@layer calendar.base, calendar.theme, calendar.density, calendar.print;
 ```
 
-`base.css` fills `calendar.base`, themes fill `calendar.theme` and `compact.css` fills `calendar.density`, so a density
-wins over any theme whatever the import order. All selectors are wrapped in `:where()`, with zero specificity.
+`base.css` fills `calendar.base`, themes fill `calendar.theme`, `compact.css` fills `calendar.density` and `print.css`
+fills `calendar.print`, so a density wins over any theme, and print over both, whatever the import order. All selectors are wrapped in `:where()`, with zero specificity.
 
 As a result, your own unlayered CSS always wins over the themes without `!important`. CSS in your own layers wins only
 when those layers come after the calendar's. See [overriding rules](customizing#overriding-rules).
@@ -225,3 +227,28 @@ import '@calendar-tsx/themes/compact.css';
 
 The density sets these tokens on `:root` in a later layer. A token you set on an element around the calendar still
 wins, because the element is closer than `:root`.
+
+### Print
+
+```ts
+import '@calendar-tsx/themes/default.css';
+import '@calendar-tsx/themes/print.css';
+```
+
+`print.css` applies only when printing, on top of any theme and density, so the printed calendar needs no separate
+view. It fills a fourth layer, `calendar.print`, and changes nothing on screen.
+
+- Browsers leave backgrounds out of a print unless the reader opts in, so nothing relies on a fill. Events are outlined
+  in their event color with the text in black, solid all-day bars included, and today's marker is a black outline.
+- Neutrals are black on white with `color-scheme: light`, so an app in dark mode still prints on paper. Event, now and
+  background-event colors stay the theme's. With shadcn/ui or Material UI the event colors follow the app's dark
+  variables, because those themes switch on a class rather than `color-scheme`.
+- Slot and hour lines, unavailable hatching, background layers and background events print as drawn
+  (`print-color-adjust: exact`).
+- The now line is hidden.
+- The time grid, timeline and list stop scrolling, drop a height limit set in a layer, and their headers stop sticking,
+  so every hour prints from the top. A height limit in your own unlayered CSS, on the calendar or its container, still
+  cuts it; lift it in a `@media print` rule.
+- Month weeks, months in a year view, list days, timeline rows and events avoid breaking across pages.
+- A timeline prints at the width it lays out, so a long range is cut at the page edge. Use landscape, a shorter range or
+  a smaller `minSlotWidth` on the view.

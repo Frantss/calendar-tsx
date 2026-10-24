@@ -2,7 +2,7 @@
  * Compact density: smaller slots, bars and text for dashboards, sidebars and wide resource grids. Sets size tokens
  * only, in a layer after the themes, so it combines with any of them: import it after the theme.
  */
-@layer calendar.base, calendar.theme, calendar.density;
+@layer calendar.base, calendar.theme, calendar.density, calendar.print;
 
 @layer calendar.density {
   :where(:root) {
