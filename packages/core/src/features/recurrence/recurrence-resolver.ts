@@ -1,6 +1,6 @@
 import { Temporal } from 'temporal-polyfill';
 
-import type { Calendar_Event, Calendar_EventSourceContext } from '#calendar.types';
+import type { Calendar_Event, Calendar_EventSourceContext } from '#events/event.types';
 import { checkDate, dateCompare, dateKey, fail } from '#features/recurrence/recurrence-dates';
 import type { RecurrenceDate } from '#features/recurrence/recurrence-dates';
 import { compileRule, expandRule } from '#features/recurrence/recurrence-rules';

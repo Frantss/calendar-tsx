@@ -1,5 +1,5 @@
 import { Temporal } from 'temporal-polyfill';
-import type { Calendar_Range } from '#calendar.types';
+import type { Calendar_Range } from '#dates/date.types';
 import type {
   Calendar_BackgroundLayer,
   Calendar_BackgroundRange,

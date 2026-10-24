@@ -1,4 +1,4 @@
-import type { Calendar_EventDisplay } from '#calendar.types';
+import type { Calendar_EventDisplay } from '#events/event.types';
 import type { Temporal } from 'temporal-polyfill';
 
 export type Calendar_RecurrenceWeekday = 'MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA' | 'SU';

@@ -2,14 +2,15 @@ import { calendarFeatures } from '#features/calendar-features';
 import { Temporal } from 'temporal-polyfill';
 import { expect, expectTypeOf, it, vi } from 'vitest';
 
-import { createCalendar } from '#calendar';
-import { fixedClock } from '#calendar-clock';
-import { createEventStore } from '#calendar-event-store';
-import { createEvent } from '#calendar-events';
-import { calendarViews, listView, dayGridView, timeGridView, timelineView } from '#calendar-views';
+import { createCalendar } from '#calendar/calendar';
+import { fixedClock } from '#calendar/clock';
+import { createEventStore } from '#events/store';
+import { createEvent } from '#events/events';
+import { calendarViews, listView, dayGridView, timeGridView, timelineView } from '#views/views';
 import { recurrenceFeature } from '#features/recurrence/recurrence-feature';
 import { createRecurringEvent } from '#features/recurrence/recurrence-events';
-import type { Calendar_Event, Calendar_EventDefinition, Calendar_Clock } from '#calendar.types';
+import type { Calendar_Event, Calendar_EventDefinition } from '#events/event.types';
+import type { Calendar_Clock } from '#calendar/calendar.types';
 import type {
   Calendar_RecurrenceOptions,
   Calendar_RecurringTimedEventInput,

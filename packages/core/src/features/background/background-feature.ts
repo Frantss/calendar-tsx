@@ -1,10 +1,8 @@
-import type {
-  Calendar_ConfiguredFeature,
-  Calendar_BackgroundLayer,
-  Calendar_TimeGridLayout,
-  Calendar_DayGridLayout,
-  Calendar_TimelineLayout,
-} from '#calendar.types';
+import type { Calendar_ConfiguredFeature } from '#features/feature.types';
+import type { Calendar_BackgroundLayer } from '#features/background/background.types';
+import type { Calendar_TimeGridLayout } from '#layouts/time-grid/time-grid.types';
+import type { Calendar_DayGridLayout } from '#layouts/day-grid/day-grid.types';
+import type { Calendar_TimelineLayout } from '#layouts/timeline/timeline.types';
 import { timeGrid_decorate, dayGrid_decorate, timeline_decorate } from '#features/background/background-layouts';
 
 const validate = (value: unknown) => {

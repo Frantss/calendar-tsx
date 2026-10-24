@@ -1,17 +1,10 @@
+import type { Calendar_State_FeatureMap } from '#features/feature-maps.types';
 import type { Temporal } from 'temporal-polyfill';
-import type {
-  Calendar_Options,
-  Calendar_Views,
-  Calendar_View,
-  Calendar_Api,
-  Calendar_EventSource,
-  Calendar_EventSourceContext,
-  Calendar_Event,
-  Calendar_AnyLayout,
-  Calendar_Range,
-  Calendar_NavigationOptions,
-  Calendar_LayoutInput,
-} from '#calendar.types';
+import type { Calendar_Options, Calendar_Api, Calendar_NavigationOptions } from '#calendar/calendar.types';
+import type { Calendar_Views, Calendar_View } from '#views/view.types';
+import type { Calendar_EventSource, Calendar_EventSourceContext, Calendar_Event } from '#events/event.types';
+import type { Calendar_AnyLayout, Calendar_LayoutInput } from '#layouts/layout.types';
+import type { Calendar_Range } from '#dates/date.types';
 
 /** What feature hooks receive. */
 export type Calendar_FeatureContext<TConfig = any> = {
@@ -87,3 +80,36 @@ export type Calendar_FeatureOverride<TFeature> =
           ? Partial<TConfig>
           : TConfig
     : never;
+
+export type UnionToIntersection<U> = (U extends unknown ? (union: U) => void : never) extends (
+  intersection: infer I,
+) => void
+  ? I
+  : never;
+
+/**
+ * The contributions of the registered features to a feature map (D29). Wide feature types (the defaults) pick every
+ * entry, so code that does not name its features sees everything a feature could add.
+ */
+export type Calendar_PickFeatures<TMap, TFeatures> = string extends keyof TFeatures
+  ? UnionToIntersection<TMap[keyof TMap]> extends infer TAll
+    ? [TAll] extends [never]
+      ? {}
+      : TAll
+    : never
+  : UnionToIntersection<TMap[Extract<keyof TFeatures, keyof TMap>]> extends infer TPicked
+    ? [TPicked] extends [never]
+      ? {}
+      : TPicked
+    : never;
+
+/** A store a feature slice can live in; TanStack Store's `Store` fits. */
+export type Calendar_Atom<TValue> = {
+  readonly state: TValue;
+  setState: (updater: (previous: TValue) => TValue) => void;
+};
+
+export type Calendar_FeatureState<TFeatures> = Calendar_PickFeatures<
+  Calendar_State_FeatureMap,
+  Calendar_FeatureTypes<TFeatures>
+>;

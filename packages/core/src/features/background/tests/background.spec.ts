@@ -2,13 +2,13 @@ import { calendarFeatures } from '#features/calendar-features';
 import { Temporal } from 'temporal-polyfill';
 import { expect, it, vi } from 'vitest';
 
-import { createCalendar } from '#calendar';
+import { createCalendar } from '#calendar/calendar';
 import { backgroundFeature } from '#features/background/background-feature';
 import { createBackgroundLayer, createWeeklyRanges } from '#features/background/background-ranges';
-import { fixedClock } from '#calendar-clock';
-import { dayGridView, timeGridView, calendarViews } from '#calendar-views';
-import type { Calendar_BackgroundLayer, Calendar_BackgroundSegment, Calendar_DayBackground } from '#calendar.types';
-import { fixtures_at, fixtures_resource, fixtures_timeZone } from '#tests/calendar.fixtures';
+import { fixedClock } from '#calendar/clock';
+import { dayGridView, timeGridView, calendarViews } from '#views/views';
+import type { Calendar_BackgroundLayer, Calendar_BackgroundSegment, Calendar_DayBackground } from '#features/background/background.types';
+import { fixtures_at, fixtures_resource, fixtures_timeZone } from '#tests/support/calendar.fixtures';
 
 const viewsFeatures = calendarFeatures({ backgroundFeature: backgroundFeature() });
 const views = calendarViews({

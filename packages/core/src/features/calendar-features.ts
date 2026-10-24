@@ -1,11 +1,10 @@
 import type {
   Calendar_Features,
-  Calendar_Options,
-  Calendar_Views,
-  Calendar_View,
   Calendar_ConfiguredFeatures,
   Calendar_ConfiguredFeature,
-} from '#calendar.types';
+} from '#features/feature.types';
+import type { Calendar_Options } from '#calendar/calendar.types';
+import type { Calendar_Views, Calendar_View } from '#views/view.types';
 
 export const calendarFeatures_validate = (features: Calendar_ConfiguredFeatures) => {
   const identities = new Set<string>();
@@ -80,6 +79,6 @@ export const calendarFeatures_active = (all: Calendar_Features, view: Calendar_V
   ...Object.entries(all).filter(([, feature]) => !('kind' in feature && 'build' in feature)),
   [view['~layout'], (view['~features'] as Calendar_Features)[view['~layout']]!] as [
     string,
-    import('#calendar.types').Calendar_Feature,
+    import('#features/feature.types').Calendar_Feature,
   ],
 ];

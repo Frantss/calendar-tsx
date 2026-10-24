@@ -1,14 +1,16 @@
 import { calendarFeatures_config } from '#features/calendar-features';
 import { createStore } from '@tanstack/store';
 
-import type { Calendar_Atom, Calendar_Options, Calendar_View, Calendar_Views } from '#calendar.types';
 import type {
+  Calendar_Atom,
   Calendar_Feature,
   Calendar_FeatureContext,
   Calendar_Features,
   Calendar_FeatureStage,
   Calendar_ConfiguredFeature,
 } from '#features/feature.types';
+import type { Calendar_Options } from '#calendar/calendar.types';
+import type { Calendar_View, Calendar_Views } from '#views/view.types';
 
 type RuntimeInput = Pick<Calendar_FeatureContext, 'options' | 'view' | 'api'> & {
   readonly state: Calendar_Options<any, any, Calendar_Views, Calendar_Features>['state'];

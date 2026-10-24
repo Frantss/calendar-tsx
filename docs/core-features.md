@@ -1,13 +1,13 @@
 # Core feature organization and exports
 
-Status: feature-owned source organization and a single public core entry implemented. This document extends the
-[calendar assembly API](./calendar-assembly.md). D55 in the [design spec](./design.md) records the decision.
+Status: modules own their implementations, types and tests; a single public core entry is implemented. This document extends the
+[calendar assembly API](./calendar-assembly.md). D55 and D56 in the [design spec](./design.md) record the decisions.
 D54 factory assembly, stable configured identities, inherited participation and per-view overrides are implemented.
 
 ## Source organization
 
-Keep shared feature machinery together and give each built-in feature its own module. Each feature owns its
-factory, configuration types, helpers, type contributions and tests.
+Each module owns its implementation and types. Focused tests live beside the module; tests that exercise several
+modules live under `tests/integration/`. Shared test fixtures and setup live in `tests/support/`.
 
 ```text
 packages/core/
@@ -15,16 +15,68 @@ packages/core/
     index.ts
 
   src/
-    calendar.ts
-    calendar.types.ts
-    calendar-views.ts
-    calendar-sources.ts
+    calendar/
+      calendar.ts
+      calendar.types.ts
+      navigation.ts
+      clock.ts
+      tests/
+
+    views/
+      views.ts
+      view.types.ts
+      periods.ts
+
+    events/
+      events.ts
+      event.types.ts
+      sources.ts
+      store.ts
+      tests/
+
+    dates/
+      day-of-week.ts
+      ranges.ts
+      date.types.ts
+
+    layouts/
+      layout-features.ts
+      layout.types.ts
+
+      day-grid/
+        day-grid.ts
+        day-grid.types.ts
+        tests/
+
+      time-grid/
+        time-grid.ts
+        time-grid.types.ts
+        tests/
+
+      list/
+        list.ts
+        list.types.ts
+        tests/
+
+      timeline/
+        timeline.ts
+        timeline.types.ts
+        tests/
+
+      shared/
+        coordinates.ts
+        bars.ts
+        columns.ts
+        intervals.ts
+        lanes.ts
+        tests/
 
     features/
       calendar-features.ts
       feature.types.ts
       feature-maps.types.ts
       feature-runtime.ts
+      tests/
 
       background/
         background-feature.ts
@@ -46,34 +98,36 @@ packages/core/
         tests/
           recurrence.spec.ts
 
-    layout/
-      ...
+    tests/
+      integration/
+      support/
 ```
 
-This tree shows the affected modules. Other core modules and calendar integration tests remain in place.
+| Module                           | Responsibility                                                                                                 |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `calendar/`                      | Owns instance creation, options, state, resources, navigation and clock lifecycle.                             |
+| `views/`                         | Owns view factories, binding, shared configuration contracts and period calculation.                           |
+| `events/`                        | Owns event inputs, normalization, ordering, source dispatch and the optional event store.                      |
+| `dates/`                         | Owns weekday values, date contracts and generic date-range helpers.                                            |
+| `layouts/`                       | Owns layout features, model construction and model types; shared geometry stays in `layouts/shared/`.          |
+| `features/calendar-features.ts`  | Implements `calendarFeatures`, validates registries, resolves configuration and checks view requirements.      |
+| `features/feature.types.ts`      | Defines configured definitions, hook contexts, pipeline stages, layout features and feature-state composition. |
+| `features/feature-maps.types.ts` | Declares the public extension maps and composes built-in contributions through type-only imports.              |
+| `features/feature-runtime.ts`    | Resolves configuration, initializes state and actions, and memoizes feature stages.                            |
+| `features/background/`           | Owns background configuration, layers, weekly ranges and layout decoration.                                    |
+| `features/recurrence/`           | Owns recurring definitions, rule compilation, date handling and expansion.                                     |
 
-| Module                           | Responsibility                                                                                                      |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `features/calendar-features.ts`  | Implements `calendarFeatures`, validates registries, resolves configuration and checks view requirements.           |
-| `features/feature.types.ts`      | Defines configured factory results, hook contexts, pipeline stages and layout features.                             |
-| `features/feature-maps.types.ts` | Declares the common extension maps and composes built-in contributions through type-only imports.                   |
-| `features/feature-runtime.ts`    | Resolves per-view configuration, initializes feature state and actions, and memoizes feature stages.                |
-| `features/background/`           | Owns the background factory, layer types, weekly-range helpers and layout decoration.                               |
-| `features/recurrence/`           | Owns the recurrence factory, recurring-event constructors and types, rule compilation, date handling and expansion. |
+`calendar/calendar.types.ts` contains calendar-level contracts. Event types belong to `events/event.types.ts`;
+view contracts belong to `views/view.types.ts`; each layout owns its settings and models. Common layout contracts
+and the inferred layout union belong to `layouts/layout.types.ts`. Feature folders retain their own concrete
+types and contributions to the shared extension maps.
 
-`calendar.ts` owns the calendar store and pipeline order. It delegates common feature mechanics to the feature
-runtime. `calendar-views.ts` implements `calendarViews`, binding each view to registered definitions and validating
-configuration overrides.
-`calendar-sources.ts` remains the generic event-source dispatcher and cache; recurrence owns its expansion
-implementation.
+Internal modules import declarations directly from their owners. There are no internal index barrels or central
+type re-export module. `export/index.ts` explicitly selects the existing public names, keeping internal helpers
+private. Declaration imports may form type-only cycles where the extension contracts refer to calendar models.
 
-Move background-specific types and built-in feature-map entries out of the central `calendar.types.ts`.
-That module continues to own calendar-level contracts and model composition. Feature folders own the concrete
-types they contribute through the shared extension maps.
-
-Layouts remain supplied by views, with their implementation in `layout/`. Navigation, clocks and event
-normalization remain core responsibilities. The optional RRule integration remains in `@calendar-tsx/rrule` and
-uses the same public feature contracts.
+Layouts remain supplied by views. The optional RRule integration remains in `@calendar-tsx/rrule` and uses the
+same public feature contracts.
 
 ## Dependencies and identity
 

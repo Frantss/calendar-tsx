@@ -6,19 +6,17 @@ import type {
 } from '#features/background/background.types';
 import { Temporal } from 'temporal-polyfill';
 
-import type {
-  Calendar_DayGridLayout,
-  Calendar_Range,
-  Calendar_TimeGridLayout,
-  Calendar_TimelineLayout,
-} from '#calendar.types';
-import type { LayoutIntervals_Interval } from '#layout/layout-intervals';
+import type { Calendar_DayGridLayout } from '#layouts/day-grid/day-grid.types';
+import type { Calendar_Range } from '#dates/date.types';
+import type { Calendar_TimeGridLayout } from '#layouts/time-grid/time-grid.types';
+import type { Calendar_TimelineLayout } from '#layouts/timeline/timeline.types';
+import type { LayoutIntervals_Interval } from '#layouts/shared/intervals';
 import {
   layoutCoordinates_coverFragments,
   layoutCoordinates_length,
   layoutCoordinates_projectTime,
-} from '#layout/layout-coordinates';
-import { layoutIntervals_complement, layoutIntervals_day, layoutIntervals_merge } from '#layout/layout-intervals';
+} from '#layouts/shared/coordinates';
+import { layoutIntervals_complement, layoutIntervals_day, layoutIntervals_merge } from '#layouts/shared/intervals';
 
 const layers_resolve = (layers: readonly Calendar_BackgroundLayer[], range: Calendar_Range, timeZone: string) =>
   layers.map(layer => ({

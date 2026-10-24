@@ -20,13 +20,13 @@ visible dates. This extends D40's fixed clock axis with compressed dates and vis
 
 ## Implementation boundaries
 
-- `packages/core/src/layout/layout-coordinates.ts` owns visible dates, clock windows, branches, source projection,
+- `packages/core/src/layouts/shared/coordinates.ts` owns visible dates, clock windows, branches, source projection,
   reverse lookup, date runs, slot geometry and display coverage. It replaces the former `layout-axis.ts` helper.
 - Built-in layouts retain their date axes or timed plans as `coordinates`; timed plans are cached per stable view
   definition and reused across event, resource and clock updates.
-- `calendar-navigation.ts` asks each layout feature for its input range. Core filtering uses that envelope before
+- `calendar/navigation.ts` asks each layout feature for its input range. Core filtering uses that envelope before
   layout projection. Custom layout features can omit the capability and receive the old range behavior.
-- `calendar-backgrounds.ts` reads the layout's coordinate plan. The parts emit explicit geometry, and themes use
+- `features/background/background-layouts.ts` reads the layout's coordinate plan. The parts emit explicit geometry, and themes use
   actual column counts and partial-slot sizes.
 
 ## Two spaces, one projection plan

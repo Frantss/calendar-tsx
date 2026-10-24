@@ -1,5 +1,5 @@
 import type { Temporal } from 'temporal-polyfill';
-import type { Calendar_Range, Calendar_DayOfWeek } from '#calendar.types';
+import type { Calendar_Range, Calendar_DayOfWeek } from '#dates/date.types';
 
 /** A range a background layer shades (D33); all-day ranges cover whole days, `end` inclusive and defaulting to `start`. */
 export type Calendar_BackgroundRange =

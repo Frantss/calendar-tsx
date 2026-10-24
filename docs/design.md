@@ -1467,7 +1467,7 @@ The complete structure, module responsibilities and export map are in
 **Decision:** group common feature contracts, extension maps, registry assembly and runtime mechanics in
 `src/features/`. Give each built-in feature its own folder containing its factory, public types, helpers,
 implementation and tests. Move feature-owned declarations out of the central calendar type module. Calendar
-orchestration stays in `calendar.ts`; layouts remain supplied by views.
+orchestration stays in `calendar/calendar.ts`; layouts remain supplied by views.
 
 **Exports:** publish one code entry, `@calendar-tsx/core`, backed by `export/index.ts`. It exports public feature
 factories, helpers and types alongside calendar APIs. Shared feature contracts and extension maps remain public
@@ -1492,6 +1492,37 @@ One build entry produces the root JavaScript and declarations. Feature modules r
 **Verification:** built root imports must retain model and event-input contributions, public declaration merging
 and independent state across calendar instances. Removed feature subpaths must be inaccessible. Tests guard inherited participation, configuration precedence, stage caching, recurrence and adapter behavior,
 including D54 aliases and typed override syntax.
+
+### D56 — Core modules own implementations, types and tests
+
+**Status:** implemented. The full tree is in [Core feature organization and exports](./core-features.md).
+
+**Serves:** D1, D29, D54, D55.
+
+**Decision:** organize core into `calendar/`, `views/`, `events/`, `dates/`, `layouts/` and `features/`.
+Calendar contracts own options, state and instance types. Event and view contracts live with their modules;
+each layout owns its settings and models. Common layout contracts and the inferred layout union live in
+`layouts/layout.types.ts`. Feature-owned modules and the shared feature machinery remain in `features/`.
+Generic date-range helpers move from navigation to `dates/ranges.ts`. The shared coordinate implementation stays
+intact in `layouts/shared/`.
+
+**Tests:** focused tests live beside their implementations. Assembly, expanded views, DST, visible windows,
+timeline-background integration and built-package contracts live in `tests/integration/`. Fixtures and calendar
+setup live in `tests/support/`.
+
+**Interface:** `@calendar-tsx/core` remains the only code entry. `export/index.ts` explicitly exports the same
+public names from their owners. Internal modules import owners directly; the former central type facade and
+internal index barrels are absent. Public names, runtime behavior, configuration and declaration merging retain
+their existing contracts.
+
+**Alternatives considered:** folder moves alone preserve the central type module and its mixed ownership.
+Grouping files into generic `types/`, `utils/` and `runtime/` directories spreads changes to one feature across
+several directories. Splitting the coordinate implementation solely to shorten it would add interfaces without
+changing its responsibility.
+
+**Verification:** compare public declarations and runtime exports before and after the move. Preserve declaration
+bodies and run the existing core, adapter, recurrence and documentation checks, including built-package declaration
+merging, aliases, configuration inheritance and structural model compatibility.
 
 ## Test cases
 
@@ -1645,7 +1676,9 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - With `default.css`, timeline events take the event colour's tint, all-day and multi-day timeline bars are solid, today's day trigger takes the accent, resource cells stay opaque over a muted band, unavailable time is hatched, the now line takes its own colour, a scrolled day label sticks beside the resource column, and forced-colors mode marks today with `Highlight`. _(D26, D34)_
 - With `base.css`, a timeline event sits at its fraction of the track, day headers line up with their slots, stacked events do not overlap, and the now line sits at the clock's offset. _(D26, D34)_
 
-## Skeleton
+## Original skeleton (historical)
+
+This initial sketch predates the package split. D56 and [the core structure](./core-features.md) describe the implemented organization.
 
 ```text
 lib/calendar/

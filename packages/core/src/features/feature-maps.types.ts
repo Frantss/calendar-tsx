@@ -4,12 +4,10 @@ import type {
   Background_TimelineRow_FeatureMap,
 } from '#features/background/background.feature-maps';
 import type { Recurrence_EventInput_FeatureMap } from '#features/recurrence/recurrence.feature-maps';
-import type {
-  Calendar_DayGridLayout,
-  Calendar_TimeGridLayout,
-  Calendar_ListLayout,
-  Calendar_TimelineLayout,
-} from '#calendar.types';
+import type { Calendar_DayGridLayout } from '#layouts/day-grid/day-grid.types';
+import type { Calendar_TimeGridLayout } from '#layouts/time-grid/time-grid.types';
+import type { Calendar_ListLayout } from '#layouts/list/list.types';
+import type { Calendar_TimelineLayout } from '#layouts/timeline/timeline.types';
 
 /** Feature-owned event definitions, keyed by the feature's export name. */
 export interface Calendar_EventInput_FeatureMap<TData> extends Recurrence_EventInput_FeatureMap<TData> {}
