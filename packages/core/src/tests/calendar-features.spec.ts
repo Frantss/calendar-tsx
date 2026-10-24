@@ -7,7 +7,7 @@ import { createCalendar } from '#calendar';
 import { fixedClock } from '#calendar-clock';
 import { listLayout } from '#calendar-layouts';
 import { listView, dayGridView, timeGridView, createCalendarViews } from '#calendar-views';
-import type { Calendar_Event, Calendar_Feature, Calendar_TimeGridLayout } from '#calendar.types';
+import type { Calendar_Event, Calendar_Feature, Calendar_TimeGridLayout, Calendar_ListLayout } from '#calendar.types';
 import { fixtures_timeZone, fixtures_timed } from '#tests/calendar.fixtures';
 
 type Highlight_Settings = { only?: boolean };
@@ -71,9 +71,13 @@ const highlightFeature = {
       }
 
       if (layout.kind === 'list') {
-        const list = layout as { kind: 'list'; days: { events: Calendar_Event<unknown>[] }[] };
+        const list = layout as Calendar_ListLayout<unknown>;
+        const sections = list.sections.map(section => ({
+          ...section,
+          days: section.days.map(day => ({ ...day, hasHighlighted: day.events.some(is) })),
+        }));
 
-        return { ...list, days: list.days.map(day => ({ ...day, hasHighlighted: day.events.some(is) })) };
+        return { ...list, sections, days: sections.flatMap(section => section.days) };
       }
 
       return layout;
@@ -158,6 +162,16 @@ it('runs a feature only in the views that list it', () => {
 it('runs calendar-wide features in every view', () => {
   expect(setup({ view: 'plain' }).store.state.layout).toMatchObject({ counted: true });
   expect(setup({ view: 'list_week' }).store.state.layout).toMatchObject({ counted: true });
+});
+
+it('decorates section days and their flat index with the view feature types', () => {
+  const calendar = setup({ view: 'list_week' });
+  calendar.api.highlight('review');
+  const layout = calendar.store.state.layout;
+  if (layout.kind !== 'list') throw new Error('expected a list');
+  const highlighted: boolean | undefined = layout.sections[0]?.days[0]?.hasHighlighted;
+  expect(highlighted).toBe(true);
+  expect(layout.days[0]).toBe(layout.sections[0]?.days[0]);
 });
 
 it('resolves settings from feature defaults, then calendar options, then the view', () => {

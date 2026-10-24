@@ -30,6 +30,38 @@ Only days with at least one event are listed, so a quiet range has no days; rend
 `hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`).
 
 Hiding all seven weekdays is invalid. A controlled date with no visible weekdays produces an empty layout.
+## Resource grouping
+
+Reuse the same factory for an agenda grouped by resource:
+
+```ts
+listView({ weeks: 1, groupBy: 'resource' });
+listView({ weeks: 1, groupBy: ['resource', 'date'] });
+listView({ weeks: 1, groupBy: ['date', 'resource'] });
+```
+
+`'resource'` and `['resource']` put resources first, followed by their dates. The ordered pairs choose whether the outer sections are resources or dates. Omitting `groupBy`, `'date'`, and `['date']` produce the ordinary agenda. Keys cannot repeat, and month grouping is specific to day grids.
+
+Resources follow their input order, and dates are chronological. Events assigned to several known resources appear in each matching group. Unassigned events and unknown-resource assignments are excluded from resource agendas, as in resource grids and timelines. Ordinary agendas include them. Empty dates and resources are omitted, so an agenda with no matching events has one list-wide empty state.
+
+### Resources before dates
+
+With `groupBy: 'resource'` or `['resource', 'date']`, each section names a resource and lists its dates.
+
+<CalendarPreview view='agenda_rooms' />
+
+[Open the resource-first agenda in the playground](/docs/playground#view=agenda_rooms&data=busy).
+
+### Dates before resources
+
+With `groupBy: ['date', 'resource']`, each section shows a date and lists the resources with events on that date.
+
+<CalendarPreview view='agenda_dates_rooms' />
+
+[Open the date-first agenda in the playground](/docs/playground#view=agenda_dates_rooms&data=busy).
+
+Render `layout.sections` with `ListViewSection` and `ListViewSectionHeader` to show the grouping headings. The day headings show dates in resource-first lists and resource names in date-first lists. Both orders work with all list durations and `hiddenDays`.
+
 ## Date headings
 
 The supplied themes place the date beside its event rows. Give `ListViewDayHeader` a `<time dateTime={day.date.toString()}>` containing a `<strong>` day number and a `<span>` with the weekday and month/year. The React and Solid examples show this composition. The full date remains the heading's accessible name, and date formatting belongs to your application.
@@ -44,7 +76,13 @@ The date column narrows with the list, and its labels wrap when space is limited
 
 ## Model
 
-`layout` is `{ kind: 'list', coordinates, days }`. Each day is `{ key, date, events }`.
+`layout` is `{ kind: 'list', coordinates, sections, days }`.
+
+- Each section is `{ key, resource?, date?, days }`. `resource` identifies a resource-first section; `date` identifies a date-first section. Ordinary lists have one section with neither field.
+- Each day is `{ key, date, resource?, events }`. Grouped day keys identify both the date and resource.
+- `layout.days` is a flat index of the same day objects in section order. Existing consumers can keep using it; section headings require iterating `sections`.
+
+`Calendar_ListLayout`, `Calendar_ListSection`, and `Calendar_ListDay` take event data, resource data, and features as their generic parameters. If a feature decorates days, update the sections and rebuild the flat index from those days.
 
 </section>
 
@@ -52,13 +90,15 @@ The date column narrows with the list, and its labels wrap when space is limited
 
 <section id='parts-table'>
 
-| Part                | Model prop | Element   | Notes                                   |
-| ------------------- | ---------- | --------- | --------------------------------------- |
-| `ListView`          | `model`    | `div`     | `role='region'`, labelled "Event list". |
-| `ListViewDay`       | `day`      | `section` | `data-date`.                            |
-| `ListViewDayHeader` | `day`      | `h3`      |                                         |
-| `ListViewEvent`     | `event`    | `button`  |                                         |
-| `ListViewEmpty`     | none       | `div`     | Renders only when the list has no days. |
+| Part                    | Model prop | Element   | Notes                                                                               |
+| ----------------------- | ---------- | --------- | ----------------------------------------------------------------------------------- |
+| `ListView`              | `model`    | `div`     | `role='region'`, labelled "Event list".                                             |
+| `ListViewSection`       | `section`  | `section` | `data-date` or `data-resource-id`; supply an accessible label for grouped sections. |
+| `ListViewSectionHeader` | `section`  | `h2`      | Consumer-supplied date or resource heading.                                         |
+| `ListViewDay`           | `day`      | `section` | `data-date`, optional `data-resource-id`.                                           |
+| `ListViewDayHeader`     | `day`      | `h3`      |                                                                                     |
+| `ListViewEvent`         | `event`    | `button`  |                                                                                     |
+| `ListViewEmpty`         | none       | `div`     | Renders only when the list has no days.                                             |
 
 </section>
 

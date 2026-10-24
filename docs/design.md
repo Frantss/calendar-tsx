@@ -2,7 +2,7 @@
 
 > Status: **core, React and Solid adapters implemented** (`packages/core`, `packages/react`, `packages/solid`)
 
-> D41 records the current durations, grouping, visibility and view models. Earlier schemas remain as decision history.
+> D41 records the current durations, grouping, visibility and view models; D44 adds resource agendas. Earlier schemas remain as decision history.
 
 > Moved from guildara-frontend (`lib/calendar`) to this repository. References to `lib/calendar/core` and
 > `lib/calendar/react` now mean `packages/core` (`@calendar-tsx/core`) and `packages/react` (`@calendar-tsx/react`);
@@ -28,7 +28,7 @@ A headless calendar library that satisfies `docs/calendar-spec.md` (R1–R11): a
 
 Library-level capabilities, each traced to the app spec. Draft; confirmed when the scope area closes.
 
-- **C1 — Views:** day grids with ordered month/resource grouping; time grids, lists and timelines; day/week/month counts and calendar month/quarter/year periods; hidden weekdays (D41). Time grids and timelines also support resources. _(app R1.1–R1.4)_
+- **C1 — Views:** day grids with ordered month/resource grouping; time grids, lists and timelines; day/week/month counts and calendar month/quarter/year periods; hidden weekdays (D41). All four layouts support resources; lists support ordered date/resource grouping (D44). _(app R1.1–R1.4)_
 - **C2 — Navigation:** current view and date, prev/next/today, go to date, change view; visible range and period derivable synchronously after any change. _(R2.3–R2.5, R3.2–R3.5, R8.1, R11.1)_
 - **C3 — Change notification:** a single subscription that reports view/date changes, so the app can sync the URL. _(R2.1–R2.2)_
 - **C4 — Time-grid layout:** overlapping timed events laid out side by side; rows do not stretch; slot labels formattable. _(R1.2, R1.7, R1.8)_
@@ -1223,6 +1223,20 @@ Rejected: formatting dates in core or adding another list factory (presentation 
 The four factories and core models stay unchanged. React and Solid mark calendar-only grids containing multiple month sections with `data-multi-month` and emit `--cal-month-rows`, the maximum section row count. Resource grids are excluded. The default theme uses smaller day, bar and row sizes, centered month/weekday headings, panel padding and wider gutters. Section grids containing both headers use CSS subgrid to share tracks with neighboring months; all span the maximum week count so subsequent panel rows start together. The year playground sets `fixedWeekCount: true`, giving every month six weeks. Configured event-row caps and overflow remain in effect.
 
 Rejected: another year factory (month grouping already expresses the view); shrinking every day grid (changes ordinary months and resource grids); hiding events with CSS (would disagree with overflow counts).
+
+### D44 — Resource agendas reuse the list layout with ordered sections
+
+**Serves:** C1, C7. Requested by the user; the four existing factories remain.
+
+`listView` accepts `groupBy: 'resource'`, `['resource']`, `['resource', 'date']`, or `['date', 'resource']`. The resource shorthand puts resources first. Omitting grouping, `'date'`, and `['date']` retain the ordinary chronological agenda. Duplicate keys and grouping keys from other layouts are rejected. Every existing duration and `hiddenDays` setting applies.
+
+`Calendar_ListLayout` adds `sections`, whose optional `resource` or `date` identifies the outer heading. Each section contains `days`; a grouped day carries its date, resource and matching events. Resource-first sections contain one resource's dates. Date-first sections contain that date's resources. Ordinary lists have one unlabelled section. `layout.days` remains a flat index of the same day objects in section order, preserving existing consumers and the empty-state check. List model generics now take event data, resource data and features, matching the other resource layouts.
+
+Resources follow input order; dates are chronological; events preserve the calendar's ordering. An event assigned to several known resources appears in each. Unassigned events and assignments only to unknown resources appear in no resource group, matching the existing resource layouts. Ordinary lists still include them. Empty dates, resource groups and sections are omitted; no resources or no matching events yields one list-wide empty state. Background events remain excluded. Section keys are unique within the layout, and day keys are unique across the flat index.
+
+React and Solid add `ListViewSection` and `ListViewSectionHeader`, with resource/date data attributes and consumer-supplied heading text. `ListViewDay` exposes its resource ID. The default theme adds wrapping section headings above the existing date-and-event rows. Date-first lists use the section heading for the date and the day heading for the resource; resource-first lists reverse those labels. Docs examples and playground presets demonstrate both orders.
+
+Rejected: a fifth factory (the event list geometry is unchanged); filtering only in examples (core would not expose consistent grouping and keys); replacing `layout.days` (unnecessary migration for existing ungrouped consumers); separate resource/date hierarchy models (one section shape expresses both orders).
 
 ## Test cases
 

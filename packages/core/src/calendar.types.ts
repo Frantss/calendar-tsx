@@ -161,6 +161,12 @@ export type Calendar_MonthGrouping =
   | readonly ['month', 'resource']
   | readonly ['resource', 'month'];
 export type Calendar_DayGridGrouping = Calendar_ResourceGrouping | Calendar_MonthGrouping;
+export type Calendar_ListGrouping =
+  | Calendar_ResourceGrouping
+  | 'date'
+  | readonly ['date']
+  | readonly ['resource', 'date']
+  | readonly ['date', 'resource'];
 
 type MonthPeriod = { period: 'month'; days?: never; weeks?: never; months?: never };
 
@@ -194,7 +200,8 @@ export type Calendar_TimeGridViewSettings = Calendar_DurationSettings &
     shortEventMinutes?: number;
   };
 
-export type Calendar_ListViewSettings = Calendar_DurationSettings & Calendar_VisibilitySettings;
+export type Calendar_ListViewSettings = Calendar_DurationSettings &
+  Calendar_VisibilitySettings & { groupBy?: Calendar_ListGrouping };
 
 export type Calendar_TimelineViewSettings = Calendar_DurationSettings &
   Calendar_TimeViewSettings & {
@@ -339,16 +346,26 @@ export type Calendar_TimeGridLayout<TData, TResourceData, TFeatures = {}> = {
   minColumnWidth?: string;
 };
 
-export type Calendar_ListDay<TData, TFeatures = {}> = {
+export type Calendar_ListDay<TData, TResourceData = unknown, TFeatures = {}> = {
   key: string;
   date: Temporal.PlainDate;
+  resource?: Calendar_Resource<TResourceData>;
   events: Calendar_Event<TData>[];
 } & Calendar_PickFeatures<Calendar_ListDay_FeatureMap, TFeatures>;
 
-export type Calendar_ListLayout<TData, TFeatures = {}> = {
+export type Calendar_ListSection<TData, TResourceData = unknown, TFeatures = {}> = {
+  key: string;
+  date?: Temporal.PlainDate;
+  resource?: Calendar_Resource<TResourceData>;
+  days: Calendar_ListDay<TData, TResourceData, TFeatures>[];
+};
+
+export type Calendar_ListLayout<TData, TResourceData = unknown, TFeatures = {}> = {
   kind: 'list';
   coordinates: LayoutCoordinates_DateAxis;
-  days: Calendar_ListDay<TData, TFeatures>[];
+  sections: Calendar_ListSection<TData, TResourceData, TFeatures>[];
+  /** The sections' days in render order, sharing the same objects. */
+  days: Calendar_ListDay<TData, TResourceData, TFeatures>[];
 };
 
 /** A day in the timeline header, as slot columns. */
@@ -415,7 +432,7 @@ export type Calendar_TimelineLayout<TData, TResourceData, TFeatures = {}> = {
 export interface Calendar_Layout_FeatureMap<TData, TResourceData, TFeatures> {
   dayGridLayout: Calendar_DayGridLayout<TData, TResourceData, TFeatures>;
   timeGridLayout: Calendar_TimeGridLayout<TData, TResourceData, TFeatures>;
-  listLayout: Calendar_ListLayout<TData, TFeatures>;
+  listLayout: Calendar_ListLayout<TData, TResourceData, TFeatures>;
   timelineLayout: Calendar_TimelineLayout<TData, TResourceData, TFeatures>;
 }
 

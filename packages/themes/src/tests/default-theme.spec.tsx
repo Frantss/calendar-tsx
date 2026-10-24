@@ -17,6 +17,8 @@ import {
   ListViewDay,
   ListViewDayHeader,
   ListViewEvent,
+  ListViewSection,
+  ListViewSectionHeader,
   DayGridViewDay,
   DayGridViewDayBackground,
   DayGridViewDayTrigger,
@@ -457,23 +459,34 @@ const List = () => {
 
   return (
     <ListView model={list}>
-      {list.days.map(day => (
-        <ListViewDay key={day.key} day={day}>
-          <ListViewDayHeader day={day} aria-label={day.date.toLocaleString('en-US', { dateStyle: 'full' })}>
-            <time dateTime={day.key}>
-              <strong>{day.date.day}</strong>{' '}
-              <span>
-                <span>{day.date.toLocaleString('en-US', { weekday: 'short' })}</span>{' '}
-                <span>{day.date.toLocaleString('en-US', { month: 'short', year: 'numeric' })}</span>
-              </span>
-            </time>
-          </ListViewDayHeader>
-          {day.events.map(event => (
-            <ListViewEvent key={event.id} event={event}>
-              {event.data.title}
-            </ListViewEvent>
+      {list.sections.map(section => (
+        <ListViewSection key={section.key} section={section}>
+          {(section.resource || section.date) && (
+            <ListViewSectionHeader section={section}>{section.resource?.title ?? section.date?.toString()}</ListViewSectionHeader>
+          )}
+          {section.days.map(day => (
+            <ListViewDay key={day.key} day={day}>
+              <ListViewDayHeader day={day} aria-label={section.date ? day.resource?.title : day.date.toLocaleString('en-US', { dateStyle: 'full' })}>
+                {section.date ? (
+                  day.resource?.title
+                ) : (
+                  <time dateTime={day.key}>
+                    <strong>{day.date.day}</strong>{' '}
+                    <span>
+                      <span>{day.date.toLocaleString('en-US', { weekday: 'short' })}</span>{' '}
+                      <span>{day.date.toLocaleString('en-US', { month: 'short', year: 'numeric' })}</span>
+                    </span>
+                  </time>
+                )}
+              </ListViewDayHeader>
+              {day.events.map(event => (
+                <ListViewEvent key={event.id} event={event}>
+                  {event.data.title}
+                </ListViewEvent>
+              ))}
+            </ListViewDay>
           ))}
-        </ListViewDay>
+        </ListViewSection>
       ))}
     </ListView>
   );
@@ -522,6 +535,28 @@ it('scrolls a long list once its height is limited', async () => {
   expect(root && getComputedStyle(root).overflowY).toBe('auto');
   style.remove();
 });
+
+it.each([{ groupBy: ['resource', 'date'] }, { groupBy: ['date', 'resource'] }] as const)(
+  'places section headings above resource agenda rows with $groupBy',
+  async ({ groupBy }) => {
+    await themesSetup_render(<List />, {
+      views: { list: listView({ weeks: 1, groupBy }) },
+      view: 'list',
+      resources: [{ id: 'a', title: 'Room A with a long resource name that wraps on narrow screens', data: null, availability: [] }],
+      events: [{ ...themesSetup_timed('Meeting', { date: '2026-03-11', start: '09:00', end: '10:00' }), resourceIds: ['a'] }],
+    });
+    const root = themesSetup_part('list-root')[0]!;
+    root.style.inlineSize = '20rem';
+    const heading = themesSetup_rect(themesSetup_part('list-section-header')[0]);
+    const day = themesSetup_rect(themesSetup_part('list-day')[0]);
+    const date = themesSetup_rect(themesSetup_part('list-day-header')[0]);
+    const event = themesSetup_rect(themesSetup_part('list-event')[0]);
+    expect(heading.width).toBeCloseTo(themesSetup_rect(root).width - 2, 0);
+    expect(day.top).toBeCloseTo(heading.bottom, 0);
+    expect(event.left).toBeCloseTo(date.right, 0);
+    expect(root.scrollWidth).toBe(root.clientWidth);
+  },
+);
 
 it('shades a timed background event under the events it overlaps', async () => {
   await themesSetup_render(<TimeGrid />, {

@@ -1,19 +1,19 @@
 import type { Accessor } from 'solid-js';
 import { Show, createContext, splitProps, useContext } from 'solid-js';
 
-import type { Calendar_Event, Calendar_ListDay, Calendar_ListLayout } from '@calendar-tsx/core';
+import type { Calendar_Event, Calendar_ListDay, Calendar_ListLayout, Calendar_ListSection } from '@calendar-tsx/core';
 import type { Calendar_HTMLProps } from '#calendar-factory';
 import { calendarFactory_elements as calendar, calendarProps_merge } from '#calendar-factory';
 import { calendarParts_attributes as part, calendarParts_vars as vars } from '#calendar-parts';
 
 const ListViewContext = createContext<Accessor<Calendar_ListLayout<unknown>>>();
 
-type ListViewProps<TData> = { model: Calendar_ListLayout<TData> } & Calendar_HTMLProps<
+type ListViewProps<TData, TResourceData> = { model: Calendar_ListLayout<TData, TResourceData> } & Calendar_HTMLProps<
   'div',
-  Calendar_ListLayout<TData>
+  Calendar_ListLayout<TData, TResourceData>
 >;
 
-export const ListView = <TData,>(props: ListViewProps<TData>) => {
+export const ListView = <TData, TResourceData>(props: ListViewProps<TData, TResourceData>) => {
   const [local, rest] = splitProps(props, ['model']);
 
   return (
@@ -26,11 +26,43 @@ export const ListView = <TData,>(props: ListViewProps<TData>) => {
   );
 };
 
-type DayProps<TData> = { day: Calendar_ListDay<TData> };
+type SectionProps<TData, TResourceData> = { section: Calendar_ListSection<TData, TResourceData> } & Calendar_HTMLProps<
+  'section',
+  Calendar_ListSection<TData, TResourceData>
+>;
 
-type ListViewDayProps<TData> = DayProps<TData> & Calendar_HTMLProps<'section', Calendar_ListDay<TData>>;
+export const ListViewSection = <TData, TResourceData>(props: SectionProps<TData, TResourceData>) => {
+  const [local, rest] = splitProps(props, ['section']);
+  return (
+    <calendar.section
+      {...calendarProps_merge(
+        () => ({
+          'data-date': local.section.date?.toString(),
+          'data-resource-id': local.section.resource?.id,
+          ...part('list-section'),
+        }),
+        rest,
+      )}
+      state={local.section}
+    />
+  );
+};
 
-export const ListViewDay = <TData,>(props: ListViewDayProps<TData>) => {
+type SectionHeaderProps<TData, TResourceData> = {
+  section: Calendar_ListSection<TData, TResourceData>;
+} & Calendar_HTMLProps<'h2', Calendar_ListSection<TData, TResourceData>>;
+
+export const ListViewSectionHeader = <TData, TResourceData>(props: SectionHeaderProps<TData, TResourceData>) => {
+  const [local, rest] = splitProps(props, ['section']);
+  return <calendar.h2 {...calendarProps_merge(part('list-section-header'), rest)} state={local.section} />;
+};
+
+type DayProps<TData, TResourceData> = { day: Calendar_ListDay<TData, TResourceData> };
+
+type ListViewDayProps<TData, TResourceData> = DayProps<TData, TResourceData> &
+  Calendar_HTMLProps<'section', Calendar_ListDay<TData, TResourceData>>;
+
+export const ListViewDay = <TData, TResourceData>(props: ListViewDayProps<TData, TResourceData>) => {
   const [local, rest] = splitProps(props, ['day']);
 
   return (
@@ -38,6 +70,7 @@ export const ListViewDay = <TData,>(props: ListViewDayProps<TData>) => {
       {...calendarProps_merge(
         () => ({
           'data-date': local.day.date.toString(),
+          'data-resource-id': local.day.resource?.id,
           style: vars({ events: Math.max(1, local.day.events.length) }),
           ...part('list-day'),
         }),
@@ -48,9 +81,10 @@ export const ListViewDay = <TData,>(props: ListViewDayProps<TData>) => {
   );
 };
 
-type ListViewDayHeaderProps<TData> = DayProps<TData> & Calendar_HTMLProps<'h3', Calendar_ListDay<TData>>;
+type ListViewDayHeaderProps<TData, TResourceData> = DayProps<TData, TResourceData> &
+  Calendar_HTMLProps<'h3', Calendar_ListDay<TData, TResourceData>>;
 
-export const ListViewDayHeader = <TData,>(props: ListViewDayHeaderProps<TData>) => {
+export const ListViewDayHeader = <TData, TResourceData>(props: ListViewDayHeaderProps<TData, TResourceData>) => {
   const [local, rest] = splitProps(props, ['day']);
 
   return <calendar.h3 {...calendarProps_merge(part('list-day-header'), rest)} state={local.day} />;

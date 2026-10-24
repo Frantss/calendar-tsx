@@ -35,8 +35,9 @@ const view_create = (
   calendarPeriods_validate(settings);
   const grid = settings as Calendar_DayGridViewSettings;
   const groups = calendarPeriods_groups(grid.groupBy);
-  if (groups.length !== new Set(groups).size || groups.some(group => !['month', 'resource'].includes(group)))
-    throw new Error('[calendar] groupBy must contain distinct month or resource keys');
+  const groupKeys = kind === 'list' ? ['date', 'resource'] : ['month', 'resource'];
+  if (groups.length !== new Set(groups).size || groups.some(group => !groupKeys.includes(group)))
+    throw new Error(`[calendar] groupBy must contain distinct ${groupKeys.join(' or ')} keys`);
   if (groups.includes('month') && (kind !== 'dayGrid' || settings.days !== undefined || settings.weeks !== undefined))
     throw new Error('[calendar] month grouping requires a day grid with a calendar-month duration');
   if (grid.fixedWeekCount !== undefined && settings.period !== 'month' && !groups.includes('month'))

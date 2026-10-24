@@ -13,6 +13,8 @@ timeGridView({ days: 1, groupBy: 'resource' });
 
 For date cells without a time axis, use `dayGridView({ days: 1, groupBy: 'resource', maxEventsPerDay: 3 })`. The [day grid](day-grid-view#grouping) also supports month grouping and ordered month/resource combinations.
 
+For an event list, use `listView({ weeks: 1, groupBy: 'resource' })`. The [resource agenda](list-view#resource-grouping) supports resource-first and date-first sections, with live examples and playground links for both orders.
+
 Pass the resources to the calendar, in the order their columns should appear:
 
 <include lang='ts'>../../../examples/core/setup.ts#resources</include>

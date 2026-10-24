@@ -15,7 +15,17 @@ const pageScheme = () => (document.documentElement.classList.contains('dark') ? 
 
 // Day grids and agenda grow the frame to fit; time grids and timelines scroll inside a fixed frame.
 const fitsContent = (view: PlaygroundView) =>
-  ['month', 'year', 'grid_days', 'grid_rooms', 'month_rooms', 'room_months', 'agenda'].includes(view);
+  [
+    'month',
+    'year',
+    'grid_days',
+    'grid_rooms',
+    'month_rooms',
+    'room_months',
+    'agenda',
+    'agenda_rooms',
+    'agenda_dates_rooms',
+  ].includes(view);
 
 type PreviewStatus = 'loading' | 'ready' | 'failed';
 

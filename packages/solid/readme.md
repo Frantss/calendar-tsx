@@ -96,6 +96,9 @@ their proportional width. The bundled themes handle these values. Fetch events f
 Timeline lanes can render `row.backgroundEvents` with `TimelineViewBackgroundEvent`. Views registering
 `backgroundFeature` also expose `row.backgrounds` for `TimelineViewBackground`. Both take geometry from the core,
 render `aria-hidden` divs, and sit beneath foreground events when using the bundled themes.
+## Resource agendas
+
+Resource agendas use `listView({ weeks: 1, groupBy: 'resource' })` or the ordered pairs `['resource', 'date']` and `['date', 'resource']`. Render `layout().sections` with `ListViewSection` and `ListViewSectionHeader`, then render each section's `days` with the existing day and event parts. Resource data stays typed in the section and day models. `layout().days` remains available as a flat index.
 
 ## Server rendering
 

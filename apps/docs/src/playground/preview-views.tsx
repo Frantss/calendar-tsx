@@ -5,6 +5,8 @@ import {
   ListViewDayHeader,
   ListViewEmpty,
   ListViewEvent,
+  ListViewSection,
+  ListViewSectionHeader,
   DayGridView,
   DayGridViewDay,
   DayGridViewDayTrigger,
@@ -159,23 +161,43 @@ export const PreviewLayout = ({
 
   return (
     <ListView model={layout}>
-      {layout.days.map(day => (
-        <ListViewDay key={day.key} day={day}>
-          <ListViewDayHeader day={day} aria-label={day.date.toLocaleString(locale, { dateStyle: 'full' })}>
-            <time dateTime={day.date.toString()}>
-              <strong>{day.date.toLocaleString(locale, { day: 'numeric' })}</strong>{' '}
-              <span>
-                <span>{day.date.toLocaleString(locale, { weekday: 'short' })}</span>{' '}
-                <span>{day.date.toLocaleString(locale, { month: 'short', year: 'numeric' })}</span>
-              </span>
-            </time>
-          </ListViewDayHeader>
-          {day.events.map(event => (
-            <ListViewEvent key={event.id} event={event} onClick={() => onSelect(event)}>
-              {event.kind === 'allDay' ? 'All day' : time(event.start, locale)} · {event.data.title}
-            </ListViewEvent>
+      {layout.sections.map(section => (
+        <ListViewSection
+          key={section.key}
+          section={section}
+          aria-label={section.resource?.title ?? section.date?.toLocaleString(locale, { dateStyle: 'full' })}
+        >
+          {(section.resource || section.date) && (
+            <ListViewSectionHeader section={section}>
+              {section.resource?.title ?? section.date?.toLocaleString(locale, { dateStyle: 'full' })}
+            </ListViewSectionHeader>
+          )}
+          {section.days.map(day => (
+            <ListViewDay key={day.key} day={day}>
+              <ListViewDayHeader
+                day={day}
+                aria-label={section.date ? day.resource?.title : day.date.toLocaleString(locale, { dateStyle: 'full' })}
+              >
+                {section.date ? (
+                  day.resource?.title
+                ) : (
+                  <time dateTime={day.date.toString()}>
+                    <strong>{day.date.toLocaleString(locale, { day: 'numeric' })}</strong>{' '}
+                    <span>
+                      <span>{day.date.toLocaleString(locale, { weekday: 'short' })}</span>{' '}
+                      <span>{day.date.toLocaleString(locale, { month: 'short', year: 'numeric' })}</span>
+                    </span>
+                  </time>
+                )}
+              </ListViewDayHeader>
+              {day.events.map(event => (
+                <ListViewEvent key={event.id} event={event} onClick={() => onSelect(event)}>
+                  {event.kind === 'allDay' ? 'All day' : time(event.start, locale)} · {event.data.title}
+                </ListViewEvent>
+              ))}
+            </ListViewDay>
           ))}
-        </ListViewDay>
+        </ListViewSection>
       ))}
       <ListViewEmpty>No events in this period. Add an event or choose another date.</ListViewEmpty>
     </ListView>

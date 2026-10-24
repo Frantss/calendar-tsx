@@ -118,6 +118,19 @@ createCalendar({
 - List: left out.
 - Without `resourceIds`, a background event shades every resource column.
 
+## Resource agendas
+
+List agendas can group resources and dates with the same factory:
+
+```ts
+import { listView } from '@calendar-tsx/core';
+
+listView({ weeks: 1, groupBy: 'resource' });
+listView({ weeks: 1, groupBy: ['date', 'resource'] });
+```
+
+`layout.sections` contains the outer resource or date groups and their event-bearing days. `layout.days` indexes the same days in render order. Resource agendas include only events assigned to known resources, in resource input order; shared events appear under each assigned resource. Ordinary lists continue to include unassigned events.
+
 ## Features
 
 Functionality beyond navigation and layout is added through features (design D29). A feature is a constant object; a

@@ -494,6 +494,20 @@
 
   /* List */
 
+  :where([data-scope='calendar'][data-part='list-section'] + [data-part='list-section']) {
+    border-block-start: 1px solid var(--calendar-border);
+  }
+
+  :where([data-scope='calendar'][data-part='list-section-header']) {
+    margin: 0;
+    padding: 0.75rem;
+    border-block-end: 1px solid var(--calendar-border);
+    background: var(--calendar-surface-muted);
+    font-size: var(--calendar-font-size);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
   :where([data-scope='calendar'][data-part='list-day'] + [data-part='list-day']) {
     border-block-start: 1px solid var(--calendar-border);
   }

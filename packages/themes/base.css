@@ -198,6 +198,10 @@
     pointer-events: none;
   }
 
+  :where([data-scope='calendar'][data-part='list-section']) {
+    min-inline-size: 0;
+  }
+
   :where([data-scope='calendar'][data-part='list-day']) {
     display: grid;
     grid-template-columns: clamp(5.5rem, 28%, var(--calendar-list-date-width, 10rem)) minmax(0, 1fr);

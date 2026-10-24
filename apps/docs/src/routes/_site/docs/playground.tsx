@@ -61,6 +61,8 @@ const viewOptions: { value: PlaygroundView; label: string }[] = [
   { value: 'agenda', label: 'Week agenda' },
   { value: 'agenda_month', label: 'Month agenda' },
   { value: 'agenda_year', label: 'Year agenda' },
+  { value: 'agenda_rooms', label: 'Resource agenda' },
+  { value: 'agenda_dates_rooms', label: 'Resource agenda by date' },
   { value: 'timeline_day', label: 'Day timeline' },
   { value: 'timeline_week', label: 'Week timeline' },
   { value: 'timeline_month', label: 'Month timeline' },

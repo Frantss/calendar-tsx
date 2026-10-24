@@ -5,7 +5,15 @@ export type {
   Calendar_RenderFn,
   Calendar_RenderProps,
 } from '#calendar-factory';
-export { ListViewDay, ListViewDayHeader, ListViewEmpty, ListViewEvent, ListView } from '#list-view';
+export {
+  ListViewDay,
+  ListViewDayHeader,
+  ListViewEmpty,
+  ListViewEvent,
+  ListView,
+  ListViewSection,
+  ListViewSectionHeader,
+} from '#list-view';
 export {
   DayGridViewSection,
   DayGridViewSectionHeader,

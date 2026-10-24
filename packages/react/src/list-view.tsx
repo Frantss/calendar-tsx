@@ -1,19 +1,19 @@
 import type { ReactElement, RefAttributes } from 'react';
 import { createContext, forwardRef, useContext } from 'react';
 
-import type { Calendar_Event, Calendar_ListDay, Calendar_ListLayout } from '@calendar-tsx/core';
+import type { Calendar_Event, Calendar_ListDay, Calendar_ListLayout, Calendar_ListSection } from '@calendar-tsx/core';
 import type { Calendar_HTMLProps } from '#calendar-factory';
 import { calendarFactory_elements as calendar, calendarProps_merge } from '#calendar-factory';
 import { calendarParts_attributes as part, calendarParts_vars as vars } from '#calendar-parts';
 
 const ListViewContext = createContext<Calendar_ListLayout<unknown> | null>(null);
 
-type ListViewProps<TData> = { model: Calendar_ListLayout<TData> } & Calendar_HTMLProps<
+type ListViewProps<TData, TResourceData> = { model: Calendar_ListLayout<TData, TResourceData> } & Calendar_HTMLProps<
   'div',
-  Calendar_ListLayout<TData>
+  Calendar_ListLayout<TData, TResourceData>
 >;
 
-export const ListView = forwardRef<HTMLDivElement, ListViewProps<unknown>>(({ model, ...props }, ref) => (
+export const ListView = forwardRef<HTMLDivElement, ListViewProps<unknown, unknown>>(({ model, ...props }, ref) => (
   <ListViewContext.Provider value={model}>
     <calendar.div
       {...calendarProps_merge({ role: 'region', 'aria-label': 'Event list', ...part('list-root') }, props)}
@@ -21,17 +21,55 @@ export const ListView = forwardRef<HTMLDivElement, ListViewProps<unknown>>(({ mo
       ref={ref}
     />
   </ListViewContext.Provider>
-)) as <TData>(props: ListViewProps<TData> & RefAttributes<HTMLDivElement>) => ReactElement | null;
+)) as <TData, TResourceData>(
+  props: ListViewProps<TData, TResourceData> & RefAttributes<HTMLDivElement>,
+) => ReactElement | null;
 
-type DayProps<TData> = { day: Calendar_ListDay<TData> };
+type SectionProps<TData, TResourceData> = { section: Calendar_ListSection<TData, TResourceData> } & Calendar_HTMLProps<
+  'section',
+  Calendar_ListSection<TData, TResourceData>
+>;
 
-type ListViewDayProps<TData> = DayProps<TData> & Calendar_HTMLProps<'section', Calendar_ListDay<TData>>;
+export const ListViewSection = forwardRef<HTMLElement, SectionProps<unknown, unknown>>(({ section, ...props }, ref) => (
+  <calendar.section
+    {...calendarProps_merge(
+      {
+        'data-date': section.date?.toString(),
+        'data-resource-id': section.resource?.id,
+        ...part('list-section'),
+      },
+      props,
+    )}
+    state={section}
+    ref={ref}
+  />
+)) as <TData, TResourceData>(
+  props: SectionProps<TData, TResourceData> & RefAttributes<HTMLElement>,
+) => ReactElement | null;
 
-export const ListViewDay = forwardRef<HTMLElement, ListViewDayProps<unknown>>(({ day, ...props }, ref) => (
+type SectionHeaderProps<TData, TResourceData> = {
+  section: Calendar_ListSection<TData, TResourceData>;
+} & Calendar_HTMLProps<'h2', Calendar_ListSection<TData, TResourceData>>;
+
+export const ListViewSectionHeader = forwardRef<HTMLHeadingElement, SectionHeaderProps<unknown, unknown>>(
+  ({ section, ...props }, ref) => (
+    <calendar.h2 {...calendarProps_merge(part('list-section-header'), props)} state={section} ref={ref} />
+  ),
+) as <TData, TResourceData>(
+  props: SectionHeaderProps<TData, TResourceData> & RefAttributes<HTMLHeadingElement>,
+) => ReactElement | null;
+
+type DayProps<TData, TResourceData> = { day: Calendar_ListDay<TData, TResourceData> };
+
+type ListViewDayProps<TData, TResourceData> = DayProps<TData, TResourceData> &
+  Calendar_HTMLProps<'section', Calendar_ListDay<TData, TResourceData>>;
+
+export const ListViewDay = forwardRef<HTMLElement, ListViewDayProps<unknown, unknown>>(({ day, ...props }, ref) => (
   <calendar.section
     {...calendarProps_merge(
       {
         'data-date': day.date.toString(),
+        'data-resource-id': day.resource?.id,
         style: vars({ events: Math.max(1, day.events.length) }),
         ...part('list-day'),
       },
@@ -40,15 +78,20 @@ export const ListViewDay = forwardRef<HTMLElement, ListViewDayProps<unknown>>(({
     state={day}
     ref={ref}
   />
-)) as <TData>(props: ListViewDayProps<TData> & RefAttributes<HTMLElement>) => ReactElement | null;
+)) as <TData, TResourceData>(
+  props: ListViewDayProps<TData, TResourceData> & RefAttributes<HTMLElement>,
+) => ReactElement | null;
 
-type ListViewDayHeaderProps<TData> = DayProps<TData> & Calendar_HTMLProps<'h3', Calendar_ListDay<TData>>;
+type ListViewDayHeaderProps<TData, TResourceData> = DayProps<TData, TResourceData> &
+  Calendar_HTMLProps<'h3', Calendar_ListDay<TData, TResourceData>>;
 
-export const ListViewDayHeader = forwardRef<HTMLHeadingElement, ListViewDayHeaderProps<unknown>>(
+export const ListViewDayHeader = forwardRef<HTMLHeadingElement, ListViewDayHeaderProps<unknown, unknown>>(
   ({ day, ...props }, ref) => (
     <calendar.h3 {...calendarProps_merge(part('list-day-header'), props)} state={day} ref={ref} />
   ),
-) as <TData>(props: ListViewDayHeaderProps<TData> & RefAttributes<HTMLHeadingElement>) => ReactElement | null;
+) as <TData, TResourceData>(
+  props: ListViewDayHeaderProps<TData, TResourceData> & RefAttributes<HTMLHeadingElement>,
+) => ReactElement | null;
 
 type ListViewEventProps<TData> = { event: Calendar_Event<TData> } & Calendar_HTMLProps<'button', Calendar_Event<TData>>;
 
