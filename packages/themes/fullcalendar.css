@@ -73,14 +73,8 @@
     color: var(--calendar-text);
   }
 
-  /* Today washes its cell, column and timeline day in yellow; the day number stays plain */
-  :where(
-    [data-scope='calendar']:is(
-        [data-part='day-grid-day'],
-        [data-part='time-grid-column'],
-        [data-part='timeline-day-header']
-      )[data-today]
-  ) {
+  /* Today washes its cell and time-grid column in yellow; the day number stays plain. Timelines mark no today */
+  :where([data-scope='calendar']:is([data-part='day-grid-day'], [data-part='time-grid-column'])[data-today]) {
     background-color: var(--fc-classic-today, light-dark(#facc1526, #fef08a1a));
   }
 

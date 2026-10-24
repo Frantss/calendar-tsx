@@ -1,7 +1,7 @@
 import { afterEach, expect, it } from 'vitest';
 
-import type { Calendar_DayGridLayout, Calendar_ListLayout, Calendar_TimeGridLayout } from '@calendar-tsx/core';
-import { listView } from '@calendar-tsx/core';
+import type { Calendar_DayGridLayout, Calendar_ListLayout, Calendar_TimeGridLayout, Calendar_TimelineLayout } from '@calendar-tsx/core';
+import { listView, timelineView } from '@calendar-tsx/core';
 import {
   DayGridView,
   DayGridViewDay,
@@ -19,6 +19,9 @@ import {
   TimeGridViewColumn,
   TimeGridViewEvent,
   TimeGridViewNowIndicator,
+  TimelineView,
+  TimelineViewDayHeader,
+  TimelineViewHeader,
   useCalendarContext,
   useCalendarSelector,
 } from '@calendar-tsx/react';
@@ -101,6 +104,22 @@ const List = () => {
   );
 };
 
+const Timeline = () => {
+  const timeline = useCalendarSelector(state => state.layout) as Calendar_TimelineLayout<ThemesSetup_EventData, null>;
+
+  return (
+    <TimelineView model={timeline}>
+      <TimelineViewHeader>
+        {timeline.days.map(day => (
+          <TimelineViewDayHeader key={day.key} day={day}>
+            {day.date.day}
+          </TimelineViewDayHeader>
+        ))}
+      </TimelineViewHeader>
+    </TimelineView>
+  );
+};
+
 const resolve = (color: string) => {
   const probe = document.body.appendChild(document.createElement('div'));
   probe.style.color = color;
@@ -127,6 +146,13 @@ it('washes today in yellow and leaves its number plain', async () => {
   expect(today && getComputedStyle(today).backgroundColor).toBe(resolve('#facc1526'));
   expect(trigger && getComputedStyle(trigger).backgroundColor).toBe('rgba(0, 0, 0, 0)');
   expect(trigger && getComputedStyle(trigger).color).toBe('rgb(3, 7, 18)');
+});
+
+it('marks no today in a timeline, as the reference does not', async () => {
+  await themesSetup_render(<Timeline />, { views: { timeline: timelineView({ days: 1 }) }, view: 'timeline' });
+  const today = themesSetup_part('timeline-day-header', '[data-today]')[0];
+
+  expect(today && getComputedStyle(today).backgroundColor).toBe('rgba(0, 0, 0, 0)');
 });
 
 it('leaves weekends unshaded and fades days outside the month', async () => {
