@@ -4,6 +4,8 @@ import type { TokenOverrides } from './tokens';
 import { emptyTokenOverrides, hasTokenOverrides, sanitizeTokenOverrides } from './tokens';
 import type { PlaygroundView, PlaygroundViewSettings } from './views';
 import { defaultPlaygroundViewSettings, playgroundViews } from './views';
+import { defaultInteractions, parseInteractions, parseChanges } from './interactions';
+import type { PlaygroundInteractions, PlaygroundChange } from './interactions';
 
 export const playgroundThemes = [
   { id: 'default', label: 'Default' },
@@ -71,6 +73,8 @@ export type PlaygroundConfig = PlaygroundViewSettings & {
   now: string;
   data: PlaygroundDataSet;
   events: PlaygroundEvent[];
+  interactions: PlaygroundInteractions;
+  changes: PlaygroundChange[];
   tokens: TokenOverrides;
 };
 
@@ -88,6 +92,8 @@ export const defaultPlaygroundConfig = (today: string): PlaygroundConfig => ({
   now: '',
   data: 'sample',
   events: [],
+  interactions: { ...defaultInteractions },
+  changes: [],
   tokens: emptyTokenOverrides(),
 });
 
@@ -226,6 +232,8 @@ export const parsePlaygroundConfig = (hash: string, today: string): PlaygroundCo
     now: isDateTime(now) ? now : fallback.now,
     data: isDataSet(data) ? data : fallback.data,
     events: sanitizeEvents(parseJson(params.get('events'))),
+    interactions: parseInteractions(parseJson(params.get('interactions'))),
+    changes: parseChanges(parseJson(params.get('changes'))),
     tokens: sanitizeTokenOverrides(parseJson(params.get('tokens'))),
   };
 };
@@ -254,6 +262,8 @@ export const serializePlaygroundConfig = (config: PlaygroundConfig) => {
   add('now', config.now, fallback.now);
   add('data', config.data, fallback.data);
   if (config.events.length > 0) params.set('events', JSON.stringify(config.events));
+  if (Object.values(config.interactions).some(Boolean)) params.set('interactions', JSON.stringify(config.interactions));
+  if (config.changes.length) params.set('changes', JSON.stringify(config.changes));
   if (hasTokenOverrides(config.tokens)) params.set('tokens', JSON.stringify(config.tokens));
 
   return params.toString();

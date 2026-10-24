@@ -27,6 +27,7 @@ import {
 import { ContrastReadout } from '@/playground/contrast-readout';
 import { buttonClass, Checkbox, Field, iconButtonClass, inputClass, Section, Segmented } from '@/playground/controls';
 import { EventEditor } from '@/playground/event-editor';
+import { interactionOptions } from '@/playground/interactions';
 import type { Measurement } from '@/playground/measure';
 import type { PlaygroundToPreview, PreviewToPlayground } from '@/playground/messages';
 import { postPlaygroundMessage, readPlaygroundMessage } from '@/playground/messages';
@@ -163,6 +164,15 @@ function Playground() {
         setConfig(current => (current ? { ...current, view: message.view, date: message.date } : current));
       }
       if (message?.type === 'measure') setMeasurement(message.measurement);
+      if (message?.type === 'edit')
+        setConfig(current =>
+          current
+            ? {
+                ...current,
+                changes: [...current.changes.filter(change => change.id !== message.change.id), message.change],
+              }
+            : current,
+        );
     };
     // a pasted link or an edited address on an open page; `replaceState` below does not fire this
     const onHashChange = () => setConfig(parsePlaygroundConfig(window.location.hash, today()));
@@ -419,6 +429,50 @@ function Playground() {
                   )}
                 </Section>
 
+                <Section title='Interactions' open>
+                  <p className='text-[11px] leading-snug text-fd-muted-foreground'>
+                    Enable operations independently. Drag empty space to select, events to move, or their edges to
+                    resize. Press Escape to cancel. Event details also offer keyboard controls.
+                  </p>
+                  {interactionOptions.map(option => (
+                    <label
+                      key={option.key}
+                      className='flex min-h-8 items-center gap-2 text-[13px] pointer-coarse:min-h-11'
+                    >
+                      <input
+                        type='checkbox'
+                        checked={config.interactions[option.key]}
+                        onChange={event =>
+                          update({ interactions: { ...config.interactions, [option.key]: event.target.checked } })
+                        }
+                        className='size-4 accent-fd-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-fd-ring'
+                      />
+                      {option.label}
+                    </label>
+                  ))}
+                  {config.interactions.crossCalendar && !config.interactions.movement && (
+                    <p className='text-[11px] text-fd-muted-foreground'>
+                      Enable movement to drag events between calendars.
+                    </p>
+                  )}
+                  {config.interactions.touch && (
+                    <p className='text-[11px] text-fd-muted-foreground'>
+                      Hold for half a second before dragging on touch screens.
+                    </p>
+                  )}
+                  <button
+                    type='button'
+                    className={buttonClass}
+                    disabled={!config.changes.length}
+                    onClick={() => update({ changes: [] })}
+                  >
+                    Reset calendar edits ({config.changes.length})
+                  </button>
+                  <p className='text-[11px] text-fd-muted-foreground'>
+                    Calendar edits and feature settings are included in copied links.
+                  </p>
+                </Section>
+
                 <Section title='Theme' open>
                   <Field label='Theme'>
                     <select
@@ -478,9 +532,17 @@ function Playground() {
                       event={event}
                       open={event.id === openEvent}
                       onChange={next =>
-                        update({ events: config.events.map(item => (item.id === event.id ? next : item)) })
+                        update({
+                          events: config.events.map(item => (item.id === event.id ? next : item)),
+                          changes: config.changes.filter(change => change.id !== event.id),
+                        })
                       }
-                      onRemove={() => update({ events: config.events.filter(item => item.id !== event.id) })}
+                      onRemove={() =>
+                        update({
+                          events: config.events.filter(item => item.id !== event.id),
+                          changes: config.changes.filter(change => change.id !== event.id),
+                        })
+                      }
                     />
                   ))}
                   <button type='button' onClick={() => addEvent(config)} className={buttonClass}>

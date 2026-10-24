@@ -1,3 +1,4 @@
+/* oxlint-disable react/refs -- Interaction bindings expose callback refs, not mutable ref objects. */
 import baseCss from '@calendar-tsx/themes/base.css?url';
 import compactCss from '@calendar-tsx/themes/compact.css?url';
 import defaultCss from '@calendar-tsx/themes/default.css?url';
@@ -9,9 +10,14 @@ import printCss from '@calendar-tsx/themes/print.css?url';
 import revenuecatCss from '@calendar-tsx/themes/revenuecat.css?url';
 import shadcnCss from '@calendar-tsx/themes/shadcn.css?url';
 import stripeCss from '@calendar-tsx/themes/stripe.css?url';
-import type { Calendar_Event } from '@calendar-tsx/core';
+import type {
+  Calendar_EventInput,
+  Calendar_DomCalendar,
+  Calendar_Selection,
+  Calendar_WeeklyRule,
+} from '@calendar-tsx/core';
 import { fixedClock } from '@calendar-tsx/core';
-import { CalendarProvider, useCalendar } from '@calendar-tsx/react';
+import { CalendarProvider, useCalendar, useCalendarInteractions } from '@calendar-tsx/react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Temporal } from 'temporal-polyfill';
@@ -28,6 +34,9 @@ import { dataSetEvents, playgroundEvents, sampleRooms } from '@/playground/sampl
 import standInsCss from '@/playground/stand-ins.css?url';
 import { tokenOverridesCss } from '@/playground/tokens';
 import { createPlaygroundViews } from '@/playground/views';
+import { createPlaygroundFeatures, applyChanges, storeEvent } from '@/playground/interactions';
+import type { PlaygroundChange, PlaygroundCalendarId } from '@/playground/interactions';
+import { InteractionTools, interactionReason } from '@/playground/interaction-preview';
 
 const themeCss: Record<PlaygroundTheme, string> = {
   default: defaultCss,
@@ -75,6 +84,7 @@ function Preview() {
   const [config, setConfig] = useState<PlaygroundConfig | null>(null);
   const api = useRef<Api | null>(null);
   const embedded = useRef(false);
+  const calendars = useRef<Partial<Record<PlaygroundCalendarId, Calendar_DomCalendar<Booking>>>>({});
 
   useEffect(() => {
     embedded.current = window.parent !== window;
@@ -101,6 +111,9 @@ function Preview() {
   const scheme = useEffectiveScheme(config?.scheme);
   const overrides = config ? tokenOverridesCss(config.tokens) : '';
   const loaded = config !== null;
+  useEffect(() => {
+    if (config && !embedded.current) window.history.replaceState(null, '', `#${serializePlaygroundConfig(config)}`);
+  }, [config]);
 
   // shadcn/ui and Material UI switch on a `.dark` class, the other themes on `color-scheme`
   useEffect(() => {
@@ -145,6 +158,14 @@ function Preview() {
       window.location.hash = serializePlaygroundConfig({ ...config, view, date });
     }
   };
+  const onEdit = (change: PlaygroundChange) => {
+    setConfig(current => {
+      if (!current) return current;
+      const next = { ...current, changes: [...current.changes.filter(item => item.id !== change.id), change] };
+      return next;
+    });
+    if (embedded.current) postPlaygroundMessage(window.parent, { type: 'edit', change } satisfies PreviewToPlayground);
+  };
 
   return (
     <>
@@ -154,12 +175,22 @@ function Preview() {
       <link rel='stylesheet' href={printCss} />
       {overrides && <style>{overrides}</style>}
       {/* a new clock needs a new instance: the clock is read at creation and on mount */}
-      <PreviewCalendar
-        key={`${config.now}|${config.timeZone}`}
-        config={config}
-        onApi={value => (api.current = value)}
-        onNavigate={onNavigate}
-      />
+      <div className='preview-calendars' data-transfer={config.interactions.crossCalendar || undefined}>
+        {(['primary', ...(config.interactions.crossCalendar ? ['secondary' as const] : [])] as const).map(id => (
+          <PreviewCalendar
+            key={`${id}|${config.now}|${config.timeZone}|${JSON.stringify(config.interactions)}`}
+            id={id}
+            config={config}
+            onEdit={onEdit}
+            onApi={value => {
+              calendars.current[id] = value;
+              if (id === 'primary') api.current = value.api;
+            }}
+            otherCalendar={() => calendars.current[id === 'primary' ? 'secondary' : 'primary']}
+            onNavigate={onNavigate}
+          />
+        ))}
+      </div>
     </>
   );
 }
@@ -168,16 +199,25 @@ function PreviewCalendar({
   config,
   onApi,
   onNavigate,
+  id,
+  onEdit,
+  otherCalendar,
 }: {
   config: PlaygroundConfig;
-  onApi: (api: Api) => void;
+  onApi: (calendar: Calendar_DomCalendar<Booking> & { api: Api }) => void;
   onNavigate: (view: PlaygroundConfig['view'], date: string) => void;
+  id: PlaygroundCalendarId;
+  onEdit: (change: PlaygroundChange) => void;
+  otherCalendar: () => Calendar_DomCalendar<Booking> | undefined;
 }) {
   const [timeZone] = useState(() => config.timeZone || Temporal.Now.timeZoneId());
   const [clock] = useState(() =>
     config.now ? fixedClock(Temporal.PlainDateTime.from(config.now).toZonedDateTime(timeZone).toInstant()) : undefined,
   );
-  const [selected, setSelected] = useState<Calendar_Event<Booking> | null>(null);
+  const [features] = useState(() => createPlaygroundFeatures(config.interactions));
+  const [selectedId, setSelectedId] = useState<string>();
+  const [selection, setSelection] = useState<Calendar_Selection | null>(null);
+  const [message, setMessage] = useState('');
   const date = Temporal.PlainDate.from(config.date);
   const month = date.with({ day: 1 }).toString();
   const { maxEventsPerDay, slotMinutes, allDay, minColumnWidth, hiddenDays, visibleStart, visibleEnd } = config;
@@ -200,13 +240,23 @@ function PreviewCalendar({
     [config.data, month, timeZone],
   );
   const added = useMemo(() => playgroundEvents(config.events, timeZone), [config.events, timeZone]);
-  const events = useMemo(() => [...generated, ...added], [generated, added]);
+  const events = useMemo(
+    () => applyChanges([...generated, ...added], config.changes, id),
+    [generated, added, config.changes, id],
+  );
   const resources = useMemo(() => sampleRooms(Temporal.PlainDate.from(month), timeZone), [month, timeZone]);
+  const [businessHours] = useState<Calendar_WeeklyRule[]>(() => [
+    {
+      daysOfWeek: [1, 2, 3, 4, 5],
+      startTime: Temporal.PlainTime.from('09:00'),
+      endTime: Temporal.PlainTime.from('17:00'),
+    },
+  ]);
 
   const calendar = useCalendar({
     timeZone,
     views,
-    features: {},
+    features,
     view: config.view,
     date,
     events,
@@ -214,15 +264,56 @@ function PreviewCalendar({
     firstDayOfWeek: config.firstDayOfWeek,
     ...(clock ? { clock } : {}),
     onNavigate: next => onNavigate(next.view, next.date.toString()),
+    movement: {
+      allowConversion: config.interactions.allowConversion,
+      conversionDuration: config.interactions.preserveDuration ? 'preserve' : 'reset',
+      resourceMode: config.interactions.replaceSource ? 'replace-source' : 'replace-all',
+    },
+    constraints: {
+      preventOverlap: config.interactions.preventOverlap,
+      resourceAvailability: config.interactions.resourceAvailability,
+      ...(config.interactions.businessHours
+        ? {
+            businessHours,
+          }
+        : {}),
+    },
+    externalDrop: {
+      placement: {
+        allowConversion: config.interactions.allowConversion,
+        conversionDuration: config.interactions.preserveDuration ? 'preserve' : 'reset',
+        resourceMode: config.interactions.replaceSource ? 'replace-source' : 'replace-all',
+      },
+    },
+    crossCalendar: { id },
+    onSelectionChange: range => {
+      setSelection(range);
+      setMessage(
+        `Selected ${range.start.toLocaleString(config.locale)} to ${range.end.toLocaleString(config.locale)}.`,
+      );
+    },
+    onEventMove: proposal => changed(proposal.after, 'Moved'),
+    onEventResize: proposal => changed(proposal.after, 'Resized'),
+    onExternalDrop: proposal => changed(proposal.after, 'Created'),
+    onEventTransfer: proposal => {
+      onEdit(storeEvent(proposal.after, proposal.destinationId === 'secondary' ? 'secondary' : 'primary'));
+      setMessage(`Transferred ${proposal.after.data.title} to the other calendar.`);
+    },
   });
+  const bindings = useCalendarInteractions(calendar);
+  function changed(event: Calendar_EventInput<Booking>, action: string) {
+    onEdit(storeEvent(event, id));
+    setSelectedId(event.id);
+    setMessage(`${action} ${event.data.title}.`);
+  }
 
   useEffect(() => {
-    onApi(calendar.api);
+    onApi(calendar);
   }, [onApi, calendar]);
 
   // Full-day previews open near the sample events; custom windows open at their starting hour.
   useEffect(() => {
-    const root = document.querySelector<HTMLElement>("[data-part='time-grid-root']");
+    const root = document.querySelector<HTMLElement>(`[data-calendar-id='${id}'] [data-part='time-grid-root']`);
     const body = root?.querySelector<HTMLElement>("[data-part='time-grid-body']");
     const header = root?.querySelector<HTMLElement>("[data-part='time-grid-header']");
 
@@ -245,14 +336,73 @@ function PreviewCalendar({
     observer.observe(body);
 
     return () => observer.disconnect();
-  }, [config.view, visibleStart, visibleEnd]);
+  }, [config.view, visibleStart, visibleEnd, id]);
 
   return (
-    <CalendarProvider value={calendar} locale={config.locale}>
-      <PreviewLayout calendar={calendar} view={config.view} onSelect={setSelected} />
-      <p role='status' style={{ marginBlock: '0.75rem 0', minBlockSize: '1.5em', fontSize: '0.875rem' }}>
-        {selected ? describeEvent(selected, config.locale) : 'Select an event to see its details.'}
-      </p>
-    </CalendarProvider>
+    <section data-calendar-id={id} aria-label={id === 'primary' ? 'Main calendar' : 'Transfer calendar'}>
+      {config.interactions.crossCalendar && <h2>{id === 'primary' ? 'Main calendar' : 'Transfer calendar'}</h2>}
+      <CalendarProvider value={calendar} locale={config.locale}>
+        <div ref={bindings.root} data-movement={config.interactions.movement || undefined}>
+          <PreviewLayout
+            calendar={calendar}
+            view={config.view}
+            resizing={config.interactions.resizing}
+            bindings={{
+              ...bindings,
+              preview:
+                bindings.preview ??
+                (selection ? calendar.api.interactions.project({ kind: 'select', range: selection }) : null),
+            }}
+            onSelect={event => {
+              setSelectedId(event.id);
+              setMessage(describeEvent(event, config.locale));
+            }}
+          />
+        </div>
+        {config.view.startsWith('agenda') && Object.values(config.interactions).some(Boolean) && (
+          <p>Agenda views support the controls below. Use a grid or timeline for dragging.</p>
+        )}
+        <InteractionTools
+          key={config.date}
+          calendar={calendar}
+          config={config}
+          selected={events.find(event => event.id === selectedId)}
+          message={message}
+          onMessage={setMessage}
+          onTransfer={event => {
+            const destination = otherCalendar();
+            const source = calendar.api.crossCalendar?.prepare(event.id, event.resourceIds?.[0]);
+            if (!destination || !source) {
+              setMessage('Enable movement and transfers on both calendars.');
+              return;
+            }
+            try {
+              const start = destination.api.transfer?.begin(source);
+              if (start?.status !== 'active') {
+                setMessage('The other calendar is busy.');
+                return;
+              }
+              destination.api.interactions.update(
+                start.token,
+                event.kind === 'timed'
+                  ? { kind: 'timed', at: event.start, resourceId: event.resourceIds?.[0] }
+                  : { kind: 'allDay', at: event.start, resourceId: event.resourceIds?.[0] },
+              );
+              const candidate = destination.api.interactions.store.state.candidate;
+              if (destination.api.interactions.commit(start.token) !== 'committed') {
+                setMessage(
+                  candidate && candidate.status !== 'valid'
+                    ? interactionReason(candidate.reason)
+                    : 'Transfer rejected.',
+                );
+                destination.api.interactions.cancel(start.token);
+              }
+            } finally {
+              source.release();
+            }
+          }}
+        />
+      </CalendarProvider>
+    </section>
   );
 }

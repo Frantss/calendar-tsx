@@ -26,3 +26,128 @@ body {
     max-block-size: none;
   }
 }
+
+.preview-calendars {
+  display: grid;
+  gap: 1.5rem;
+}
+.preview-calendars > section {
+  min-width: 0;
+}
+.preview-calendars h2 {
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+}
+@media (min-width: 900px) {
+  .preview-calendars[data-transfer] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.interaction-draft {
+  position: absolute;
+  z-index: 8;
+  box-sizing: border-box;
+  pointer-events: none;
+  border: 2px dashed Highlight;
+  background: color-mix(in srgb, Highlight 18%, transparent);
+}
+.interaction-allday-track {
+  position: relative;
+  display: grid;
+  grid-column: 2 / -1;
+  grid-row: 1 / span max(1, var(--cal-all-day-rows, 1));
+  grid-template-columns: subgrid;
+  grid-auto-rows: var(--calendar-bar-height, 1.375rem);
+  row-gap: var(--calendar-bar-gap, 2px);
+  min-block-size: var(--calendar-bar-height, 1.375rem);
+}
+.interaction-allday-track [data-part='time-grid-all-day-event'] {
+  position: relative;
+  grid-column: calc(var(--cal-col-start) + 1) / span var(--cal-col-span);
+}
+.interaction-resize {
+  position: absolute;
+  z-index: 2;
+  background: currentColor;
+  opacity: 0.6;
+  border-radius: 2px;
+}
+.interaction-resize[data-axis='vertical'] {
+  left: 50%;
+  width: min(50%, 2rem);
+  transform: translateX(-50%);
+  height: 6px;
+  cursor: ns-resize;
+}
+.interaction-resize[data-axis='vertical'][data-edge='start'] {
+  top: 0;
+}
+.interaction-resize[data-axis='vertical'][data-edge='end'] {
+  bottom: 0;
+}
+.interaction-resize[data-axis='horizontal'] {
+  top: 20%;
+  height: 60%;
+  width: 6px;
+  cursor: ew-resize;
+}
+.interaction-resize[data-axis='horizontal'][data-edge='start'] {
+  left: 0;
+}
+.interaction-resize[data-axis='horizontal'][data-edge='end'] {
+  right: 0;
+}
+[data-movement] [data-part$='event']:not([aria-hidden]) {
+  cursor: grab;
+}
+.interaction-tools {
+  margin-block-start: 0.75rem;
+  font-size: 0.875rem;
+}
+.interaction-tools p {
+  min-height: 1.5em;
+  margin: 0 0 0.5rem;
+}
+.interaction-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-block: 0.5rem;
+}
+.interaction-actions label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+.interaction-actions button,
+.interaction-actions input:not([type='checkbox']) {
+  color: CanvasText;
+  background: Canvas;
+  border: 1px solid GrayText;
+  border-radius: 0.25rem;
+  min-height: 2rem;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
+  max-width: 100%;
+}
+.interaction-actions :focus-visible {
+  outline: 2px solid Highlight;
+  outline-offset: 2px;
+}
+.interaction-external {
+  cursor: grab;
+}
+@media (pointer: coarse) {
+  .interaction-actions button,
+  .interaction-actions input:not([type='checkbox']) {
+    min-height: 2.75rem;
+  }
+  .interaction-resize[data-axis='vertical'] {
+    height: 10px;
+  }
+  .interaction-resize[data-axis='horizontal'] {
+    width: 10px;
+  }
+}

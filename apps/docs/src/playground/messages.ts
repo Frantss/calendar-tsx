@@ -1,6 +1,7 @@
 import type { PlaygroundConfig } from './config';
 import type { Measurement } from './measure';
 import type { PlaygroundView } from './views';
+import type { PlaygroundChange } from './interactions';
 
 /** From the playground page to the preview iframe. */
 export type PlaygroundToPreview =
@@ -11,6 +12,7 @@ export type PlaygroundToPreview =
 export type PreviewToPlayground =
   | { type: 'ready' }
   | { type: 'navigate'; view: PlaygroundView; date: string }
+  | { type: 'edit'; change: PlaygroundChange }
   | { type: 'measure'; measurement: Measurement };
 
 const source = 'calendar-tsx-playground';
