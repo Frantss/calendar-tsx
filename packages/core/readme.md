@@ -6,17 +6,22 @@
 Framework-agnostic calendar engine that powers [`@calendar-tsx/react`](../react). It derives day-grid, time-grid,
 list and timeline layouts from controlled view/date options and event input, in a single time zone.
 
-Built-in features, helpers and their types are available from direct subpaths:
+Calendar APIs, built-in features, helpers and public types use the same entry point:
 
 ```ts
-import { backgroundFeature, createBackgroundLayer, createWeeklyRanges } from '@calendar-tsx/core/background';
-import { recurrenceFeature, createRecurringEvent } from '@calendar-tsx/core/recurrence';
+import {
+  backgroundFeature,
+  createBackgroundLayer,
+  createWeeklyRanges,
+  recurrenceFeature,
+  createRecurringEvent,
+} from '@calendar-tsx/core';
 ```
 
-Root also re-exports these symbols. Configure features with their factories, register them with
+Configure features with their factories, register them with
 `calendarFeatures`, and bind views with `calendarViews`. See the
 [factory assembly API](../../docs/calendar-assembly.md) and
-[core feature organization and exports](../../docs/core-features.md) for module ownership and public entries.
+[core feature organization and exports](../../docs/core-features.md) for module ownership and the public entry.
 
 ## Quick example
 
@@ -209,7 +214,7 @@ entries inherit defaults, and adding an override to one view does not change ano
   overrides. Changing registered definitions through `~update` throws; create a new instance instead.
 - Views supply their layout features. Consumers do not register layouts in the feature registry.
 
-See [feature organization and exports](../../docs/core-features.md) for the module layout and public entries.
+See [feature organization and exports](../../docs/core-features.md) for the module layout and public entry.
 
 ## Background layers
 

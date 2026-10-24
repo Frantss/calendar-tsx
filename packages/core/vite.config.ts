@@ -6,8 +6,6 @@ export default defineConfig({
   pack: {
     entry: {
       index: 'export/index.ts',
-      background: 'export/background.ts',
-      recurrence: 'export/recurrence.ts',
     },
     format: ['esm'],
     platform: 'browser',

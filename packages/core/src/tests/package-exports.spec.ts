@@ -2,22 +2,22 @@ import { Temporal } from 'temporal-polyfill';
 import { expect, expectTypeOf, it, vi } from 'vitest';
 
 import {
-  backgroundFeature as rootBackgroundFeature,
-  createBackgroundLayer as rootCreateBackgroundLayer,
-  createWeeklyRanges as rootCreateWeeklyRanges,
-  recurrenceFeature as rootRecurrenceFeature,
-  createRecurringEvent as rootCreateRecurringEvent,
+  backgroundFeature,
+  createBackgroundLayer,
+  recurrenceFeature,
+  createRecurringEvent,
   createCalendar,
   calendarViews,
   calendarFeatures,
   timeGridView,
   fixedClock,
 } from '@calendar-tsx/core';
-import type { Calendar_ConfiguredFeature, Calendar_EventDefinition, Calendar_BackgroundLayer as RootBackgroundLayer } from '@calendar-tsx/core';
-import { backgroundFeature, createBackgroundLayer, createWeeklyRanges } from '@calendar-tsx/core/background';
-import type { Calendar_BackgroundLayer } from '@calendar-tsx/core/background';
-import { recurrenceFeature, createRecurringEvent } from '@calendar-tsx/core/recurrence';
-import type { Calendar_RecurringAllDayEventInput } from '@calendar-tsx/core/recurrence';
+import type {
+  Calendar_ConfiguredFeature,
+  Calendar_EventDefinition,
+  Calendar_BackgroundLayer,
+  Calendar_RecurringAllDayEventInput,
+} from '@calendar-tsx/core';
 
 declare module '@calendar-tsx/core' {
   interface Calendar_State_FeatureMap {
@@ -40,7 +40,7 @@ const exportsProbeFeature = {
 const setup = () => {
   const viewsFeatures = calendarFeatures({});
   const views = calendarViews({ features: viewsFeatures, views: { day: timeGridView({ days: 2 }) } });
-  const layer = createBackgroundLayer({
+  const layer: Calendar_BackgroundLayer = createBackgroundLayer({
     id: 'holiday',
     kind: 'holiday',
     ranges: [{ allDay: true, start: Temporal.PlainDate.from('2026-03-11') }],
@@ -53,7 +53,6 @@ const setup = () => {
     data: { title: 'Daily' },
   });
 
-  expectTypeOf<Calendar_BackgroundLayer>().toEqualTypeOf<RootBackgroundLayer>();
   expectTypeOf(event).toExtend<Calendar_RecurringAllDayEventInput<{ title: string }>>();
   expectTypeOf(event).toExtend<Calendar_EventDefinition<{ title: string }, { recurrenceFeature: ReturnType<typeof recurrenceFeature> }>>();
 
@@ -69,17 +68,7 @@ const setup = () => {
   });
 };
 
-it('exports the same feature implementations and helpers through root and feature entries', () => {
-  expect(backgroundFeature).toBe(rootBackgroundFeature);
-  expect(createBackgroundLayer).toBe(rootCreateBackgroundLayer);
-  expect(createWeeklyRanges).toBe(rootCreateWeeklyRanges);
-  expect(recurrenceFeature).toBe(rootRecurrenceFeature);
-  expect(createRecurringEvent).toBe(rootCreateRecurringEvent);
-  expectTypeOf(backgroundFeature).toEqualTypeOf<typeof rootBackgroundFeature>();
-  expectTypeOf(createRecurringEvent).toEqualTypeOf<typeof rootCreateRecurringEvent>();
-});
-
-it('composes subpath feature types and behavior with the root calendar', () => {
+it('composes built-in feature types and behavior through the root entry', () => {
   const calendar = setup();
   const model = calendar.store.state.layout;
 

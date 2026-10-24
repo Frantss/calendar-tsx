@@ -3,9 +3,8 @@
 Status: implemented. This document records the factory assembly API and per-view configuration rules. See D54 in the
 [design spec](./design.md) for the decision and its relationship to D29 and D53.
 
-The implemented [core feature organization and exports](./core-features.md) defines feature-owned modules and the
-`@calendar-tsx/core/background` and `@calendar-tsx/core/recurrence` entry points. Root also re-exports their public
-symbols, so both import styles support the assembly below.
+The implemented [core feature organization and exports](./core-features.md) keeps implementations in feature-owned
+modules. All public calendar and feature symbols are imported from `@calendar-tsx/core`.
 
 ## Assembly
 
@@ -97,9 +96,18 @@ Definitions stay at module scope so their references remain stable. This setup i
 import { useState, type ReactNode } from 'react';
 import { Temporal } from 'temporal-polyfill';
 
-import { calendarFeatures, calendarViews, createEvent, dayGridView, DayOfWeek, timeGridView } from '@calendar-tsx/core';
-import { backgroundFeature, createBackgroundLayer, createWeeklyRanges } from '@calendar-tsx/core/background';
-import { recurrenceFeature } from '@calendar-tsx/core/recurrence';
+import {
+  backgroundFeature,
+  calendarFeatures,
+  calendarViews,
+  createBackgroundLayer,
+  createEvent,
+  createWeeklyRanges,
+  dayGridView,
+  DayOfWeek,
+  recurrenceFeature,
+  timeGridView,
+} from '@calendar-tsx/core';
 import { CalendarProvider, useCalendar } from '@calendar-tsx/react';
 
 const timeZone = 'America/Montevideo';

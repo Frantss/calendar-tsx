@@ -30,8 +30,8 @@ parts.
 The design, requirements and decision log live in [docs/design.md](docs/design.md). The
 [calendar assembly API](docs/calendar-assembly.md) documents feature-factory configuration and per-view
 overrides. The
-[core feature organization and exports](docs/core-features.md) documents the implemented feature modules and direct
-feature subpaths. The documentation site is a
+[core feature organization and exports](docs/core-features.md) documents feature-owned modules and the single
+core entry point. The documentation site is a
 [Fumadocs](https://fumadocs.dev) app on TanStack Start in [apps/docs](apps/docs), with one root per framework. Pages
 in `apps/docs/content/docs` include shared text from `apps/docs/content/shared` and code from `apps/docs/examples`,
 which `check:types` compiles.

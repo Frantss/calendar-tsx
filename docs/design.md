@@ -1454,11 +1454,11 @@ references. Layout implementations remain supplied by each view.
 **Verification:** type probes and regression cases cover aliases, unknown and invalid overrides, registry
 requirements, inherited fields, array replacement, shallow object merging, immutable defaults, per-view updates,
 state isolation and structural model assignment. Core, adapter, RRule and compiled documentation consumers use
-the new assembly. The package-export suite checks mixed root/subpath imports and public declaration merging.
+the new assembly. The package-export suite checks root imports and public declaration merging.
 
-### D55 — Core features own their modules and explicit public entries
+### D55 — Core features own their modules with one public entry
 
-**Status:** source organization, explicit public entries and D54 factory assembly implemented.
+**Status:** feature-owned source organization, one public core entry and D54 factory assembly implemented.
 The complete structure, module responsibilities and export map are in
 [Core feature organization and exports](./core-features.md).
 
@@ -1469,29 +1469,28 @@ The complete structure, module responsibilities and export map are in
 implementation and tests. Move feature-owned declarations out of the central calendar type module. Calendar
 orchestration stays in `calendar.ts`; layouts remain supplied by views.
 
-**Exports:** publish `@calendar-tsx/core/background` and `@calendar-tsx/core/recurrence`, backed by
-`export/background.ts` and `export/recurrence.ts`. Root re-exports the same public factories, helpers and types.
-Shared feature contracts and extension maps remain public at root for third-party authors. Runtime machinery and
-feature internals stay private. Declare package paths explicitly and build matching JavaScript and declaration
-entries. The public paths omit `/features/`, as requested by the user.
+**Exports:** publish one code entry, `@calendar-tsx/core`, backed by `export/index.ts`. It exports public feature
+factories, helpers and types alongside calendar APIs. Shared feature contracts and extension maps remain public
+for third-party authors. Runtime machinery and feature internals stay private. The package metadata path remains
+available. The user revised the original feature-subpath proposal to retain feature-owned modules with one core entry.
 
 **Dependencies:** registry and runtime machinery do not import built-in feature implementations. Shared extension
-maps compose feature-owned interfaces through type-only imports. Root and feature entries reference the same
-shared contracts and implementations. D54 adds configured identities independent of registration aliases and inheritance across views.
+maps compose feature-owned interfaces through type-only imports. The root entry re-exports public symbols from
+their owning modules. D54 adds configured identities independent of registration aliases and inheritance across views.
 
 **Alternatives considered:** a flat source directory preserves scattered feature ownership. Separate feature
-packages add publishing and dependency management. Root-only exports omit direct feature imports; wildcard
-exports can expose internal files. `/features/background` and `/features/recurrence` were shortened at the user's
-request. Root re-exports retain the assembly examples' single-import option.
+packages add publishing and dependency management. Feature subpaths were initially implemented, then removed at
+the user's request: source ownership does not require separate public entries. Wildcard exports can expose
+internal files. One root entry retains the assembly examples' single-import style.
 
 **Implementation:** feature-specific types and contributions live with the implementations and tests in
 `src/features/background` and `src/features/recurrence`. The common contracts, registry and runtime have separate
 modules in `src/features`. Built-in type contributions use interface inheritance: internal module augmentations
 were emitted with unresolved source paths by the declaration bundler. Public declaration merging stays supported.
-Three build entries produce root, background and recurrence exports backed by shared implementation and type chunks.
+One build entry produces the root JavaScript and declarations. Feature modules remain separate in source.
 
-**Verification:** built root and subpath imports must retain implementation identity, model and event-input
-contributions, public declaration merging and independent state across calendar instances. Tests guard inherited participation, configuration precedence, stage caching, recurrence and adapter behavior,
+**Verification:** built root imports must retain model and event-input contributions, public declaration merging
+and independent state across calendar instances. Removed feature subpaths must be inaccessible. Tests guard inherited participation, configuration precedence, stage caching, recurrence and adapter behavior,
 including D54 aliases and typed override syntax.
 
 ## Test cases

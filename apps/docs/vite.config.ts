@@ -41,14 +41,6 @@ export default defineConfig(({ command, isPreview }) => ({
               replacement: fileURLToPath(new URL('../../packages/core/export/index.ts', import.meta.url)),
             },
             {
-              find: /^@calendar-tsx\/core\/background$/,
-              replacement: fileURLToPath(new URL('../../packages/core/export/background.ts', import.meta.url)),
-            },
-            {
-              find: /^@calendar-tsx\/core\/recurrence$/,
-              replacement: fileURLToPath(new URL('../../packages/core/export/recurrence.ts', import.meta.url)),
-            },
-            {
               find: /^@calendar-tsx\/react$/,
               replacement: fileURLToPath(new URL('../../packages/react/export/index.ts', import.meta.url)),
             },

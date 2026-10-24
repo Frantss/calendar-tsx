@@ -1,9 +1,18 @@
 import { useState, type ReactNode } from 'react';
 import { Temporal } from 'temporal-polyfill';
 
-import { calendarFeatures, calendarViews, createEvent, dayGridView, DayOfWeek, timeGridView } from '@calendar-tsx/core';
-import { backgroundFeature, createBackgroundLayer, createWeeklyRanges } from '@calendar-tsx/core/background';
-import { recurrenceFeature } from '@calendar-tsx/core/recurrence';
+import {
+  backgroundFeature,
+  calendarFeatures,
+  calendarViews,
+  createBackgroundLayer,
+  createEvent,
+  createWeeklyRanges,
+  dayGridView,
+  DayOfWeek,
+  recurrenceFeature,
+  timeGridView,
+} from '@calendar-tsx/core';
 import { CalendarProvider, useCalendar } from '@calendar-tsx/react';
 
 const timeZone = 'America/Montevideo';

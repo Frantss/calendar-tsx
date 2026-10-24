@@ -1,6 +1,6 @@
 # Core feature organization and exports
 
-Status: source organization and public entry points implemented. This document extends the
+Status: feature-owned source organization and a single public core entry implemented. This document extends the
 [calendar assembly API](./calendar-assembly.md). D55 in the [design spec](./design.md) records the decision.
 D54 factory assembly, stable configured identities, inherited participation and per-view overrides are implemented.
 
@@ -13,8 +13,6 @@ factory, configuration types, helpers, type contributions and tests.
 packages/core/
   export/
     index.ts
-    background.ts
-    recurrence.ts
 
   src/
     calendar.ts
@@ -94,29 +92,33 @@ preserve event-source resolution. Feature-map selection normalizes aliases to ca
 Each calendar instance owns its feature state, actions and stage caches. Factories produce reusable definitions;
 per-view overrides change configuration within that instance. Object values shallow-merge and arrays replace defaults.
 
-## Public entry points
+## Public entry point
 
-Expose explicit feature subpaths directly below the package name:
+Expose all public calendar and feature symbols from `@calendar-tsx/core`:
 
 ```ts
-import { createCalendar, calendarFeatures, calendarViews, dayGridView, timeGridView } from '@calendar-tsx/core';
-
-import { backgroundFeature, createBackgroundLayer, createWeeklyRanges } from '@calendar-tsx/core/background';
-
-import { recurrenceFeature, createRecurringEvent } from '@calendar-tsx/core/recurrence';
+import {
+  createCalendar,
+  calendarFeatures,
+  calendarViews,
+  dayGridView,
+  timeGridView,
+  backgroundFeature,
+  createBackgroundLayer,
+  createWeeklyRanges,
+  recurrenceFeature,
+  createRecurringEvent,
+} from '@calendar-tsx/core';
 ```
 
-| Entry                           | Public exports                                                                                                                                                                     |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@calendar-tsx/core`            | Calendar assembly, view factories, layout features, calendar primitives and types, public feature contracts and extension maps, plus all public background and recurrence exports. |
-| `@calendar-tsx/core/background` | `backgroundFeature`, `createBackgroundLayer`, `createWeeklyRanges` and background-owned public types.                                                                              |
-| `@calendar-tsx/core/recurrence` | `recurrenceFeature`, `createRecurringEvent` and recurrence-owned public types.                                                                                                     |
+| Entry                | Public exports                                                                                                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@calendar-tsx/core` | Calendar assembly, view factories, layout features, calendar primitives and types, public feature contracts and extension maps, plus all public background and recurrence exports. |
 
-Root re-exports preserve the single-import style in the assembly API. A feature export from root and the same
-export from its subpath refer to the same implementation and type declarations. The public paths are
-`/background` and `/recurrence`; `features/` is an internal source directory only.
+Feature ownership is an internal source boundary. The public API uses one core entry, independently of how
+features are organized in `src/features/`.
 
-The files in `export/` define the public interface and explicitly re-export supported symbols. Feature runtime
+`export/index.ts` defines the public interface and explicitly re-exports supported symbols. Feature runtime
 machinery, background decorators, recurrence resolvers, rule compilers and date helpers remain private.
 Third-party feature authors import the shared feature contracts and extension maps from root.
 
@@ -131,26 +133,16 @@ The package export map is explicit:
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./background": {
-      "types": "./dist/background.d.ts",
-      "import": "./dist/background.js"
-    },
-    "./recurrence": {
-      "types": "./dist/recurrence.d.ts",
-      "import": "./dist/recurrence.js"
-    },
     "./package.json": "./package.json"
   }
 }
 ```
 
-Use matching build entries:
+The package metadata path remains available. Build one code entry:
 
 ```ts
 entry: {
   index: 'export/index.ts',
-  background: 'export/background.ts',
-  recurrence: 'export/recurrence.ts',
 }
 ```
 
@@ -159,14 +151,13 @@ import path. Retain ESM output and the package's side-effect-free contract.
 
 ## Migration and verification
 
-Feature implementations, types and tests live in their owning modules. Explicit feature entries and root
-re-exports share implementations and declarations. The package readmes and compiled examples use factory assembly.
+Feature implementations, types and tests live in their owning modules. Replace feature-subpath imports with root
+imports. The package readmes and compiled examples use factory assembly through `@calendar-tsx/core`.
 
-Implementation verification must cover root imports, feature-subpath imports and mixed imports against the
-built package. Check that factories and helper exports retain identity across entries, and that declaration
-merging reaches the same shared extension maps through every entry. Verify registered aliases, source resolution,
+Implementation verification must cover factories, helpers and types imported from the built root entry, and
+declaration merging through its public extension maps. Verify registered aliases, source resolution,
 view overrides and inferred model fields. Keep calendar integration coverage alongside feature-owned tests.
 
-Package validation must inspect the built output; publishing these paths requires both JavaScript and
-declaration files to resolve. The package-export tests cover implementation identity, feature type contributions,
-public extension-map augmentation and state isolation through the built entries.
+Package validation must inspect the built output; the root JavaScript and declaration files must resolve, and
+removed feature subpaths must be inaccessible. The package-export tests cover feature type contributions,
+public extension-map augmentation and state isolation through the built root entry.

@@ -25,14 +25,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./background": {
-      "types": "./dist/background.d.ts",
-      "import": "./dist/background.js"
-    },
-    "./recurrence": {
-      "types": "./dist/recurrence.d.ts",
-      "import": "./dist/recurrence.js"
-    },
     "./package.json": "./package.json"
   },
   "scripts": {
