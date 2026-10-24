@@ -3,6 +3,8 @@
 Status: **proposal for discussion**, based on `fd13cd8`. Production runtime and public interfaces are unchanged.
 A [selection/movement prototype](../packages/core/prototypes/interaction-foundation/readme.md) exercises the shared
 lifecycle and compiles its feature-type sketch. Examples below remain conceptual unless linked to that sketch.
+The extension uses real time-grid/timeline geometry and both adapters' public hooks and parts. It also exposes an
+[adapter context typing gap](../reports/interaction-foundation.md#6-adapter-context-erasure-retains-required-feature-state).
 
 Related decisions: [D2](design.md#d2--events-are-input-with-unique-ids-managed-event-state-is-an-opt-in-helper),
 [D29](design.md#d29--functionality-is-added-through-a-feature-map-views-declare-the-features-they-use),
@@ -226,6 +228,7 @@ and actual event timestamps remain unchanged by a draft.
 
 Before implementation, agree the proposed DST target policy, overlay-only preview policy, clear-on-emission commit
 policy and transient-store ownership amendment. The prototype verifies the selection/movement feature types and
-shared lifecycle against TypeScript 7.0.2 and browser walkthroughs. Production construction, layout capabilities,
-adapter-binding types and lifetimes, persistent selection wiring, third-party operation extensibility and bundle
-size remain unproved. No production interaction feature is marked implemented.
+shared lifecycle against TypeScript 7.0.2 and browser walkthroughs. The extension exercises real projection, DOM
+measurement, framework subscriptions/lifetimes and controlled selection wiring. Adapter typing retains the recorded
+context-erasure gap. Production construction/capability registration, third-party operation extensibility and bundle
+guarantees remain unproved. No production interaction feature is marked implemented.

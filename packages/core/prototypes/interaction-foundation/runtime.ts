@@ -344,6 +344,17 @@ export const createRuntime = (host: {
     evaluate,
     begin,
     update,
+    unavailable(token: number, reason: string) {
+      if (lease !== token) return 'stale-token';
+      if (pending || read().session?.token !== token) return 'awaiting-owner';
+      const current = read();
+      publish({
+        ...current,
+        session: { ...current.session!, target: undefined },
+        candidate: { status: 'unavailable', reason },
+      });
+      return 'unavailable';
+    },
     commit,
     cancel,
     refresh,

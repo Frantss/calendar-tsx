@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "paths": { "@calendar-tsx/core": ["../../../core/export/index.ts"] }
+  },
+  "include": ["*.tsx", "*.d.ts"],
+  "exclude": ["vite.config.ts"]
+}
