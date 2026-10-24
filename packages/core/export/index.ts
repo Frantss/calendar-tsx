@@ -1,5 +1,6 @@
 export type * from '#calendar.types';
 export { createCalendar } from '#calendar';
+export { DayOfWeek } from '#calendar-day-of-week';
 export { fixedClock, intervalClock } from '#calendar-clock';
 export { createEvent } from '#calendar-events';
 export type { Calendar_EventStore } from '#calendar-event-store';

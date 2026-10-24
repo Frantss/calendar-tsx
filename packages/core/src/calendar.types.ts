@@ -1,3 +1,4 @@
+import type { DayOfWeek } from '#calendar-day-of-week';
 export type * from '#features/background/background.types';
 export type * from '#features/recurrence/recurrence.types';
 import type {
@@ -99,10 +100,10 @@ export type Calendar_Clock = {
 
 export type Calendar_Range = { start: Temporal.PlainDate; end: Temporal.PlainDate };
 
-export type Calendar_FirstDayOfWeek = 1 | 2 | 3 | 4 | 5 | 6 | 7;
-
 /** ISO day of the week: 1 is Monday, 7 is Sunday. */
-export type Calendar_DayOfWeek = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type Calendar_DayOfWeek = (typeof DayOfWeek)[keyof typeof DayOfWeek];
+
+export type Calendar_FirstDayOfWeek = Calendar_DayOfWeek;
 
 type UnionToIntersection<U> = (U extends unknown ? (union: U) => void : never) extends (intersection: infer I) => void
   ? I

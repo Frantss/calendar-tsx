@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Temporal } from 'temporal-polyfill';
 
-import { calendarFeatures, calendarViews, createEvent, dayGridView, timeGridView } from '@calendar-tsx/core';
+import { calendarFeatures, calendarViews, createEvent, dayGridView, DayOfWeek, timeGridView } from '@calendar-tsx/core';
 import { backgroundFeature, createBackgroundLayer, createWeeklyRanges } from '@calendar-tsx/core/background';
 import { recurrenceFeature } from '@calendar-tsx/core/recurrence';
 import { CalendarProvider, useCalendar } from '@calendar-tsx/react';
@@ -24,7 +24,7 @@ const workWeekBackgrounds = [
     inverse: true,
     ranges: createWeeklyRanges([
       {
-        daysOfWeek: [1, 2, 3, 4, 5],
+        daysOfWeek: [DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday],
         startTime: Temporal.PlainTime.from('09:00'),
         endTime: Temporal.PlainTime.from('17:00'),
       },
@@ -56,7 +56,7 @@ const views = calendarViews({
     }),
     week: timeGridView({
       weeks: 1,
-      hiddenDays: [6, 7],
+      hiddenDays: [DayOfWeek.Saturday, DayOfWeek.Sunday],
       timeWindow: { startMinutes: 480, endMinutes: 1080 },
       slotMinutes: 30,
       features: {
@@ -85,7 +85,7 @@ export function Scheduler({ children }: { children: ReactNode }) {
     views,
     events,
     timeZone,
-    firstDayOfWeek: 1,
+    firstDayOfWeek: DayOfWeek.Monday,
     view,
     date,
     onNavigate: next => {

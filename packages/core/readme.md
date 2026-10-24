@@ -74,13 +74,20 @@ resource row. All-day shading follows anchor dates; timed shading uses exact pro
 
 ## Hidden weekdays and visible hours
 
-All built-in views accept `hiddenDays`, using ISO weekdays (`1` Monday through `7` Sunday). Time grids and timelines
+Core exports the `DayOfWeek` const object with ISO values (`DayOfWeek.Monday` is `1`, `DayOfWeek.Sunday` is `7`).
+Use it for `firstDayOfWeek`, `hiddenDays` and weekly background rules' `daysOfWeek`. Numeric literals remain valid.
+
+All built-in views accept `hiddenDays`. Time grids and timelines
 also accept a `timeWindow` in nominal clock minutes:
 
 ```ts
-import { timeGridView, timelineView } from '@calendar-tsx/core';
+import { DayOfWeek, timeGridView, timelineView } from '@calendar-tsx/core';
 
-timeGridView({ days: 7, hiddenDays: [6, 7], timeWindow: { startMinutes: 480, endMinutes: 1080 } });
+timeGridView({
+  days: 7,
+  hiddenDays: [DayOfWeek.Saturday, DayOfWeek.Sunday],
+  timeWindow: { startMinutes: 480, endMinutes: 1080 },
+});
 timelineView({ days: 1, timeWindow: { startMinutes: 1320, endMinutes: 1800 } }); // 22:00–06:00
 ```
 
