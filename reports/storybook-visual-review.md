@@ -273,3 +273,17 @@ visual changes. Baselines were updated only for those stories, then the full com
 Initial sandboxed attempts also reported `listen EPERM ... 127.0.0.1:63315` for browser tests,
 `listen EPERM ... ::1:3000` for docs prerendering, and `Command failed: npm pack` for package validation.
 The same commands passed when rerun with the required local-server/cache access.
+
+## Rebase verification · 2026-10-24
+
+Rebased the Storybook work onto `main` at `84bdae9`, which introduces the neutral default palette, removes today
+column fills, and derives stronger borders from each theme's tokens. The evidence images above remain the record
+of the earlier visual review; current regression baselines reflect the rebased theme sources.
+
+The initial comparison reported `106 failed | 40 passed`: all 106 failures were screenshot mismatches, with no
+functional assertion failures. Refreshed and reviewed 106 snapshots per platform; image dimensions are unchanged.
+The other 40 snapshots per platform are unchanged.
+
+The rebased build, `check:all`, all 669 workspace tests, and all 146 Storybook comparisons on both macOS and Linux
+passed. Linux verification used the matching Playwright 1.63.0 arm64 image and a fixed source archive after a live
+copy reported `tar: .: file changed as we read it`.
