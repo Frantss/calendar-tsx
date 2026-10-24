@@ -50,11 +50,13 @@ const buildRow = <TData, TResourceData>({
   events,
   backgroundEvents,
   plan,
+  minEventMs,
 }: {
   resource?: Calendar_Resource<TResourceData>;
   events: Projected<TData>[];
   backgroundEvents: Projected<TData>[];
   plan: LayoutCoordinates_Plan;
+  minEventMs: number;
 }): Calendar_TimelineRow<TData, TResourceData> => {
   const length = layoutCoordinates_length(plan);
   const total = length * plan.dates.dates.length;
@@ -95,7 +97,7 @@ const buildRow = <TData, TResourceData>({
           fragments,
           isAllDay: false,
           startMs: Math.min(...starts),
-          endMs: Math.max(...ends),
+          endMs: Math.min(total, Math.max(Math.max(...ends), Math.min(...starts) + minEventMs)),
           continuesBefore: event.start.epochNanoseconds < fragments[0].source.start.epochNanoseconds,
           continuesAfter: event.end.epochNanoseconds > fragments[fragments.length - 1].source.end.epochNanoseconds,
         },
@@ -221,7 +223,7 @@ export const layoutTimeline_build = <TData, TResourceData>({
       })),
     ),
     rows: groups.map(resource =>
-      buildRow({ resource, events: projected, backgroundEvents: projectedBackgrounds, plan }),
+      buildRow({ resource, events: projected, backgroundEvents: projectedBackgrounds, plan, minEventMs: (definition.minEventMinutes ?? slotMinutes / 2) * 60_000 }),
     ),
     now: clock ? (clock.dateIndex + clock.position) / dates.length : undefined,
     minSlotWidth: definition.minSlotWidth,

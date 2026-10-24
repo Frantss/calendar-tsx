@@ -208,6 +208,8 @@ export type Calendar_TimelineViewSettings = Calendar_DurationSettings &
     groupBy?: Calendar_ResourceGrouping;
     slotMinutes?: number;
     minSlotWidth?: string;
+    /** Minimum display duration, also used for stacking; defaults to half of `slotMinutes`, `0` turns it off. */
+    minEventMinutes?: number;
   };
 
 export type Calendar_DayGridColumn<TResourceData = unknown> = {

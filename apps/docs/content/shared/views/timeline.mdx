@@ -25,13 +25,18 @@ Choose exactly one of `days`, `weeks`, `months`, or `period`. Counts must be pos
 
 `next()` and `prev()` advance the configured duration. Month-based steps land on the first day. `hiddenDays` omits ISO weekdays (`1` Monday to `7` Sunday) without changing the nominal period or its inclusive fetch range; at least one weekday must remain visible.
 
-| Setting        | Type                           | Default | Description                                                          |
-| -------------- | ------------------------------ | ------- | -------------------------------------------------------------------- |
-| `groupBy`      | `'resource'` or `['resource']` | none    | One row per resource. Without it, the layout has one row.            |
-| `slotMinutes`  | `number`                       | `60`    | Positive integer slot length; the final slot may be shorter.                       |
-| `minSlotWidth` | `string`                       | none    | Passed through as the slot columns' minimum width, such as `'3rem'`. |
+| Setting           | Type                           | Default               | Description                                                          |
+| ----------------- | ------------------------------ | --------------------- | -------------------------------------------------------------------- |
+| `groupBy`         | `'resource'` or `['resource']` | none                  | One row per resource. Without it, the layout has one row.            |
+| `slotMinutes`     | `number`                       | `60`                  | Positive integer slot length; the final slot may be shorter.                       |
+| `minSlotWidth`    | `string`                       | none                  | Passed through as the slot columns' minimum width, such as `'3rem'`. |
+| `minEventMinutes` | `number`                       | half of `slotMinutes` | Minimum display duration, also used for stacking. `0` turns it off.  |
 
 Set `minSlotWidth` for month and year timelines to keep daily columns readable. With the supplied themes, the timeline scrolls horizontally when the columns exceed its width.
+
+Brief timed events occupy at least half a slot by default. With daily slots and `minSlotWidth: '6rem'`, this gives a bar at least `3rem` wide on ordinary days. The core stacks using the enlarged display spans, so neighboring short events remain separately selectable. The event's actual start and end stay unchanged; use them for labels and event details. Display spans stop at the visible range's end, where a bar can be narrower than the minimum.
+
+Set `minEventMinutes` to choose a different duration, or `0` for exact time widths. The minimum is measured in visible clock minutes, including across hidden dates and daylight-saving changes. It does not resize all-day events. Keep CSS inline padding and borders inside the calculated width; a CSS-only minimum would enlarge bars without restacking them.
 
 - An event appears in every row whose resource it names.
 - All-day events have no separate row. They stack with the timed events, from the start of their first day to the
@@ -84,12 +89,12 @@ widths across daylight-saving transitions. Repeated hours share clock positions;
 | Segment field                       | Description                                                        |
 | ----------------------------------- | ------------------------------------------------------------------ |
 | `event`                             | The event, in the calendar's time zone.                            |
-| `start`, `span`                     | Fractions of the range.                                            |
+| `start`, `span`                     | Display position and duration as fractions of the visible range.   |
 | `row`                               | Zero-based stack row; each event takes the lowest row free for it. |
 | `isAllDay`                          | The event is all-day.                                              |
 | `continuesBefore`, `continuesAfter` | The event extends past the range.                                  |
 
-Stacking follows [event order](../features/events#order). Events that only touch don't overlap.
+Stacking follows [event order](../features/events#order). Display spans that only touch don't overlap.
 
 Timed shading is clipped to visible anchor windows and can split at dates or DST gaps. All-day shading follows
 anchor dates, including their overnight portions. Hidden weekdays contribute no shading. Layer ranges are merged

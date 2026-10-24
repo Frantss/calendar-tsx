@@ -314,6 +314,9 @@
   }
 
   :where([data-scope='calendar'][data-part='timeline-event']) {
+    padding-inline: 0;
+    border-inline-width: 0;
+    overflow: hidden;
     inset-block-start: calc(
       var(--calendar-bar-gap, 2px) + var(--cal-row) *
         (var(--calendar-bar-height, 1.375rem) + var(--calendar-bar-gap, 2px))

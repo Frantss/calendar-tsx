@@ -118,6 +118,12 @@ createCalendar({
 - List: left out.
 - Without `resourceIds`, a background event shades every resource column.
 
+## Timeline event sizes
+
+`timelineView` lays out short timed events with a minimum display duration of half a slot. Stacking uses that enlarged span, so neighboring brief events stay separate. The event's actual start and end are unchanged. Set `minEventMinutes` to override the minimum, or `0` to use exact durations. Bars clip at the visible range's end; all-day events keep their date spans.
+
+For coarse timelines, combine daily slots with `minSlotWidth`, for example `timelineView({ period: 'quarter', slotMinutes: 1440, minSlotWidth: '6rem' })`. The default minimum then occupies half a daily column instead of a one-pixel sliver.
+
 ## Resource agendas
 
 List agendas can group resources and dates with the same factory:

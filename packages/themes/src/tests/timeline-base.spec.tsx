@@ -122,6 +122,18 @@ it('stacks overlapping events without overlap and grows the row', async () => {
   expect(ana?.height).toBeGreaterThan(room?.height ?? 0);
 });
 
+it('keeps native buttons within their calculated timeline span', async () => {
+  await render({
+    views: { timeline: timelineView({ period: 'month', groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '6rem', minEventMinutes: 0 }) },
+    events: [
+      { ...themesSetup_timed('First', { date: '2026-03-11', start: '09:00', end: '09:15' }), resourceIds: ['Ana'] },
+      { ...themesSetup_timed('Second', { date: '2026-03-11', start: '09:15', end: '09:30' }), resourceIds: ['Ana'] },
+    ],
+  });
+  expect(themesSetup_rect(event('First')).right).toBeLessThanOrEqual(themesSetup_rect(event('Second')).left + 0.05);
+  expect(getComputedStyle(event('First')!).overflowX).toBe('hidden');
+});
+
 it('draws the now line at the clock offset across all rows', async () => {
   await render();
   const lanes = themesSetup_part('timeline-lane').map(themesSetup_rect);

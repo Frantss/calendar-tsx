@@ -1238,6 +1238,26 @@ React and Solid add `ListViewSection` and `ListViewSectionHeader`, with resource
 
 Rejected: a fifth factory (the event list geometry is unchanged); filtering only in examples (core would not expose consistent grouping and keys); replacing `layout.days` (unnecessary migration for existing ungrouped consumers); separate resource/date hierarchy models (one section shape expresses both orders).
 
+### D45 — Timeline decorations preserve narrow event geometry
+
+**Serves:** C1, C4, C11. Fixes visible overlaps reported in coarse timeline views.
+
+The timeline already assigns overlapping time intervals to separate stack rows (D34). In month and year views, however, a brief event can project to about one pixel. Native button padding and theme borders imposed a wider minimum box, so adjacent events on the same stack row covered each other despite their correct time positions.
+
+Timeline events have no inline padding or inline border width in the positioning base. The default theme preserves the label inset with `text-indent` and draws the inline borders on a clipped, noninteractive pseudo-element. High contrast keeps two-pixel and dashed continuation edges on that pseudo-element. Block borders, bar height, focus rings, timing fractions, lane assignment, and the React/Solid models remain unchanged. Both the native button and themed box therefore retain their calculated time width, including subpixel widths.
+
+Rejected: changing the stack algorithm (time overlap is already handled); extending event durations to compensate for CSS (would change the time geometry); imposing a larger minimum event width (would require collision layout to use that same width).
+
+### D46 — Timeline minimum display durations participate in stacking
+
+**Serves:** C1, C5, C7, C11. Accepted by the user after the quarter timeline showed one-pixel event bars.
+
+D45 fixed accidental expansion from CSS decorations but left brief events too narrow to read or select. The timeline now follows D39's duration-based approach: `timelineView({ minEventMinutes })` defaults to half of `slotMinutes` (or 30 minutes for the default hourly slots). Daily slots therefore give brief events a half-day display span. A configured `minSlotWidth` makes that span usable on coarse axes without browser measurement.
+
+The core extends each timed event's projected end to that minimum before assigning stack rows. Both geometry and collisions use the same display interval. The real `event.start` and `event.end`, continuation flags, and all-day spans stay unchanged. Display spans clip at the visible range's end; minutes count on the compressed visible elapsed-time axis, including hidden weekdays and DST. `minEventMinutes: 0` restores exact durations, and D45 keeps those narrow boxes within their spans. React and Solid continue to render the same core geometry without new models or factories.
+
+Rejected: CSS-only minimum widths (stacking cannot see the enlarged bars); fixed pixel widths with measured browser layout (adds resize-dependent layout and adapter behavior to a headless engine); opt-in minima only in the playground (leaves the default library behavior unusable for short events).
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.
@@ -1313,6 +1333,7 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 
 - A 1-day timeline has 24 slots of 60 minutes and one day header spanning them; a 7-day timeline starts on `firstDayOfWeek`. _(D34)_
 - Overlapping events in one row stack into rows 0 and 1, and the row reports `rows: 2`; touching events share row 0. _(D34)_
+- Brief timed events get a half-slot display span and stack using that span; an explicit minimum overrides it, `0` restores exact durations, real event times remain unchanged, and display spans clip at the range end. _(D46)_
 - A timed event crossing midnight in a week timeline is one segment; one starting before the range is clipped and marked `continuesBefore`. _(D34)_
 - An all-day event spans its days from midnight to midnight and carries `isAllDay`. _(D34)_
 - An event referencing two resources appears in both rows; without `groupBy` there is one row with no resource. _(C7, D34)_

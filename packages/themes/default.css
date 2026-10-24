@@ -395,6 +395,23 @@
 
   /* Timeline */
 
+  :where([data-scope='calendar'][data-part='timeline-event']) {
+    padding-inline: 0;
+    border-inline-width: 0;
+    text-indent: calc(0.375rem + var(--_calendar-timeline-border-width, 1px));
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-event'])::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-inline-width: var(--_calendar-timeline-border-width, 1px);
+    border-inline-style: inherit;
+    border-inline-color: var(--_calendar-event-border);
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
   :where([data-scope='calendar'][data-part='timeline-header']) {
     background: var(--calendar-surface);
     border-block-end: 1px solid var(--calendar-border);

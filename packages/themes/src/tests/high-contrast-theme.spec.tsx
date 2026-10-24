@@ -156,6 +156,21 @@ it('dashes the edges where a timeline event continues past the range', async () 
     events: [themesSetup_allDay('Fair', { start: '2026-03-10', end: '2026-03-12' })],
   });
   const fair = getComputedStyle(themesSetup_part('timeline-event')[0]!);
+  const edges = getComputedStyle(themesSetup_part('timeline-event')[0]!, '::before');
 
   expect([fair.borderLeftStyle, fair.borderRightStyle]).toEqual(['dashed', 'dashed']);
+  expect([edges.borderLeftStyle, edges.borderRightStyle, edges.borderLeftWidth]).toEqual(['dashed', 'dashed', '2px']);
+});
+
+it('keeps thick timeline outlines from widening adjacent short events', async () => {
+  await themesSetup_render(<Timeline />, {
+    views: { timeline: timelineView({ period: 'month', slotMinutes: 1440, minSlotWidth: '6rem', minEventMinutes: 0 }) },
+    view: 'timeline',
+    events: [
+      themesSetup_timed('First', { date: '2026-03-11', start: '09:00', end: '09:15' }),
+      themesSetup_timed('Second', { date: '2026-03-11', start: '09:15', end: '09:30' }),
+    ],
+  });
+  const [first, second] = themesSetup_part('timeline-event');
+  expect(first!.getBoundingClientRect().right).toBeLessThanOrEqual(second!.getBoundingClientRect().left + 0.05);
 });

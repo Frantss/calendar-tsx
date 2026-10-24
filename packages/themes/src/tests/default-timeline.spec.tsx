@@ -157,3 +157,37 @@ it('marks today with system colors in forced-colors mode', async () => {
   probe.remove();
   await cdp().send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'none' }] });
 });
+
+it.each(['month', 'year'] as const)('keeps exact-width adjacent events apart when the minimum is disabled in a %s timeline', async period => {
+  await render({
+    views: { timeline: timelineView({ period, groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '6rem', minEventMinutes: 0 }) },
+    events: [
+      { ...themesSetup_timed('First', { date: '2026-03-11', start: '09:00', end: '09:15' }), resourceIds: ['Ana'] },
+      { ...themesSetup_timed('Second', { date: '2026-03-11', start: '09:15', end: '09:30' }), resourceIds: ['Ana'] },
+    ],
+  });
+  const [first, second] = themesSetup_part('timeline-event');
+  const firstRect = themesSetup_rect(first);
+  const secondRect = themesSetup_rect(second);
+  expect(first?.style.getPropertyValue('--cal-row')).toBe('0');
+  expect(second?.style.getPropertyValue('--cal-row')).toBe('0');
+  expect(firstRect.right).toBeLessThanOrEqual(secondRect.left + 0.05);
+});
+
+it.each(['month', 'quarter', 'year'] as const)('keeps minimum-size events visible and separately selectable in a %s timeline', async period => {
+  await render({
+    views: { timeline: timelineView({ period, groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '6rem' }) },
+    events: [
+      { ...themesSetup_timed('First', { date: '2026-03-11', start: '09:00', end: '09:15' }), resourceIds: ['Ana'] },
+      { ...themesSetup_timed('Second', { date: '2026-03-11', start: '09:15', end: '09:30' }), resourceIds: ['Ana'] },
+    ],
+  });
+  const [first, second] = themesSetup_part('timeline-event');
+  const a = themesSetup_rect(first);
+  const b = themesSetup_rect(second);
+
+  expect(a.width).toBeGreaterThanOrEqual(48);
+  expect(b.width).toBeGreaterThanOrEqual(48);
+  expect(a.bottom).toBeLessThanOrEqual(b.top);
+  expect(themesSetup_rect(themesSetup_part('timeline-lane')[0]).bottom).toBeGreaterThanOrEqual(b.bottom);
+});

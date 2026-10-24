@@ -48,8 +48,8 @@ it('starts a 7-day timeline on the first day of the week and honours slotMinutes
   });
 
   expect(utils.state().context.range.start.toString()).toBe('2026-03-08');
-  expect(utils.layout.slots).toHaveLength(7 * 48 - 2);
-  expect(utils.layout.days.map(day => day.colStart)).toEqual([0, 46, 94, 142, 190, 238, 286]);
+  expect(utils.layout.slots).toHaveLength(7 * 48);
+  expect(utils.layout.days.map(day => day.colStart)).toEqual([0, 48, 96, 144, 192, 240, 288]);
 });
 
 it('steps by the number of days', async () => {
@@ -80,6 +80,99 @@ it('positions events as fractions of the range', async () => {
 
   expect(segment?.start).toBeCloseTo(0.375);
   expect(segment?.span).toBeCloseTo(1 / 24);
+});
+
+it.each(['month', 'quarter', 'year'] as const)('gives brief events half a daily slot and stacks their display spans in a %s', async period => {
+  const first = fixtures_timed('first', { date: '2026-03-11', start: '09:00', end: '09:15' });
+  const utils = await setup({
+    views: { timeline: timelineView({ period, slotMinutes: 1440 }) },
+    events: [first, fixtures_timed('second', { date: '2026-03-11', start: '09:15', end: '09:30' })],
+  });
+  const day = utils.layout.days.find(candidate => candidate.key === '2026-03-11')!;
+  const [a, b] = utils.row('all')!.segments;
+
+  expect(a!.span).toBeCloseTo(day.span / 2, 10);
+  expect(b!.span).toBeCloseTo(day.span / 2, 10);
+  expect(utils.stacks('all')).toEqual(['first:0', 'second:1']);
+  expect(utils.row('all')!.rows).toBe(2);
+  expect(a!.event.end?.toString()).toBe(first.end.toString());
+});
+
+it('uses half an hourly slot by default and lets touching display spans share a stack row', async () => {
+  const utils = await setup({
+    events: [
+      fixtures_timed('first', { date: '2026-03-11', start: '09:00', end: '09:05' }),
+      fixtures_timed('second', { date: '2026-03-11', start: '09:05', end: '09:10' }),
+      fixtures_timed('third', { date: '2026-03-11', start: '09:30', end: '09:35' }),
+    ],
+  });
+
+  expect(utils.row('all')!.segments[0]!.span).toBeCloseTo(30 / 1440, 10);
+  expect(utils.stacks('all')).toEqual(['first:0', 'second:1', 'third:0']);
+});
+
+it('accepts an explicit timeline minimum and clips display spans at the range end', async () => {
+  const utils = await setup({
+    views: { timeline: timelineView({ days: 1, minEventMinutes: 60 }) },
+    events: [
+      fixtures_timed('early', { date: '2026-03-11', start: '09:00', end: '09:05' }),
+      fixtures_timed('late', { date: '2026-03-11', start: '23:45', end: '23:50' }),
+    ],
+  });
+  const segment = utils.row('all')!.segments[1]!;
+
+  expect(utils.row('all')!.segments[0]!.span).toBeCloseTo(60 / 1440, 10);
+  expect(segment.span).toBeCloseTo(15 / 1440, 10);
+  expect(segment.start + segment.span).toBeCloseTo(1);
+  expect(segment.continuesAfter).toBe(false);
+  expect(segment.event.kind === 'timed' && segment.event.end.toPlainTime().toString()).toBe('23:50:00');
+});
+
+it('can disable the minimum to use exact durations and stack only actual overlaps', async () => {
+  const utils = await setup({
+    views: { timeline: timelineView({ period: 'month', slotMinutes: 1440, minEventMinutes: 0 }) },
+    events: [
+      fixtures_timed('first', { date: '2026-03-11', start: '09:00', end: '09:15' }),
+      fixtures_timed('second', { date: '2026-03-11', start: '09:15', end: '09:30' }),
+    ],
+  });
+  const day = utils.layout.days.find(candidate => candidate.key === '2026-03-11')!;
+
+  expect(utils.row('all')!.segments[0]!.span).toBeCloseTo((day.span * 15) / 1440, 10);
+  expect(utils.stacks('all')).toEqual(['first:0', 'second:0']);
+});
+
+it('stacks minimum display spans across compressed hidden dates', async () => {
+  const utils = await setup({
+    date: Temporal.PlainDate.from('2026-03-13'),
+    views: { timeline: timelineView({ days: 4, hiddenDays: [6, 7], slotMinutes: 1440 }) },
+    events: [
+      fixtures_timed('friday', { date: '2026-03-13', start: '23:45', end: '23:50' }),
+      fixtures_timed('monday', { date: '2026-03-16', start: '00:00', end: '00:05' }),
+    ],
+  });
+
+  expect(utils.row('all')!.segments[0]!.span).toBeCloseTo(12 / 48, 10);
+  expect(utils.stacks('all')).toEqual(['friday:0', 'monday:1']);
+});
+
+it.each(['2026-03-08', '2026-11-01'])('measures the minimum in displayed clock minutes on %s', async date => {
+  const utils = await setup({
+    date: Temporal.PlainDate.from(date),
+    views: { timeline: timelineView({ days: 1, slotMinutes: 1440 }) },
+    events: [fixtures_timed('brief', { date, start: '09:00', end: '09:05' })],
+  });
+
+  expect(utils.row('all')!.segments[0]!.span).toBeCloseTo(12 / 24, 10);
+});
+
+it('does not stretch all-day dates to a timed-event minimum', async () => {
+  const utils = await setup({
+    views: { timeline: timelineView({ days: 7, minEventMinutes: 2880 }) },
+    events: [fixtures_allDay('fair', { start: '2026-03-11' })],
+  });
+
+  expect(utils.row('all')!.segments[0]!.span).toBeCloseTo(24 / 168, 10);
 });
 
 it('keeps an event crossing midnight as one segment and clips one starting before the range', async () => {

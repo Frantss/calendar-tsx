@@ -46,6 +46,11 @@
     line-height: calc(var(--calendar-bar-height) - 4px);
   }
 
+  :where([data-scope='calendar'][data-part='timeline-event']) {
+    --_calendar-timeline-border-width: 2px;
+    border-inline-width: 0;
+  }
+
   /* Bars continue across week and range edges; time-grid events continue across midnight */
   :where(
     [data-scope='calendar'][data-continues-before]:is(
