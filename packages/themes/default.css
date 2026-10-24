@@ -382,12 +382,16 @@
   /*
    * Lines drawn from the slot geometry rather than one element per slot (D13): half-strength lines at each slot and
    * full lines on the hour. A visible window may start off the hour, so the hour lines start `--cal-hour-offset` in.
+   * Slots of an hour or more, such as a timeline's daily slots, draw full lines at each slot instead.
    */
   :where([data-scope='calendar'][data-part='time-grid-column']) {
     border-inline-start: 1px solid var(--calendar-border);
     --_calendar-slot: calc(100% / var(--cal-slot-units, var(--cal-slots)));
-    --_calendar-hour: calc(var(--_calendar-slot) * var(--cal-slots-per-hour, 1));
-    --_calendar-hour-start: calc(var(--_calendar-slot) * var(--cal-hour-offset, 0));
+    --_calendar-hour: calc(var(--_calendar-slot) * max(1, var(--cal-slots-per-hour, 1)));
+    /* 1 when slots are an hour or shorter, else 0: longer slots draw their hour lines on the slot lines */
+    --_calendar-hour-start: calc(
+      var(--_calendar-slot) * var(--cal-hour-offset, 0) * clamp(0, (var(--cal-slots-per-hour, 1) - 1) * 1000 + 1, 1)
+    );
     background-image:
       repeating-linear-gradient(
         to bottom,
@@ -606,8 +610,11 @@
   /* Slot and hour lines as in the time grid (D13), plus a strong line where each day's window starts */
   :where([data-scope='calendar'][data-part='timeline-lane']) {
     --_calendar-slot: calc(100% / var(--cal-day-slot-units, var(--cal-slot-units, var(--cal-slots))));
-    --_calendar-hour: calc(var(--_calendar-slot) * var(--cal-slots-per-hour, 1));
-    --_calendar-hour-start: calc(var(--_calendar-slot) * var(--cal-hour-offset, 0));
+    --_calendar-hour: calc(var(--_calendar-slot) * max(1, var(--cal-slots-per-hour, 1)));
+    /* 1 when slots are an hour or shorter, else 0: longer slots draw their hour lines on the slot lines */
+    --_calendar-hour-start: calc(
+      var(--_calendar-slot) * var(--cal-hour-offset, 0) * clamp(0, (var(--cal-slots-per-hour, 1) - 1) * 1000 + 1, 1)
+    );
     background-image:
       linear-gradient(to right, var(--calendar-border-strong) 1px, transparent 1px),
       repeating-linear-gradient(

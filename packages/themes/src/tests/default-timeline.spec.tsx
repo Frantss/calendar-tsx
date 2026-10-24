@@ -161,6 +161,22 @@ it('draws the start stripe inside the bar, and drops it where an event continues
   expect(stripe('Fair')?.borderInlineStartWidth).toBe('1px');
 });
 
+it('draws hour lines on the slot lines when slots are a day long', async () => {
+  await render({ views: { timeline: timelineView({ days: 7, groupBy: 'resource', slotMinutes: 1440 }) } });
+  const lane = themesSetup_part('timeline-lane')[0];
+  const width = (length: string) => {
+    const probe = lane?.appendChild(document.createElement('div'));
+    probe?.setAttribute('style', `position: absolute; inline-size: ${length};`);
+    const size = themesSetup_rect(probe).width;
+    probe?.remove();
+    return size;
+  };
+
+  // 24 hour lines inside each daily slot would draw a barcode; the hour period is the slot itself
+  expect(width('var(--_calendar-hour)')).toBeCloseTo(width('var(--_calendar-slot)'), 0);
+  expect(width('var(--_calendar-hour-start)')).toBeCloseTo(0, 0);
+});
+
 it('hatches unavailable time', async () => {
   await render();
   const shade = themesSetup_part('timeline-unavailable')[0];
