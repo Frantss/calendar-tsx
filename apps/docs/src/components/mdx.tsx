@@ -3,6 +3,8 @@ import defaultMdxComponents from 'fumadocs-ui/mdx';
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentProps } from 'react';
 
+import { CalendarPreview } from './calendar-preview';
+
 const isRelative = (href: string) => !/^([a-z][a-z\d+.-]*:|\/|#)/i.test(href);
 
 /**
@@ -23,6 +25,7 @@ export function getMDXComponents(components?: MDXComponents) {
   return {
     ...defaultMdxComponents,
     a: RelativeLink,
+    CalendarPreview,
     ...components,
   } satisfies MDXComponents;
 }
