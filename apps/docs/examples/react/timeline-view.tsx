@@ -51,7 +51,7 @@ export const Timeline = ({
           <TimelineViewRow key={row.key} row={row}>
             <TimelineViewResource row={row}>{row.resource?.title}</TimelineViewResource>
             <TimelineViewLane row={row}>
-              {row.backgrounds.map(background => (
+              {row.backgrounds?.map(background => (
                 <TimelineViewBackground key={background.key} background={background} />
               ))}
               {row.backgroundEvents.map(segment => (

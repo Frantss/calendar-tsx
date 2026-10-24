@@ -207,7 +207,6 @@ export const createCalendar = <
         range: viewContext.range,
         period: viewContext.period,
         inputRange: viewContext.inputRange,
-        firstDayOfWeek: input.firstDayOfWeek,
         events,
         backgroundEvents,
         resources: input.resources ?? [],

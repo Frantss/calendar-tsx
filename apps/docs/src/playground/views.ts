@@ -57,7 +57,7 @@ export const createPlaygroundViews = ({
     year_stack: dayGridView({ period: 'year', groupBy: 'month', fixedWeekCount: true, maxEventsPerDay, hiddenDays }),
     grid_days: dayGridView({ days: 3, maxEventsPerDay, hiddenDays }),
     grid_week: dayGridView({ weeks: 1, maxEventsPerDay, hiddenDays }),
-    grid_workweek: dayGridView({ weeks: 1, hiddenDays: [6, 7], maxEventsPerDay, hiddenDays }),
+    grid_workweek: dayGridView({ weeks: 1, hiddenDays: [6, 7], maxEventsPerDay }),
     grid_rooms: dayGridView({ days: 1, groupBy: 'resource', maxEventsPerDay, hiddenDays }),
     month_rooms: dayGridView({ period: 'quarter', groupBy: ['month', 'resource'], maxEventsPerDay, hiddenDays }),
     room_months: dayGridView({ period: 'quarter', groupBy: ['resource', 'month'], maxEventsPerDay, hiddenDays }),
@@ -86,9 +86,30 @@ export const createPlaygroundViews = ({
     agenda_dates_rooms: listView({ weeks: 1, groupBy: ['date', 'resource'], hiddenDays }),
     timeline_day: timelineView({ days: 1, groupBy: 'resource', minSlotWidth: '4rem', ...timed }),
     timeline_week: timelineView({ weeks: 1, groupBy: 'resource', minSlotWidth: '4rem', ...timed }),
-    timeline_month: timelineView({ period: 'month', groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '6rem', hiddenDays, timeWindow: timed.timeWindow }),
-    timeline_quarter: timelineView({ period: 'quarter', groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '6rem', hiddenDays, timeWindow: timed.timeWindow }),
-    timeline_year: timelineView({ period: 'year', groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '6rem', hiddenDays, timeWindow: timed.timeWindow }),
+    timeline_month: timelineView({
+      period: 'month',
+      groupBy: 'resource',
+      slotMinutes: 1440,
+      minSlotWidth: '6rem',
+      hiddenDays,
+      timeWindow: timed.timeWindow,
+    }),
+    timeline_quarter: timelineView({
+      period: 'quarter',
+      groupBy: 'resource',
+      slotMinutes: 1440,
+      minSlotWidth: '6rem',
+      hiddenDays,
+      timeWindow: timed.timeWindow,
+    }),
+    timeline_year: timelineView({
+      period: 'year',
+      groupBy: 'resource',
+      slotMinutes: 1440,
+      minSlotWidth: '6rem',
+      hiddenDays,
+      timeWindow: timed.timeWindow,
+    }),
   });
 };
 

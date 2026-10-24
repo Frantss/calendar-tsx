@@ -80,15 +80,15 @@ it.each(['month', 'day_grid_week', 'day_grid_four_weeks'])('reports dayGrid for 
 });
 
 it('takes either a month period or weeks, with fixedWeekCount only for months', () => {
-  // @ts-expect-error -- a day grid needs a period or a week count (D40)
+  // @ts-expect-error -- a day grid needs a period or a week count (D43)
   expect(() => dayGridView({ maxEventsPerDay: 4 })).toThrow('provide exactly one');
 
-  // @ts-expect-error -- period and weeks are exclusive (D40)
+  // @ts-expect-error -- period and weeks are exclusive (D43)
   expect(() => dayGridView({ period: 'month', weeks: 4, maxEventsPerDay: 4 })).toThrow('provide exactly one');
 
-  // @ts-expect-error -- fixedWeekCount applies only to calendar months (D40)
+  // @ts-expect-error -- fixedWeekCount applies only to calendar months (D43)
   expect(() => dayGridView({ weeks: 4, fixedWeekCount: true, maxEventsPerDay: 4 })).toThrow('individual month grids');
 
-  // @ts-expect-error -- even false is not a setting on the weeks form (D40)
+  // @ts-expect-error -- even false is not a setting on the weeks form (D43)
   expect(() => dayGridView({ weeks: 4, fixedWeekCount: false, maxEventsPerDay: 4 })).toThrow('individual month grids');
 });

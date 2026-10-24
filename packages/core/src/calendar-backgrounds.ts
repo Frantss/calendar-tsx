@@ -133,18 +133,18 @@ const dayGrid_decorate = (
           const touches = (item: LayoutIntervals_Interval) =>
             item.startMs < interval.endMs && item.endMs > interval.startMs;
 
-        const backgrounds = resolved.flatMap(({ layer, ranges }): Calendar_DayBackground[] => {
+          const backgrounds = resolved.flatMap(({ layer, ranges }): Calendar_DayBackground[] => {
             if (!appliesTo(layer, day.resource?.id)) return [];
-          const allDayTouches = (range: Extract<Calendar_BackgroundRange, { allDay: true }>) =>
-            Temporal.PlainDate.compare(range.start, day.date) <= 0 &&
-            Temporal.PlainDate.compare(range.end ?? range.start, day.date) >= 0;
-          const shaded = layer.inverse
-            ? !ranges.some(range =>
-                'allDay' in range
-                  ? allDayTouches(range)
-                  : touches({ startMs: range.start.epochMilliseconds, endMs: range.end.epochMilliseconds }),
-              )
-            : ranges.some(range => 'allDay' in range && allDayTouches(range));
+            const allDayTouches = (range: Extract<Calendar_BackgroundRange, { allDay: true }>) =>
+              Temporal.PlainDate.compare(range.start, day.date) <= 0 &&
+              Temporal.PlainDate.compare(range.end ?? range.start, day.date) >= 0;
+            const shaded = layer.inverse
+              ? !ranges.some(range =>
+                  'allDay' in range
+                    ? allDayTouches(range)
+                    : touches({ startMs: range.start.epochMilliseconds, endMs: range.end.epochMilliseconds }),
+                )
+              : ranges.some(range => 'allDay' in range && allDayTouches(range));
 
             return shaded ? [{ key: `${day.key}:${layer.id}`, layer: layer.id, kind: layer.kind }] : [];
           });
@@ -223,7 +223,8 @@ export const backgroundFeature = {
 
       if (layout.kind === 'timeGrid')
         return timeGrid_decorate(layout as Calendar_TimeGridLayout<unknown, unknown>, layers, timeZone);
-      if (layout.kind === 'dayGrid') return dayGrid_decorate(layout as Calendar_DayGridLayout<unknown>, layers, timeZone);
+      if (layout.kind === 'dayGrid')
+        return dayGrid_decorate(layout as Calendar_DayGridLayout<unknown>, layers, timeZone);
       if (layout.kind === 'timeline')
         return timeline_decorate(layout as Calendar_TimelineLayout<unknown, unknown>, layers, timeZone);
 

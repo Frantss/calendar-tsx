@@ -32,20 +32,20 @@ const Calendar = () => {
       <DayGridView model={model}>
         {model.sections.map(section => (
           <DayGridViewSection key={section.key} section={section}>
-          {section.rows.map(week => (
-          <DayGridViewRow key={week.key} row={week}>
-            {week.days.map(day => (
-              <DayGridViewDay key={day.key} day={day}>
-                {day.date.day}
-              </DayGridViewDay>
+            {section.rows.map(week => (
+              <DayGridViewRow key={week.key} row={week}>
+                {week.days.map(day => (
+                  <DayGridViewDay key={day.key} day={day}>
+                    {day.date.day}
+                  </DayGridViewDay>
+                ))}
+                {week.segments.map(segment => (
+                  <DayGridViewRowEvent key={segment.key} segment={segment}>
+                    {segment.event.id}
+                  </DayGridViewRowEvent>
+                ))}
+              </DayGridViewRow>
             ))}
-            {week.segments.map(segment => (
-              <DayGridViewRowEvent key={segment.key} segment={segment}>
-                {segment.event.id}
-              </DayGridViewRowEvent>
-            ))}
-          </DayGridViewRow>
-          ))}
           </DayGridViewSection>
         ))}
       </DayGridView>

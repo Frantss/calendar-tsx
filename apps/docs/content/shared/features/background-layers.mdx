@@ -67,11 +67,11 @@ A range is timed, `{ start, end }` as `Temporal.ZonedDateTime`s, or all-day, `{ 
 
 ## Parts
 
-| Part                     | Model prop   | Where                                             |
-| ------------------------ | ------------ | ------------------------------------------------- |
-| `TimeGridViewBackground` | `background` | In `TimeGridViewColumn`, before the events.       |
-| `DayGridViewDayBackground` | `background` | In `DayGridViewDay`, before its content.            |
-| `TimelineViewBackground` | `background` | In `TimelineViewLane`, beneath foreground events. |
+| Part                       | Model prop   | Where                                             |
+| -------------------------- | ------------ | ------------------------------------------------- |
+| `TimeGridViewBackground`   | `background` | In `TimeGridViewColumn`, before the events.       |
+| `DayGridViewDayBackground` | `background` | In `DayGridViewDay`, before its content.          |
+| `TimelineViewBackground`   | `background` | In `TimelineViewLane`, beneath foreground events. |
 
 Each renders an `aria-hidden` `div` with `data-layer` and `data-kind`. A label such as "Closed" is your own text.
 

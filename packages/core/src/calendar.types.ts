@@ -142,7 +142,9 @@ export interface Calendar_TimelineRow_FeatureMap {
 export interface Calendar_TimelineSegment_FeatureMap {}
 
 export type Calendar_DateViewSettings = { hiddenDays?: readonly Calendar_DayOfWeek[] };
-export type Calendar_TimeViewSettings = Calendar_DateViewSettings & { timeWindow?: { startMinutes: number; endMinutes: number } };
+export type Calendar_TimeViewSettings = Calendar_DateViewSettings & {
+  timeWindow?: { startMinutes: number; endMinutes: number };
+};
 
 export type Calendar_DayDuration =
   | { days: number; weeks?: never; months?: never; period?: never }

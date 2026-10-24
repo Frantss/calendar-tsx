@@ -21,7 +21,7 @@ const setup = ({
   backgrounds = [],
   feature = true,
 }: {
-  settings?: Partial<Calendar_TimelineViewSettings>;
+  settings?: Partial<Extract<Calendar_TimelineViewSettings, { days: number }>>;
   anchor?: string;
   timeZone?: string;
   events?: Calendar_EventInput<Fixtures_EventData>[];

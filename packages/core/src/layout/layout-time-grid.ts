@@ -221,8 +221,11 @@ export const layoutTimeGrid_build = <TData, TResourceData>({
       ),
     ]),
   );
-  const groups: (Calendar_Resource<TResourceData> | undefined)[] =
-    calendarPeriods_groups(definition.groupBy).includes('resource') ? resources : [undefined];
+  const groups: (Calendar_Resource<TResourceData> | undefined)[] = calendarPeriods_groups(definition.groupBy).includes(
+    'resource',
+  )
+    ? resources
+    : [undefined];
 
   const pairs =
     definition.groupOrder === 'date-first'

@@ -220,18 +220,15 @@ it('compresses hidden timeline dates for events, availability and now', () => {
   expect(model.now).toBeCloseTo(0.75);
 });
 
-it.each([
-  ['2026-03-08', 23],
-  ['2026-11-01', 25],
-] as const)('uses real slot boundaries on %s', (date, hours) => {
+it.each(['2026-03-08', '2026-11-01'])('keeps clock slot boundaries aligned across DST on %s', date => {
   const { layout } = setup(timelineView({ days: 1, slotMinutes: 60 }), {
     date,
     now: `${date}T12:00[America/New_York]`,
     events: [fixtures_timed('noon', { date, start: '12:00', end: '13:00' })],
   });
   const model = layout as Calendar_TimelineLayout<Fixtures_EventData, null>;
-  expect(model.slots).toHaveLength(hours);
-  expect(new Set(model.slots.map(slot => slot.key)).size).toBe(hours);
+  expect(model.slots).toHaveLength(24);
+  expect(new Set(model.slots.map(slot => slot.key)).size).toBe(24);
   const noon = model.slots.find(slot => slot.time.hour === 12);
   expect(model.rows[0]?.segments[0]?.start).toBeCloseTo(noon!.start);
   expect(model.now).toBeCloseTo(noon!.start);
@@ -242,7 +239,7 @@ it('keeps one daily slot per calendar date across daylight saving', () => {
   const { layout } = setup(timelineView({ days: 3, slotMinutes: 1440 }), { date: '2026-03-07' });
   const model = layout as Calendar_TimelineLayout<Fixtures_EventData, null>;
   expect(model.slots).toHaveLength(3);
-  expect(model.days.map(day => day.span)).toEqual([24 / 71, 23 / 71, 24 / 71]);
+  expect(model.days.map(day => day.span)).toEqual([1 / 3, 1 / 3, 1 / 3]);
 });
 
 it('returns empty visible models when the selected date is hidden', () => {
@@ -255,8 +252,8 @@ it('rejects invalid durations, visibility and duplicate grouping keys', () => {
   expect(() => timeGridView({ days: 0 })).toThrow('positive integers');
   expect(() => listView({ months: 1.5 })).toThrow('positive integers');
   expect(() => timelineView({ days: 1, hiddenDays: [1, 2, 3, 4, 5, 6, 7] })).toThrow('leave at least one');
-  // @ts-expect-error -- grouping keys are unique (D41)
+  // @ts-expect-error -- grouping keys are unique (D44)
   expect(() => dayGridView({ period: 'year', groupBy: ['month', 'month'], maxEventsPerDay: 3 })).toThrow('distinct');
-  // @ts-expect-error -- month grouping needs month-based periods (D41)
+  // @ts-expect-error -- month grouping needs month-based periods (D44)
   expect(() => dayGridView({ days: 3, groupBy: 'month', maxEventsPerDay: 3 })).toThrow('calendar-month duration');
 });

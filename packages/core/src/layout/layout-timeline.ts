@@ -223,7 +223,13 @@ export const layoutTimeline_build = <TData, TResourceData>({
       })),
     ),
     rows: groups.map(resource =>
-      buildRow({ resource, events: projected, backgroundEvents: projectedBackgrounds, plan, minEventMs: (definition.minEventMinutes ?? slotMinutes / 2) * 60_000 }),
+      buildRow({
+        resource,
+        events: projected,
+        backgroundEvents: projectedBackgrounds,
+        plan,
+        minEventMs: (definition.minEventMinutes ?? slotMinutes / 2) * 60_000,
+      }),
     ),
     now: clock ? (clock.dateIndex + clock.position) / dates.length : undefined,
     minSlotWidth: definition.minSlotWidth,

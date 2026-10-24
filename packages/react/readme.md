@@ -73,7 +73,7 @@ Configure `hiddenDays` on the core view factories and `timeWindow` on `timeGridV
 consume the resulting geometry; callers keep mapping columns, slots and segments as usual. Slots expose
 `dayOffset` to label after-midnight times, and a single event can appear in multiple date columns.
 
-For custom CSS, use `--cal-columns` for month widths, each axis label's `--cal-start`/`--cal-span` for its position,
+For custom CSS, use `--cal-columns` for day-grid widths, each axis label's `--cal-start`/`--cal-span` for its position,
 and `--cal-slot-units` for time-grid height. Timeline headers use `--cal-slot-columns` so final partial slots keep
 their proportional width. The bundled themes handle these values. Fetch events for navigation's `inputRange`.
 
@@ -82,6 +82,7 @@ their proportional width. The bundled themes handle these values. Fetch events f
 Timeline lanes can render `row.backgroundEvents` with `TimelineViewBackgroundEvent`. Views registering
 `backgroundFeature` also expose `row.backgrounds` for `TimelineViewBackground`. Both take geometry from the core,
 render `aria-hidden` divs, and sit beneath foreground events when using the bundled themes.
+
 ## Resource agendas
 
 Resource agendas use `listView({ weeks: 1, groupBy: 'resource' })` or the ordered pairs `['resource', 'date']` and `['date', 'resource']`. Render `layout.sections` with `ListViewSection` and `ListViewSectionHeader`, then render each section's `days` with the existing day and event parts. Resource data stays typed in the section and day models. `layout.days` remains available as a flat index.

@@ -18,7 +18,6 @@
 
   :where([data-scope='calendar'][data-part='day-grid-section']) {
     display: grid;
-    grid-template-columns: repeat(var(--cal-columns, 7), minmax(0, 1fr));
     min-inline-size: 0;
   }
 

@@ -88,11 +88,11 @@ it('lines the day headers and slot labels up with the track', async () => {
   expect(days).toHaveLength(7);
   expect(days[0]?.left).toBeCloseTo(lane.left, 0);
   expect(days[6]?.right).toBeCloseTo(lane.right, 0);
-  expect(days[3]?.left).toBeCloseTo(slots[71]?.left ?? 0, 0);
-  expect(lane.width).toBeGreaterThanOrEqual(167 * 16 - 1);
+  expect(days[3]?.left).toBeCloseTo(slots[72]?.left ?? 0, 0);
+  expect(lane.width).toBeGreaterThanOrEqual(168 * 16 - 1);
 });
 
-it('aligns daily month headers and event bars across a short DST day', async () => {
+it('aligns daily month headers and event bars across a DST transition', async () => {
   await render({
     views: { timeline: timelineView({ period: 'month', groupBy: 'resource', slotMinutes: 1440, minSlotWidth: '2rem' }) },
     events: [{ ...themesSetup_allDay('DST', { start: '2026-03-08', end: '2026-03-08' }), resourceIds: ['Ana'] }],
@@ -102,7 +102,7 @@ it('aligns daily month headers and event bars across a short DST day', async () 
   const bar = themesSetup_rect(event('DST'));
   expect(bar.left).toBeCloseTo(shortDay.left, 0);
   expect(bar.width).toBeCloseTo(shortDay.width, 0);
-  expect(shortDay.width / normalDay.width).toBeCloseTo(23 / 24, 2);
+  expect(shortDay.width / normalDay.width).toBeCloseTo(1, 2);
   expect(shortDay.width).toBeGreaterThanOrEqual(31.9);
 });
 
