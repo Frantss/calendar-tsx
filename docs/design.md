@@ -502,6 +502,8 @@ Themes vary along two axes that combine. A look (`default.css`, `shadcn.css`) se
 
 **Revised — outside-month days and today's hover.** With gray neutrals, the muted surface on outside-month days (`#f4f4f5`) sat within about 1% lightness of the 3% weekend shade, so in a month or year view the two roles merged into one grey frame; the stone surface had kept them apart by hue. Outside-month days now keep only muted text. Hovering today's marker also turned its fill to the muted surface and left the accent's contrast text on it (white on `#f4f4f5`), because the plain trigger hover has a `:hover` outside `:where()` and outranks the today rule. Today's hover now restates the accent fill and adds a 3px halo of the accent at 24%, which keeps the marker's contrast with any accent. Rejected: a lighter fill on hover (white on a lightened Material UI blue drops below 4.5:1); a darker weekend shade (it would move toward the background-layer shade instead).
 
+**Revised — a derived strong border.** `--calendar-border-strong` was a zinc literal on `:root`, and no look but `high-contrast.css` set it, so Stripe's navy, RevenueCat's purple and an app's own shadcn or Material UI palette drew zinc header and day-start lines, as did any app that set only `--calendar-border`. It is now undeclared, like the other derived tokens, and falls back at the point of use to the border mixed 15% toward the text in oklab, which reproduces the default's former values (oklab L 0.808 and 0.415 against 0.806 and 0.404). Rejected: a value per look (it would leave apps that set `--calendar-border` on zinc, and shadcn and Material UI have no stronger border variable to map).
+
 ### D27 — Server rendering: a seeded first "now" and a client-module entry
 
 **Serves:** D11, D24; C9, C10

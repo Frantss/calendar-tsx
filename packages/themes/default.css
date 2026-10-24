@@ -4,7 +4,8 @@
  * Each role has its own color, so they read apart: the accent marks today and focus, `--calendar-event-color` the
  * events, `--calendar-now` the now line and `--calendar-background-event-color` background events.
  * Tokens that default to another token (`--calendar-event`, `--calendar-event-border`, `--calendar-event-text`,
- * `--calendar-focus-ring`, `--calendar-background`, `--calendar-background-event`, `--calendar-weekend`) are left
+ * `--calendar-focus-ring`, `--calendar-background`, `--calendar-background-event`, `--calendar-weekend`,
+ * `--calendar-border-strong`) are left
  * undeclared and fall back at the point of use: declared on `:root`, they would resolve there and ignore overrides
  * further down.
  */
@@ -19,7 +20,6 @@
     --calendar-text: light-dark(#18181b, #f1f1f3);
     --calendar-text-muted: light-dark(#5b5b63, #a3a3ab);
     --calendar-border: light-dark(#e2e2e5, #323236);
-    --calendar-border-strong: light-dark(#bfbfc5, #48484e);
     --calendar-accent: light-dark(#18181b, #f1f1f3);
     --calendar-accent-contrast: light-dark(#ffffff, #18181b);
     --calendar-event-color: light-dark(#2f63d6, #7ea6ff);
@@ -40,6 +40,14 @@
     --calendar-row-min-height: 6rem;
     --calendar-slot-height: 3rem;
     --calendar-axis-width: 4rem;
+  }
+
+  /* The border deepened toward the text, so a theme or an app that sets the border gets a matching strong line */
+  :where([data-scope='calendar']) {
+    --_calendar-border-strong: var(
+      --calendar-border-strong,
+      color-mix(in oklab, var(--calendar-border), var(--calendar-text) 15%)
+    );
   }
 
   /* Roots */
@@ -248,7 +256,7 @@
     )
   ) {
     background: linear-gradient(var(--calendar-surface-muted), var(--calendar-surface-muted)), var(--calendar-surface);
-    border-block-end: 1px solid var(--calendar-border-strong);
+    border-block-end: 1px solid var(--_calendar-border-strong);
   }
 
   :where([data-scope='calendar'][data-part='day-grid-header-cell']) {
@@ -543,7 +551,7 @@
 
   :where([data-scope='calendar'][data-part='timeline-day-header']) {
     padding: 0.375rem 0.5rem 0.125rem;
-    border-inline-start: 1px solid var(--calendar-border-strong);
+    border-inline-start: 1px solid var(--_calendar-border-strong);
     color: var(--calendar-text);
     font-size: var(--calendar-font-size-sm);
     font-weight: 600;
@@ -594,7 +602,7 @@
   /* Opaque, since events and the now line scroll under it */
   :where([data-scope='calendar'][data-part='timeline-resource']) {
     padding: 0.375rem 0.75rem;
-    border-inline-end: 1px solid var(--calendar-border-strong);
+    border-inline-end: 1px solid var(--_calendar-border-strong);
     background: linear-gradient(var(--calendar-surface-muted), var(--calendar-surface-muted)), var(--calendar-surface);
     font-weight: 600;
     overflow: hidden;
@@ -615,7 +623,7 @@
       var(--_calendar-slot) * var(--cal-hour-offset, 0) * clamp(0, (var(--cal-slots-per-hour, 1) - 1) * 1000 + 1, 1)
     );
     background-image:
-      linear-gradient(to right, var(--calendar-border-strong) 1px, transparent 1px),
+      linear-gradient(to right, var(--_calendar-border-strong) 1px, transparent 1px),
       repeating-linear-gradient(
         to right,
         transparent 0 var(--_calendar-hour-start),

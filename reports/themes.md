@@ -60,3 +60,14 @@
 - **Where:** `packages/themes/default.css:285` (outside-month days); `packages/themes/high-contrast.css:14` and `:17`.
 - **Why it matters:** the earlier finding and `apps/docs/content/shared/styling/themes.mdx` name outside-month days as
   the example of a muted surface.
+
+## shadcn's muted text falls below AA on weekend outside-month dates
+
+- **What:** with shadcn's default neutral palette in light mode, an outside-month date that falls on a weekend measures
+  4.43:1: `--muted-foreground` (`oklch(0.556 0 0)`, 4.74:1 on the background) over the 3% weekend shade. Every other
+  measured pair in `shadcn.css`, `material-ui.css`, `revenuecat.css`, `stripe.css` and `high-contrast.css` meets AA in
+  both modes.
+- **Where:** `packages/themes/shadcn.css:16` maps `--calendar-text-muted` to `--muted-foreground`; the weekend shade is
+  at `packages/themes/default.css:290`; outside-month days take the muted text at `packages/themes/default.css:294`.
+- **Why it matters:** the color is the app's own, so the theme cannot raise it without overriding the palette it adopts,
+  but the themes page does not say that an adopted muted color can drop below AA on the weekend shade.

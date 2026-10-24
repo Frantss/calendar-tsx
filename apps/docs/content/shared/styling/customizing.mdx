@@ -16,7 +16,8 @@ Defaults from `default.css`, light then dark:
 | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
 | `--calendar-surface`, `--calendar-surface-muted`                                          | `#ffffff` `#f4f4f5`, `#161618` `#1f1f22`                     |
 | `--calendar-text`, `--calendar-text-muted`                                                | `#18181b` `#5b5b63`, `#f1f1f3` `#a3a3ab`                     |
-| `--calendar-border`, `--calendar-border-strong`                                           | `#e2e2e5` `#bfbfc5`, `#323236` `#48484e`                     |
+| `--calendar-border`                                                                       | `#e2e2e5`, `#323236`                                         |
+| `--calendar-border-strong`                                                                | unset: the border mixed 15% toward the text                  |
 | `--calendar-accent`, `--calendar-accent-contrast`                                         | `#18181b` `#ffffff`, `#f1f1f3` `#18181b`                     |
 | `--calendar-event-color`, `--calendar-event-color-contrast`                               | `#2f63d6` `#ffffff`, `#7ea6ff` `#0b1530`                     |
 | `--calendar-event`, `--calendar-event-border`                                             | unset: see [roles](#roles)                                   |
@@ -34,7 +35,7 @@ Defaults from `default.css`, light then dark:
 | `--calendar-background-event`                                                             | unset: the background event color mixed 14% into transparent |
 | `--calendar-weekend`                                                                      | unset: the text mixed 3% into transparent                    |
 
-The event fill, border and text, the background fills, `--calendar-weekend` and `--calendar-focus-ring` are unset on purpose. A custom property declared as `var(--other)`
+The event fill, border and text, the background fills, `--calendar-weekend`, `--calendar-border-strong` and `--calendar-focus-ring` are unset on purpose. A custom property declared as `var(--other)`
 resolves where it is declared, so a default on `:root` would ignore an override of the token it points to further
 down.
 

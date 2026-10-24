@@ -432,6 +432,23 @@ it('resolves derived tokens below an override', async () => {
   style.remove();
 });
 
+it.each([
+  ['derives the header line from a border set below the root', '', 'color-mix(in oklab, rgb(0, 0, 255), #18181b 15%)'],
+  ['lets --calendar-border-strong set the header line', '--calendar-border-strong: rgb(1, 2, 3);', 'rgb(1, 2, 3)'],
+] as const)('%s', async (_, strong, line) => {
+  const style = document.head.appendChild(document.createElement('style'));
+  style.textContent = `.brand { --calendar-border: rgb(0, 0, 255); ${strong} }`;
+  const probe = document.body.appendChild(document.createElement('div'));
+  probe.style.color = line;
+
+  await themesSetup_render(<TimeGrid />, { className: 'brand' });
+  const header = themesSetup_part('time-grid-header')[0];
+
+  expect(header && getComputedStyle(header).borderBlockEndColor).toBe(getComputedStyle(probe).color);
+  probe.remove();
+  style.remove();
+});
+
 it('restores the today marker with system colors in forced-colors mode', async () => {
   await cdp().send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] });
   await themesSetup_render(<Month />, { view: 'month' });

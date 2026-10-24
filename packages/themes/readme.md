@@ -61,7 +61,8 @@ colors resolve on each event, so a class on one event part that sets `--calendar
 | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | `--calendar-surface`, `--calendar-surface-muted`                                          | `#ffffff` `#f4f4f5`, `#161618` `#1f1f22`                                  |
 | `--calendar-text`, `--calendar-text-muted`                                                | `#18181b` `#5b5b63`, `#f1f1f3` `#a3a3ab`                                  |
-| `--calendar-border`, `--calendar-border-strong`                                           | `#e2e2e5` `#bfbfc5`, `#323236` `#48484e`                                  |
+| `--calendar-border`                                                                       | `#e2e2e5`, `#323236`                                                      |
+| `--calendar-border-strong`                                                                | unset: the border mixed 15% toward the text                               |
 | `--calendar-accent`, `--calendar-accent-contrast`                                         | `#18181b` `#ffffff`, `#f1f1f3` `#18181b`                                  |
 | `--calendar-event-color`, `--calendar-event-color-contrast`                               | `#2f63d6` `#ffffff`, `#7ea6ff` `#0b1530`                                  |
 | `--calendar-event`, `--calendar-event-border`                                             | unset: tints of the event color, or the event color on solid bars         |
@@ -77,8 +78,8 @@ colors resolve on each event, so a class on one event part that sets `--calendar
 | `--calendar-event-gap`                                                                    | `4px`: space after each time-grid event, both axes                        |
 | `--calendar-day-header-height`, `--calendar-overflow-height`, `--calendar-row-min-height` | `2.25rem`, `1.5rem`, `6rem`                                               |
 
-The theme sets no font family; the calendar inherits the page's. The event fill, border and text tokens, `--calendar-focus-ring`, `--calendar-background` and
-`--calendar-weekend` are left unset on purpose: a token declared as `var(--other)` resolves where it is declared, so a default on `:root`
+The theme sets no font family; the calendar inherits the page's. The event fill, border and text tokens, `--calendar-focus-ring`, `--calendar-background`,
+`--calendar-weekend` and `--calendar-border-strong` are left unset on purpose: a token declared as `var(--other)` resolves where it is declared, so a default on `:root`
 would ignore an override of the token it points to.
 
 **Dark mode.** Colors use `light-dark()`, so they follow the inherited `color-scheme`. The theme never sets it: declare
