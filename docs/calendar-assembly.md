@@ -1,12 +1,11 @@
 # Calendar assembly API
 
-Status: target API, not implemented. This document records the assembly syntax and examples agreed in the API
-discussion. The current packages still export `createCalendarViews` and feature constants. See D54 in the
+Status: implemented. This document records the factory assembly API and per-view configuration rules. See D54 in the
 [design spec](./design.md) for the decision and its relationship to D29 and D53.
 
 The implemented [core feature organization and exports](./core-features.md) defines feature-owned modules and the
 `@calendar-tsx/core/background` and `@calendar-tsx/core/recurrence` entry points. Root also re-exports their public
-symbols. These import paths exist today; the factory assembly shown below remains unimplemented.
+symbols, so both import styles support the assembly below.
 
 ## Assembly
 
@@ -91,7 +90,8 @@ resolver or a separate set of recurrence state.
 ## React setup
 
 This example includes its background layers and one event. Rendering parts belong inside `CalendarProvider`.
-Definitions stay at module scope so their references remain stable.
+Definitions stay at module scope so their references remain stable. This setup is also
+[a compiled React example](../apps/docs/examples/react/assembly.tsx).
 
 ```tsx
 import { useState, type ReactNode } from 'react';
@@ -202,12 +202,21 @@ Month inherits the holiday backgrounds. Week uses holidays plus business-hour sh
 layers. All three views retain recurrence support. Navigation stays controlled through `view`, `date` and
 `onNavigate`; accessible-label locale stays on the provider.
 
-## Typing requirements and remaining decisions
+## Validation and configuration lifetime
 
-The implementation must preserve registration keys, view keys and each feature's contributions through all three
-assembly stages. It must reject unknown override keys, invalid override values and calendar registrations that
-do not satisfy the views' feature requirements. These checks have not yet been prototyped against the new API.
+The registry and view binder preserve consumer keys and each feature's contributions. Unknown override keys,
+invalid override types and missing or incompatible registrations are rejected. A configured definition carries
+its stable identity independently of its alias, including for recurrence input types and source resolution.
+Canonical model-feature keys preserve structural compatibility with React and Solid parts.
 
-The examples establish inheritance and background-array replacement. They do not settle general object-option
-merging, a feature-disabling syntax, multiple registrations of the same feature, or how configured defaults can
-change after calendar creation. Those decisions remain open before their implementation.
+Object overrides shallow-merge with factory defaults. Nested objects are replaced. Arrays replace the entire
+array. Duplicate registrations of one feature identity are rejected, and no feature-disabling syntax is provided.
+Features with no configuration arguments reject overrides.
+
+Definitions and factory defaults are fixed at calendar creation. Keep references stable, and supply a new view
+definition and `views` map to update an override. A new registry object containing the same definitions is allowed;
+replacing definitions through `~update` throws. Create a new calendar to change registered definitions or defaults.
+
+State and actions initialize once per calendar. Factories and view assembly do not initialize state. Resolved
+configuration is cached per view definition and included in stage dependencies. A rejected update leaves the
+current calendar options and state unchanged.

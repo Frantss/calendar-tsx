@@ -15,7 +15,8 @@ pnpm add @calendar-tsx/core temporal-polyfill
 ```ts
 import {
   createCalendar,
-  createCalendarViews,
+  calendarViews,
+  calendarFeatures,
   listView,
   createRecurringEvent,
   recurrenceFeature,
@@ -31,11 +32,12 @@ const review = createRecurringEvent({
   data: { title: 'Review' },
 });
 
-const views = createCalendarViews({ month: listView({ period: 'month' }) });
+const features = calendarFeatures({ recurrence: recurrenceFeature() });
+const views = calendarViews({ features, views: { month: listView({ period: 'month' }) } });
 const calendar = createCalendar({
   timeZone: 'America/New_York',
-  views: views.views,
-  features: { ...views.features, recurrenceFeature },
+  views,
+  features,
   view: 'month',
   date: Temporal.PlainDate.from('2026-01-01'),
   events: [review],

@@ -9,7 +9,7 @@ description: A month calendar with navigation, in one component.
 
 ## What it does
 
-1. Views are defined once at module scope with `createCalendarViews`, and passed as `views` and `features`.
+1. Features are configured once with `calendarFeatures`, views are bound with `calendarViews`, and both results are passed directly.
 2. `view` and `date` live in signals. `useCalendar` takes an accessor and re-syncs whenever a signal read inside
    it changes. The buttons call `calendar.api`, which reports the next view and date to `onNavigate`; setting the
    signals moves the calendar.

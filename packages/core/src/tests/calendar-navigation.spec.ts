@@ -1,8 +1,9 @@
+import { calendarFeatures } from '#features/calendar-features';
 import { Temporal } from 'temporal-polyfill';
 import { expect, it } from 'vitest';
 
 import { getCalendarNavigation } from '#calendar-navigation';
-import { createCalendarViews, listView, dayGridView, timeGridView } from '#calendar-views';
+import { calendarViews, listView, dayGridView, timeGridView } from '#calendar-views';
 
 const views = {
   month: dayGridView({ period: 'month', maxEventsPerDay: 4 }),
@@ -46,9 +47,10 @@ it('aligns month padding and multiweek grids to the configured first day', () =>
 });
 
 it('registers one layout feature for both month and week day grids', () => {
-  const grids = createCalendarViews({ month: views.month, weeks: views.grid_weeks });
+  const gridsFeatures = calendarFeatures({});
+  const grids = calendarViews({ features: gridsFeatures, views: { month: views.month, weeks: views.grid_weeks } });
 
-  expect(Object.keys(grids.features)).toEqual(['dayGridLayout']);
+  expect(Object.values(grids).map(view => Object.keys(view['~features']))).toEqual([['dayGridLayout'], ['dayGridLayout']]);
 });
 
 it('anchors non-week durations on the date itself', async () => {

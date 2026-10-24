@@ -1,5 +1,5 @@
 import type { Calendar_DayOfWeek, Calendar_State } from '@calendar-tsx/core';
-import { createCalendarViews, listView, dayGridView, timeGridView, timelineView } from '@calendar-tsx/core';
+import { calendarViews, calendarFeatures, listView, dayGridView, timeGridView, timelineView } from '@calendar-tsx/core';
 
 import type { Booking, Room } from './sample-data';
 
@@ -50,71 +50,74 @@ export const createPlaygroundViews = ({
 
   const resourceTimed = { ...timed, minColumnWidth: timed.minColumnWidth ?? '8rem' };
 
-  return createCalendarViews({
-    month: dayGridView({ period: 'month', maxEventsPerDay, hiddenDays }),
-    year: dayGridView({ period: 'year', groupBy: 'month', fixedWeekCount: true, maxEventsPerDay, hiddenDays }),
-    year_continuous: dayGridView({ period: 'year', maxEventsPerDay, hiddenDays }),
-    year_stack: dayGridView({ period: 'year', groupBy: 'month', fixedWeekCount: true, maxEventsPerDay, hiddenDays }),
-    grid_days: dayGridView({ days: 3, maxEventsPerDay, hiddenDays }),
-    grid_week: dayGridView({ weeks: 1, maxEventsPerDay, hiddenDays }),
-    grid_workweek: dayGridView({ weeks: 1, hiddenDays: [6, 7], maxEventsPerDay }),
-    grid_rooms: dayGridView({ days: 1, groupBy: 'resource', maxEventsPerDay, hiddenDays }),
-    month_rooms: dayGridView({ period: 'quarter', groupBy: ['month', 'resource'], maxEventsPerDay, hiddenDays }),
-    room_months: dayGridView({ period: 'quarter', groupBy: ['resource', 'month'], maxEventsPerDay, hiddenDays }),
-    week: timeGridView({ days: 7, ...timed }),
-    workweek: timeGridView({ weeks: 1, ...timed, hiddenDays: [6, 7] }),
-    day: timeGridView({ days: 1, ...timed }),
-    rooms: timeGridView({ days: 1, groupBy: 'resource', ...timed }),
-    rooms_week: timeGridView({ weeks: 1, groupBy: 'resource', ...resourceTimed }),
-    rooms_workweek: timeGridView({
-      weeks: 1,
-      groupBy: 'resource',
-      ...resourceTimed,
-      hiddenDays: [6, 7],
-    }),
-    rooms_week_dates: timeGridView({
-      weeks: 1,
-      groupBy: 'resource',
-      groupOrder: 'date-first',
-      ...resourceTimed,
-    }),
-    agenda: listView({ days: 7, hiddenDays }),
-    agenda_day: listView({ days: 1, hiddenDays }),
-    agenda_month: listView({ period: 'month', hiddenDays }),
-    agenda_year: listView({ period: 'year', hiddenDays }),
-    agenda_rooms: listView({ weeks: 1, groupBy: 'resource', hiddenDays }),
-    agenda_dates_rooms: listView({ weeks: 1, groupBy: ['date', 'resource'], hiddenDays }),
-    timeline_day: timelineView({ days: 1, groupBy: 'resource', minSlotWidth: '4rem', ...timed }),
-    timeline_week: timelineView({ weeks: 1, groupBy: 'resource', minSlotWidth: '4rem', ...timed }),
-    timeline_month: timelineView({
-      period: 'month',
-      groupBy: 'resource',
-      slotMinutes: 1440,
-      minSlotWidth: '6rem',
-      hiddenDays,
-      timeWindow: timed.timeWindow,
-    }),
-    timeline_quarter: timelineView({
-      period: 'quarter',
-      groupBy: 'resource',
-      slotMinutes: 1440,
-      minSlotWidth: '6rem',
-      hiddenDays,
-      timeWindow: timed.timeWindow,
-    }),
-    timeline_year: timelineView({
-      period: 'year',
-      groupBy: 'resource',
-      slotMinutes: 1440,
-      minSlotWidth: '6rem',
-      hiddenDays,
-      timeWindow: timed.timeWindow,
-    }),
+  return calendarViews({
+    features: calendarFeatures({}),
+    views: {
+      month: dayGridView({ period: 'month', maxEventsPerDay, hiddenDays }),
+      year: dayGridView({ period: 'year', groupBy: 'month', fixedWeekCount: true, maxEventsPerDay, hiddenDays }),
+      year_continuous: dayGridView({ period: 'year', maxEventsPerDay, hiddenDays }),
+      year_stack: dayGridView({ period: 'year', groupBy: 'month', fixedWeekCount: true, maxEventsPerDay, hiddenDays }),
+      grid_days: dayGridView({ days: 3, maxEventsPerDay, hiddenDays }),
+      grid_week: dayGridView({ weeks: 1, maxEventsPerDay, hiddenDays }),
+      grid_workweek: dayGridView({ weeks: 1, hiddenDays: [6, 7], maxEventsPerDay }),
+      grid_rooms: dayGridView({ days: 1, groupBy: 'resource', maxEventsPerDay, hiddenDays }),
+      month_rooms: dayGridView({ period: 'quarter', groupBy: ['month', 'resource'], maxEventsPerDay, hiddenDays }),
+      room_months: dayGridView({ period: 'quarter', groupBy: ['resource', 'month'], maxEventsPerDay, hiddenDays }),
+      week: timeGridView({ days: 7, ...timed }),
+      workweek: timeGridView({ weeks: 1, ...timed, hiddenDays: [6, 7] }),
+      day: timeGridView({ days: 1, ...timed }),
+      rooms: timeGridView({ days: 1, groupBy: 'resource', ...timed }),
+      rooms_week: timeGridView({ weeks: 1, groupBy: 'resource', ...resourceTimed }),
+      rooms_workweek: timeGridView({
+        weeks: 1,
+        groupBy: 'resource',
+        ...resourceTimed,
+        hiddenDays: [6, 7],
+      }),
+      rooms_week_dates: timeGridView({
+        weeks: 1,
+        groupBy: 'resource',
+        groupOrder: 'date-first',
+        ...resourceTimed,
+      }),
+      agenda: listView({ days: 7, hiddenDays }),
+      agenda_day: listView({ days: 1, hiddenDays }),
+      agenda_month: listView({ period: 'month', hiddenDays }),
+      agenda_year: listView({ period: 'year', hiddenDays }),
+      agenda_rooms: listView({ weeks: 1, groupBy: 'resource', hiddenDays }),
+      agenda_dates_rooms: listView({ weeks: 1, groupBy: ['date', 'resource'], hiddenDays }),
+      timeline_day: timelineView({ days: 1, groupBy: 'resource', minSlotWidth: '4rem', ...timed }),
+      timeline_week: timelineView({ weeks: 1, groupBy: 'resource', minSlotWidth: '4rem', ...timed }),
+      timeline_month: timelineView({
+        period: 'month',
+        groupBy: 'resource',
+        slotMinutes: 1440,
+        minSlotWidth: '6rem',
+        hiddenDays,
+        timeWindow: timed.timeWindow,
+      }),
+      timeline_quarter: timelineView({
+        period: 'quarter',
+        groupBy: 'resource',
+        slotMinutes: 1440,
+        minSlotWidth: '6rem',
+        hiddenDays,
+        timeWindow: timed.timeWindow,
+      }),
+      timeline_year: timelineView({
+        period: 'year',
+        groupBy: 'resource',
+        slotMinutes: 1440,
+        minSlotWidth: '6rem',
+        hiddenDays,
+        timeWindow: timed.timeWindow,
+      }),
+    },
   });
 };
 
 export const playgroundViews = createPlaygroundViews(defaultPlaygroundViewSettings);
 
-export type PlaygroundView = keyof typeof playgroundViews.views;
+export type PlaygroundView = keyof typeof playgroundViews;
 
-export type PlaygroundState = Calendar_State<Booking, Room, typeof playgroundViews.views>;
+export type PlaygroundState = Calendar_State<Booking, Room, typeof playgroundViews>;

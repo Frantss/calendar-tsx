@@ -2,8 +2,6 @@ export type * from '#features/background/background.types';
 export type * from '#features/recurrence/recurrence.types';
 import type {
   Calendar_EventInput_FeatureMap,
-  Calendar_Options_FeatureMap,
-  Calendar_ViewSettings_FeatureMap,
   Calendar_State_FeatureMap,
   Calendar_Api_FeatureMap,
   Calendar_DayGridDay_FeatureMap,
@@ -16,7 +14,12 @@ import type {
   Calendar_Layout_FeatureMap,
 } from '#features/feature-maps.types';
 export type * from '#features/feature-maps.types';
-import type { Calendar_Features } from '#features/feature.types';
+import type {
+  Calendar_Features,
+  Calendar_FeatureTypes,
+  Calendar_ConfiguredFeatures,
+  Calendar_FeatureOverride,
+} from '#features/feature.types';
 export type * from '#features/feature.types';
 import type { ReadonlyStore } from '@tanstack/store';
 import type { Temporal } from 'temporal-polyfill';
@@ -66,7 +69,7 @@ export type Calendar_EventDefinition<TData, TFeatures = Calendar_Features> =
   | (Calendar_EventSource<TData> &
       Calendar_EventInput_FeatureMap<TData>[string extends keyof TFeatures
         ? keyof Calendar_EventInput_FeatureMap<TData>
-        : Extract<keyof TFeatures, keyof Calendar_EventInput_FeatureMap<TData>>]);
+        : Extract<keyof Calendar_FeatureTypes<TFeatures>, keyof Calendar_EventInput_FeatureMap<TData>>]);
 
 /** An event after resolution and normalization; timed dates use the calendar's `timeZone`. */
 export type Calendar_Event<TData> = Calendar_EventInput<TData> & {
@@ -460,17 +463,47 @@ export type Calendar_View<
 
 export type Calendar_Views = Record<string, Calendar_View>;
 
-/** The settings a view factory takes beyond its layout's own: the features it uses and their per-view settings. */
-export type Calendar_ViewFeatureSettings<TFeatures extends Calendar_Features> = {
-  features?: TFeatures;
-} & Calendar_PickFeatures<Calendar_ViewSettings_FeatureMap, TFeatures>;
+/** Unbound overrides are validated against a registry by `calendarViews`. */
+export type Calendar_ViewFeatureSettings<TOverrides extends object> = {
+  features?: TOverrides;
+};
+
+export type Calendar_ViewOverrides<TFeatures extends Calendar_ConfiguredFeatures> = {
+  [K in keyof TFeatures]?: Calendar_FeatureOverride<TFeatures[K]>;
+};
+
+export type Calendar_BoundViews<TFeatures extends Calendar_ConfiguredFeatures, TViews extends Calendar_Views> = {
+  [K in keyof TViews]: Omit<TViews[K], '~features'> & {
+    '~features': Pick<TViews[K]['~features'], Extract<TViews[K]['~layout'], keyof TViews[K]['~features']>> & TFeatures;
+  };
+};
+
+type ValidateOverrideValue<TAllowed, TValue> = TAllowed extends unknown
+  ? TValue extends readonly unknown[]
+    ? TAllowed
+    : TValue extends object
+      ? TAllowed & Record<Exclude<keyof TValue, keyof TAllowed>, never>
+      : TAllowed
+  : never;
+
+export type Calendar_ValidateOverrides<TFeatures extends Calendar_ConfiguredFeatures, TViews extends Calendar_Views> = {
+  [K in keyof TViews]: TViews[K] extends { features: infer TOverrides }
+    ? {
+        features: {
+          [P in keyof TOverrides]: P extends keyof TFeatures
+            ? ValidateOverrideValue<Calendar_FeatureOverride<TFeatures[P]>, TOverrides[P]>
+            : never;
+        };
+      }
+    : unknown;
+};
 
 export type Calendar_FeaturesOf<TViews extends Record<string, { '~features': object }>> = UnionToIntersection<
   TViews[keyof TViews]['~features']
 >;
 
 type MissingFeatures<TViews extends Calendar_Views, TFeatures> =
-  | Exclude<keyof Calendar_FeaturesOf<TViews>, keyof TFeatures>
+  | Exclude<keyof Calendar_FeaturesOf<TViews>, keyof TFeatures | TViews[keyof TViews]['~layout']>
   | {
       [K in keyof Calendar_FeaturesOf<TViews> & keyof TFeatures]: TFeatures[K] extends Calendar_FeaturesOf<TViews>[K]
         ? never
@@ -486,11 +519,11 @@ export type Calendar_ValidateFeatures<
   : [MissingFeatures<TViews, TFeatures>] extends [never]
     ? unknown
     : {
-        features: `Error: views use '${MissingFeatures<TViews, TFeatures> & string}'; spread views.features into features, or replace them with compatible implementations`;
+        features: `Error: views use '${MissingFeatures<TViews, TFeatures> & string}'; pass the registry used by calendarViews`;
       };
 
-export type Calendar_Navigation<TViews extends Calendar_Views> = {
-  view: keyof TViews & string;
+type NavigationFor<TViewKey extends string> = {
+  view: TViewKey;
   date: Temporal.PlainDate;
   /** Anchor-date envelope, including month padding and hidden weekdays. */
   range: Calendar_Range;
@@ -500,9 +533,15 @@ export type Calendar_Navigation<TViews extends Calendar_Views> = {
   period: Calendar_Range;
 };
 
-export type Calendar_ViewContext<TViews extends Calendar_Views> = Calendar_Navigation<TViews> & {
-  kind: TViews[keyof TViews]['kind'];
-};
+export type Calendar_Navigation<TViews extends Calendar_Views> = TViews extends unknown
+  ? NavigationFor<keyof TViews & string>
+  : never;
+
+export type Calendar_ViewContext<TViews extends Calendar_Views> = TViews extends unknown
+  ? NavigationFor<keyof TViews & string> & {
+      kind: TViews[keyof TViews]['kind'];
+    }
+  : never;
 
 /** A store a feature slice can live in; TanStack Store's `Store` fits. */
 export type Calendar_Atom<TValue> = {
@@ -510,22 +549,25 @@ export type Calendar_Atom<TValue> = {
   setState: (updater: (previous: TValue) => TValue) => void;
 };
 
-export type Calendar_FeatureState<TFeatures> = Calendar_PickFeatures<Calendar_State_FeatureMap, TFeatures>;
+export type Calendar_FeatureState<TFeatures> = Calendar_PickFeatures<
+  Calendar_State_FeatureMap,
+  Calendar_FeatureTypes<TFeatures>
+>;
 
 export type Calendar_Options<
   TData,
   TResourceData,
   TViews extends Calendar_Views,
-  TFeatures extends Calendar_Features = Calendar_Features,
+  TFeatures extends Calendar_Features = Calendar_ConfiguredFeatures,
 > = {
   timeZone: string;
-  /** Usually `createCalendarViews(…).views`; tracked by reference. */
+  /** The map returned by `calendarViews`; tracked by reference. */
   views: TViews;
-  /** Usually `{ ...views.features }` plus calendar-wide features. Read once at creation. */
+  /** Configured definitions returned by `calendarFeatures`. Read once at creation. */
   features: TFeatures;
-  view: keyof TViews & string;
+  view: keyof NoInfer<TViews> & string;
   date: Temporal.PlainDate;
-  onNavigate: (next: Calendar_Navigation<TViews>) => void;
+  onNavigate: (next: Calendar_Navigation<NoInfer<TViews>>) => void;
   /**
    * Ids must be unique; tracked by reference. Events with `display: 'background'` are shaded under the others: no
    * lanes or rows, no `eventOrder`, no feature `events` stages, not in `day.events` or the list (D37).
@@ -534,7 +576,11 @@ export type Calendar_Options<
   /** Tracked by reference. */
   resources?: Calendar_Resource<TResourceData>[];
   /** Read when the layout derives; changing it alone does not re-derive. */
-  eventOrder?: (a: Calendar_Event<TData>, b: Calendar_Event<TData>, context: Calendar_ViewContext<TViews>) => number;
+  eventOrder?: (
+    a: Calendar_Event<TData>,
+    b: Calendar_Event<TData>,
+    context: Calendar_ViewContext<NoInfer<TViews>>,
+  ) => number;
   firstDayOfWeek?: Calendar_FirstDayOfWeek;
   clock?: Calendar_Clock;
   /**
@@ -543,12 +589,16 @@ export type Calendar_Options<
    */
   initialNow?: Temporal.Instant;
   /** Controlled feature state slices; each slice tracked by reference. */
-  state?: Partial<Calendar_FeatureState<TFeatures>>;
+  state?: Partial<Calendar_FeatureState<NoInfer<TFeatures>>>;
   /** External stores for feature state slices; read once at creation. */
-  atoms?: { [K in keyof Calendar_FeatureState<TFeatures>]?: Calendar_Atom<Calendar_FeatureState<TFeatures>[K]> };
-} & Calendar_PickFeatures<Calendar_Options_FeatureMap<TData, TResourceData>, TFeatures>;
+  atoms?: {
+    [K in keyof Calendar_FeatureState<NoInfer<TFeatures>>]?: Calendar_Atom<
+      Calendar_FeatureState<NoInfer<TFeatures>>[K]
+    >;
+  };
+};
 
-/** One layout per view, with its declared features and calendar-only features that run in every view. */
+/** One layout per view, with all registered features inherited (D54). */
 export type Calendar_Layout<
   TData,
   TResourceData,
@@ -558,7 +608,7 @@ export type Calendar_Layout<
   [K in keyof TViews]: Calendar_Layout_FeatureMap<
     TData,
     TResourceData,
-    TViews[K]['~features'] & Omit<TFeatures, keyof Calendar_FeaturesOf<TViews>>
+    Calendar_FeatureTypes<TViews[K]['~features'] & TFeatures>
   >[TViews[K]['~layout']];
 }[keyof TViews];
 
@@ -586,7 +636,7 @@ export type Calendar_Api<TViews extends Calendar_Views, TFeatures extends Calend
   goTo: (date: Temporal.PlainDate) => void;
   setView: (view: keyof TViews & string, date?: Temporal.PlainDate) => void;
   navigate: (target: Calendar_NavigateTarget<TViews>) => void;
-} & Calendar_PickFeatures<Calendar_Api_FeatureMap, TFeatures>;
+} & Calendar_PickFeatures<Calendar_Api_FeatureMap, Calendar_FeatureTypes<TFeatures>>;
 
 export type Calendar_Instance<
   TData,

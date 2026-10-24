@@ -1,6 +1,7 @@
 import {
   createCalendar,
-  createCalendarViews,
+  calendarViews,
+  calendarFeatures,
   createEvent,
   createEventStore,
   fixedClock,
@@ -9,7 +10,7 @@ import {
   timeGridView,
   timelineView,
 } from '@calendar-tsx/core';
-import type { Calendar_Event, Calendar_EventDefinition, Calendar_Feature, Calendar_Range, Calendar_Clock } from '@calendar-tsx/core';
+import type { Calendar_ConfiguredFeature, Calendar_Event, Calendar_EventDefinition, Calendar_Range, Calendar_Clock } from '@calendar-tsx/core';
 import { RRuleTemporal } from 'rrule-temporal';
 import { Temporal } from 'temporal-polyfill';
 import { expect, expectTypeOf, it, vi } from 'vitest';
@@ -46,7 +47,7 @@ const expand = (
   start = '2026-01-01',
   end = '2026-12-31',
   timeZone = 'America/New_York',
-) => rruleFeature.resolveEvents(source, { range: range(start, end), timeZone });
+) => rruleFeature().resolveEvents(source, { range: range(start, end), timeZone });
 const starts = (events: Calendar_Event<unknown>[]) => events.map(event => event.start.toString());
 const dates = (events: Calendar_Event<unknown>[]) =>
   events.map(event => (event.kind === 'timed' ? event.start.toPlainDate().toString() : event.start.toString()));
@@ -185,21 +186,25 @@ it('rejects conflicting seeds, raw instances, malformed selectors and mismatched
   for (const source of invalid) expect(() => expand(source)).toThrow();
 });
 
-const views = createCalendarViews({
-  list: listView({ days: 3 }),
-  grid: timeGridView({ days: 3, allDay: true, groupBy: 'resource' }),
-  month: dayGridView({ period: 'month', maxEventsPerDay: 4 }),
-  timeline: timelineView({ days: 3, groupBy: 'resource' }),
+const viewsFeatures = calendarFeatures({});
+const views = calendarViews({
+  features: viewsFeatures,
+  views: {
+    list: listView({ days: 3 }),
+    grid: timeGridView({ days: 3, allDay: true, groupBy: 'resource' }),
+    month: dayGridView({ period: 'month', maxEventsPerDay: 4 }),
+    timeline: timelineView({ days: 3, groupBy: 'resource' }),
+  },
 });
 const calendar = (
-  events: Calendar_EventDefinition<{ title: string }, { rruleFeature: typeof rruleFeature }>[],
-  feature: Calendar_Feature = rruleFeature,
+  events: Calendar_EventDefinition<{ title: string }, { rruleFeature: ReturnType<typeof rruleFeature> }>[],
+  feature: Calendar_ConfiguredFeature<'rruleFeature', undefined> = rruleFeature(),
   clock?: Calendar_Clock,
 ) =>
   createCalendar({
     timeZone: 'America/New_York',
-    views: views.views,
-    features: { ...views.features, rruleFeature: feature },
+    views: views,
+    features: { ...viewsFeatures, rruleFeature: feature },
     view: 'list',
     date: date('2026-01-01'),
     events,
@@ -212,7 +217,7 @@ it('resolves before normalization, filtering, ordering and feature events; input
   const series = timed();
   const store = createEventStore([series]);
   expectTypeOf(store.store.state.events[0]!.data).toEqualTypeOf<{ title: string }>();
-  expectTypeOf(series).toExtend<Calendar_EventDefinition<{ title: string }, { rruleFeature: typeof rruleFeature }>>();
+  expectTypeOf(series).toExtend<Calendar_EventDefinition<{ title: string }, { rruleFeature: ReturnType<typeof rruleFeature> }>>();
   expectTypeOf(series).not.toExtend<Calendar_EventDefinition<{ title: string }, {}>>();
   const instance = calendar(store.store.state.events);
   const state = instance.store.state;
@@ -229,7 +234,7 @@ it('resolves before normalization, filtering, ordering and feature events; input
 it('memoizes resolution across clock ticks, while range, zone and definition changes resolve again', () => {
   let tick = () => {};
   let instant = now;
-  const resolver = vi.fn(rruleFeature.resolveEvents);
+  const resolver = vi.fn(rruleFeature().resolveEvents);
   const clock: Calendar_Clock = {
     now: () => instant,
     subscribe: listener => {
@@ -237,7 +242,7 @@ it('memoizes resolution across clock ticks, while range, zone and definition cha
       return () => {};
     },
   };
-  const instance = calendar([timed()], { resolveEvents: resolver }, clock);
+  const instance = calendar([timed()], { ...rruleFeature(), resolveEvents: resolver }, clock);
   const dispose = instance['~mount']();
   expect(instance.store.state.layout.kind).toBe('list');
   const count = resolver.mock.calls.length;
@@ -283,7 +288,7 @@ it('renders foreground and background occurrences through all layouts with resou
 });
 
 it('fails explicitly when a recurring definition has no registered resolver', () => {
-  expect(() => calendar([timed()], {}).store.state).toThrow('has no registered resolver');
+  expect(() => calendar([timed()], { '~id': 'rruleFeature', '~config': undefined }).store.state).toThrow('has no registered resolver');
 });
 
 it('passes only sorted visible foreground occurrences to later feature stages', () => {
@@ -292,7 +297,7 @@ it('passes only sorted visible foreground occurrences to later feature stages', 
   const base = calendar([source, timed({ id: 'background', display: 'background' })]);
   const instance = createCalendar({
     ...base.options,
-    features: { ...base.options.features, inspectFeature: { events: { run: spy } } },
+    features: { ...base.options.features, inspectFeature: { '~id': 'inspectFeature', '~config': undefined, events: { run: spy } } },
     eventOrder: (a, b) => b.id.localeCompare(a.id),
   });
   expect(instance.store.state.layout.kind).toBe('list');

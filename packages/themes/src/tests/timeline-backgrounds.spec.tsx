@@ -1,3 +1,4 @@
+import type { backgroundFeature } from '@calendar-tsx/core';
 /// <reference types="@vitest/browser-playwright" />
 
 import { Temporal } from 'temporal-polyfill';
@@ -5,7 +6,7 @@ import { expect, it } from 'vitest';
 import { cdp } from 'vitest/browser';
 
 import type { Calendar_TimelineLayout } from '@calendar-tsx/core';
-import { backgroundFeature, timelineView } from '@calendar-tsx/core';
+import { timelineView } from '@calendar-tsx/core';
 import {
   TimelineView,
   TimelineViewBackground,
@@ -25,7 +26,7 @@ const Timeline = () => {
   const layout = useCalendarSelector(state => state.layout) as Calendar_TimelineLayout<
     ThemesSetup_EventData,
     null,
-    { backgroundFeature: typeof backgroundFeature }
+    { backgroundFeature: ReturnType<typeof backgroundFeature> }
   >;
   return (
     <TimelineView model={layout}>
@@ -56,7 +57,7 @@ const Timeline = () => {
 const render = (colorScheme: 'light' | 'dark' = 'light') =>
   themesSetup_render(<Timeline />, {
     colorScheme,
-    views: { timeline: timelineView({ days: 1, groupBy: 'resource', features: { backgroundFeature } }) },
+    views: { timeline: timelineView({ days: 1, groupBy: 'resource' }) },
     view: 'timeline',
     resources: [{ id: 'room', title: 'Room', availability: [], data: null }],
     events: [

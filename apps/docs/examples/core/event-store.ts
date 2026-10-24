@@ -2,15 +2,15 @@ import { createCalendar, createEventStore } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
 
 import type { Booking } from './setup';
-import { bookings, timeZone, views } from './setup';
+import { bookings, timeZone, views, features } from './setup';
 
 // #region store
 const eventStore = createEventStore<Booking>(bookings);
 
 const calendar = createCalendar({
   timeZone,
-  views: views.views,
-  features: { ...views.features },
+  views,
+  features,
   view: 'week',
   date: Temporal.Now.plainDateISO(),
   events: eventStore.store.state.events,

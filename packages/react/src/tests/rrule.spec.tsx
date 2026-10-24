@@ -1,4 +1,4 @@
-import { createCalendarViews, fixedClock, listView } from '@calendar-tsx/core';
+import { calendarViews, calendarFeatures, fixedClock, listView } from '@calendar-tsx/core';
 import { createRRuleEvent, rruleFeature } from '@calendar-tsx/rrule';
 import { Temporal } from 'temporal-polyfill';
 import { expect, it } from 'vitest';
@@ -9,7 +9,8 @@ import { ListView, ListViewDay, ListViewEvent } from '#list-view';
 import { CalendarProvider, useCalendar, useCalendarSelector } from '#use-calendar';
 import { useCalendarEventStore } from '#use-calendar-event-store';
 
-const views = createCalendarViews({ list: listView({ days: 3 }) });
+const viewsFeatures = calendarFeatures({ rrule: rruleFeature() });
+const views = calendarViews({ features: viewsFeatures, views: { list: listView({ days: 3 }) } });
 const series = createRRuleEvent({
   id: 'review',
   kind: 'timed',
@@ -41,8 +42,8 @@ it('renders derived occurrences and removes them by updating the stored series',
     const store = useCalendarEventStore([series]);
     const instance = useCalendar({
       timeZone: 'America/New_York',
-      views: views.views,
-      features: { ...views.features, rruleFeature },
+      views: views,
+      features: viewsFeatures,
       view: 'list',
       date: Temporal.PlainDate.from('2026-03-07'),
       events: store.events,

@@ -3,7 +3,7 @@ import { createSignal } from 'solid-js';
 import { Temporal } from 'temporal-polyfill';
 
 import type { ViewKey } from '../core/setup';
-import { bookings, rooms, timeZone, views } from '../core/setup';
+import { bookings, rooms, timeZone, views, features } from '../core/setup';
 
 // #region calendar
 export const useAppCalendar = () => {
@@ -12,8 +12,8 @@ export const useAppCalendar = () => {
 
   return useCalendar(() => ({
     timeZone,
-    views: views.views,
-    features: { ...views.features },
+    views,
+    features,
     view: view(),
     date: date(),
     events: bookings,

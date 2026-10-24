@@ -11,7 +11,14 @@ import type {
   Calendar_TimedEventInput,
   Calendar_Views,
 } from '@calendar-tsx/core';
-import { fixedClock, dayGridView, timeGridView, createCalendarViews } from '@calendar-tsx/core';
+import {
+  backgroundFeature,
+  fixedClock,
+  dayGridView,
+  timeGridView,
+  calendarViews,
+  calendarFeatures,
+} from '@calendar-tsx/core';
 import { CalendarProvider, useCalendar } from '@calendar-tsx/react';
 
 export type ThemesSetup_EventData = { title: string };
@@ -67,15 +74,15 @@ export const themesSetup_render = async (children: ReactNode, overrides: Partial
     ...themesSetup_defaults,
     ...overrides,
   };
-  const views = createCalendarViews(rest.views);
+  const viewsFeatures = calendarFeatures({ backgroundFeature: backgroundFeature(backgrounds) });
+  const views = calendarViews({ features: viewsFeatures, views: rest.views });
 
   const Harness = () => {
     const calendar = useCalendar<ThemesSetup_EventData, null>({
-      views: views.views,
-      features: views.features,
+      views: views,
+      features: viewsFeatures,
       view,
       events,
-      backgrounds,
       resources,
       date: Temporal.PlainDate.from('2026-03-11'),
       timeZone: themesSetup_timeZone,

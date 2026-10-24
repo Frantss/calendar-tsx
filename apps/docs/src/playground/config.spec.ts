@@ -35,7 +35,8 @@ it.each([
   const settings = { ...defaultPlaygroundConfig(date), minColumnWidth: 480, hiddenDays: [6, 7] as const, visibleStart, visibleEnd };
   const views = createPlaygroundViews(settings);
   const calendar = createCalendar({
-    ...views,
+    views,
+    features: {},
     view: 'week',
     date: Temporal.PlainDate.from(date),
     timeZone: 'America/New_York',

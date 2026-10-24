@@ -1,4 +1,4 @@
-import type { Calendar_Event, Calendar_EventSourceContext, Calendar_Feature } from '@calendar-tsx/core';
+import type { Calendar_Event, Calendar_EventSourceContext, Calendar_ConfiguredFeature } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
 
 import { dateCompare, dateKey, fail, fromEngine, toEngine } from '#rrule-dates';
@@ -132,6 +132,9 @@ const resolve = (
   return events;
 };
 
-export const rruleFeature = {
-  resolveEvents: (source, context) => resolve(source as Calendar_RRuleEventInput<unknown>, context),
-} satisfies Calendar_Feature;
+export const rruleFeature = () =>
+  ({
+    '~id': 'rruleFeature',
+    '~config': undefined,
+    resolveEvents: (source, context) => resolve(source as Calendar_RRuleEventInput<unknown>, context),
+  }) satisfies Calendar_ConfiguredFeature<'rruleFeature', undefined>;

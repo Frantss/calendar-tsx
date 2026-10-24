@@ -1,4 +1,4 @@
-import { createCalendar, createCalendarViews, listView } from '@calendar-tsx/core';
+import { createCalendar, calendarViews, calendarFeatures, listView } from '@calendar-tsx/core';
 import { createRRuleEvent, rruleFeature } from '@calendar-tsx/rrule';
 import { Temporal } from 'temporal-polyfill';
 
@@ -12,11 +12,12 @@ export const review = createRRuleEvent({
   data: { title: 'Month-end review' },
 });
 
-const views = createCalendarViews({ month: listView({ period: 'month' }) });
+const features = calendarFeatures({ recurrence: rruleFeature() });
+const views = calendarViews({ features, views: { month: listView({ period: 'month' }) } });
 export const calendar = createCalendar({
   timeZone: 'America/New_York',
-  views: views.views,
-  features: { ...views.features, rruleFeature },
+  views,
+  features,
   view: 'month',
   date: Temporal.PlainDate.from('2026-01-01'),
   events: [review],

@@ -3,7 +3,7 @@ import { createSignal } from 'solid-js';
 import { Temporal } from 'temporal-polyfill';
 
 import type { State, ViewKey } from '../core/setup';
-import { bookings, timeZone, views } from '../core/setup';
+import { bookings, timeZone, views, features } from '../core/setup';
 
 // #region calendar
 export const Embedded = () => {
@@ -13,8 +13,8 @@ export const Embedded = () => {
   return (
     <Calendar
       timeZone={timeZone}
-      views={views.views}
-      features={{ ...views.features }}
+      views={views}
+      features={features}
       view={view()}
       date={date()}
       events={bookings}

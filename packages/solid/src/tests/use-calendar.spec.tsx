@@ -4,7 +4,7 @@ import { expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 
 import type { Calendar_Clock } from '@calendar-tsx/core';
-import { createCalendarViews, listView } from '@calendar-tsx/core';
+import { calendarViews, calendarFeatures, listView } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_timeZone, fixtures_timed } from '#tests/calendar.fixtures';
 import { tests_render } from '#tests/utils/render';
@@ -12,7 +12,7 @@ import { Calendar, CalendarProvider, useCalendar, useCalendarContext, useCalenda
 import { useCalendarEventStore } from '#use-calendar-event-store';
 
 const defaults = {
-  views: createCalendarViews({ list_week: listView({ days: 7 }) }),
+  views: calendarViews({ features: calendarFeatures({}), views: { list_week: listView({ days: 7 }) } }),
   date: Temporal.PlainDate.from('2026-03-11'),
   yoga: fixtures_timed('Yoga', { date: '2026-03-11', start: '09:00', end: '10:00' }),
   swim: fixtures_timed('Swim', { date: '2026-03-12', start: '14:00', end: '15:00' }),
@@ -43,8 +43,8 @@ const setup = ({ clock }: { clock?: Calendar_Clock } = {}) => {
     const [events, setEvents] = createSignal([defaults.yoga]);
     const calendar = useCalendar<Fixtures_EventData>(() => ({
       timeZone: fixtures_timeZone,
-      views: defaults.views.views,
-      features: defaults.views.features,
+      views: defaults.views,
+      features: {},
       view: 'list_week',
       date: defaults.date,
       events: events(),
@@ -98,8 +98,8 @@ it('mounts the clock with the component and stops it on unmount', async () => {
   const screen = tests_render(() => (
     <Calendar
       timeZone={fixtures_timeZone}
-      views={defaults.views.views}
-      features={defaults.views.features}
+      views={defaults.views}
+      features={{}}
       view='list_week'
       date={defaults.date}
       events={[]}
@@ -121,8 +121,8 @@ it('syncs Calendar props into the instance when a signal they read changes', asy
   tests_render(() => (
     <Calendar
       timeZone={fixtures_timeZone}
-      views={defaults.views.views}
-      features={defaults.views.features}
+      views={defaults.views}
+      features={{}}
       view='list_week'
       date={defaults.date}
       events={events()}
@@ -147,8 +147,8 @@ it('provides the instance it created through CalendarProvider', async () => {
   const ViaProvider = () => {
     const calendar = useCalendar(() => ({
       timeZone: fixtures_timeZone,
-      views: defaults.views.views,
-      features: defaults.views.features,
+      views: defaults.views,
+      features: {},
       view: 'list_week',
       date: defaults.date,
       events: [],
@@ -178,8 +178,8 @@ it('feeds managed events into the calendar', async () => {
     const eventStore = useCalendarEventStore<Fixtures_EventData>([defaults.yoga]);
     const calendar = useCalendar(() => ({
       timeZone: fixtures_timeZone,
-      views: defaults.views.views,
-      features: defaults.views.features,
+      views: defaults.views,
+      features: {},
       view: 'list_week',
       date: defaults.date,
       events: eventStore.events(),

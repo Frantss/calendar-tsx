@@ -1,6 +1,6 @@
 // #region app
 import type { Calendar_EventInput, Calendar_State } from '@calendar-tsx/core';
-import { createCalendarViews, dayGridView, timeGridView } from '@calendar-tsx/core';
+import { calendarViews, calendarFeatures, dayGridView, timeGridView } from '@calendar-tsx/core';
 import {
   CalendarProvider,
   DayGridView,
@@ -18,19 +18,23 @@ import { Temporal } from 'temporal-polyfill';
 type Booking = { title: string };
 
 // module scope: views and features are compared by reference
-const views = createCalendarViews({
-  month: dayGridView({ period: 'month', maxEventsPerDay: 3 }),
-  week: timeGridView({ days: 7 }),
+const features = calendarFeatures({});
+const views = calendarViews({
+  features: features,
+  views: {
+    month: dayGridView({ period: 'month', maxEventsPerDay: 3 }),
+    week: timeGridView({ days: 7 }),
+  },
 });
 
 export const App = ({ events }: { events: Calendar_EventInput<Booking>[] }) => {
-  const [view, setView] = useState<keyof typeof views.views>('month');
+  const [view, setView] = useState<keyof typeof views>('month');
   const [date, setDate] = useState(() => Temporal.Now.plainDateISO());
 
   const calendar = useCalendar({
     timeZone: 'America/New_York',
-    views: views.views,
-    features: { ...views.features },
+    views,
+    features,
     view,
     date,
     events,
@@ -51,7 +55,7 @@ export const App = ({ events }: { events: Calendar_EventInput<Booking>[] }) => {
 };
 
 // the context erases the instance's types; annotate the selector to get them back
-type State = Calendar_State<Booking, unknown, typeof views.views>;
+type State = Calendar_State<Booking, unknown, typeof views>;
 
 const Month = () => {
   const layout = useCalendarSelector((state: State) => state.layout);

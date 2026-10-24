@@ -48,14 +48,9 @@ To get the range for any view and date without a calendar, for example to fetch 
 ```ts
 import { getCalendarNavigation } from '@calendar-tsx/core';
 
-const { range, period, inputRange } = getCalendarNavigation(
-  views.views,
-  'month',
-  Temporal.PlainDate.from('2026-03-11'),
-  {
-    firstDayOfWeek: 1,
-  },
-);
+const { range, period, inputRange } = getCalendarNavigation(views, 'month', Temporal.PlainDate.from('2026-03-11'), {
+  firstDayOfWeek: 1,
+});
 ```
 
 </section>

@@ -1,36 +1,37 @@
+import { calendarFeatures_validate, calendarFeatures_config } from '#features/calendar-features';
+import type {
+  Calendar_Views,
+  Calendar_ConfiguredFeatures,
+  Calendar_BoundViews,
+  Calendar_ValidateOverrides,
+} from '#calendar.types';
 import { dayGridLayout, listLayout, timeGridLayout, timelineLayout } from '#calendar-layouts';
 import { calendarPeriods_groups, calendarPeriods_validate } from '#calendar-periods';
 import type {
   Calendar_DayGridViewSettings,
   Calendar_DurationSettings,
   Calendar_VisibilitySettings,
-  Calendar_Features,
-  Calendar_FeaturesOf,
   Calendar_LayoutKey,
   Calendar_ListViewSettings,
-  Calendar_PickFeatures,
   Calendar_TimeGridViewSettings,
   Calendar_TimelineViewSettings,
   Calendar_View,
   Calendar_ViewFeatureSettings,
-  Calendar_ViewSettings_FeatureMap,
 } from '#calendar.types';
 
 type ViewOf<
   TLayout extends Calendar_LayoutKey,
   TKind extends string,
   TSettings,
-  TFeatures extends Calendar_Features,
+  TOverrides extends object,
   TLayoutFeature,
-> = TSettings &
-  Calendar_PickFeatures<Calendar_ViewSettings_FeatureMap, TFeatures> &
-  Calendar_View<TLayout, TKind, NoInfer<TFeatures> & { [K in TLayout]: TLayoutFeature }>;
+> = TSettings & { features: TOverrides } & Calendar_View<TLayout, TKind, { [K in TLayout]: TLayoutFeature }>;
 
 const view_create = (
   kind: string,
   layoutKey: Calendar_LayoutKey,
   layout: unknown,
-  { features, ...settings }: Calendar_DurationSettings & Calendar_VisibilitySettings & { features?: Calendar_Features },
+  { features, ...settings }: Calendar_DurationSettings & Calendar_VisibilitySettings & { features?: object },
 ) => {
   calendarPeriods_validate(settings);
   const grid = settings as Calendar_DayGridViewSettings;
@@ -45,62 +46,85 @@ const view_create = (
   const slotMinutes = (settings as { slotMinutes?: number }).slotMinutes;
   if (slotMinutes !== undefined && (!Number.isInteger(slotMinutes) || slotMinutes < 1))
     throw new Error('[calendar] slotMinutes must be a positive integer');
-  return { ...settings, kind, '~layout': layoutKey, '~features': { ...features, [layoutKey]: layout } };
+  return { ...settings, features: features ?? {}, kind, '~layout': layoutKey, '~features': { [layoutKey]: layout } };
 };
 
-// `NoInfer` keeps views nested in `createCalendarViews` from inferring their features from its constraint, which
-// would leak a string index into `keyof views.features` (D29).
-
-export const dayGridView = <const TFeatures extends Calendar_Features = {}>(
-  settings: Calendar_DayGridViewSettings & Calendar_ViewFeatureSettings<TFeatures>,
+export const dayGridView = <const TOverrides extends object = {}>(
+  settings: Calendar_DayGridViewSettings & Calendar_ViewFeatureSettings<TOverrides>,
 ) =>
   view_create('dayGrid', 'dayGridLayout', dayGridLayout, settings) as unknown as ViewOf<
     'dayGridLayout',
     'dayGrid',
     Calendar_DayGridViewSettings,
-    TFeatures,
+    TOverrides,
     typeof dayGridLayout
   >;
 
-export const timeGridView = <const TFeatures extends Calendar_Features = {}>(
-  settings: Calendar_TimeGridViewSettings & Calendar_ViewFeatureSettings<TFeatures>,
+export const timeGridView = <const TOverrides extends object = {}>(
+  settings: Calendar_TimeGridViewSettings & Calendar_ViewFeatureSettings<TOverrides>,
 ) =>
   view_create('timeGrid', 'timeGridLayout', timeGridLayout, settings) as unknown as ViewOf<
     'timeGridLayout',
     'timeGrid',
     Calendar_TimeGridViewSettings,
-    TFeatures,
+    TOverrides,
     typeof timeGridLayout
   >;
 
-export const listView = <const TFeatures extends Calendar_Features = {}>(
-  settings: Calendar_ListViewSettings & Calendar_ViewFeatureSettings<TFeatures>,
+export const listView = <const TOverrides extends object = {}>(
+  settings: Calendar_ListViewSettings & Calendar_ViewFeatureSettings<TOverrides>,
 ) =>
   view_create('list', 'listLayout', listLayout, settings) as unknown as ViewOf<
     'listLayout',
     'list',
     Calendar_ListViewSettings,
-    TFeatures,
+    TOverrides,
     typeof listLayout
   >;
 
-export const timelineView = <const TFeatures extends Calendar_Features = {}>(
-  settings: Calendar_TimelineViewSettings & Calendar_ViewFeatureSettings<TFeatures>,
+export const timelineView = <const TOverrides extends object = {}>(
+  settings: Calendar_TimelineViewSettings & Calendar_ViewFeatureSettings<TOverrides>,
 ) =>
   view_create('timeline', 'timelineLayout', timelineLayout, settings) as unknown as ViewOf<
     'timelineLayout',
     'timeline',
     Calendar_TimelineViewSettings,
-    TFeatures,
+    TOverrides,
     typeof timelineLayout
   >;
 
-/** The views, plus every feature they use, to spread into the calendar's `features` (D29). */
-export const createCalendarViews = <
-  const TViews extends Record<string, { kind: string; '~layout': Calendar_LayoutKey; '~features': object }>,
->(
-  views: TViews,
-) => ({
+/** Binds feature defaults and typed overrides to each named view (D54). */
+export const calendarViews = <
+  const TFeatures extends Calendar_ConfiguredFeatures,
+  const TViews extends Calendar_Views,
+>({
+  features,
   views,
-  features: Object.assign({}, ...Object.values(views).map(view => view['~features'])) as Calendar_FeaturesOf<TViews>,
-});
+}: {
+  features: TFeatures;
+  views: TViews & Calendar_ValidateOverrides<NoInfer<TFeatures>, TViews>;
+}): Calendar_BoundViews<TFeatures, TViews> => {
+  calendarFeatures_validate(features);
+  return Object.fromEntries(
+    Object.entries(views).map(([key, view]) => {
+      const overrides = (view as { features?: Record<string, unknown> }).features ?? {};
+      for (const alias of Object.keys(overrides)) {
+        if (!Object.hasOwn(features, alias))
+          throw new Error(`[calendar] unknown feature override "${alias}" in view "${key}"`);
+        calendarFeatures_config(features[alias]!, overrides[alias]);
+      }
+      if (Object.hasOwn(features, view['~layout']))
+        throw new Error(`[calendar] feature key "${view['~layout']}" conflicts with a layout`);
+      return [
+        key,
+        {
+          ...view,
+          '~features': {
+            [view['~layout']]: (view['~features'] as Record<string, unknown>)[view['~layout']],
+            ...features,
+          },
+        },
+      ];
+    }),
+  ) as unknown as Calendar_BoundViews<TFeatures, TViews>;
+};

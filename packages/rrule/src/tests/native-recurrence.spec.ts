@@ -1,6 +1,7 @@
 import {
   createCalendar,
-  createCalendarViews,
+  calendarViews,
+  calendarFeatures,
   createEvent,
   createEventStore,
   createRecurringEvent,
@@ -56,7 +57,7 @@ const parity = (source: Calendar_RecurringEventInput<{ title: string }>, start =
       end: event.end?.toString(),
       occurrence: event.occurrence && { ...event.occurrence, originalStart: event.occurrence.originalStart.toString() },
     }));
-  expect(snapshot(recurrenceFeature.resolveEvents(source, context))).toEqual(snapshot(rruleFeature.resolveEvents(advanced, context)));
+  expect(snapshot(recurrenceFeature().resolveEvents(source, context))).toEqual(snapshot(rruleFeature().resolveEvents(advanced, context)));
 };
 
 it('accepts native rule and event definitions and retains each implementation in inferred stores', () => {
@@ -145,11 +146,12 @@ it('resolves native, advanced and one-off definitions together and edits series 
   });
   const oneOff = createEvent({ id: 'one', kind: 'allDay', start: date('2026-01-01'), data: { title: 'One' } });
   const store = createEventStore([native, advanced, oneOff]);
-  const views = createCalendarViews({ list: listView({ days: 3 }) });
+  const viewsFeatures = calendarFeatures({});
+  const views = calendarViews({ features: viewsFeatures, views: { list: listView({ days: 3 }) } });
   const instance = createCalendar({
     timeZone: 'America/New_York',
-    views: views.views,
-    features: { ...views.features, recurrenceFeature, rruleFeature },
+    views: views,
+    features: { ...viewsFeatures, recurrenceFeature: recurrenceFeature(), rruleFeature: rruleFeature() },
     view: 'list',
     date: date('2026-01-01'),
     events: store.store.state.events,
@@ -181,15 +183,19 @@ it('resolves both implementations through overnight input coverage and refreshes
     createRRuleEvent({ ...excluded, id: 'rrule-excluded' }),
   ];
   const night = { days: 1, hiddenDays: [2 as const], timeWindow: { startMinutes: 1320, endMinutes: 1800 } };
-  const views = createCalendarViews({
-    grid: timeGridView(night),
-    timeline: timelineView(night),
-    day: timeGridView({ days: 1 }),
+  const viewsFeatures = calendarFeatures({});
+  const views = calendarViews({
+    features: viewsFeatures,
+    views: {
+      grid: timeGridView(night),
+      timeline: timelineView(night),
+      day: timeGridView({ days: 1 }),
+    },
   });
   const instance = createCalendar({
     timeZone: 'America/New_York',
-    views: views.views,
-    features: { ...views.features, recurrenceFeature, rruleFeature },
+    views: views,
+    features: { ...viewsFeatures, recurrenceFeature: recurrenceFeature(), rruleFeature: rruleFeature() },
     view: 'grid',
     date: date('2026-01-05'),
     events,

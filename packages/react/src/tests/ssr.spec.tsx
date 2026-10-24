@@ -4,7 +4,7 @@ import type { Temporal } from 'temporal-polyfill';
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest';
 
 import type { Calendar_EventInput, Calendar_TimeGridLayout } from '@calendar-tsx/core';
-import { fixedClock, timeGridView, createCalendarViews } from '@calendar-tsx/core';
+import { fixedClock, timeGridView, calendarViews, calendarFeatures } from '@calendar-tsx/core';
 import { fixtures_at, fixtures_timeZone } from '#tests/calendar.fixtures';
 import {
   TimeGridViewBody,
@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 const defaults = {
-  views: createCalendarViews({ week: timeGridView({ days: 7 }) }),
+  views: calendarViews({ features: calendarFeatures({}), views: { week: timeGridView({ days: 7 }) } }),
   date: fixtures_at('2026-03-11', '12:00').toPlainDate(),
   events: [] as Calendar_EventInput<null>[],
   // the request is served just before midnight and hydrates just after it
@@ -57,8 +57,8 @@ const Week = () => {
 const App = ({ now, initialNow }: { now: Temporal.Instant; initialNow?: Temporal.Instant }) => (
   <Calendar
     timeZone={fixtures_timeZone}
-    views={defaults.views.views}
-    features={defaults.views.features}
+    views={defaults.views}
+    features={{}}
     view='week'
     date={defaults.date}
     events={defaults.events}

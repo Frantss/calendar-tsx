@@ -1,4 +1,4 @@
-import { createCalendarViews, fixedClock, listView, createRecurringEvent, recurrenceFeature } from '@calendar-tsx/core';
+import { calendarViews, calendarFeatures, fixedClock, listView, createRecurringEvent, recurrenceFeature } from '@calendar-tsx/core';
 import { For, Show } from 'solid-js';
 import { Temporal } from 'temporal-polyfill';
 import { expect, it } from 'vitest';
@@ -9,7 +9,8 @@ import { tests_render } from '#tests/utils/render';
 import { CalendarProvider, useCalendar, useCalendarSelector } from '#use-calendar';
 import { useCalendarEventStore } from '#use-calendar-event-store';
 
-const views = createCalendarViews({ list: listView({ days: 3 }) });
+const viewsFeatures = calendarFeatures({ recurrence: recurrenceFeature() });
+const views = calendarViews({ features: viewsFeatures, views: { list: listView({ days: 3 }) } });
 const series = createRecurringEvent({
   id: 'review',
   kind: 'timed',
@@ -42,8 +43,8 @@ it('renders derived occurrences and removes them by updating the stored series',
     const store = useCalendarEventStore([series]);
     const instance = useCalendar(() => ({
       timeZone: 'America/New_York',
-      views: views.views,
-      features: { ...views.features, recurrenceFeature },
+      views: views,
+      features: viewsFeatures,
       view: 'list',
       date: Temporal.PlainDate.from('2026-03-07'),
       events: store.events(),

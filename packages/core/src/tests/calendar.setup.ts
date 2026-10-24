@@ -1,3 +1,4 @@
+import { calendarFeatures } from '#features/calendar-features';
 import { Temporal } from 'temporal-polyfill';
 import type { Mock } from 'vitest';
 import { vi } from 'vitest';
@@ -7,7 +8,7 @@ import { iife } from '#tests/utils/iife';
 
 import { createCalendar } from '#calendar';
 import { fixedClock } from '#calendar-clock';
-import { listView, dayGridView, timeGridView, createCalendarViews } from '#calendar-views';
+import { listView, dayGridView, timeGridView, calendarViews } from '#calendar-views';
 import type {
   Calendar_Clock,
   Calendar_EventInput,
@@ -51,12 +52,16 @@ export const calendarSetup_create = async (overrides: CalendarSetup_Overrides = 
   const onNavigate: Mock<Calendar_Options<Fixtures_EventData, null, Calendar_Views>['onNavigate']> = vi.fn();
   const now = tests_withDefault(overrides, 'now', calendarSetup_defaults.now);
 
-  const views = createCalendarViews(tests_withDefault(overrides, 'views', calendarSetup_defaults.views));
+  const viewsFeatures = calendarFeatures({});
+  const views = calendarViews({
+    features: viewsFeatures,
+    views: tests_withDefault(overrides, 'views', calendarSetup_defaults.views),
+  });
 
   const options: Calendar_Options<Fixtures_EventData, null, Calendar_Views> = {
     timeZone: tests_withDefault(overrides, 'timeZone', calendarSetup_defaults.timeZone),
-    views: views.views,
-    features: views.features,
+    views: views,
+    features: viewsFeatures,
     view: tests_withDefault(overrides, 'view', calendarSetup_defaults.view),
     date: tests_withDefault(overrides, 'date', calendarSetup_defaults.date),
     events: tests_withDefault(overrides, 'events', calendarSetup_defaults.events),

@@ -13,26 +13,31 @@ import { backgroundFeature, createBackgroundLayer, createWeeklyRanges } from '@c
 import { recurrenceFeature, createRecurringEvent } from '@calendar-tsx/core/recurrence';
 ```
 
-Root also re-exports these symbols. Features still use the constant-based registration shown below; the
-[factory assembly API](../../docs/calendar-assembly.md) is a planned follow-up. See
+Root also re-exports these symbols. Configure features with their factories, register them with
+`calendarFeatures`, and bind views with `calendarViews`. See the
+[factory assembly API](../../docs/calendar-assembly.md) and
 [core feature organization and exports](../../docs/core-features.md) for module ownership and public entries.
 
 ## Quick example
 
 ```ts
-import { dayGridView, timeGridView, createCalendarViews, createCalendar } from '@calendar-tsx/core';
+import { dayGridView, timeGridView, calendarFeatures, calendarViews, createCalendar } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
 
 // module scope: views and features are compared by reference
-const views = createCalendarViews({
-  month: dayGridView({ period: 'month', maxEventsPerDay: 4 }),
-  week: timeGridView({ days: 7 }),
+const features = calendarFeatures({});
+const views = calendarViews({
+  features,
+  views: {
+    month: dayGridView({ period: 'month', maxEventsPerDay: 4 }),
+    week: timeGridView({ days: 7 }),
+  },
 });
 
 const calendar = createCalendar({
   timeZone: 'America/New_York',
-  views: views.views,
-  features: { ...views.features },
+  views,
+  features,
   view: 'week',
   date: Temporal.PlainDate.from('2026-03-11'),
   events: [],
@@ -62,8 +67,8 @@ Backgrounds, availability and the now indicator use the same axis. All-day spans
 midnight is skipped. Minimum and short event lengths measure displayed clock minutes (design D40).
 Timed shading can split into separate bands at a DST transition; inverse layers retain the gaps between them.
 
-Timeline rows expose `backgroundEvents` independently of foreground `segments`. Register `backgroundFeature` on
-`timelineView` to add `row.backgrounds` for fixed, weekly or inverse layers. Both use fractions of the visible
+Timeline rows expose `backgroundEvents` independently of foreground `segments`. Register `backgroundFeature(layers)` in the feature registry and bind it with
+`calendarViews` to add `row.backgrounds` for fixed, weekly or inverse layers. Both use fractions of the visible
 track and take no stack rows. Unassigned background events shade every resource; scoped layers require a matching
 resource row. All-day shading follows anchor dates; timed shading uses exact projected coverage.
 
@@ -163,42 +168,46 @@ listView({ weeks: 1, groupBy: ['date', 'resource'] });
 
 ## Features
 
-Functionality beyond navigation and layout is added through features (design D29). A feature is a constant object; a
-view lists the features it uses, and `createCalendarViews` collects them for the calendar's `features`. A feature
-listed only in `features` runs in every view.
-
-Model fields use that same scope: calendar-only features contribute fields to every view. Once a view declares a
-feature, its fields and stages are limited to declaring views, including when another view is added later.
+Feature factories return reusable configuration definitions (design D54). Register each definition under a
+consumer-chosen key, then pass the registry into `calendarViews` and `createCalendar`:
 
 ```ts
-const views = createCalendarViews({
-  week: timeGridView({ days: 7, features: { xFeature }, x: { perView: true } }),
-  day: timeGridView({ days: 1 }), // xFeature does not run here
+const features = calendarFeatures({ background: backgroundFeature(defaultBackgrounds) });
+const views = calendarViews({
+  features,
+  views: {
+    week: timeGridView({ weeks: 1 }),
+    day: timeGridView({ days: 1, features: { background: dayBackgrounds } }),
+  },
 });
 
-createCalendar({ ...options, views: views.views, features: { ...views.features }, x: { calendarWide: true } });
+createCalendar({ ...options, features, views });
 ```
 
-- **Hooks:** `getInitialState`, `constructApi`, `resolveEvents` before normalization, an `events` stage after the core sort, and a `decorate` pass that adds
-  model fields. Stages rerun when their input or `deps` change. Feature options are read untracked unless the feature
-  lists their keys in `trackedOptions`.
-- **Sources:** `Calendar_EventInput_FeatureMap<TData>` adds event definition variants. Each carries `~source` equal to
-  its feature key. Its `resolveEvents(source, { range, timeZone })` hook runs calendar-wide, before background
-  splitting, and returns concrete events. Its `range` is the inclusive `inputRange`, including overnight coverage.
-  Resolution is cached by input reference, input range and display zone;
-  feature state and other options are not source dependencies. A missing resolver throws.
-- **Settings:** a feature's defaults, then the calendar option, then the view's setting, shallow-merged per layer.
-- **State:** each slice is uncontrolled, controlled through `state`, or kept in an external store through `atoms`.
-- **Types:** features extend the `Calendar_*_FeatureMap` interfaces by declaration merging, keyed by their export name.
-  Options, view settings, state, API and model fields then exist only where the feature is registered.
-- **Replacing an implementation:** `{ ...views.features, listLayout: myList }` replaces it in every view.
-- **Layouts are features too:** `dayGridLayout`, `timeGridLayout`, `listLayout` and `timelineLayout` supply
-  navigation and `build`; a new view kind is a layout feature plus a `Calendar_Layout_FeatureMap` entry.
+Every view inherits the registered features. Overrides use the factory's configuration input shape. Objects
+shallow-merge with defaults; arrays replace them. An empty background array clears that view's layers. Omitted
+entries inherit defaults, and adding an override to one view does not change another view's participation.
+
+- Hooks can contribute initial state, actions, source resolution, event stages and layout decoration.
+- Feature hooks read their resolved configuration from `context.config`. The runtime includes it in stage cache
+  dependencies. State and actions belong to the calendar instance and are shared across views.
+- Sources carry a stable `~source` identity. Resolver lookup uses the configured definition's `~id`, so registry
+  aliases preserve event-input types and runtime resolution. Resolution remains calendar-wide and is cached by
+  input reference, input range and display zone.
+- State can be internal, controlled through `state`, or kept in external `atoms`.
+- Features extend the `Calendar_*_FeatureMap` interfaces using their stable identities. Registry aliases preserve
+  state, action, event-input and model contributions. Layout feature maps receive canonical identities.
+- Duplicate feature identities and registry keys that conflict with a view's layout are rejected.
+- Feature definitions and factory defaults are fixed at creation. Pass a new `views` reference to update view
+  overrides. Changing registered definitions through `~update` throws; create a new instance instead.
+- Views supply their layout features. Consumers do not register layouts in the feature registry.
+
+See [feature organization and exports](../../docs/core-features.md) for the module layout and public entries.
 
 ## Background layers
 
-`backgroundFeature` shades time in the time-grid and day-grid views that list it (design D33). Each layer in the
-`backgrounds` option is one kind of shading: fixed ranges, a function of the visible range, or the gaps they leave
+`backgroundFeature(layers)` shades time in the time-grid, day-grid and timeline views (design D33). Each layer passed to the
+factory is one kind of shading: fixed ranges, a function of the visible range, or the gaps they leave
 (`inverse`), optionally limited to some resources.
 
 ```ts
@@ -225,12 +234,16 @@ const backgrounds = [
   }),
 ];
 
-const views = createCalendarViews({
-  week: timeGridView({ days: 7, features: { backgroundFeature } }),
-  month: dayGridView({ period: 'month', maxEventsPerDay: 4, features: { backgroundFeature } }),
+const features = calendarFeatures({ background: backgroundFeature(backgrounds) });
+const views = calendarViews({
+  features,
+  views: {
+    week: timeGridView({ days: 7 }),
+    month: dayGridView({ period: 'month', maxEventsPerDay: 4 }),
+  },
 });
 
-createCalendar({ ...options, views: views.views, features: { ...views.features }, backgrounds });
+createCalendar({ ...options, views, features });
 ```
 
 Time-grid columns get `backgrounds: { key, layer, kind, start, span }[]`, as fractions of the day. Day-grid cells get

@@ -94,7 +94,7 @@ const oneOf =
   (value: unknown): value is T =>
     values.includes(value as T);
 
-const isView = (value: string | null): value is PlaygroundView => value !== null && value in playgroundViews.views;
+const isView = (value: string | null): value is PlaygroundView => value !== null && value in playgroundViews;
 const isTheme = oneOf(playgroundThemes.map(theme => theme.id));
 const isDataSet = oneOf(playgroundDataSets.map(set => set.id));
 const isLocale = oneOf(playgroundLocales);

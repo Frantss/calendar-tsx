@@ -37,7 +37,7 @@ const Timeline = () => {
   const timeline = useCalendarSelector(state => state.layout) as Calendar_TimelineLayout<
     Fixtures_EventData,
     null,
-    { backgroundFeature: typeof backgroundFeature }
+    { backgroundFeature: ReturnType<typeof backgroundFeature> }
   >;
 
   return (
@@ -161,7 +161,7 @@ it('navigates from a day trigger', async () => {
 
 it('renders targeted background events and layers as hidden, non-interactive geometry', async () => {
   const { ui } = await setup({
-    views: { timeline: timelineView({ days: 1, groupBy: 'resource', features: { backgroundFeature } }) },
+    views: { timeline: timelineView({ days: 1, groupBy: 'resource' }) },
     resources: [fixtures_resource('Ana'), fixtures_resource('Room')],
     events: [fixtures_background(fixtures_timed('closure', { date: '2026-03-11', start: '12:00', end: '13:00', resourceIds: ['Ana'] }))],
     backgrounds: [

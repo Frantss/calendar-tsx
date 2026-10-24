@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Temporal } from 'temporal-polyfill';
 
 import type { Booking, ViewKey } from '../core/setup';
-import { bookings, timeZone, views } from '../core/setup';
+import { bookings, timeZone, views, features } from '../core/setup';
 
 // #region store
 export const useBookingCalendar = () => {
@@ -14,8 +14,8 @@ export const useBookingCalendar = () => {
 
   const calendar = useCalendar({
     timeZone,
-    views: views.views,
-    features: { ...views.features },
+    views,
+    features,
     view,
     date,
     events: eventStore.events,

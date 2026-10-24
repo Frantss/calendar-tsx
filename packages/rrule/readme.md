@@ -17,11 +17,12 @@ matching occurrences and their IDs.
 ## Timed series
 
 ```ts
-import { createCalendar, createCalendarViews, listView } from '@calendar-tsx/core';
+import { createCalendar, calendarViews, calendarFeatures, listView } from '@calendar-tsx/core';
 import { createRRuleEvent, rruleFeature } from '@calendar-tsx/rrule';
 import { Temporal } from 'temporal-polyfill';
 
-const views = createCalendarViews({ month: listView({ period: 'month' }) });
+const features = calendarFeatures({ recurrence: rruleFeature() });
+const views = calendarViews({ features, views: { month: listView({ period: 'month' }) } });
 const review = createRRuleEvent({
   id: 'month-end-review',
   kind: 'timed',
@@ -33,8 +34,8 @@ const review = createRRuleEvent({
 
 const calendar = createCalendar({
   timeZone: 'America/New_York',
-  views: views.views,
-  features: { ...views.features, rruleFeature },
+  views,
+  features,
   view: 'month',
   date: Temporal.PlainDate.from('2026-01-01'),
   events: [review],

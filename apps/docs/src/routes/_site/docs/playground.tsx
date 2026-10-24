@@ -109,7 +109,7 @@ const toUtcDate = (date: Temporal.PlainDate) => new Date(Date.UTC(date.year, dat
 /** The toolbar title: the month, the day, or the span of days the view shows. */
 const periodTitle = (config: PlaygroundConfig) => {
   const { period } = getCalendarNavigation(
-    createPlaygroundViews(config).views,
+    createPlaygroundViews(config),
     config.view,
     Temporal.PlainDate.from(config.date),
     {

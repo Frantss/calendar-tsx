@@ -5,7 +5,7 @@ import { createContext, createRenderEffect, onCleanup, onMount, splitProps, untr
 import type { Temporal } from 'temporal-polyfill';
 
 import type {
-  Calendar_Features,
+  Calendar_ConfiguredFeatures,
   Calendar_AnyLayout,
   Calendar_Api,
   Calendar_Options,
@@ -40,11 +40,11 @@ export const useCalendar = <
   TData,
   TResourceData = unknown,
   const TViews extends Calendar_Views = Calendar_Views,
-  const TFeatures extends Calendar_Features = Calendar_Features,
+  const TFeatures extends Calendar_ConfiguredFeatures = Calendar_ConfiguredFeatures,
 >(
   options: Accessor<
     Calendar_Options<TData, TResourceData, TViews, TFeatures> &
-      Calendar_ValidateFeatures<TViews, TFeatures> & { locale?: never }
+      Calendar_ValidateFeatures<NoInfer<TViews>, NoInfer<TFeatures>> & { locale?: never }
   >,
 ) => {
   const instance = createCalendar<TData, TResourceData, TViews, TFeatures>(untrack(options));
@@ -98,16 +98,16 @@ export const Calendar = <
   TData,
   TResourceData = unknown,
   const TViews extends Calendar_Views = Calendar_Views,
-  const TFeatures extends Calendar_Features = Calendar_Features,
+  const TFeatures extends Calendar_ConfiguredFeatures = Calendar_ConfiguredFeatures,
 >(
   props: Calendar_Options<TData, TResourceData, TViews, TFeatures> &
-    Calendar_ValidateFeatures<TViews, TFeatures> & { children: JSX.Element; locale?: string },
+    Calendar_ValidateFeatures<NoInfer<TViews>, NoInfer<TFeatures>> & { children: JSX.Element; locale?: string },
 ) => {
   const [local, options] = splitProps(props, ['children', 'locale']);
   const instance = useCalendar<TData, TResourceData, TViews, TFeatures>(
     () =>
       ({ ...options }) as Calendar_Options<TData, TResourceData, TViews, TFeatures> &
-        Calendar_ValidateFeatures<TViews, TFeatures>,
+        Calendar_ValidateFeatures<NoInfer<TViews>, NoInfer<TFeatures>>,
   );
 
   return (

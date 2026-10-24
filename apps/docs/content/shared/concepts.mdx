@@ -34,6 +34,7 @@ values, never strings.
 
 ## Features
 
-Behavior beyond navigation and layout comes from [features](../extending/features), which add options, state, actions
-and model fields to the views that list them. The layouts themselves are features, which is why every calendar takes
-`features: { ...views.features }`.
+Behavior beyond navigation and layout comes from [features](../extending/features). Call each feature factory with
+its defaults and collect the definitions in `calendarFeatures`. `calendarViews` binds that registry to named view
+definitions. Views inherit all registered features and can override their configuration. View factories supply
+layout features automatically.

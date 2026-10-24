@@ -1,6 +1,7 @@
 import {
   createCalendar,
-  createCalendarViews,
+  calendarViews,
+  calendarFeatures,
   listView,
   createRecurringEvent,
   recurrenceFeature,
@@ -18,11 +19,12 @@ export const review = createRecurringEvent({
   data: { title: 'Review' },
 });
 
-const views = createCalendarViews({ month: listView({ period: 'month' }) });
+const features = calendarFeatures({ recurrence: recurrenceFeature() });
+const views = calendarViews({ features, views: { month: listView({ period: 'month' }) } });
 export const calendar = createCalendar({
   timeZone: 'America/New_York',
-  views: views.views,
-  features: { ...views.features, recurrenceFeature },
+  views,
+  features,
   view: 'month',
   date: Temporal.PlainDate.from('2026-01-01'),
   events: [review],
@@ -50,9 +52,12 @@ export const advanced = createRRuleEvent({
   id: 'monthly-review',
   rrule: { freq: 'MONTHLY', byDay: ['2FR'] },
 });
+const advancedFeatures = calendarFeatures({ recurrence: rruleFeature() });
+const advancedViews = calendarViews({ features: advancedFeatures, views: { month: listView({ period: 'month' }) } });
 export const advancedCalendar = createCalendar({
   ...calendar.options,
-  features: { ...views.features, rruleFeature },
+  features: advancedFeatures,
+  views: advancedViews,
   events: [rruleReview, advanced],
 });
 // #endregion upgrade

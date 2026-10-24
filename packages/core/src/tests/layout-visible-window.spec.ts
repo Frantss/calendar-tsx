@@ -1,3 +1,4 @@
+import { calendarFeatures } from '#features/calendar-features';
 import { Temporal } from 'temporal-polyfill';
 import { expect, it } from 'vitest';
 
@@ -7,7 +8,7 @@ import { createWeeklyRanges } from '#features/background/background-ranges';
 import { fixedClock } from '#calendar-clock';
 import { getCalendarNavigation } from '#calendar-navigation';
 import { timeGridLayout } from '#calendar-layouts';
-import { createCalendarViews, dayGridView, listView, timeGridView, timelineView } from '#calendar-views';
+import { calendarViews, dayGridView, listView, timeGridView, timelineView } from '#calendar-views';
 import type { Calendar_BackgroundLayer, Calendar_EventInput, Calendar_Range, Calendar_Resource } from '#calendar.types';
 
 const date = (value: string) => Temporal.PlainDate.from(value);
@@ -26,24 +27,28 @@ const allDay = (id: string, start: string, end = start): Calendar_EventInput<nul
   end: date(end),
   data: null,
 });
-const night = { days: 1, timeWindow: { startMinutes: 1320, endMinutes: 1800 }, features: { backgroundFeature } };
+const night = { days: 1, timeWindow: { startMinutes: 1320, endMinutes: 1800 } };
 const weekdays = { hiddenDays: [6, 7] as const };
 const daytime = { days: 7, ...weekdays, timeWindow: { startMinutes: 480, endMinutes: 1080 } };
 const partial = { days: 1, slotMinutes: 30, timeWindow: { startMinutes: 490, endMinutes: 540 } };
-const views = createCalendarViews({
-  night: timeGridView(night),
-  night_timeline: timelineView(night),
-  grid: timeGridView(daytime),
-  timeline: timelineView(daytime),
-  month: dayGridView({ period: 'month', maxEventsPerDay: 1, fixedWeekCount: true, ...weekdays }),
-  days: dayGridView({ weeks: 2, maxEventsPerDay: 2, ...weekdays }),
-  list: listView({ days: 7, ...weekdays }),
-  partial: timeGridView(partial),
-  partial_timeline: timelineView({ ...partial, days: 2 }),
+const viewsFeatures = calendarFeatures({});
+const views = calendarViews({
+  features: viewsFeatures,
+  views: {
+    night: timeGridView(night),
+    night_timeline: timelineView(night),
+    grid: timeGridView(daytime),
+    timeline: timelineView(daytime),
+    month: dayGridView({ period: 'month', maxEventsPerDay: 1, fixedWeekCount: true, ...weekdays }),
+    days: dayGridView({ weeks: 2, maxEventsPerDay: 2, ...weekdays }),
+    list: listView({ days: 7, ...weekdays }),
+    partial: timeGridView(partial),
+    partial_timeline: timelineView({ ...partial, days: 2 }),
+  },
 });
 
 const setup = (
-  view: keyof typeof views.views,
+  view: keyof typeof views,
   day: string,
   events: Calendar_EventInput<null>[] = [],
   resources: Calendar_Resource<null>[] = [],
@@ -51,13 +56,12 @@ const setup = (
   now = `${day}T10:00`,
 ) =>
   createCalendar({
-    views: views.views,
-    features: views.features,
+    views: views,
+    features: { ...viewsFeatures, backgroundFeature: backgroundFeature(backgrounds) },
     view,
     date: date(day),
     events,
     resources,
-    backgrounds,
     timeZone: 'America/New_York',
     firstDayOfWeek: 7,
     clock: fixedClock(at(now).toInstant()),
@@ -73,7 +77,7 @@ it('includes the following morning in navigation and input filtering while prese
     [],
     '2026-03-10T05:00',
   );
-  const navigation = getCalendarNavigation(views.views, 'night', date('2026-03-09'));
+  const navigation = getCalendarNavigation(views, 'night', date('2026-03-09'));
   expect(navigation).toMatchObject({
     inputRange: { start: date('2026-03-09'), end: date('2026-03-10') },
     range: { start: date('2026-03-09'), end: date('2026-03-09') },
@@ -120,15 +124,16 @@ it('uses overnight input coverage and shared geometry for background layers, bac
   if (!('backgrounds' in grid.columns[0])) throw new Error('expected background feature');
   expect(grid.columns[0].backgrounds).toMatchObject([{ start: 150 / 480, span: 60 / 480 }]);
 
-  const resourceViews = createCalendarViews({ night: timeGridView({ ...night, groupBy: 'resource' }) });
+  const resourceViewsFeatures = calendarFeatures({});
+  const resourceViews = calendarViews({ features: resourceViewsFeatures, views: { night: timeGridView({ ...night, groupBy: 'resource' }) } });
   const resource = createCalendar({
     timeZone: 'America/New_York',
     date: date('2026-03-09'),
     events: [],
     view: 'night',
     onNavigate: () => {},
-    views: resourceViews.views,
-    features: resourceViews.features,
+    views: resourceViews,
+    features: resourceViewsFeatures,
     resources: [{ id: 'room', title: 'Room', data: null, availability: ranges }],
   }).store.state.layout;
   if (resource.kind !== 'timeGrid') throw new Error('expected grid');
@@ -201,15 +206,16 @@ it('keeps partial-slot positions proportional and clips minimum paint size at vi
 
 it('keeps the controlled date when it is a hidden weekday, without changing navigation', () => {
   const definition = { ...night, hiddenDays: [1] as const };
-  const hidden = createCalendarViews({ day: timeGridView(definition), timeline: timelineView(definition) });
+  const hiddenFeatures = calendarFeatures({});
+  const hidden = calendarViews({ features: hiddenFeatures, views: { day: timeGridView(definition), timeline: timelineView(definition) } });
   for (const view of ['day', 'timeline'] as const) {
     const calendar = createCalendar({
       timeZone: 'America/New_York',
       date: date('2026-03-09'),
       events: [],
       onNavigate: () => {},
-      views: hidden.views,
-      features: hidden.features,
+      views: hidden,
+      features: hiddenFeatures,
       view,
     });
     expect(calendar.store.state.context.date.toString()).toBe('2026-03-09');
@@ -232,11 +238,15 @@ it('retains the D40 enclosing policy when a DST transition falls inside an overn
 
 for (const groupOrder of ['resource-first', 'date-first'] as const) {
   it(`compresses all-day bars and background spans with ${groupOrder} resources`, () => {
-    const resourceViews = createCalendarViews({ week: timeGridView({ days: 7, ...weekdays, groupBy: 'resource', groupOrder }) });
+    const resourceViewsFeatures = calendarFeatures({});
+    const resourceViews = calendarViews({
+      features: resourceViewsFeatures,
+      views: { week: timeGridView({ days: 7, ...weekdays, groupBy: 'resource', groupOrder }) },
+    });
     const resources = ['a', 'b'].map(id => ({ id, title: id, data: null, availability: [] }));
     const calendar = createCalendar({
-      views: resourceViews.views,
-      features: resourceViews.features,
+      views: resourceViews,
+      features: resourceViewsFeatures,
       view: 'week',
       timeZone: 'America/New_York',
       date: date('2026-03-11'),
@@ -269,11 +279,12 @@ for (const groupOrder of ['resource-first', 'date-first'] as const) {
 
 it('retains repeated-hour occurrence metadata and visual collisions inside a narrow visible window', () => {
   const settings = { days: 1, slotMinutes: 7, timeWindow: { startMinutes: 90, endMinutes: 105 } };
-  const folded = createCalendarViews({ grid: timeGridView(settings), timeline: timelineView(settings) });
+  const foldedFeatures = calendarFeatures({});
+  const folded = calendarViews({ features: foldedFeatures, views: { grid: timeGridView(settings), timeline: timelineView(settings) } });
   for (const view of ['grid', 'timeline'] as const) {
     const model = createCalendar({
-      views: folded.views,
-      features: folded.features,
+      views: folded,
+      features: foldedFeatures,
       view,
       date: date('2026-11-01'),
       timeZone: 'America/New_York',
@@ -304,12 +315,13 @@ it('reuses coordinate plans for event updates and invalidates them when navigati
 });
 
 it('uses layout input-range capabilities for both navigation paths and falls back for older layout features', () => {
-  const localViews = createCalendarViews({ day: timeGridView({ days: 1 }) });
+  const localViewsFeatures = calendarFeatures({});
+  const localViews = calendarViews({ features: localViewsFeatures, views: { day: timeGridView({ days: 1 }) } });
   const override = { ...timeGridLayout, inputRange: (range: Calendar_Range) => ({ start: range.start, end: range.end.add({ days: 2 }) }) };
   const navigated: Calendar_Range[] = [];
   const calendar = createCalendar({
-    views: localViews.views,
-    features: { ...localViews.features, timeGridLayout: override },
+    views: { ...localViews, day: { ...localViews.day, '~features': { timeGridLayout: override } } },
+    features: localViewsFeatures,
     view: 'day',
     date: date('2026-03-09'),
     timeZone: 'UTC',
@@ -320,7 +332,7 @@ it('uses layout input-range capabilities for both navigation paths and falls bac
   calendar.api.next();
   expect(navigated[0].end.toString()).toBe('2026-03-12');
   const { inputRange: _inputRange, ...legacy } = timeGridLayout;
-  const legacyView = { ...localViews.views.day, '~features': { timeGridLayout: legacy } };
+  const legacyView = { ...localViews.day, '~features': { timeGridLayout: legacy } };
   const navigation = getCalendarNavigation({ day: legacyView }, 'day', date('2026-03-09'));
   expect(navigation.inputRange).toEqual(navigation.range);
 });

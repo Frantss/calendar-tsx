@@ -1,9 +1,10 @@
+import { calendarFeatures } from '#features/calendar-features';
 import { Temporal } from 'temporal-polyfill';
 import { expect, it } from 'vitest';
 
 import { listView, timeGridView } from '#calendar-views';
 import { createCalendar } from '#calendar';
-import { createCalendarViews } from '#calendar-views';
+import { calendarViews } from '#calendar-views';
 import type { Calendar_ListGrouping, Calendar_ListLayout } from '#calendar.types';
 import { fixtures_allDay, fixtures_background, fixtures_resource, fixtures_timed } from '#tests/calendar.fixtures';
 import type { CalendarSetup_Overrides } from '#tests/calendar.setup';
@@ -173,11 +174,12 @@ it('rejects unsupported or repeated list grouping keys', () => {
 });
 
 it('keeps resource data typed through the calendar layout', () => {
-  const views = createCalendarViews({ agenda: listView({ weeks: 1, groupBy: 'resource' }) });
+  const viewsFeatures = calendarFeatures({});
+  const views = calendarViews({ features: viewsFeatures, views: { agenda: listView({ weeks: 1, groupBy: 'resource' }) } });
   const calendar = createCalendar({
     timeZone: 'America/New_York',
-    views: views.views,
-    features: views.features,
+    views: views,
+    features: viewsFeatures,
     view: 'agenda',
     date: Temporal.PlainDate.from('2026-03-11'),
     onNavigate: () => {},

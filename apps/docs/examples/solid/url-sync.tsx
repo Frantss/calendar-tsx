@@ -3,9 +3,9 @@ import { createSignal } from 'solid-js';
 import { Temporal } from 'temporal-polyfill';
 
 import type { ViewKey } from '../core/setup';
-import { bookings, timeZone, views } from '../core/setup';
+import { bookings, timeZone, views, features } from '../core/setup';
 
-const isViewKey = (value: string | null): value is ViewKey => value !== null && value in views.views;
+const isViewKey = (value: string | null): value is ViewKey => value !== null && value in views;
 
 // #region url
 const fromUrl = () => {
@@ -24,8 +24,8 @@ export const useUrlCalendar = () => {
 
   return useCalendar(() => ({
     timeZone,
-    views: views.views,
-    features: { ...views.features },
+    views,
+    features,
     view: navigation().view,
     date: navigation().date,
     events: bookings,

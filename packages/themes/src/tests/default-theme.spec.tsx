@@ -10,7 +10,7 @@ import type {
   Calendar_DayGridLayout,
   Calendar_TimeGridLayout,
 } from '@calendar-tsx/core';
-import { backgroundFeature, listView, dayGridView, timeGridView } from '@calendar-tsx/core';
+import { listView, dayGridView, timeGridView } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
 import {
   ListView,
@@ -556,8 +556,8 @@ it('leaves a gap between the day number and the first bar', async () => {
 });
 
 const backgroundViews = {
-  day: timeGridView({ days: 1, features: { backgroundFeature } }),
-  month: dayGridView({ period: 'month', maxEventsPerDay: 3, features: { backgroundFeature } }),
+  day: timeGridView({ days: 1 }),
+  month: dayGridView({ period: 'month', maxEventsPerDay: 3 }),
 };
 
 it("shades a background layer's span across the column", async () => {

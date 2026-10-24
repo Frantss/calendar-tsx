@@ -1,12 +1,11 @@
 <section id='intro'>
 
-`backgroundFeature` shades time from rules, such as business hours or holidays, in the time-grid, month and timeline views that
-list it. Each layer in the `backgrounds` option is one kind of shading: fixed ranges, ranges computed for the visible
+`backgroundFeature(layers)` shades time from rules, such as business hours or holidays, in the time-grid, month and timeline views. Each layer passed to the factory is one kind of shading: fixed ranges, ranges computed for the visible
 period, or the time they leave uncovered.
 
 <include lang='ts'>../../../examples/core/backgrounds.ts#layers</include>
 
-Register the feature on the views that shade, and pass `backgrounds` to the calendar:
+Register the configured feature, then bind it to the view definitions:
 
 <include lang='ts'>../../../examples/core/backgrounds.ts#views</include>
 
@@ -34,8 +33,7 @@ A range is timed, `{ start, end }` as `Temporal.ZonedDateTime`s, or all-day, `{ 
 - `createWeeklyRanges(rules)` returns a ranges function from weekly opening hours. Each rule takes ISO `daysOfWeek`
   (`1` Monday to `7` Sunday), a `startTime` and an `endTime`. An `endTime` at or before the `startTime` ends the next
   day, so `22:00` to `02:00` works.
-- Keep `backgrounds` and every ranges function at module scope or memoized. The calendar compares them by reference
-  and re-derives when they change.
+- Keep `backgrounds` and every ranges function at module scope or memoized. Factory defaults are fixed at calendar creation. To change a view override, replace its view definition and the `views` map.
 - An inverse layer with no ranges shades everything, the same rule as a resource with no availability.
 
 </section>
@@ -59,8 +57,7 @@ A range is timed, `{ start, end }` as `Temporal.ZonedDateTime`s, or all-day, `{ 
   coverage, preserving DST gaps and combining repeated hours. Coverage merges before inverse gaps are computed.
   Hidden weekdays contribute no shading; range callbacks receive `inputRange`.
 - Resource-limited layers skip rows or columns without a matching resource, including ungrouped timelines.
-- Fields follow the feature's scope: declaring views get them, or every supported view gets them when
-  `backgroundFeature` is registered only on the calendar. The time grid's all-day row and the list aren't shaded.
+- Every supported view inherits the registered background feature. Per-view arrays replace the default layers. The time grid's all-day row and the list aren't shaded.
 
 </section>
 

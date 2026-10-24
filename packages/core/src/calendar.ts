@@ -1,4 +1,8 @@
-import { calendarFeatures_collect, calendarFeatures_active } from '#features/calendar-features';
+import {
+  calendarFeatures_collect,
+  calendarFeatures_active,
+  calendarFeatures_validateViews,
+} from '#features/calendar-features';
 import { calendarFeatures_createRuntime } from '#features/feature-runtime';
 import { createStore } from '@tanstack/store';
 import { Temporal } from 'temporal-polyfill';
@@ -13,6 +17,7 @@ import type {
   Calendar_Event,
   Calendar_FeatureContext,
   Calendar_Features,
+  Calendar_ConfiguredFeatures,
   Calendar_Instance,
   Calendar_LayoutFeature,
   Calendar_NavigateTarget,
@@ -32,9 +37,9 @@ type AnyOptions = Calendar_Options<any, any, Calendar_Views, Calendar_Features>;
 type Tracked = Pick<
   AnyOptions,
   'timeZone' | 'views' | 'view' | 'date' | 'events' | 'resources' | 'firstDayOfWeek' | 'state'
-> & { now: Temporal.Instant; featureOptions: Record<string, unknown> };
+> & { now: Temporal.Instant };
 
-const tracked_from = (options: AnyOptions, now: Temporal.Instant, featureKeys: readonly string[]): Tracked => ({
+const tracked_from = (options: AnyOptions, now: Temporal.Instant): Tracked => ({
   timeZone: options.timeZone,
   views: options.views,
   view: options.view,
@@ -44,7 +49,6 @@ const tracked_from = (options: AnyOptions, now: Temporal.Instant, featureKeys: r
   firstDayOfWeek: options.firstDayOfWeek,
   state: options.state,
   now,
-  featureOptions: Object.fromEntries(featureKeys.map(key => [key, (options as Record<string, unknown>)[key]])),
 });
 
 const records_equal = (a: Record<string, unknown> = {}, b: Record<string, unknown> = {}) => {
@@ -62,24 +66,24 @@ const tracked_equals = (a: Tracked, b: Tracked) =>
   a.resources === b.resources &&
   a.firstDayOfWeek === b.firstDayOfWeek &&
   records_equal(a.state, b.state) &&
-  records_equal(a.featureOptions, b.featureOptions) &&
   a.now.equals(b.now);
 
 export const createCalendar = <
   TData,
   TResourceData = unknown,
   const TViews extends Calendar_Views = Calendar_Views,
-  const TFeatures extends Calendar_Features = Calendar_Features,
+  const TFeatures extends Calendar_ConfiguredFeatures = Calendar_ConfiguredFeatures,
 >(
-  initial: Calendar_Options<TData, TResourceData, TViews, TFeatures> & Calendar_ValidateFeatures<TViews, TFeatures>,
+  initial: Calendar_Options<TData, TResourceData, TViews, TFeatures> &
+    Calendar_ValidateFeatures<NoInfer<TViews>, NoInfer<TFeatures>>,
 ): Calendar_Instance<TData, TResourceData, TViews, TFeatures> => {
-  let options = initial as AnyOptions;
+  let options = initial as unknown as AnyOptions;
   const clock = () => options.clock ?? defaultClock;
+  const definitions = { ...initial.features };
   const features = calendarFeatures_collect(options);
   const resolveEvents = calendarSources_createResolver(features);
-  const featureKeys = Object.values(features).flatMap(feature => feature.trackedOptions ?? []);
 
-  const persisted = createStore(tracked_from(options, options.initialNow ?? clock().now(), featureKeys));
+  const persisted = createStore(tracked_from(options, options.initialNow ?? clock().now()));
   const featureRuntime = calendarFeatures_createRuntime(features, {
     get options() {
       return options;
@@ -110,7 +114,7 @@ export const createCalendar = <
     const input = persisted.state;
     const now = input.now.toZonedDateTimeISO(input.timeZone);
     const definition = calendarNavigation_view(input.views, input.view);
-    const active = calendarFeatures_active(features, input.views, definition);
+    const active = calendarFeatures_active(features, definition);
     const navigation = navigation_of(input.views, input.view, input.date);
     const viewContext = { ...navigation, kind: definition.kind } as unknown as Calendar_ViewContext<TViews>;
     const order = options.eventOrder;
@@ -127,7 +131,7 @@ export const createCalendar = <
       .sort((a, b) => (order ? order(a, b, viewContext) : calendarEvents_defaultOrder(a, b)));
 
     for (const [key, feature] of active)
-      if (feature.events) events = featureRuntime.run(`${key}:events`, feature.events, events);
+      if (feature.events) events = featureRuntime.run(key, `${key}:events`, feature.events, events);
 
     const layout = featureRuntime.resolve(definition, definition['~layout']) as Calendar_LayoutFeature;
     let model: Calendar_AnyLayout = layout.build(
@@ -146,7 +150,7 @@ export const createCalendar = <
     );
 
     for (const [key, feature] of active)
-      if (feature.decorate) model = featureRuntime.run(`${key}:decorate`, feature.decorate, model);
+      if (feature.decorate) model = featureRuntime.run(key, `${key}:decorate`, feature.decorate, model);
 
     const featureState = featureRuntime.state();
 
@@ -189,7 +193,7 @@ export const createCalendar = <
 
   return {
     get options() {
-      return options as Calendar_Options<TData, TResourceData, TViews, TFeatures>;
+      return options as unknown as Calendar_Options<TData, TResourceData, TViews, TFeatures>;
     },
     store,
     api,
@@ -199,9 +203,15 @@ export const createCalendar = <
       return clock().subscribe(tick);
     },
     '~update': next => {
-      options = next as AnyOptions;
+      if (
+        Object.keys(next.features).length !== Object.keys(definitions).length ||
+        Object.entries(definitions).some(([key, feature]) => next.features[key] !== feature)
+      )
+        throw new Error('[calendar] feature definitions cannot change after calendar creation');
+      if (next.views !== options.views) calendarFeatures_validateViews(definitions, next.views);
+      options = next as unknown as AnyOptions;
       persisted.setState(state => {
-        const updated = tracked_from(options, state.now, featureKeys);
+        const updated = tracked_from(options, state.now);
 
         return tracked_equals(state, updated) ? state : updated;
       });

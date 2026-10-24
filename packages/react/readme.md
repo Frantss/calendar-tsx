@@ -50,7 +50,7 @@ const Month = () => {
 };
 
 const App = () => {
-  const calendar = useCalendar({/* same options as createCalendar, including views.views and features */});
+  const calendar = useCalendar({/* same options as createCalendar, including the views map and feature registry */});
 
   return (
     <CalendarProvider value={calendar}>

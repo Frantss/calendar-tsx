@@ -3,8 +3,18 @@ import { Temporal } from 'temporal-polyfill';
 import { expect, expectTypeOf, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 
-import type { Calendar_DayGridDay, Calendar_Feature, Calendar_TimelineDay } from '@calendar-tsx/core';
-import { createCalendar, createCalendarViews, dayGridView, fixedClock, timeGridView, timelineView } from '@calendar-tsx/core';
+import type { Calendar_State, Calendar_DayGridDay, Calendar_ConfiguredFeature, Calendar_TimelineDay } from '@calendar-tsx/core';
+import {
+  backgroundFeature,
+  createBackgroundLayer,
+  createCalendar,
+  calendarViews,
+  calendarFeatures,
+  dayGridView,
+  fixedClock,
+  timeGridView,
+  timelineView,
+} from '@calendar-tsx/core';
 import { DayGridViewDayTrigger } from '#day-grid-view';
 import { TimeGridViewColumnTrigger } from '#time-grid-view';
 import { TimelineViewDayTrigger } from '#timeline-view';
@@ -17,16 +27,24 @@ declare module '@calendar-tsx/core' {
   }
 }
 
-const cohesionFeature = { getInitialState: () => ({ cohesion: 'ready' }) } satisfies Calendar_Feature;
-const views = createCalendarViews({
-  day: timeGridView({ days: 1 }),
-  month: dayGridView({ period: 'month', maxEventsPerDay: 2 }),
-  timeline: timelineView({ days: 1 }),
+const cohesionFeature = {
+  '~id': 'cohesionFeature',
+  '~config': undefined,
+  getInitialState: () => ({ cohesion: 'ready' }),
+} satisfies Calendar_ConfiguredFeature<'cohesionFeature', undefined>;
+const viewsFeatures = calendarFeatures({});
+const views = calendarViews({
+  features: viewsFeatures,
+  views: {
+    day: timeGridView({ days: 1 }),
+    month: dayGridView({ period: 'month', maxEventsPerDay: 2 }),
+    timeline: timelineView({ days: 1 }),
+  },
 });
 const options = {
   timeZone: 'UTC',
-  views: views.views,
-  features: views.features,
+  views: views,
+  features: viewsFeatures,
   view: 'day' as const,
   date: Temporal.PlainDate.from('2026-03-11'),
   events: [],
@@ -36,7 +54,7 @@ const options = {
 
 it('accepts plain and feature-owning calendars after a feature state merge', async () => {
   const plain = createCalendar(options);
-  const featured = createCalendar({ ...options, features: { ...views.features, cohesionFeature } });
+  const featured = createCalendar({ ...options, features: { ...viewsFeatures, cohesionFeature } });
   expectTypeOf(plain.store.state).not.toHaveProperty('cohesion');
   expectTypeOf(featured.store.state.cohesion).toEqualTypeOf<string>();
   expect(featured.store.state.cohesion).toBe('ready');
@@ -52,7 +70,7 @@ it('accepts plain and feature-owning calendars after a feature state merge', asy
       <Calendar {...options}>
         <p>plain root</p>
       </Calendar>
-      <Calendar {...options} features={{ ...views.features, cohesionFeature }}>
+      <Calendar {...options} features={{ ...viewsFeatures, cohesionFeature }}>
         <p>feature root</p>
       </Calendar>
     </>
@@ -142,4 +160,31 @@ it('rejects unregistered trigger targets and locale on hook options', () => {
   void InvalidTriggers;
   void InvalidHook;
   expectTypeOf<Parameters<typeof calendar.api.setView>[0]>().toEqualTypeOf<'day' | 'month' | 'timeline'>();
+});
+
+it('applies aliased factory defaults and per-view overrides through controlled navigation', async () => {
+  const features = calendarFeatures({
+    background: backgroundFeature([createBackgroundLayer({ id: 'holiday', kind: 'holiday', ranges: [{ allDay: true, start: options.date }] })]),
+  });
+  const views = calendarViews({ features, views: { day: timeGridView({ days: 1 }), week: timeGridView({ days: 1, features: { background: [] } }) } });
+  const Layers = () => {
+    const model = useCalendarSelector((state: Calendar_State<unknown, unknown, typeof views, typeof features>) => state.layout);
+    return <p>{model().columns[0].backgrounds.length} layers</p>;
+  };
+  const Harness = () => {
+    const [view, setView] = createSignal<'day' | 'week'>('day');
+    const calendar = useCalendar(() => ({ ...options, features, views, view: view(), onNavigate: next => setView(next.view) }));
+    return (
+      <CalendarProvider value={calendar}>
+        <button type='button' onClick={() => calendar.api.setView('week')}>
+          week
+        </button>
+        <Layers />
+      </CalendarProvider>
+    );
+  };
+  tests_render(() => <Harness />);
+  await expect.element(page.getByText('1 layers')).toBeVisible();
+  await page.getByRole('button', { name: 'week', exact: true }).click();
+  await expect.element(page.getByText('0 layers')).toBeVisible();
 });

@@ -6,6 +6,7 @@ export type { Calendar_EventStore } from '#calendar-event-store';
 export { createEventStore } from '#calendar-event-store';
 export { getCalendarNavigation } from '#calendar-navigation';
 export { dayGridLayout, listLayout, timeGridLayout, timelineLayout } from '#calendar-layouts';
-export { dayGridView, listView, timeGridView, timelineView, createCalendarViews } from '#calendar-views';
+export { dayGridView, listView, timeGridView, timelineView, calendarViews } from '#calendar-views';
 export * from './background';
 export * from './recurrence';
+export { calendarFeatures } from '#features/calendar-features';

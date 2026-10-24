@@ -20,7 +20,7 @@ import {
 } from '#layout/layout-coordinates';
 import { layoutIntervals_complement, layoutIntervals_day, layoutIntervals_merge } from '#layout/layout-intervals';
 
-const layers_resolve = (layers: Calendar_BackgroundLayer[], range: Calendar_Range, timeZone: string) =>
+const layers_resolve = (layers: readonly Calendar_BackgroundLayer[], range: Calendar_Range, timeZone: string) =>
   layers.map(layer => ({
     layer,
     ranges: typeof layer.ranges === 'function' ? layer.ranges(range, timeZone) : layer.ranges,
@@ -31,7 +31,7 @@ const appliesTo = (layer: Calendar_BackgroundLayer, resourceId: string | undefin
 
 export const timeGrid_decorate = (
   grid: Calendar_TimeGridLayout<unknown, unknown>,
-  layers: Calendar_BackgroundLayer[],
+  layers: readonly Calendar_BackgroundLayer[],
   timeZone: string,
 ) => {
   const plan = grid.coordinates;
@@ -85,7 +85,7 @@ export const timeGrid_decorate = (
 /** All-day ranges shade cells; inverse layers shade untouched days, within the layer's resource scope. */
 export const dayGrid_decorate = (
   grid: Calendar_DayGridLayout<unknown>,
-  layers: Calendar_BackgroundLayer[],
+  layers: readonly Calendar_BackgroundLayer[],
   timeZone: string,
 ) => {
   const range = grid.coordinates.dates.length ? grid.coordinates.inputRange : undefined;
@@ -127,7 +127,7 @@ export const dayGrid_decorate = (
 
 export const timeline_decorate = (
   timeline: Calendar_TimelineLayout<unknown, unknown>,
-  layers: Calendar_BackgroundLayer[],
+  layers: readonly Calendar_BackgroundLayer[],
   timeZone: string,
 ) => {
   const plan = timeline.coordinates;

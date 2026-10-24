@@ -21,8 +21,7 @@ when the state changes. The React and Solid bindings are built this way.
 
 - Create the calendar once. Creating one per render loses feature state and subscriptions.
 - Don't call `~mount` on the server. Without it the clock never starts, so server rendering leaves no timer behind.
-- Type your options with `Calendar_ValidateFeatures`, as the example does. Without it, forgetting `...views.features`
-  stops being a type error for your users.
+- Type your options with `Calendar_ValidateFeatures`, as the example does. It preserves the check that the calendar's registry satisfies the bound views.
 
 ## Context
 

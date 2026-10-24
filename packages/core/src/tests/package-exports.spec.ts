@@ -8,11 +8,12 @@ import {
   recurrenceFeature as rootRecurrenceFeature,
   createRecurringEvent as rootCreateRecurringEvent,
   createCalendar,
-  createCalendarViews,
+  calendarViews,
+  calendarFeatures,
   timeGridView,
   fixedClock,
 } from '@calendar-tsx/core';
-import type { Calendar_Feature, Calendar_EventDefinition, Calendar_BackgroundLayer as RootBackgroundLayer } from '@calendar-tsx/core';
+import type { Calendar_ConfiguredFeature, Calendar_EventDefinition, Calendar_BackgroundLayer as RootBackgroundLayer } from '@calendar-tsx/core';
 import { backgroundFeature, createBackgroundLayer, createWeeklyRanges } from '@calendar-tsx/core/background';
 import type { Calendar_BackgroundLayer } from '@calendar-tsx/core/background';
 import { recurrenceFeature, createRecurringEvent } from '@calendar-tsx/core/recurrence';
@@ -28,14 +29,17 @@ declare module '@calendar-tsx/core' {
 }
 
 const exportsProbeFeature = {
+  '~id': 'exportsProbeFeature' as const,
+  '~config': undefined,
   getInitialState: () => ({ exportsProbe: 0 }),
   constructApi: context => ({
     incrementExportsProbe: () => context.setState<number>('exportsProbe', value => value + 1),
   }),
-} satisfies Calendar_Feature;
+} satisfies Calendar_ConfiguredFeature<'exportsProbeFeature', undefined>;
 
 const setup = () => {
-  const views = createCalendarViews({ day: timeGridView({ days: 2 }) });
+  const viewsFeatures = calendarFeatures({});
+  const views = calendarViews({ features: viewsFeatures, views: { day: timeGridView({ days: 2 }) } });
   const layer = createBackgroundLayer({
     id: 'holiday',
     kind: 'holiday',
@@ -51,12 +55,11 @@ const setup = () => {
 
   expectTypeOf<Calendar_BackgroundLayer>().toEqualTypeOf<RootBackgroundLayer>();
   expectTypeOf(event).toExtend<Calendar_RecurringAllDayEventInput<{ title: string }>>();
-  expectTypeOf(event).toExtend<Calendar_EventDefinition<{ title: string }, { recurrenceFeature: typeof recurrenceFeature }>>();
+  expectTypeOf(event).toExtend<Calendar_EventDefinition<{ title: string }, { recurrenceFeature: ReturnType<typeof recurrenceFeature> }>>();
 
   return createCalendar({
-    views: views.views,
-    features: { ...views.features, backgroundFeature, recurrenceFeature, exportsProbeFeature },
-    backgrounds: [layer],
+    views: views,
+    features: { ...viewsFeatures, recurrenceFeature: recurrenceFeature(), exportsProbeFeature, backgroundFeature: backgroundFeature([layer]) },
     events: [event],
     date: Temporal.PlainDate.from('2026-03-11'),
     view: 'day',

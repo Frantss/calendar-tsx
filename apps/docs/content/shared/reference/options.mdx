@@ -4,7 +4,7 @@ createCalendar<TData, TResourceData, TViews, TFeatures>(options);
 
 `TData` is the type of each event's `data` payload and `TResourceData` that of each resource's. `TViews` and
 `TFeatures` are inferred from `views` and `features`, so `view` and `onNavigate` only accept your view keys, and the
-options, state and actions of the registered [features](../extending/features) appear on the calendar.
+configuration, state and actions of the registered [features](../extending/features) appear on the calendar.
 
 Let TypeScript infer all four. Passing some explicitly, as in `createCalendar<Booking>(…)`, turns off inference for
 the others, and view keys widen to `string`. Type `events` as `Calendar_EventInput<Booking>[]` instead.
@@ -12,8 +12,8 @@ the others, and view keys widen to `string`. Type `events` as `Calendar_EventInp
 | Option           | Type                                     | Default         | Tracked        |
 | ---------------- | ---------------------------------------- | --------------- | -------------- |
 | `timeZone`       | `string` (IANA zone)                     | required        | Yes            |
-| `views`          | `createCalendarViews(…).views`           | required        | Yes            |
-| `features`       | `{ ...views.features, …calendarWide }`   | required        | Read once      |
+| `views`          | `calendarViews({ features, views })`     | required        | Yes            |
+| `features`       | `calendarFeatures({ … })`                | required        | Read once      |
 | `view`           | `keyof TViews`                           | required        | Yes            |
 | `date`           | `Temporal.PlainDate`                     | required        | Yes            |
 | `onNavigate`     | `(next: Calendar_Navigation) => void`    | required        | No             |
@@ -28,9 +28,9 @@ the others, and view keys widen to `string`. Type `events` as `Calendar_EventInp
 
 **Tracked** options re-derive the layout when they change through `~update`. Others are read when needed: changing
 `eventOrder` alone does not re-order until a tracked input changes. **Read once** options are read at creation and
-ignored afterwards.
+fixed afterwards. Changing feature definitions throws; create a new instance to change them.
 
-Registered features can add options of their own; see [features](../extending/features).
+Pass feature options to their factories and per-view overrides to the view definitions; see [features](../extending/features).
 
 `views`, `events`, `resources` and each `state` slice are compared **by reference**. Pass a new array or object to signal a change, and
 keep the same reference otherwise, or every update re-derives.
@@ -42,21 +42,23 @@ counts as today.
 
 ## `views`, `view` and `date`
 
-`views` maps your own keys to [views](../getting-started/concepts#views-and-layouts), usually through `createCalendarViews`. `view`
+`views` maps your own keys to [views](../getting-started/concepts#views-and-layouts), usually through `calendarViews`. `view`
 selects one, and `date` is any day inside the period to show. Both are controlled: see
 [actions](../features/navigation#actions). An unknown `view` key throws.
 
 ## `features`
 
-Every feature the calendar uses, keyed by name. Spread `views.features` from `createCalendarViews`, which holds each
-view's layout and the features it lists, and add calendar-wide features next to it:
+Configured feature definitions keyed by consumer aliases:
 
 ```ts
-createCalendar({ ...options, views: views.views, features: { myFeature, ...views.features } });
+const features = calendarFeatures({ background: backgroundFeature(defaultBackgrounds) });
+const views = calendarViews({ features, views: { week: timeGridView({ weeks: 1 }) } });
+createCalendar({ ...options, views, features });
 ```
 
-Leaving out a feature a view uses is a type error. The object is read once, at creation. See
-[features](../extending/features).
+Every view inherits the registered features. A view can override a feature through `features: { background: layers }`.
+Unknown keys and invalid override types are rejected. Feature definitions are captured at creation; view overrides
+update through a new `views` reference. See [features](../extending/features).
 
 ## `onNavigate`
 

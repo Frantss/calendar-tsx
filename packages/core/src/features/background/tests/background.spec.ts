@@ -1,3 +1,4 @@
+import { calendarFeatures } from '#features/calendar-features';
 import { Temporal } from 'temporal-polyfill';
 import { expect, it, vi } from 'vitest';
 
@@ -5,21 +6,19 @@ import { createCalendar } from '#calendar';
 import { backgroundFeature } from '#features/background/background-feature';
 import { createBackgroundLayer, createWeeklyRanges } from '#features/background/background-ranges';
 import { fixedClock } from '#calendar-clock';
-import { dayGridView, timeGridView, createCalendarViews } from '#calendar-views';
-import type {
-  Calendar_BackgroundLayer,
-  Calendar_BackgroundSegment,
-  Calendar_DayBackground,
-  Calendar_DayGridLayout,
-  Calendar_TimeGridLayout,
-} from '#calendar.types';
+import { dayGridView, timeGridView, calendarViews } from '#calendar-views';
+import type { Calendar_BackgroundLayer, Calendar_BackgroundSegment, Calendar_DayBackground } from '#calendar.types';
 import { fixtures_at, fixtures_resource, fixtures_timeZone } from '#tests/calendar.fixtures';
 
-const views = createCalendarViews({
-  week: timeGridView({ days: 7, features: { backgroundFeature } }),
-  resources: timeGridView({ days: 1, groupBy: 'resource', features: { backgroundFeature } }),
-  month: dayGridView({ period: 'month', maxEventsPerDay: 3, features: { backgroundFeature } }),
-  plain: timeGridView({ days: 1 }),
+const viewsFeatures = calendarFeatures({ backgroundFeature: backgroundFeature() });
+const views = calendarViews({
+  features: viewsFeatures,
+  views: {
+    week: timeGridView({ days: 7 }),
+    resources: timeGridView({ days: 1, groupBy: 'resource' }),
+    month: dayGridView({ period: 'month', maxEventsPerDay: 3 }),
+    plain: timeGridView({ days: 1 }),
+  },
 });
 
 const businessHours = createBackgroundLayer({
@@ -37,11 +36,11 @@ const holiday = createBackgroundLayer({
   ranges: [{ allDay: true, start: Temporal.PlainDate.from('2026-03-11') }],
 });
 
-const setup = (view: keyof typeof views.views, backgrounds: Calendar_BackgroundLayer[]) =>
+const setup = (view: keyof typeof views, backgrounds: Calendar_BackgroundLayer[]) =>
   createCalendar({
     timeZone: fixtures_timeZone,
-    views: views.views,
-    features: { ...views.features },
+    views: views,
+    features: { ...viewsFeatures, backgroundFeature: backgroundFeature(backgrounds) },
     view,
     // Wednesday; the week runs Sunday 8 (a 23-hour DST day) to Saturday 14
     date: Temporal.PlainDate.from('2026-03-11'),
@@ -50,11 +49,11 @@ const setup = (view: keyof typeof views.views, backgrounds: Calendar_BackgroundL
     events: [],
     resources: [fixtures_resource('a'), fixtures_resource('b')],
     clock: fixedClock(Temporal.Instant.from('2026-03-11T15:00:00Z')),
-    backgrounds,
   });
 
 const columns = (calendar: ReturnType<typeof setup>) => {
-  const layout = calendar.store.state.layout as Calendar_TimeGridLayout<unknown, null>;
+  const layout = calendar.store.state.layout;
+  if (layout.kind !== 'timeGrid') throw new Error('expected a time grid');
 
   return Object.fromEntries(
     layout.columns.map(column => [
@@ -67,7 +66,8 @@ const columns = (calendar: ReturnType<typeof setup>) => {
 };
 
 const days = (calendar: ReturnType<typeof setup>) => {
-  const layout = calendar.store.state.layout as Calendar_DayGridLayout<unknown>;
+  const layout = calendar.store.state.layout;
+  if (layout.kind !== 'dayGrid') throw new Error('expected a day grid');
 
   return Object.fromEntries(
     layout.sections
@@ -160,8 +160,8 @@ it('passes the visible range and time zone to a ranges function', () => {
   );
 });
 
-it('adds no fields to views that do not list the feature', () => {
-  expect(columns(setup('plain', [holiday]))['all:2026-03-11']).toBeUndefined();
+it('inherits background layers in views without overrides', () => {
+  expect(columns(setup('plain', [holiday]))['all:2026-03-11']).toEqual([`holiday ${fraction(0)}+${fraction(24)}`]);
 });
 
 it('re-derives when the backgrounds change', () => {
@@ -169,7 +169,10 @@ it('re-derives when the backgrounds change', () => {
 
   expect(columns(calendar)['all:2026-03-11']).toEqual([]);
 
-  calendar['~update']({ ...calendar.options, backgrounds: [holiday] });
+  calendar['~update']({
+    ...calendar.options,
+    views: { ...calendar.options.views, week: { ...calendar.options.views.week, features: { backgroundFeature: [holiday] } } },
+  });
 
   expect(columns(calendar)['all:2026-03-11']).toEqual([`holiday ${fraction(0)}+${fraction(24)}`]);
 });

@@ -1410,8 +1410,8 @@ navigation through the explicit instance, locale ownership, and accessible-label
 
 ### D54 — Feature factories configure calendar assembly
 
-**Status:** target API recorded from the assembly discussion; not implemented. The complete API and React example
-are in [Calendar assembly API](./calendar-assembly.md). Typing feasibility for the new signatures is unverified.
+**Status:** implemented. The complete API and React example are in
+[Calendar assembly API](./calendar-assembly.md).
 
 **Serves:** D4, D5, D8, D24, D29, D53.
 
@@ -1427,23 +1427,38 @@ continue to supply layout features. Consumers pass `views` directly and no longe
 `views.features`. Feature definitions retain their identity and type contributions when registered under aliases
 such as `background`. Recurrence source resolution remains calendar-wide.
 
-**Effect on existing decisions:** the target replaces D29's constant-only feature registration and
+**Effect on existing decisions:** D54 replaces D29's constant-only feature registration and
 `createCalendarViews` assembly. It also replaces the cross-view activation rule preserved by D53: each view
 inherits the registered features, and adding an override to one view does not change another view's scope. Other
-D53 binding contracts remain unchanged. Current package documentation continues to describe the implemented API
-until this target is implemented.
+D53 binding contracts remain unchanged. Package documentation and compiled examples use factory assembly.
 
 **Alternatives considered:** a `{ feature, options }` descriptor repeats the feature's identity; the user rejected
 it. A separate defaults argument disconnects configuration from each feature's factory signature. An array of
 factory results removes explicit registration keys; the user chose an object. Recreating configured features in
 each view is unnecessary because views only override configuration and share the calendar's state.
 
-**Still open:** general object-option merging, disabling syntax, duplicate feature registrations and updating
-configured defaults after creation. The documented examples do not establish those contracts.
+**Configuration rules:** object overrides shallow-merge with factory defaults; nested objects are replaced and
+arrays replace the entire array. The user selected shallow object merging during implementation. Duplicate
+registrations of one stable identity are rejected. No feature-disabling syntax is provided. Definitions and
+factory defaults remain fixed at creation, continuing D29's lifetime rule; updating definitions through `~update`
+throws. New view definitions and a new `views` map update per-view overrides.
+
+**Implementation:** factories return `Calendar_ConfiguredFeature<TId, TConfig>` definitions carrying `~id` and
+`~config`. `calendarFeatures` validates and collects them; `calendarViews` checks overrides and binds each view to
+its registry. Hooks receive resolved `context.config`. State and actions initialize only at calendar creation.
+Source resolution indexes stable identities, independently of consumer aliases. Model extension maps receive
+canonical feature keys, preserving structural assignment to base models in both adapters. Retired option/view
+setting maps, `context.settings` and `trackedOptions` are replaced by typed factory configuration and tracked view
+references. Layout implementations remain supplied by each view.
+
+**Verification:** type probes and regression cases cover aliases, unknown and invalid overrides, registry
+requirements, inherited fields, array replacement, shallow object merging, immutable defaults, per-view updates,
+state isolation and structural model assignment. Core, adapter, RRule and compiled documentation consumers use
+the new assembly. The package-export suite checks mixed root/subpath imports and public declaration merging.
 
 ### D55 — Core features own their modules and explicit public entries
 
-**Status:** source organization and explicit public entries implemented; D54 factory assembly remains unimplemented.
+**Status:** source organization, explicit public entries and D54 factory assembly implemented.
 The complete structure, module responsibilities and export map are in
 [Core feature organization and exports](./core-features.md).
 
@@ -1462,8 +1477,7 @@ entries. The public paths omit `/features/`, as requested by the user.
 
 **Dependencies:** registry and runtime machinery do not import built-in feature implementations. Shared extension
 maps compose feature-owned interfaces through type-only imports. Root and feature entries reference the same
-shared contracts and implementations. Stable configured identities independent of registration aliases remain
-part of D54; this migration preserves existing source resolution and activation rules.
+shared contracts and implementations. D54 adds configured identities independent of registration aliases and inheritance across views.
 
 **Alternatives considered:** a flat source directory preserves scattered feature ownership. Separate feature
 packages add publishing and dependency management. Root-only exports omit direct feature imports; wildcard
@@ -1477,9 +1491,8 @@ were emitted with unresolved source paths by the declaration bundler. Public dec
 Three build entries produce root, background and recurrence exports backed by shared implementation and type chunks.
 
 **Verification:** built root and subpath imports must retain implementation identity, model and event-input
-contributions, public declaration merging and independent state across calendar instances. Existing tests guard
-activation, settings precedence, stage caching, recurrence and adapter behavior. D54 will separately verify aliases
-and the new override syntax.
+contributions, public declaration merging and independent state across calendar instances. Tests guard inherited participation, configuration precedence, stage caching, recurrence and adapter behavior,
+including D54 aliases and typed override syntax.
 
 ## Test cases
 

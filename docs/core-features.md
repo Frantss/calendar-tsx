@@ -2,8 +2,7 @@
 
 Status: source organization and public entry points implemented. This document extends the
 [calendar assembly API](./calendar-assembly.md). D55 in the [design spec](./design.md) records the decision.
-The D54 factory assembly, configured aliases and per-view overrides remain a target API. Features currently keep
-their constant definitions and existing registration and activation behavior.
+D54 factory assembly, stable configured identities, inherited participation and per-view overrides are implemented.
 
 ## Source organization
 
@@ -55,18 +54,18 @@ packages/core/
 
 This tree shows the affected modules. Other core modules and calendar integration tests remain in place.
 
-| Module                           | Responsibility                                                                                                                    |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `features/calendar-features.ts`  | Collects registered features and resolves their current per-view activation. D54 will add the public `calendarFeatures` assembly. |
-| `features/feature.types.ts`      | Defines feature contracts, hook contexts, pipeline stages and layout features.                                                    |
-| `features/feature-maps.types.ts` | Declares the common extension maps and composes built-in contributions through type-only imports.                                 |
-| `features/feature-runtime.ts`    | Resolves per-view configuration, initializes feature state and actions, and memoizes feature stages.                              |
-| `features/background/`           | Owns the background factory, layer types, weekly-range helpers and layout decoration.                                             |
-| `features/recurrence/`           | Owns the recurrence factory, recurring-event constructors and types, rule compilation, date handling and expansion.               |
+| Module                           | Responsibility                                                                                                      |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `features/calendar-features.ts`  | Implements `calendarFeatures`, validates registries, resolves configuration and checks view requirements.           |
+| `features/feature.types.ts`      | Defines configured factory results, hook contexts, pipeline stages and layout features.                             |
+| `features/feature-maps.types.ts` | Declares the common extension maps and composes built-in contributions through type-only imports.                   |
+| `features/feature-runtime.ts`    | Resolves per-view configuration, initializes feature state and actions, and memoizes feature stages.                |
+| `features/background/`           | Owns the background factory, layer types, weekly-range helpers and layout decoration.                               |
+| `features/recurrence/`           | Owns the recurrence factory, recurring-event constructors and types, rule compilation, date handling and expansion. |
 
 `calendar.ts` owns the calendar store and pipeline order. It delegates common feature mechanics to the feature
-runtime. `calendar-views.ts` still owns the current `createCalendarViews` assembly. D54 will add typed configuration
-overrides and the new `calendarViews` signature.
+runtime. `calendar-views.ts` implements `calendarViews`, binding each view to registered definitions and validating
+configuration overrides.
 `calendar-sources.ts` remains the generic event-source dispatcher and cache; recurrence owns its expansion
 implementation.
 
@@ -88,20 +87,19 @@ This keeps built-in declarations in their owning folders and produces one shared
 bundled declarations. Internal module augmentations retained unresolved source paths in the generated output;
 interface inheritance avoids that packaging problem. Third-party augmentation of the public maps remains supported.
 
-Under D54, each configured definition must retain its stable feature identity. Consumer registration keys such
-as `background` and `recurrence` will identify view overrides. Renaming a registration key must preserve its type
-contributions and event-source resolution. The current source dispatcher still looks up resolvers by the event
-definition's `~source` value; that behavior is unchanged by this source reorganization.
+Each configured definition carries its stable `~id`, while consumer keys such as `background` and `recurrence`
+identify view overrides. The source dispatcher indexes implementations by stable identity, so registration aliases
+preserve event-source resolution. Feature-map selection normalizes aliases to canonical identities.
 
-Each calendar instance owns its feature state, actions and stage caches. D54 factories will produce reusable
-configuration definitions, with per-view overrides changing configuration within that instance.
+Each calendar instance owns its feature state, actions and stage caches. Factories produce reusable definitions;
+per-view overrides change configuration within that instance. Object values shallow-merge and arrays replace defaults.
 
 ## Public entry points
 
 Expose explicit feature subpaths directly below the package name:
 
 ```ts
-import { createCalendar, createCalendarViews, dayGridView, timeGridView } from '@calendar-tsx/core';
+import { createCalendar, calendarFeatures, calendarViews, dayGridView, timeGridView } from '@calendar-tsx/core';
 
 import { backgroundFeature, createBackgroundLayer, createWeeklyRanges } from '@calendar-tsx/core/background';
 
@@ -161,9 +159,8 @@ import path. Retain ESM output and the package's side-effect-free contract.
 
 ## Migration and verification
 
-Feature implementations, types and tests now live in their owning modules. Explicit feature entries preserve
-the existing behavior and root exports. Implementing the documented factory assembly is the next migration;
-the package readmes continue to describe the current constant-based registration.
+Feature implementations, types and tests live in their owning modules. Explicit feature entries and root
+re-exports share implementations and declarations. The package readmes and compiled examples use factory assembly.
 
 Implementation verification must cover root imports, feature-subpath imports and mixed imports against the
 built package. Check that factories and helper exports retain identity across entries, and that declaration

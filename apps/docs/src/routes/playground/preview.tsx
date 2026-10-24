@@ -199,8 +199,8 @@ function PreviewCalendar({
 
   const calendar = useCalendar({
     timeZone,
-    views: views.views,
-    features: { ...views.features },
+    views,
+    features: {},
     view: config.view,
     date,
     events,

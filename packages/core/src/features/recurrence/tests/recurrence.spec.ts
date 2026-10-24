@@ -1,3 +1,4 @@
+import { calendarFeatures } from '#features/calendar-features';
 import { Temporal } from 'temporal-polyfill';
 import { expect, expectTypeOf, it, vi } from 'vitest';
 
@@ -5,10 +6,10 @@ import { createCalendar } from '#calendar';
 import { fixedClock } from '#calendar-clock';
 import { createEventStore } from '#calendar-event-store';
 import { createEvent } from '#calendar-events';
-import { createCalendarViews, listView, dayGridView, timeGridView, timelineView } from '#calendar-views';
+import { calendarViews, listView, dayGridView, timeGridView, timelineView } from '#calendar-views';
 import { recurrenceFeature } from '#features/recurrence/recurrence-feature';
 import { createRecurringEvent } from '#features/recurrence/recurrence-events';
-import type { Calendar_Event, Calendar_EventDefinition, Calendar_Feature, Calendar_Clock } from '#calendar.types';
+import type { Calendar_Event, Calendar_EventDefinition, Calendar_Clock } from '#calendar.types';
 import type {
   Calendar_RecurrenceOptions,
   Calendar_RecurringTimedEventInput,
@@ -43,7 +44,7 @@ const expand = (
   start = '2026-01-01',
   end = '2026-12-31',
   timeZone = 'America/New_York',
-) => recurrenceFeature.resolveEvents(source, { range: { start: date(start), end: date(end) }, timeZone });
+) => recurrenceFeature().resolveEvents(source, { range: { start: date(start), end: date(end) }, timeZone });
 const starts = (events: Calendar_Event<unknown>[]) => events.map(event => event.start.toString());
 const dates = (events: Calendar_Event<unknown>[]) =>
   events.map(event => (event.kind === 'timed' ? event.start.toPlainDate().toString() : event.start.toString()));
@@ -53,7 +54,7 @@ it('gates native definitions by their feature and infers store source keys and d
   const store = createEventStore([source]);
   expectTypeOf<(typeof store.store.state.events)[number]['~source']>().toEqualTypeOf<'recurrenceFeature' | undefined>();
   store.add([allDay(), createEvent({ id: 'one', kind: 'allDay', start: date('2026-01-01'), data: { title: 'One' } })]);
-  expectTypeOf(source).toExtend<Calendar_EventDefinition<{ title: string }, { recurrenceFeature: typeof recurrenceFeature }>>();
+  expectTypeOf(source).toExtend<Calendar_EventDefinition<{ title: string }, { recurrenceFeature: ReturnType<typeof recurrenceFeature> }>>();
   expectTypeOf(source).not.toExtend<Calendar_EventDefinition<{ title: string }, {}>>();
   expectTypeOf<{ freq: 'DAILY'; byDay: ['MO'] }>().not.toExtend<Calendar_RecurrenceOptions>();
   expectTypeOf<{ freq: 'MONTHLY' }>().not.toExtend<Calendar_RecurrenceOptions>();
@@ -245,21 +246,25 @@ it('rejects unsupported options, strings, malformed bounds, selectors and durati
   for (const source of invalid) expect(() => expand(source)).toThrowError(/\[calendar\/recurrence\]/);
 });
 
-const views = createCalendarViews({
-  list: listView({ days: 3 }),
-  month: dayGridView({ period: 'month', maxEventsPerDay: 4 }),
-  grid: timeGridView({ days: 3, allDay: true, groupBy: 'resource' }),
-  timeline: timelineView({ days: 3, groupBy: 'resource' }),
+const viewsFeatures = calendarFeatures({});
+const views = calendarViews({
+  features: viewsFeatures,
+  views: {
+    list: listView({ days: 3 }),
+    month: dayGridView({ period: 'month', maxEventsPerDay: 4 }),
+    grid: timeGridView({ days: 3, allDay: true, groupBy: 'resource' }),
+    timeline: timelineView({ days: 3, groupBy: 'resource' }),
+  },
 });
 const calendar = (
-  events: Calendar_EventDefinition<{ title: string }, { recurrenceFeature: typeof recurrenceFeature }>[],
-  feature: Calendar_Feature = recurrenceFeature,
+  events: Calendar_EventDefinition<{ title: string }, { recurrenceFeature: ReturnType<typeof recurrenceFeature> }>[],
+  feature: ReturnType<typeof recurrenceFeature> = recurrenceFeature(),
   clock?: Calendar_Clock,
 ) =>
   createCalendar({
     timeZone: 'America/New_York',
-    views: views.views,
-    features: { ...views.features, recurrenceFeature: feature },
+    views: views,
+    features: { ...viewsFeatures, recurrenceFeature: feature },
     view: 'list',
     date: date('2026-01-01'),
     events,
@@ -275,7 +280,7 @@ it('retains definitions in stores and resolves before normalization, filtering a
   const stage = vi.fn((events: Calendar_Event<unknown>[]) => events);
   const instance = createCalendar({
     ...calendar(store.store.state.events).options,
-    features: { ...views.features, recurrenceFeature, stage: { events: { run: stage } } },
+    features: { ...viewsFeatures, recurrenceFeature: recurrenceFeature(), stage: { '~id': 'stage', '~config': undefined, events: { run: stage } } },
     eventOrder: (a, b) => a.start.toString().localeCompare(b.start.toString()),
   });
   expect(instance.store.state.layout.kind === 'list' && instance.store.state.layout.days.flatMap(day => day.events).length).toBe(3);
@@ -293,7 +298,7 @@ it('feeds all layouts, resources and background splitting through the existing s
   const oneOff = createEvent({ id: 'one', kind: 'allDay', start: date('2026-01-01'), data: { title: 'One' } });
   const instance = createCalendar({
     ...calendar([foreground, background]).options,
-    features: { ...views.features, recurrenceFeature },
+    features: { ...viewsFeatures, recurrenceFeature: recurrenceFeature() },
     events: [foreground, background, oneOff],
   });
   for (const view of ['list', 'month', 'grid', 'timeline'] as const) {
@@ -314,7 +319,7 @@ it('feeds all layouts, resources and background splitting through the existing s
 it('memoizes queries across clock ticks and refreshes after range, zone and immutable definition changes', () => {
   let tick = () => {};
   let instant = Temporal.Instant.from('2026-01-01T00:00Z');
-  const resolver = vi.fn(recurrenceFeature.resolveEvents);
+  const resolver = vi.fn(recurrenceFeature().resolveEvents);
   const clock: Calendar_Clock = {
     now: () => instant,
     subscribe: callback => {
@@ -322,7 +327,7 @@ it('memoizes queries across clock ticks and refreshes after range, zone and immu
       return () => {};
     },
   };
-  const instance = calendar([timed()], { resolveEvents: resolver }, clock);
+  const instance = calendar([timed()], { ...recurrenceFeature(), resolveEvents: resolver }, clock);
   const dispose = instance['~mount']();
   const before = instance.store.state.layout;
   const calls = resolver.mock.calls.length;
@@ -346,7 +351,7 @@ it('memoizes queries across clock ticks and refreshes after range, zone and immu
 });
 
 it('rejects definitions at runtime when the native feature is absent', () => {
-  expect(() => createCalendar({ ...calendar([]).options, features: views.features, events: [timed()] as never }).store.state).toThrow(
+  expect(() => createCalendar({ ...calendar([]).options, features: viewsFeatures, events: [timed()] as never }).store.state).toThrow(
     /no registered resolver/,
   );
 });

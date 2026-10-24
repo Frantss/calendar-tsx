@@ -1,20 +1,24 @@
 // #region app
 import type { Calendar_DayGridLayout } from '@calendar-tsx/core';
-import { createCalendar, createCalendarViews, dayGridView, timeGridView } from '@calendar-tsx/core';
+import { createCalendar, calendarViews, calendarFeatures, dayGridView, timeGridView } from '@calendar-tsx/core';
 import '@calendar-tsx/themes/default.css';
 import { Temporal } from 'temporal-polyfill';
 
 type Booking = { title: string };
 
-const views = createCalendarViews({
-  month: dayGridView({ period: 'month', maxEventsPerDay: 3 }),
-  week: timeGridView({ days: 7 }),
+const features = calendarFeatures({});
+const views = calendarViews({
+  features: features,
+  views: {
+    month: dayGridView({ period: 'month', maxEventsPerDay: 3 }),
+    week: timeGridView({ days: 7 }),
+  },
 });
 
 const calendar = createCalendar({
   timeZone: 'America/New_York',
-  views: views.views,
-  features: { ...views.features },
+  views,
+  features,
   view: 'month',
   date: Temporal.Now.plainDateISO(),
   events: [{ id: 'standup', kind: 'allDay', start: Temporal.Now.plainDateISO(), data: { title: 'Standup' } }],

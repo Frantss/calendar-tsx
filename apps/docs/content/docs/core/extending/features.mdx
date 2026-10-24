@@ -7,9 +7,9 @@ description: Add state, options, actions and model fields to the views that use 
 
 ## Registering features
 
-A view lists the features it takes part in. `createCalendarViews` collects them, and the calendar's `features` option
-holds them all, together with calendar-wide features that no view lists. Registered features add their options to
-`createCalendar`, their actions to `calendar.api` and their state to `calendar.store.state`:
+Configure each feature with its factory, collect the definitions with `calendarFeatures`, and bind named views
+with `calendarViews`. Registered features contribute state, actions and model fields to every supported view.
+Per-view `features` entries override the factory defaults using consumer-chosen registry keys:
 
 <include lang='ts'>../../../../examples/features/core.ts#register</include>
 

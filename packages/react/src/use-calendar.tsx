@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useStat
 import type { Temporal } from 'temporal-polyfill';
 
 import type {
-  Calendar_Features,
+  Calendar_ConfiguredFeatures,
   Calendar_AnyLayout,
   Calendar_Api,
   Calendar_Options,
@@ -41,10 +41,10 @@ export const useCalendar = <
   TData,
   TResourceData = unknown,
   const TViews extends Calendar_Views = Calendar_Views,
-  const TFeatures extends Calendar_Features = Calendar_Features,
+  const TFeatures extends Calendar_ConfiguredFeatures = Calendar_ConfiguredFeatures,
 >(
   options: Calendar_Options<TData, TResourceData, TViews, TFeatures> &
-    Calendar_ValidateFeatures<TViews, TFeatures> & { locale?: never },
+    Calendar_ValidateFeatures<NoInfer<TViews>, NoInfer<TFeatures>> & { locale?: never },
 ) => {
   const [instance] = useState(() => createCalendar<TData, TResourceData, TViews, TFeatures>(options));
 
@@ -96,15 +96,16 @@ export const Calendar = <
   TData,
   TResourceData = unknown,
   const TViews extends Calendar_Views = Calendar_Views,
-  const TFeatures extends Calendar_Features = Calendar_Features,
+  const TFeatures extends Calendar_ConfiguredFeatures = Calendar_ConfiguredFeatures,
 >({
   children,
   locale,
   ...options
 }: Calendar_Options<TData, TResourceData, TViews, TFeatures> &
-  Calendar_ValidateFeatures<TViews, TFeatures> & { children: ReactNode; locale?: string }) => {
+  Calendar_ValidateFeatures<NoInfer<TViews>, NoInfer<TFeatures>> & { children: ReactNode; locale?: string }) => {
   const instance = useCalendar<TData, TResourceData, TViews, TFeatures>(
-    options as Calendar_Options<TData, TResourceData, TViews, TFeatures> & Calendar_ValidateFeatures<TViews, TFeatures>,
+    options as Calendar_Options<TData, TResourceData, TViews, TFeatures> &
+      Calendar_ValidateFeatures<NoInfer<TViews>, NoInfer<TFeatures>>,
   );
 
   return (

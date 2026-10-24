@@ -66,5 +66,5 @@ export const getCalendarNavigation = <TViews extends Calendar_Views>(
     view,
     date,
     ...calendarNavigation_resolve(calendarNavigation_layout(definition), definition, date, options),
-  };
+  } as Calendar_Navigation<TViews>;
 };

@@ -7,7 +7,8 @@ import type {
 } from '@calendar-tsx/core';
 import {
   backgroundFeature,
-  createCalendarViews,
+  calendarViews,
+  calendarFeatures,
   listView,
   dayGridView,
   timeGridView,
@@ -20,17 +21,21 @@ export type Room = { capacity: number };
 
 // #region views
 // module scope: views and features are compared by reference
-export const views = createCalendarViews({
-  month: dayGridView({ period: 'month', maxEventsPerDay: 3 }),
-  week: timeGridView({ days: 7 }),
-  day: timeGridView({ days: 1 }),
-  rooms: timeGridView({ days: 1, groupBy: 'resource' }),
-  agenda: listView({ days: 7 }),
-  timeline: timelineView({ days: 7, groupBy: 'resource', features: { backgroundFeature } }),
+export const features = calendarFeatures({ backgroundFeature: backgroundFeature() });
+export const views = calendarViews({
+  features: features,
+  views: {
+    month: dayGridView({ period: 'month', maxEventsPerDay: 3 }),
+    week: timeGridView({ days: 7 }),
+    day: timeGridView({ days: 1 }),
+    rooms: timeGridView({ days: 1, groupBy: 'resource' }),
+    agenda: listView({ days: 7 }),
+    timeline: timelineView({ days: 7, groupBy: 'resource' }),
+  },
 });
 // #endregion views
 
-export type ViewKey = keyof typeof views.views;
+export type ViewKey = keyof typeof views;
 
 export type DayCalendar = {
   readonly options: { views: { day: Calendar_View } };
@@ -39,7 +44,7 @@ export type DayCalendar = {
 
 // #region state
 // the context erases the instance's types; annotate selectors with this to get them back
-export type State = Calendar_State<Booking, Room, typeof views.views>;
+export type State = Calendar_State<Booking, Room, typeof views>;
 // #endregion state
 
 export const timeZone = 'America/New_York';

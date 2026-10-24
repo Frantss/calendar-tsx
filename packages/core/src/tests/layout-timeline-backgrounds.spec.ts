@@ -1,3 +1,4 @@
+import { calendarFeatures } from '#features/calendar-features';
 import { Temporal } from 'temporal-polyfill';
 import { expect, it, vi } from 'vitest';
 
@@ -5,12 +6,11 @@ import { createCalendar } from '#calendar';
 import { backgroundFeature } from '#features/background/background-feature';
 import { createWeeklyRanges } from '#features/background/background-ranges';
 import { fixedClock } from '#calendar-clock';
-import { createCalendarViews, timelineView } from '#calendar-views';
-import type { Calendar_BackgroundLayer, Calendar_EventInput, Calendar_TimelineLayout, Calendar_TimelineViewSettings } from '#calendar.types';
+import { calendarViews, timelineView } from '#calendar-views';
+import type { Calendar_BackgroundLayer, Calendar_EventInput, Calendar_TimelineViewSettings } from '#calendar.types';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_allDay, fixtures_at, fixtures_background, fixtures_resource, fixtures_timed } from '#tests/calendar.fixtures';
 
-type Features = { backgroundFeature: typeof backgroundFeature };
 const date = (value: string) => Temporal.PlainDate.from(value);
 const at = (value: string) => Temporal.ZonedDateTime.from(value);
 
@@ -29,23 +29,27 @@ const setup = ({
   backgrounds?: Calendar_BackgroundLayer[];
   feature?: boolean;
 } = {}) => {
-  const views = createCalendarViews({
-    timeline: timelineView({ days: 1, ...settings, features: { backgroundFeature } }),
-    plain: timelineView({ days: 1, ...settings }),
+  const viewsFeatures = calendarFeatures({ backgroundFeature: backgroundFeature(feature ? backgrounds : []) });
+  const views = calendarViews({
+    features: viewsFeatures,
+    views: {
+      timeline: timelineView({ days: 1, ...settings }),
+      plain: timelineView({ days: 1, ...settings }),
+    },
   });
   const calendar = createCalendar({
     timeZone,
-    ...views,
+    views,
+    features: viewsFeatures,
     view: feature ? 'timeline' : 'plain',
     date: date(anchor),
     events,
-    backgrounds,
     resources: [fixtures_resource('a'), fixtures_resource('b'), fixtures_resource('c')],
     firstDayOfWeek: 1,
     clock: fixedClock(Temporal.Instant.from('2026-03-11T15:00Z')),
     onNavigate: vi.fn(),
   });
-  const layout = () => calendar.store.state.layout as Calendar_TimelineLayout<Fixtures_EventData, null, Features>;
+  const layout = () => calendar.store.state.layout;
   return { calendar, layout, row: (id = 'all') => layout().rows.find(row => row.key === id)! };
 };
 
@@ -287,19 +291,19 @@ it('shades a single-day timeline whose only date is a hidden weekday', () => {
   expect(ranges).toHaveBeenCalled();
 });
 
-it('keeps layers opt-in, re-derives them on updates, and always exposes background events', () => {
+it('inherits empty layers, re-derives view overrides, and always exposes background events', () => {
   const plain = setup({
     feature: false,
     backgrounds: [lunch],
     events: [fixtures_background(fixtures_allDay('holiday', { start: '2026-03-11' }))],
   }).row();
-  expect(plain).not.toHaveProperty('backgrounds');
+  expect(plain.backgrounds).toEqual([]);
   expect(plain.backgroundEvents).toHaveLength(1);
   const { calendar, row } = setup();
   expect(row().backgrounds).toEqual([]);
   calendar['~update']({
     ...calendar.options,
-    backgrounds: [lunch],
+    views: { ...calendar.options.views, timeline: { ...calendar.options.views.timeline, features: { backgroundFeature: [lunch] } } },
     events: [fixtures_background(fixtures_allDay('holiday', { start: '2026-03-11' }))],
   });
   expect(row().backgrounds[0]).toMatchObject({ start: 0.5, span: 1 / 24 });

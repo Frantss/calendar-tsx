@@ -2,14 +2,14 @@ import { Calendar, useCalendarSelector } from '@calendar-tsx/react';
 import { Temporal } from 'temporal-polyfill';
 
 import type { State } from '../core/setup';
-import { bookings, timeZone, views } from '../core/setup';
+import { bookings, timeZone, views, features } from '../core/setup';
 
 // #region calendar
 export const Embedded = () => (
   <Calendar
     timeZone={timeZone}
-    views={views.views}
-    features={{ ...views.features }}
+    views={views}
+    features={features}
     view='agenda'
     date={Temporal.Now.plainDateISO()}
     events={bookings}

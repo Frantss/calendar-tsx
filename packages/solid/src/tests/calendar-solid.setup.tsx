@@ -14,7 +14,15 @@ import type {
   Calendar_Resource,
   Calendar_Views,
 } from '@calendar-tsx/core';
-import { createCalendarViews, fixedClock, listView, dayGridView, timeGridView } from '@calendar-tsx/core';
+import {
+  calendarViews,
+  calendarFeatures,
+  backgroundFeature,
+  fixedClock,
+  listView,
+  dayGridView,
+  timeGridView,
+} from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_timeZone } from '#tests/calendar.fixtures';
 import { CalendarProvider, useCalendar } from '#use-calendar';
@@ -47,15 +55,22 @@ export const calendarSolidSetup_render = (
   overrides: CalendarSolidSetup_Overrides = {},
 ) => {
   const onNavigate: Mock<Calendar_Options<Fixtures_EventData, null, Calendar_Views>['onNavigate']> = vi.fn();
-  const views = createCalendarViews(tests_withDefault(overrides, 'views', calendarSolidSetup_defaults.views));
+  const viewsFeatures = calendarFeatures({
+    backgroundFeature: backgroundFeature(
+      tests_withDefault(overrides, 'backgrounds', calendarSolidSetup_defaults.backgrounds),
+    ),
+  });
+  const views = calendarViews({
+    features: viewsFeatures,
+    views: tests_withDefault(overrides, 'views', calendarSolidSetup_defaults.views),
+  });
   const resolved = {
-    views: views.views,
-    features: views.features,
+    views: views,
+    features: viewsFeatures,
     view: tests_withDefault(overrides, 'view', calendarSolidSetup_defaults.view),
     date: tests_withDefault(overrides, 'date', calendarSolidSetup_defaults.date),
     events: tests_withDefault(overrides, 'events', calendarSolidSetup_defaults.events),
     resources: tests_withDefault(overrides, 'resources', calendarSolidSetup_defaults.resources),
-    backgrounds: tests_withDefault(overrides, 'backgrounds', calendarSolidSetup_defaults.backgrounds),
     locale: tests_withDefault(overrides, 'locale', calendarSolidSetup_defaults.locale),
     clock: fixedClock(tests_withDefault(overrides, 'now', calendarSolidSetup_defaults.now)),
   };

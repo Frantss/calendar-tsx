@@ -1,3 +1,4 @@
+import { calendarFeatures_config } from '#features/calendar-features';
 import { createStore } from '@tanstack/store';
 
 import type { Calendar_Atom, Calendar_Options, Calendar_View, Calendar_Views } from '#calendar.types';
@@ -6,6 +7,7 @@ import type {
   Calendar_FeatureContext,
   Calendar_Features,
   Calendar_FeatureStage,
+  Calendar_ConfiguredFeature,
 } from '#features/feature.types';
 
 type RuntimeInput = Pick<Calendar_FeatureContext, 'options' | 'view' | 'api'> & {
@@ -43,40 +45,57 @@ export const calendarFeatures_createRuntime = (features: Calendar_Features, inpu
     internal.setState(state => ({ ...state, [key]: next }));
   };
 
-  const context: Calendar_FeatureContext = {
-    get options() {
-      return input.options;
-    },
-    get view() {
-      return input.view;
-    },
-    get api() {
-      return input.api;
-    },
-    getState,
-    setState,
-    settings: (key, defaults) => ({
-      ...defaults,
-      ...((input.options as Record<string, unknown>)[key] as object | undefined),
-      ...((input.view as Record<string, unknown>)[key] as object | undefined),
-    }),
+  const configs = new WeakMap<Calendar_View, Map<string, unknown>>();
+  const contexts = new Map<string, Calendar_FeatureContext>();
+  const contextFor = (alias: string): Calendar_FeatureContext => {
+    const previous = contexts.get(alias);
+    if (previous) return previous;
+    const feature = features[alias] as Calendar_ConfiguredFeature;
+    const result: Calendar_FeatureContext = {
+      get options() {
+        return input.options;
+      },
+      get view() {
+        return input.view;
+      },
+      get api() {
+        return input.api;
+      },
+      get config() {
+        const view = input.view;
+        let cached = configs.get(view);
+        if (!cached) configs.set(view, (cached = new Map()));
+        if (!cached.has(alias))
+          cached.set(
+            alias,
+            calendarFeatures_config(feature, (view as { features?: Record<string, unknown> }).features?.[alias]),
+          );
+        return cached.get(alias);
+      },
+      getState,
+      setState,
+    };
+    contexts.set(alias, result);
+    return result;
   };
 
   const stages = new Map<string, { input: unknown; deps: unknown[] | undefined; output: unknown }>();
 
   return {
     resolve: (view: Calendar_View, key: string) =>
-      (features[key] ?? (view['~features'] as Calendar_Features)[key]) as Calendar_Feature,
+      (key === view['~layout'] ? (view['~features'] as Calendar_Features)[key] : features[key]) as Calendar_Feature,
     state: () => {
       const keys = new Set([...Object.keys(internal.state), ...Object.keys(atoms), ...Object.keys(input.state ?? {})]);
 
       return Object.fromEntries([...keys].map(key => [key, getState(key)]));
     },
     constructApi: (api: object) => {
-      for (const feature of Object.values(features)) Object.assign(api, feature.constructApi?.(context));
+      for (const [alias, feature] of Object.entries(features))
+        Object.assign(api, feature.constructApi?.(contextFor(alias)));
     },
-    run: <TValue>(key: string, stage: Calendar_FeatureStage<TValue>, value: TValue): TValue => {
-      const deps = stage.deps?.(context);
+    run: <TValue>(alias: string, key: string, stage: Calendar_FeatureStage<TValue>, value: TValue): TValue => {
+      const context = contextFor(alias);
+      const deps = [context.config, ...(stage.deps?.(context) ?? [])];
       const cached = stages.get(key);
 
       if (cached && cached.input === value && deps_equal(cached.deps, deps)) return cached.output as TValue;

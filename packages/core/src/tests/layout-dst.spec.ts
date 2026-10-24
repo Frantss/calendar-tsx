@@ -1,17 +1,22 @@
+import { calendarFeatures } from '#features/calendar-features';
 import { Temporal } from 'temporal-polyfill';
 import { expect, it } from 'vitest';
 
 import { createCalendar } from '#calendar';
 import { backgroundFeature } from '#features/background/background-feature';
 import { fixedClock } from '#calendar-clock';
-import { createCalendarViews, timeGridView, timelineView } from '#calendar-views';
+import { calendarViews, timeGridView, timelineView } from '#calendar-views';
 import type { Calendar_BackgroundLayer, Calendar_EventInput, Calendar_Resource } from '#calendar.types';
 
-const views = createCalendarViews({
-  grid: timeGridView({ days: 1, features: { backgroundFeature } }),
-  resources: timeGridView({ days: 1, groupBy: 'resource', features: { backgroundFeature } }),
-  timeline: timelineView({ days: 1 }),
-  timeline_week: timelineView({ days: 7, groupBy: 'resource' }),
+const viewsFeatures = calendarFeatures({ backgroundFeature: backgroundFeature() });
+const views = calendarViews({
+  features: viewsFeatures,
+  views: {
+    grid: timeGridView({ days: 1 }),
+    resources: timeGridView({ days: 1, groupBy: 'resource' }),
+    timeline: timelineView({ days: 1 }),
+    timeline_week: timelineView({ days: 7, groupBy: 'resource' }),
+  },
 });
 
 const setup = ({
@@ -25,19 +30,18 @@ const setup = ({
   date: string;
   timeZone: string;
   events: Calendar_EventInput<null>[];
-  view?: keyof typeof views.views;
+  view?: keyof typeof views;
   resources?: Calendar_Resource<null>[];
   backgrounds?: Calendar_BackgroundLayer[];
 }) =>
   createCalendar({
     timeZone,
-    views: views.views,
-    features: views.features,
+    views: views,
+    features: { ...viewsFeatures, backgroundFeature: backgroundFeature(backgrounds) },
     view,
     date: Temporal.PlainDate.from(date),
     events,
     resources,
-    backgrounds,
     firstDayOfWeek: 7,
     clock: fixedClock(Temporal.ZonedDateTime.from(`${date}T09:00[${timeZone}]`).toInstant()),
     onNavigate: () => {},

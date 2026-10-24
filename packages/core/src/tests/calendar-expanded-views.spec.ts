@@ -1,8 +1,9 @@
+import { calendarFeatures } from '#features/calendar-features';
 import { Temporal } from 'temporal-polyfill';
 import { expect, it, vi } from 'vitest';
 import { createCalendar } from '#calendar';
 import { backgroundFeature } from '#features/background/background-feature';
-import { createCalendarViews, dayGridView, listView, timeGridView, timelineView } from '#calendar-views';
+import { calendarViews, dayGridView, listView, timeGridView, timelineView } from '#calendar-views';
 import type {
   Calendar_DayGridLayout,
   Calendar_EventInput,
@@ -25,12 +26,13 @@ const setup = (
     firstDayOfWeek?: 1 | 7;
   } = {},
 ) => {
-  const views = createCalendarViews({ test: definition });
+  const viewsFeatures = calendarFeatures({});
+  const views = calendarViews({ features: viewsFeatures, views: { test: definition } });
   const onNavigate = vi.fn();
   const calendar = createCalendar({
     timeZone: 'America/New_York',
-    views: views.views,
-    features: { ...views.features },
+    views: views,
+    features: { ...viewsFeatures },
     view: 'test',
     date: Temporal.PlainDate.from(options.date ?? '2026-03-11'),
     initialNow: Temporal.ZonedDateTime.from(options.now ?? '2026-03-11T10:40[America/New_York]').toInstant(),
@@ -166,18 +168,23 @@ it('filters resource events, scopes overflow, and shades background events per r
 });
 
 it('supports resource-scoped background layers on day-grid cells', () => {
-  const definition = dayGridView({ days: 1, groupBy: 'resource', maxEventsPerDay: 3, features: { backgroundFeature } });
-  const views = createCalendarViews({ day: definition });
+  const definition = dayGridView({ days: 1, groupBy: 'resource', maxEventsPerDay: 3 });
+  const viewsFeatures = calendarFeatures({});
+  const views = calendarViews({ features: viewsFeatures, views: { day: definition } });
   const calendar = createCalendar({
     timeZone: 'America/New_York',
-    views: views.views,
-    features: views.features,
+    views: views,
+    features: {
+      ...viewsFeatures,
+      backgroundFeature: backgroundFeature([
+        { id: 'holiday', kind: 'holiday', resourceIds: ['b'], ranges: [{ allDay: true, start: Temporal.PlainDate.from('2026-03-11') }] },
+      ]),
+    },
     view: 'day',
     date: Temporal.PlainDate.from('2026-03-11'),
     events: [],
     resources: [fixtures_resource('a'), fixtures_resource('b')],
     onNavigate: () => {},
-    backgrounds: [{ id: 'holiday', kind: 'holiday', resourceIds: ['b'], ranges: [{ allDay: true, start: Temporal.PlainDate.from('2026-03-11') }] }],
   });
   const cells = calendar.store.state.layout.sections[0]?.rows[0]?.days;
   expect(cells?.map(day => day.backgrounds.length)).toEqual([0, 1]);

@@ -14,7 +14,15 @@ import type {
   Calendar_Resource,
   Calendar_Views,
 } from '@calendar-tsx/core';
-import { fixedClock, listView, dayGridView, timeGridView, createCalendarViews } from '@calendar-tsx/core';
+import {
+  backgroundFeature,
+  fixedClock,
+  listView,
+  dayGridView,
+  timeGridView,
+  calendarViews,
+  calendarFeatures,
+} from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_timeZone } from '#tests/calendar.fixtures';
 import { CalendarProvider, useCalendar } from '#use-calendar';
@@ -44,15 +52,22 @@ export type CalendarReactSetup_Overrides = Partial<typeof calendarReactSetup_def
  */
 export const calendarReactSetup_render = async (children: ReactNode, overrides: CalendarReactSetup_Overrides = {}) => {
   const onNavigate: Mock<Calendar_Options<Fixtures_EventData, null, Calendar_Views>['onNavigate']> = vi.fn();
-  const views = createCalendarViews(tests_withDefault(overrides, 'views', calendarReactSetup_defaults.views));
+  const viewsFeatures = calendarFeatures({
+    backgroundFeature: backgroundFeature(
+      tests_withDefault(overrides, 'backgrounds', calendarReactSetup_defaults.backgrounds),
+    ),
+  });
+  const views = calendarViews({
+    features: viewsFeatures,
+    views: tests_withDefault(overrides, 'views', calendarReactSetup_defaults.views),
+  });
   const resolved = {
-    views: views.views,
-    features: views.features,
+    views: views,
+    features: viewsFeatures,
     view: tests_withDefault(overrides, 'view', calendarReactSetup_defaults.view),
     date: tests_withDefault(overrides, 'date', calendarReactSetup_defaults.date),
     events: tests_withDefault(overrides, 'events', calendarReactSetup_defaults.events),
     resources: tests_withDefault(overrides, 'resources', calendarReactSetup_defaults.resources),
-    backgrounds: tests_withDefault(overrides, 'backgrounds', calendarReactSetup_defaults.backgrounds),
     locale: tests_withDefault(overrides, 'locale', calendarReactSetup_defaults.locale),
     clock: fixedClock(tests_withDefault(overrides, 'now', calendarReactSetup_defaults.now)),
   };

@@ -1,5 +1,5 @@
 import type {
-  Calendar_Features,
+  Calendar_ConfiguredFeatures,
   Calendar_Instance,
   Calendar_Options,
   Calendar_ValidateFeatures,
@@ -9,7 +9,12 @@ import { createCalendar } from '@calendar-tsx/core';
 
 // #region adapter
 // the shape of a framework binding: create once, sync options on every render, mount with the component
-export const bindCalendar = <TData, TResourceData, TViews extends Calendar_Views, TFeatures extends Calendar_Features>(
+export const bindCalendar = <
+  TData,
+  TResourceData,
+  TViews extends Calendar_Views,
+  TFeatures extends Calendar_ConfiguredFeatures,
+>(
   // intersect the validation, as the bindings do, so missing features stay a type error for your users
   initial: Calendar_Options<TData, TResourceData, TViews, TFeatures> & Calendar_ValidateFeatures<TViews, TFeatures>,
   onChange: () => void,

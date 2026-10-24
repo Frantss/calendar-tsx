@@ -2,6 +2,11 @@ import { calendarEvents_checkIds } from '#calendar-events';
 import type { Calendar_Event, Calendar_EventSource, Calendar_Features, Calendar_Range } from '#calendar.types';
 
 export const calendarSources_createResolver = (features: Calendar_Features) => {
+  const resolvers = new Map(
+    Object.entries(features)
+      .filter(([, feature]) => feature.resolveEvents)
+      .map(([key, feature]) => [(feature as { '~id'?: string })['~id'] ?? key, feature.resolveEvents!]),
+  );
   let cached:
     | {
         definitions: (Calendar_Event<unknown> | Calendar_EventSource<unknown>)[];
@@ -31,7 +36,7 @@ export const calendarSources_createResolver = (features: Calendar_Features) => {
       const key = event['~source'];
       if (key === undefined) return [event as Calendar_Event<unknown>];
 
-      const resolver = features[key]?.resolveEvents;
+      const resolver = resolvers.get(key);
       if (!resolver) throw new Error(`[calendar] event source "${key}" has no registered resolver`);
 
       const resolved = resolver(event as Calendar_EventSource<unknown>, { range, timeZone });

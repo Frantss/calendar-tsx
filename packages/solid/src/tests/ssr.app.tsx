@@ -2,7 +2,7 @@ import { For } from 'solid-js';
 import { Temporal } from 'temporal-polyfill';
 
 import type { Calendar_EventInput, Calendar_TimeGridLayout } from '@calendar-tsx/core';
-import { createCalendarViews, fixedClock, timeGridView } from '@calendar-tsx/core';
+import { calendarViews, calendarFeatures, fixedClock, timeGridView } from '@calendar-tsx/core';
 import { fixtures_at, fixtures_timeZone } from '#tests/calendar.fixtures';
 import {
   TimeGridViewBody,
@@ -16,7 +16,7 @@ import {
 import { Calendar, useCalendarContext, useCalendarSelector } from '#use-calendar';
 
 export const ssrApp_defaults = {
-  views: createCalendarViews({ week: timeGridView({ days: 7 }) }),
+  views: calendarViews({ features: calendarFeatures({}), views: { week: timeGridView({ days: 7 }) } }),
   date: fixtures_at('2026-03-11', '12:00').toPlainDate(),
   events: [] as Calendar_EventInput<null>[],
   // the request is served just before midnight and hydrates just after it
@@ -59,8 +59,8 @@ const Week = () => {
 export const SsrApp = (props: SsrApp_Props) => (
   <Calendar
     timeZone={fixtures_timeZone}
-    views={ssrApp_defaults.views.views}
-    features={ssrApp_defaults.views.features}
+    views={ssrApp_defaults.views}
+    features={{}}
     view='week'
     date={ssrApp_defaults.date}
     events={ssrApp_defaults.events}

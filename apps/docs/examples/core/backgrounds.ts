@@ -3,7 +3,8 @@ import {
   backgroundFeature,
   createBackgroundLayer,
   createCalendar,
-  createCalendarViews,
+  calendarViews,
+  calendarFeatures,
   createWeeklyRanges,
   dayGridView,
   timeGridView,
@@ -38,17 +39,20 @@ export const backgrounds = [
 // #endregion layers
 
 // #region views
-export const views = createCalendarViews({
-  week: timeGridView({ days: 7, features: { backgroundFeature } }),
-  month: dayGridView({ period: 'month', maxEventsPerDay: 3, features: { backgroundFeature } }),
-  timeline: timelineView({ days: 7, groupBy: 'resource', features: { backgroundFeature } }),
+export const features = calendarFeatures({ background: backgroundFeature(backgrounds) });
+export const views = calendarViews({
+  features,
+  views: {
+    week: timeGridView({ days: 7 }),
+    month: dayGridView({ period: 'month', maxEventsPerDay: 3 }),
+    timeline: timelineView({ days: 7, groupBy: 'resource' }),
+  },
 });
 
 export const calendar = createCalendar({
   timeZone,
-  views: views.views,
-  features: { ...views.features },
-  backgrounds,
+  views,
+  features,
   view: 'week',
   date: Temporal.PlainDate.from('2026-03-11'),
   events: bookings,
@@ -57,4 +61,4 @@ export const calendar = createCalendar({
 });
 // #endregion views
 
-export type BackgroundState = Calendar_State<Booking, Room, typeof views.views>;
+export type BackgroundState = Calendar_State<Booking, Room, typeof views>;

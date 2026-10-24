@@ -1,20 +1,21 @@
+import type { backgroundFeature } from '@calendar-tsx/core';
 import { For } from 'solid-js';
 import { Temporal } from 'temporal-polyfill';
 import { expect, it } from 'vitest';
 
 import type { Calendar_DayGridLayout, Calendar_TimeGridLayout } from '@calendar-tsx/core';
-import { backgroundFeature, createBackgroundLayer, dayGridView, timeGridView } from '@calendar-tsx/core';
+import { createBackgroundLayer, dayGridView, timeGridView } from '@calendar-tsx/core';
 import { DayGridView, DayGridViewDay, DayGridViewDayBackground, DayGridViewRow, DayGridViewSection } from '#day-grid-view';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { calendarSolidSetup_render } from '#tests/calendar-solid.setup';
 import { TimeGridView, TimeGridViewBackground, TimeGridViewBody, TimeGridViewColumn } from '#time-grid-view';
 import { useCalendarSelector } from '#use-calendar';
 
-type Features = { backgroundFeature: typeof backgroundFeature };
+type Features = { backgroundFeature: ReturnType<typeof backgroundFeature> };
 
 const views = {
-  day: timeGridView({ days: 1, features: { backgroundFeature } }),
-  month: dayGridView({ period: 'month', maxEventsPerDay: 2, features: { backgroundFeature } }),
+  day: timeGridView({ days: 1 }),
+  month: dayGridView({ period: 'month', maxEventsPerDay: 2 }),
 };
 
 const holiday = createBackgroundLayer({
