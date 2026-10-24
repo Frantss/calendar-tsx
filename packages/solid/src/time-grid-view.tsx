@@ -10,7 +10,9 @@ import type {
   Calendar_TimeGridSegment,
   Calendar_TimeGridSlot,
   Calendar_UnavailableSegment,
+  Calendar_Views,
 } from '@calendar-tsx/core';
+import type { CalendarParts_NavigateProps } from '#calendar-parts';
 import type { Calendar_HTMLProps } from '#calendar-factory';
 import { calendarFactory_elements as calendar, calendarProps_merge } from '#calendar-factory';
 import {
@@ -86,20 +88,17 @@ export const TimeGridViewColumnHeader = <TData, TResourceData>(props: ColumnProp
   );
 };
 
-type TimeGridViewColumnTriggerProps<TData, TResourceData> = {
+type TimeGridViewColumnTriggerProps<TData, TResourceData, TViews extends Calendar_Views> = {
   column: Column<TData, TResourceData>;
-  view: string;
-} & Calendar_HTMLProps<'button', Column<TData, TResourceData>>;
+} & CalendarParts_NavigateProps<TViews> &
+  Calendar_HTMLProps<'button', Column<TData, TResourceData>>;
 
-export const TimeGridViewColumnTrigger = <TData, TResourceData>(
-  props: TimeGridViewColumnTriggerProps<TData, TResourceData>,
+export const TimeGridViewColumnTrigger = <TData, TResourceData, const TViews extends Calendar_Views>(
+  props: TimeGridViewColumnTriggerProps<TData, TResourceData, TViews>,
 ) => {
-  const [local, rest] = splitProps(props, ['column', 'view']);
+  const [local, rest] = splitProps(props, ['column', 'calendar', 'view']);
   const context = useCalendarContext();
-  const navigate = useCalendarParts_NavigateTrigger(
-    () => local.view,
-    () => local.column.date,
-  );
+  const navigate = useCalendarParts_NavigateTrigger(local, () => local.column.date);
 
   return (
     <calendar.button

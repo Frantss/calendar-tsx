@@ -156,6 +156,9 @@ Functionality beyond navigation and layout is added through features (design D29
 view lists the features it uses, and `createCalendarViews` collects them for the calendar's `features`. A feature
 listed only in `features` runs in every view.
 
+Model fields use that same scope: calendar-only features contribute fields to every view. Once a view declares a
+feature, its fields and stages are limited to declaring views, including when another view is added later.
+
 ```ts
 const views = createCalendarViews({
   week: timeGridView({ days: 7, features: { xFeature }, x: { perView: true } }),

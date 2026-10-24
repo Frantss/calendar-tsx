@@ -9,7 +9,9 @@ import type {
   Calendar_DayGridSection,
   Calendar_DayGridColumn,
   Calendar_DayGridRow,
+  Calendar_Views,
 } from '@calendar-tsx/core';
+import type { CalendarParts_NavigateProps } from '#calendar-parts';
 import type { Calendar_HTMLProps } from '#calendar-factory';
 import { calendarFactory_elements as calendar, calendarProps_merge } from '#calendar-factory';
 import {
@@ -177,20 +179,17 @@ export const DayGridViewDayBackground = (
   );
 };
 
-type DayGridViewDayTriggerProps<TData, TResourceData> = {
+type DayGridViewDayTriggerProps<TData, TResourceData, TViews extends Calendar_Views> = {
   day: Calendar_DayGridDay<TData, TResourceData>;
-  view: string;
-} & Calendar_HTMLProps<'button', Calendar_DayGridDay<TData, TResourceData>>;
+} & CalendarParts_NavigateProps<TViews> &
+  Calendar_HTMLProps<'button', Calendar_DayGridDay<TData, TResourceData>>;
 
-export const DayGridViewDayTrigger = <TData, TResourceData>(
-  props: DayGridViewDayTriggerProps<TData, TResourceData>,
+export const DayGridViewDayTrigger = <TData, TResourceData, const TViews extends Calendar_Views>(
+  props: DayGridViewDayTriggerProps<TData, TResourceData, TViews>,
 ) => {
-  const [local, rest] = splitProps(props, ['day', 'view']);
+  const [local, rest] = splitProps(props, ['day', 'calendar', 'view']);
   const context = useCalendarContext();
-  const navigate = useCalendarParts_NavigateTrigger(
-    () => local.view,
-    () => local.day.date,
-  );
+  const navigate = useCalendarParts_NavigateTrigger(local, () => local.day.date);
 
   return (
     <calendar.button

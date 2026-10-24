@@ -10,7 +10,9 @@ import type {
   Calendar_DayGridSection,
   Calendar_DayGridColumn,
   Calendar_DayGridRow,
+  Calendar_Views,
 } from '@calendar-tsx/core';
+import type { CalendarParts_NavigateProps } from '#calendar-parts';
 import type { Calendar_HTMLProps } from '#calendar-factory';
 import { calendarFactory_elements as calendar, calendarProps_merge } from '#calendar-factory';
 import {
@@ -177,34 +179,35 @@ export const DayGridViewDayBackground = forwardRef<
   />
 ));
 
-type DayGridViewDayTriggerProps<TData, TResourceData> = {
+type DayGridViewDayTriggerProps<TData, TResourceData, TViews extends Calendar_Views> = {
   day: Calendar_DayGridDay<TData, TResourceData>;
-  view: string;
-} & Calendar_HTMLProps<'button', Calendar_DayGridDay<TData, TResourceData>>;
+} & CalendarParts_NavigateProps<TViews> &
+  Calendar_HTMLProps<'button', Calendar_DayGridDay<TData, TResourceData>>;
 
-export const DayGridViewDayTrigger = forwardRef<HTMLButtonElement, DayGridViewDayTriggerProps<unknown, unknown>>(
-  ({ day, view, ...props }, ref) => {
-    const { locale } = useCalendarContext();
-    const navigate = useCalendarParts_NavigateTrigger(view, day.date);
+export const DayGridViewDayTrigger = forwardRef<
+  HTMLButtonElement,
+  DayGridViewDayTriggerProps<unknown, unknown, Calendar_Views>
+>(({ day, calendar: instance, view, ...props }, ref) => {
+  const { locale } = useCalendarContext();
+  const navigate = useCalendarParts_NavigateTrigger({ calendar: instance, view }, day.date);
 
-    return (
-      <calendar.button
-        {...calendarProps_merge(
-          {
-            type: 'button',
-            'aria-label': `Go to ${calendarParts_dateLabel(day.date, locale)}`,
-            ...part('day-grid-day-trigger'),
-          },
-          props,
-          { onClick: navigate },
-        )}
-        state={day}
-        ref={ref}
-      />
-    );
-  },
-) as <TData, TResourceData>(
-  props: DayGridViewDayTriggerProps<TData, TResourceData> & RefAttributes<HTMLButtonElement>,
+  return (
+    <calendar.button
+      {...calendarProps_merge(
+        {
+          type: 'button',
+          'aria-label': `Go to ${calendarParts_dateLabel(day.date, locale)}`,
+          ...part('day-grid-day-trigger'),
+        },
+        props,
+        { onClick: navigate },
+      )}
+      state={day}
+      ref={ref}
+    />
+  );
+}) as <TData, TResourceData, const TViews extends Calendar_Views>(
+  props: DayGridViewDayTriggerProps<TData, TResourceData, TViews> & RefAttributes<HTMLButtonElement>,
 ) => ReactElement | null;
 
 type DayGridViewRowEventProps<TData> = { segment: Calendar_BarSegment<TData> } & Calendar_HTMLProps<

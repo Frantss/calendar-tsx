@@ -1,4 +1,10 @@
-import type { Calendar_EventInput, Calendar_Resource, Calendar_State } from '@calendar-tsx/core';
+import type {
+  Calendar_Api,
+  Calendar_EventInput,
+  Calendar_Resource,
+  Calendar_State,
+  Calendar_View,
+} from '@calendar-tsx/core';
 import {
   backgroundFeature,
   createCalendarViews,
@@ -25,6 +31,11 @@ export const views = createCalendarViews({
 // #endregion views
 
 export type ViewKey = keyof typeof views.views;
+
+export type DayCalendar = {
+  readonly options: { views: { day: Calendar_View } };
+  api: Pick<Calendar_Api<{ day: Calendar_View }, {}>, 'navigate'>;
+};
 
 // #region state
 // the context erases the instance's types; annotate selectors with this to get them back

@@ -1372,6 +1372,42 @@ in favor of the core exports.
 occurrence snapshots and IDs. Cover week starts, partial seed weeks, interval phase, COUNT/UNTIL, exclusions, DST,
 lookback, old-series seeking, explicit unsupported-option errors, feature types and both adapter stores.
 
+### D53 — Feature models and bindings keep their registration contracts
+
+**Serves:** D6, D20, D22, D29, D31. Accepted through the requested fixes to the four API cohesion findings.
+
+- **Provider isolation:** framework context stores require only core context/now fields and a layout with a string
+  kind. They do not instantiate the wide feature maps. Importing a stateful feature therefore adds no requirements
+  to providers for calendars that do not register it. Typed selectors continue to use `Calendar_StateOf`.
+- **Feature scope:** preserve D29's activation rule. A feature declared by any view runs only in views that declare
+  it; a calendar feature declared by no view runs in every view. `Calendar_Layout` gains a fourth feature generic,
+  defaulting to `{}` for existing direct layout annotations. State supplies its registered features so layout model
+  contributions include both the current view's declarations and calendar-only features. Adding a view declaration
+  changes both runtime scope and model types together.
+- **Typed trigger targets:** React and Solid day-grid, time-grid and timeline triggers require `calendar` alongside
+  `view`. The calendar supplies the registered keys; `NoInfer` prevents the target from widening them. Triggers call
+  that instance's navigation, while accessible labels still use the surrounding provider's locale. Keep the typed
+  instance returned by the hook or core and pass it to the parts. An erased context instance still has erased keys.
+- **Locale ownership:** `locale` belongs to `CalendarProvider`. The convenience `Calendar` accepts it separately
+  from core options and forwards it to the provider. Core options no longer declare it, and hooks explicitly reject
+  it, including Solid accessor returns. Updating the provider/root locale updates accessible labels without changing
+  core options. Both compositions default to `en-US`.
+
+**Alternatives considered:** a factory creating scoped providers/hooks/triggers would preserve implicit instance
+lookup, but add a new binding setup step; the user chose an explicit calendar prop. A separate global-feature
+registration field would remove cross-view scope changes, but alter D29's configuration; the user chose to preserve
+activation and align inference. Reading locale from the instance would retain an adapter-only core option and
+require React to synchronize an untracked option across effects; provider ownership keeps the value reactive where
+labels render.
+
+**Migration:** pass `calendar={calendar}` to each navigation trigger. Move any hook/core `locale` option to
+`CalendarProvider`; keep `locale` on `Calendar` as before. Feature registration syntax is unchanged. The provider
+state-map workaround documented before this decision is no longer required.
+
+**Verification:** core tests pair runtime feature scope with model-field assertions. Both bindings test imported
+feature state with plain and feature-owning providers/roots, rejected trigger keys and missing calendar props,
+navigation through the explicit instance, locale ownership, and accessible-label updates in both compositions.
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.

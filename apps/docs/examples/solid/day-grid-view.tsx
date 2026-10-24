@@ -14,9 +14,10 @@ import {
 import { For, Show } from 'solid-js';
 
 import { useLayout } from './layouts';
+import type { DayCalendar } from '../core/setup';
 
 // #region view
-export const DayGrid = (props: { onOverflow: (date: string) => void }) => {
+export const DayGrid = (props: { calendar: DayCalendar; onOverflow: (date: string) => void }) => {
   const grid = useLayout('dayGrid');
 
   return (
@@ -48,7 +49,7 @@ export const DayGrid = (props: { onOverflow: (date: string) => void }) => {
                       <For each={week.days}>
                         {day => (
                           <DayGridViewDay day={day}>
-                            <DayGridViewDayTrigger day={day} view='day'>
+                            <DayGridViewDayTrigger calendar={props.calendar} day={day} view='day'>
                               {day.date.day}
                             </DayGridViewDayTrigger>
                             <DayGridViewOverflow day={day} onClick={() => props.onOverflow(day.date.toString())}>

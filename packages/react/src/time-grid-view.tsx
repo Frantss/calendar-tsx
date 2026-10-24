@@ -11,7 +11,9 @@ import type {
   Calendar_TimeGridSegment,
   Calendar_TimeGridSlot,
   Calendar_UnavailableSegment,
+  Calendar_Views,
 } from '@calendar-tsx/core';
+import type { CalendarParts_NavigateProps } from '#calendar-parts';
 import type { Calendar_HTMLProps } from '#calendar-factory';
 import { calendarFactory_elements as calendar, calendarProps_merge } from '#calendar-factory';
 import {
@@ -89,17 +91,17 @@ export const TimeGridViewColumnHeader = forwardRef<HTMLDivElement, ColumnProps<u
   props: ColumnProps<TData, TResourceData> & RefAttributes<HTMLDivElement>,
 ) => ReactElement | null;
 
-type TimeGridViewColumnTriggerProps<TData, TResourceData> = {
+type TimeGridViewColumnTriggerProps<TData, TResourceData, TViews extends Calendar_Views> = {
   column: Column<TData, TResourceData>;
-  view: string;
-} & Calendar_HTMLProps<'button', Column<TData, TResourceData>>;
+} & CalendarParts_NavigateProps<TViews> &
+  Calendar_HTMLProps<'button', Column<TData, TResourceData>>;
 
 export const TimeGridViewColumnTrigger = forwardRef<
   HTMLButtonElement,
-  TimeGridViewColumnTriggerProps<unknown, unknown>
->(({ column, view, ...props }, ref) => {
+  TimeGridViewColumnTriggerProps<unknown, unknown, Calendar_Views>
+>(({ column, calendar: instance, view, ...props }, ref) => {
   const { locale } = useCalendarContext();
-  const navigate = useCalendarParts_NavigateTrigger(view, column.date);
+  const navigate = useCalendarParts_NavigateTrigger({ calendar: instance, view }, column.date);
 
   return (
     <calendar.button
@@ -116,8 +118,8 @@ export const TimeGridViewColumnTrigger = forwardRef<
       ref={ref}
     />
   );
-}) as <TData, TResourceData>(
-  props: TimeGridViewColumnTriggerProps<TData, TResourceData> & RefAttributes<HTMLButtonElement>,
+}) as <TData, TResourceData, const TViews extends Calendar_Views>(
+  props: TimeGridViewColumnTriggerProps<TData, TResourceData, TViews> & RefAttributes<HTMLButtonElement>,
 ) => ReactElement | null;
 
 export const TimeGridViewAllDay = forwardRef<HTMLDivElement, Calendar_HTMLProps<'div'>>((props, ref) => (

@@ -18,6 +18,7 @@ import {
   TimelineViewLane,
   TimelineViewRow,
   useCalendarSelector,
+  useCalendarContext,
   DayGridViewSection,
 } from '@calendar-tsx/react';
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
@@ -46,6 +47,7 @@ const TimeGrid = () => {
 };
 
 const Month = () => {
+  const { instance: calendar } = useCalendarContext();
   const month = useCalendarSelector(state => state.layout) as Calendar_DayGridLayout<ThemesSetup_EventData>;
 
   return (
@@ -56,7 +58,7 @@ const Month = () => {
             <DayGridViewRow key={week.key} row={week}>
               {week.days.map(day => (
                 <DayGridViewDay key={day.key} day={day}>
-                  <DayGridViewDayTrigger day={day} view='month'>
+                  <DayGridViewDayTrigger calendar={calendar} day={day} view='month'>
                     {day.date.day}
                   </DayGridViewDayTrigger>
                 </DayGridViewDay>

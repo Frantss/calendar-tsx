@@ -35,6 +35,7 @@ import {
 import type { Calendar_Event } from '@calendar-tsx/core';
 import type { CSSProperties } from 'react';
 import { Timeline } from '../../examples/react/timeline-view';
+import type { DayCalendar } from '../../examples/core/setup';
 
 import type { Booking } from './sample-data';
 import type { PlaygroundState, PlaygroundView } from './views';
@@ -52,16 +53,18 @@ export const describeEvent = (event: Calendar_Event<Booking>, locale: string) =>
 
 /** Renders the active view's layout with the React parts, the way the docs' view pages compose them. */
 export const PreviewLayout = ({
+  calendar,
   view,
   onSelect,
 }: {
+  calendar: DayCalendar;
   view: PlaygroundView;
   onSelect: (event: Calendar_Event<Booking>) => void;
 }) => {
   const layout = useCalendarSelector((state: PlaygroundState) => state.layout);
   const { instance, locale } = useCalendarContext();
 
-  if (layout.kind === 'timeline') return <Timeline locale={locale} onSelect={onSelect} />;
+  if (layout.kind === 'timeline') return <Timeline calendar={calendar} locale={locale} onSelect={onSelect} />;
 
   if (layout.kind === 'dayGrid') {
     return (
@@ -85,7 +88,7 @@ export const PreviewLayout = ({
               <DayGridViewRow key={week.key} row={week}>
                 {week.days.map(day => (
                   <DayGridViewDay key={day.key} day={day}>
-                    <DayGridViewDayTrigger day={day} view='day'>
+                    <DayGridViewDayTrigger calendar={calendar} day={day} view='day'>
                       {view === 'year_continuous' && day.date.day === 1
                         ? day.date.toLocaleString(locale, { month: 'short', day: 'numeric' })
                         : day.date.day}
@@ -118,7 +121,7 @@ export const PreviewLayout = ({
           {layout.columns.map(column => (
             <TimeGridViewColumnHeader key={column.key} column={column}>
               {column.resource && <span>{column.resource.title} </span>}
-              <TimeGridViewColumnTrigger column={column} view='day'>
+              <TimeGridViewColumnTrigger calendar={calendar} column={column} view='day'>
                 {column.date.toLocaleString(locale, { weekday: 'short', day: 'numeric' })}
               </TimeGridViewColumnTrigger>
             </TimeGridViewColumnHeader>

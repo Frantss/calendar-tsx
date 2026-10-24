@@ -29,10 +29,11 @@ when the state changes. The React and Solid bindings are built this way.
 Your parts need the instance. The bindings put it in context with its types erased, because a context cannot be
 generic, and let users get the types back by annotating selectors with `Calendar_StateOf`.
 
-<Callout type='warn' title='Known issue'>
-  Typing the context's instance with the wide `Calendar_Features` breaks once any feature merges a state slice: every
-  calendar without that feature stops being assignable. The React and Solid providers have this issue today.
-</Callout>
+The erased context accepts the core state fields and a layout with `kind: string`. It does not require merged
+feature fields. Typing it with the wide `Calendar_Features` would require every imported feature's state and make
+unrelated calendar instances incompatible.
+
+Navigation triggers take the typed instance explicitly so their target keys remain checked across the context seam.
 
 ## Parts
 

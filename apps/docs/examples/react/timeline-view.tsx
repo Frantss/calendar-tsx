@@ -17,14 +17,19 @@ import {
 } from '@calendar-tsx/react';
 
 import type { Calendar_Event } from '@calendar-tsx/core';
-import type { Booking, State } from '../core/setup';
+import type { Booking, DayCalendar, State } from '../core/setup';
 import { formatEvent } from '../core/format-event';
 
 // #region view
 export const Timeline = ({
+  calendar,
   locale = 'en-US',
   onSelect,
-}: { locale?: string; onSelect?: (event: Calendar_Event<Booking>) => void } = {}) => {
+}: {
+  calendar: DayCalendar;
+  locale?: string;
+  onSelect?: (event: Calendar_Event<Booking>) => void;
+}) => {
   const timeline = useCalendarSelector((state: State) => state.layout);
 
   if (timeline.kind !== 'timeline') return null;
@@ -34,7 +39,7 @@ export const Timeline = ({
       <TimelineViewHeader>
         {timeline.days.map(day => (
           <TimelineViewDayHeader key={day.key} day={day}>
-            <TimelineViewDayTrigger day={day} view='day'>
+            <TimelineViewDayTrigger calendar={calendar} day={day} view='day'>
               {day.date.toLocaleString(locale, { month: 'short', day: 'numeric' })}
             </TimelineViewDayTrigger>
           </TimelineViewDayHeader>

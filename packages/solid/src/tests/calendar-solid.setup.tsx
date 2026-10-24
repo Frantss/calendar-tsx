@@ -59,17 +59,18 @@ export const calendarSolidSetup_render = (
     locale: tests_withDefault(overrides, 'locale', calendarSolidSetup_defaults.locale),
     clock: fixedClock(tests_withDefault(overrides, 'now', calendarSolidSetup_defaults.now)),
   };
+  const { locale, ...options } = resolved;
 
   const Harness = () => {
     const calendar = useCalendar<Fixtures_EventData, null>(() => ({
-      ...resolved,
+      ...options,
       timeZone: fixtures_timeZone,
       onNavigate,
       firstDayOfWeek: 7,
     }));
 
     return (
-      <CalendarProvider value={calendar} locale={resolved.locale}>
+      <CalendarProvider value={calendar} locale={locale}>
         {children()}
       </CalendarProvider>
     );

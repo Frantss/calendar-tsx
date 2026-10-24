@@ -23,7 +23,7 @@ import {
   TimelineView,
   TimelineViewUnavailable,
 } from '#timeline-view';
-import { useCalendarSelector } from '#use-calendar';
+import { useCalendarContext, useCalendarSelector } from '#use-calendar';
 import type { CalendarSolidSetup_Overrides } from '#tests/calendar-solid.setup';
 import { calendarSolidSetup_render } from '#tests/calendar-solid.setup';
 
@@ -34,6 +34,7 @@ const views: Calendar_Views = {
 };
 
 const Timeline = () => {
+  const { instance: calendar } = useCalendarContext();
   const timeline = useCalendarSelector(
     state => state.layout as Calendar_TimelineLayout<Fixtures_EventData, null, { backgroundFeature: typeof backgroundFeature }>,
   );
@@ -44,7 +45,7 @@ const Timeline = () => {
         <For each={timeline().days}>
           {day => (
             <TimelineViewDayHeader day={day}>
-              <TimelineViewDayTrigger day={day} view='day' />
+              <TimelineViewDayTrigger calendar={calendar} day={day} view='day' />
             </TimelineViewDayHeader>
           )}
         </For>

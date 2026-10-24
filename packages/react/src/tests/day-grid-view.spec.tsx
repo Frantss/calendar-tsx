@@ -17,11 +17,12 @@ import {
   DayGridViewRowEvent,
   DayGridViewSection,
 } from '#day-grid-view';
-import { useCalendarSelector } from '#use-calendar';
+import { useCalendarContext, useCalendarSelector } from '#use-calendar';
 import type { CalendarReactSetup_Overrides } from '#tests/calendar-react.setup';
 import { calendarReactSetup_render } from '#tests/calendar-react.setup';
 
 const MonthBody = ({ onTriggerClick }: { onTriggerClick?: (event: React.MouseEvent) => void }) => {
+  const { instance: calendar } = useCalendarContext();
   const month = useCalendarSelector(state => state.layout) as Calendar_DayGridLayout<Fixtures_EventData>;
 
   return (
@@ -37,7 +38,7 @@ const MonthBody = ({ onTriggerClick }: { onTriggerClick?: (event: React.MouseEve
             <DayGridViewRow key={week.key} row={week}>
               {week.days.map(day => (
                 <DayGridViewDay key={day.key} day={day}>
-                  <DayGridViewDayTrigger day={day} view='day' onClick={onTriggerClick}>
+                  <DayGridViewDayTrigger calendar={calendar} day={day} view='day' onClick={onTriggerClick}>
                     {day.date.day}
                   </DayGridViewDayTrigger>
                   <DayGridViewOverflow day={day}>see all</DayGridViewOverflow>

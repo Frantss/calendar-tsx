@@ -9,7 +9,8 @@ description: useCalendar, Calendar, CalendarProvider, useCalendarSelector and us
 const calendar = useCalendar(options);
 ```
 
-Takes the [options](options) and returns the [instance](instance).
+Takes the [options](options) and returns the [instance](instance). Set accessible-label `locale` on
+`CalendarProvider` or `Calendar`; it is rejected in hook options.
 
 - The instance is created on the first render and kept for the component's lifetime.
 - It mounts in a layout effect, which starts the clock, and unmounts with the component.
@@ -39,7 +40,7 @@ Puts an instance in context for the parts and `useCalendarSelector`. Every part 
 
 ## `Calendar`
 
-`useCalendar` and `CalendarProvider` in one component: it takes the options, including `locale`, plus `children`. Use
+`useCalendar` and `CalendarProvider` in one component: it takes the core options plus `locale` and `children`. Use
 it when nothing outside the tree needs the instance.
 
 <include lang='tsx'>../../../../examples/react/hooks.tsx#calendar</include>

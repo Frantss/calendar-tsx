@@ -228,6 +228,7 @@ attributes as variants. Boolean attributes (`data-today`, `data-outside`, `data-
 ```tsx
 <DayGridViewDay day={day} className='p-1 data-outside:bg-zinc-50 data-outside:text-zinc-500'>
   <DayGridViewDayTrigger
+    calendar={calendar}
     day={day}
     view='day'
     className='size-7 rounded-full in-data-today:bg-indigo-600 in-data-today:text-white'

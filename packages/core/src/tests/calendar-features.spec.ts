@@ -1,7 +1,7 @@
 import type { Store } from '@tanstack/store';
 import { createStore } from '@tanstack/store';
 import { Temporal } from 'temporal-polyfill';
-import { expect, it, vi } from 'vitest';
+import { expect, expectTypeOf, it, vi } from 'vitest';
 
 import { createCalendar } from '#calendar';
 import { fixedClock } from '#calendar-clock';
@@ -162,6 +162,59 @@ it('runs a feature only in the views that list it', () => {
 it('runs calendar-wide features in every view', () => {
   expect(setup({ view: 'plain' }).store.state.layout).toMatchObject({ counted: true });
   expect(setup({ view: 'list_week' }).store.state.layout).toMatchObject({ counted: true });
+});
+
+it('includes calendar-only feature fields in each view model type', () => {
+  const registered = createCalendarViews({
+    grid: timeGridView({ days: 1 }),
+    list: listView({ days: 1 }),
+  });
+  const calendar = createCalendar({
+    timeZone: fixtures_timeZone,
+    views: registered.views,
+    features: { ...registered.features, highlightFeature },
+    view: 'grid',
+    date: Temporal.PlainDate.from('2026-03-11'),
+    onNavigate: vi.fn(),
+    events,
+  });
+  calendar.api.highlight('review');
+  const grid = calendar.store.state.layout;
+  if (grid.kind !== 'timeGrid') throw new Error('expected a time grid');
+  expectTypeOf(grid.columns[0]!.segments[0]!.isHighlighted).toEqualTypeOf<boolean>();
+  expect(grid.columns[0]!.segments.map(segment => segment.isHighlighted)).toEqual([false, true]);
+
+  calendar['~update']({ ...calendar.options, view: 'list' });
+  const list = calendar.store.state.layout;
+  if (list.kind !== 'list') throw new Error('expected a list');
+  expectTypeOf(list.days[0]!.hasHighlighted).toEqualTypeOf<boolean>();
+  expect(list.days[0]!.hasHighlighted).toBe(true);
+});
+
+it('keeps view-declared feature fields out of other view model types', () => {
+  const registered = createCalendarViews({
+    grid: timeGridView({ days: 1 }),
+    list: listView({ days: 1, features: { highlightFeature } }),
+  });
+  const calendar = createCalendar({
+    timeZone: fixtures_timeZone,
+    views: registered.views,
+    features: { ...registered.features },
+    view: 'grid',
+    date: Temporal.PlainDate.from('2026-03-11'),
+    onNavigate: vi.fn(),
+    events,
+  });
+  const grid = calendar.store.state.layout;
+  if (grid.kind !== 'timeGrid') throw new Error('expected a time grid');
+  expectTypeOf(grid.columns[0]!.segments[0]!).not.toHaveProperty('isHighlighted');
+  expect(grid.columns[0]!.segments[0]).not.toHaveProperty('isHighlighted');
+
+  calendar['~update']({ ...calendar.options, view: 'list' });
+  const list = calendar.store.state.layout;
+  if (list.kind !== 'list') throw new Error('expected a list');
+  expectTypeOf(list.days[0]!.hasHighlighted).toEqualTypeOf<boolean>();
+  expect(list.days[0]!.hasHighlighted).toBe(false);
 });
 
 it('decorates section days and their flat index with the view feature types', () => {

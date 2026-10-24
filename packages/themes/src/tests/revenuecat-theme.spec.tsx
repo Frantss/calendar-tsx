@@ -14,6 +14,7 @@ import {
   TimelineViewDayHeader,
   TimelineViewHeader,
   useCalendarSelector,
+  useCalendarContext,
 } from '@calendar-tsx/react';
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
 import '../../revenuecat.css';
@@ -21,6 +22,7 @@ import '../../revenuecat.css';
 import { themesSetup_part, themesSetup_render, themesSetup_timed } from '#tests/themes.setup';
 
 const TimeGrid = () => {
+  const { instance: calendar } = useCalendarContext();
   const grid = useCalendarSelector(state => state.layout) as Calendar_TimeGridLayout<ThemesSetup_EventData, null>;
 
   return (
@@ -29,7 +31,7 @@ const TimeGrid = () => {
         {grid.columns.map(column => (
           <TimeGridViewColumnHeader key={column.key} column={column}>
             Wed
-            <TimeGridViewColumnTrigger column={column} view='day'>
+            <TimeGridViewColumnTrigger calendar={calendar} column={column} view='day'>
               {column.date.day}
             </TimeGridViewColumnTrigger>
           </TimeGridViewColumnHeader>

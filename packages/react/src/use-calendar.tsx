@@ -1,22 +1,30 @@
 import { useSelector } from '@tanstack/react-store';
+import type { ReadonlyStore } from '@tanstack/store';
 import type { ReactNode } from 'react';
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import type { Temporal } from 'temporal-polyfill';
 
 import type {
   Calendar_Features,
-  Calendar_Instance,
+  Calendar_AnyLayout,
+  Calendar_Api,
   Calendar_Options,
   Calendar_State,
   Calendar_ValidateFeatures,
   Calendar_Views,
+  Calendar_ViewContext,
 } from '@calendar-tsx/core';
 import { createCalendar } from '@calendar-tsx/core';
 
 /** Any instance: the parts only navigate and read the store, so view keys and feature types are erased. */
 type AnyInstance = {
-  readonly options: unknown;
-  store: Calendar_Instance<unknown, unknown, Calendar_Views>['store'];
-  api: Pick<Calendar_Instance<unknown, unknown, Calendar_Views>['api'], 'navigate'>;
+  readonly options: { views: Calendar_Views };
+  store: ReadonlyStore<{
+    context: Calendar_ViewContext<Calendar_Views>;
+    layout: Calendar_AnyLayout;
+    now: Temporal.ZonedDateTime;
+  }>;
+  api: Pick<Calendar_Api<Calendar_Views, {}>, 'navigate'>;
   '~mount': () => () => void;
   '~update': (options: never) => void;
 };
@@ -35,7 +43,8 @@ export const useCalendar = <
   const TViews extends Calendar_Views = Calendar_Views,
   const TFeatures extends Calendar_Features = Calendar_Features,
 >(
-  options: Calendar_Options<TData, TResourceData, TViews, TFeatures> & Calendar_ValidateFeatures<TViews, TFeatures>,
+  options: Calendar_Options<TData, TResourceData, TViews, TFeatures> &
+    Calendar_ValidateFeatures<TViews, TFeatures> & { locale?: never },
 ) => {
   const [instance] = useState(() => createCalendar<TData, TResourceData, TViews, TFeatures>(options));
 
@@ -90,15 +99,16 @@ export const Calendar = <
   const TFeatures extends Calendar_Features = Calendar_Features,
 >({
   children,
+  locale,
   ...options
 }: Calendar_Options<TData, TResourceData, TViews, TFeatures> &
-  Calendar_ValidateFeatures<TViews, TFeatures> & { children: ReactNode }) => {
+  Calendar_ValidateFeatures<TViews, TFeatures> & { children: ReactNode; locale?: string }) => {
   const instance = useCalendar<TData, TResourceData, TViews, TFeatures>(
     options as Calendar_Options<TData, TResourceData, TViews, TFeatures> & Calendar_ValidateFeatures<TViews, TFeatures>,
   );
 
   return (
-    <CalendarProvider value={instance} locale={options.locale}>
+    <CalendarProvider value={instance} locale={locale}>
       {children}
     </CalendarProvider>
   );

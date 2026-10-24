@@ -13,3 +13,10 @@
   `CalendarProvider` and `Calendar` for every other calendar in it. Found while type-checking the docs examples, which
   now compile the feature example in a separate program (`apps/docs/examples/features`). The docs' feature pages carry a
   "Known issue" note. No test covers a provider with merged feature types.
+
+## 2026-10-24 verification status
+
+The provider incompatibility above no longer reproduces. Plain and feature-owning calendars now satisfy provider
+and convenience-root types in a program that imports a state-map declaration merge. Regression coverage is in
+`packages/react/src/tests/api-contract.spec.tsx:37` and `packages/solid/src/tests/api-contract.spec.tsx:37`.
+Both binding type checks and browser suites pass. The documentation no longer carries the obsolete workaround.

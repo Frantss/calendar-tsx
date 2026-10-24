@@ -40,6 +40,7 @@ import {
   TimeGridViewNowIndicator,
   TimeGridView,
   useCalendarSelector,
+  useCalendarContext,
   DayGridViewSection,
   DayGridViewSectionHeader,
   DayGridViewHeader,
@@ -104,6 +105,7 @@ const TimeGrid = ({ eventClassName }: { eventClassName?: string }) => {
 };
 
 const Month = () => {
+  const { instance: calendar } = useCalendarContext();
   const month = useCalendarSelector(state => state.layout) as Calendar_DayGridLayout<ThemesSetup_EventData>;
 
   return (
@@ -129,7 +131,7 @@ const Month = () => {
                   {(day as { backgrounds?: Calendar_DayBackground[] }).backgrounds?.map(background => (
                     <DayGridViewDayBackground key={background.key} background={background} />
                   ))}
-                  <DayGridViewDayTrigger day={day} view='day'>
+                  <DayGridViewDayTrigger calendar={calendar} day={day} view='day'>
                     {day.date.day}
                   </DayGridViewDayTrigger>
                   <DayGridViewOverflow day={day}>more</DayGridViewOverflow>

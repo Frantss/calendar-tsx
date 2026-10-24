@@ -88,13 +88,9 @@ view sees an entry only when it registers that key.
 | `Calendar_TimeGridSegment_FeatureMap` | Fields on time-grid segments                       |
 | `Calendar_ListDay_FeatureMap`         | Fields on list days                                |
 
-Model fields appear only in the layouts of views that list the feature.
-
-<Callout type='warn' title='Known issue'>
-  Once a feature merges a state slice into `Calendar_State_FeatureMap`, `CalendarProvider` and `Calendar` reject every
-  calendar that does not register that feature: the provider's types expect every merged slice. Register the feature on
-  every calendar in the program, or keep the merged types out of programs that don't use it.
-</Callout>
+Model fields follow the same scope as runtime stages: view-declared features contribute only to those views;
+features that no view declares contribute to every view. Adding a view declaration changes that feature's scope,
+including its inferred model fields. Providers accept calendars independently of which feature state maps are imported.
 
 ## Layout features
 

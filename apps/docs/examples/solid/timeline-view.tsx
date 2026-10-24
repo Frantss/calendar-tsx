@@ -18,9 +18,10 @@ import { For, Show } from 'solid-js';
 
 import { useLayout } from './layouts';
 import { formatEvent } from '../core/format-event';
+import type { DayCalendar } from '../core/setup';
 
 // #region view
-export const Timeline = () => {
+export const Timeline = (props: { calendar: DayCalendar }) => {
   const timeline = useLayout('timeline');
 
   return (
@@ -31,7 +32,7 @@ export const Timeline = () => {
             <For each={timeline().days}>
               {day => (
                 <TimelineViewDayHeader day={day}>
-                  <TimelineViewDayTrigger day={day} view='day'>
+                  <TimelineViewDayTrigger calendar={props.calendar} day={day} view='day'>
                     {day.date.toLocaleString('en-US', { weekday: 'short', day: 'numeric' })}
                   </TimelineViewDayTrigger>
                 </TimelineViewDayHeader>

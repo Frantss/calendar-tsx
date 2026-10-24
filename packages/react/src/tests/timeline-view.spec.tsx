@@ -22,7 +22,7 @@ import {
   TimelineView,
   TimelineViewUnavailable,
 } from '#timeline-view';
-import { useCalendarSelector } from '#use-calendar';
+import { useCalendarContext, useCalendarSelector } from '#use-calendar';
 import type { CalendarReactSetup_Overrides } from '#tests/calendar-react.setup';
 import { calendarReactSetup_render } from '#tests/calendar-react.setup';
 
@@ -33,6 +33,7 @@ const views: Calendar_Views = {
 };
 
 const Timeline = () => {
+  const { instance: calendar } = useCalendarContext();
   const timeline = useCalendarSelector(state => state.layout) as Calendar_TimelineLayout<
     Fixtures_EventData,
     null,
@@ -44,7 +45,7 @@ const Timeline = () => {
       <TimelineViewHeader>
         {timeline.days.map(day => (
           <TimelineViewDayHeader key={day.key} day={day}>
-            <TimelineViewDayTrigger day={day} view='day' />
+            <TimelineViewDayTrigger calendar={calendar} day={day} view='day' />
           </TimelineViewDayHeader>
         ))}
         {timeline.slots.map(slot => (

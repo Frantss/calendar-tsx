@@ -19,6 +19,7 @@ import {
   TimelineView,
   TimelineViewUnavailable,
   useCalendarSelector,
+  useCalendarContext,
 } from '@calendar-tsx/react';
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
 import '../../default.css';
@@ -38,6 +39,7 @@ const resources = [
 ];
 
 const Timeline = () => {
+  const { instance: calendar } = useCalendarContext();
   const timeline = useCalendarSelector(state => state.layout) as Calendar_TimelineLayout<ThemesSetup_EventData, null>;
 
   return (
@@ -45,7 +47,7 @@ const Timeline = () => {
       <TimelineViewHeader>
         {timeline.days.map(day => (
           <TimelineViewDayHeader key={day.key} day={day}>
-            <TimelineViewDayTrigger day={day} view='timeline'>
+            <TimelineViewDayTrigger calendar={calendar} day={day} view='timeline'>
               {day.date.day}
             </TimelineViewDayTrigger>
           </TimelineViewDayHeader>

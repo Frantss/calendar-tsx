@@ -13,7 +13,7 @@ import {
   TimeGridViewNowIndicator,
   TimeGridView,
 } from '#time-grid-view';
-import { Calendar, useCalendarSelector } from '#use-calendar';
+import { Calendar, useCalendarContext, useCalendarSelector } from '#use-calendar';
 
 export const ssrApp_defaults = {
   views: createCalendarViews({ week: timeGridView({ days: 7 }) }),
@@ -28,6 +28,7 @@ export const ssrApp_defaults = {
 export type SsrApp_Props = { now: string; initialNow?: string | undefined };
 
 const Week = () => {
+  const { instance: calendar } = useCalendarContext();
   const grid = useCalendarSelector(state => state.layout as Calendar_TimeGridLayout<null, unknown>);
 
   return (
@@ -36,7 +37,7 @@ const Week = () => {
         <For each={grid().columns}>
           {column => (
             <TimeGridViewColumnHeader column={column}>
-              <TimeGridViewColumnTrigger column={column} view='week' />
+              <TimeGridViewColumnTrigger calendar={calendar} column={column} view='week' />
             </TimeGridViewColumnHeader>
           )}
         </For>

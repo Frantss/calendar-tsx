@@ -71,6 +71,10 @@ The context does not carry the instance's types, so `useCalendarSelector` return
 your views and features, annotate the selector with `Calendar_StateOf` from `@calendar-tsx/core`:
 `useCalendarSelector((state: Calendar_StateOf<typeof calendar>) => …)`.
 
+Navigation triggers require `calendar={calendar}` and a `view` key checked against that typed instance. Pass the
+instance returned by `useCalendar` down to your view parts; context erases the registered keys. Set accessible-label
+`locale` on `CalendarProvider` or `Calendar`, rather than hook options.
+
 ## Differences from the React bindings
 
 - `useCalendar` takes an accessor, `() => options`. It re-syncs whenever a signal read inside it changes;

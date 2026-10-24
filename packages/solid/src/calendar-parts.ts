@@ -1,7 +1,14 @@
 import type { JSX } from 'solid-js';
 import type { Temporal } from 'temporal-polyfill';
+import type { Calendar_Api, Calendar_Views } from '@calendar-tsx/core';
 
-import { useCalendarContext } from '#use-calendar';
+export type CalendarParts_NavigateProps<TViews extends Calendar_Views> = {
+  calendar: {
+    readonly options: { views: TViews };
+    api: Pick<Calendar_Api<NoInfer<TViews>, {}>, 'navigate'>;
+  };
+  view: keyof NoInfer<TViews> & string;
+};
 
 export const calendarParts_attributes = (name: string) => ({ 'data-scope': 'calendar', 'data-part': name });
 
@@ -42,10 +49,11 @@ export const calendarParts_dateLabel = (date: Temporal.PlainDate, locale: string
   date.toLocaleString(locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
 /** Built-in trigger action (D22); merged after consumer handlers so `preventDefault()` skips it. */
-export const useCalendarParts_NavigateTrigger = (view: () => string, date: () => Temporal.PlainDate) => {
-  const { instance } = useCalendarContext();
-
+export const useCalendarParts_NavigateTrigger = <TViews extends Calendar_Views>(
+  props: CalendarParts_NavigateProps<TViews>,
+  date: () => Temporal.PlainDate,
+) => {
   return (event: MouseEvent) => {
-    if (!event.defaultPrevented) instance.api.navigate({ view: view(), date: date() });
+    if (!event.defaultPrevented) props.calendar.api.navigate({ view: props.view, date: date() });
   };
 };

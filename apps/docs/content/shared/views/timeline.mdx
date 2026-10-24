@@ -112,22 +112,22 @@ includes all background events. Resource-limited layers apply only to matching r
 
 <section id='parts-table'>
 
-| Part                          | Model prop    | Element  | Notes                                                                              |
-| ----------------------------- | ------------- | -------- | ---------------------------------------------------------------------------------- |
-| `TimelineView`                | `model`       | `div`    | `role='region'`, labelled "Timeline". Scrolls both ways.                           |
-| `TimelineViewHeader`          | none          | `div`    | Sticky; holds the day headers and the slot labels.                                 |
-| `TimelineViewDayHeader`       | `day`         | `div`    | `data-today`, `data-date`, `data-weekday`.                                         |
-| `TimelineViewDayTrigger`      | `day`, `view` | `button` | Navigates to `view` on the day. See [day triggers](../features/day-triggers).      |
-| `TimelineViewSlotLabel`       | `slot`        | `div`    | `slot` is the time slot, not the HTML attribute.                                   |
-| `TimelineViewBody`            | none          | `div`    | Holds the rows and the now indicator.                                              |
-| `TimelineViewRow`             | `row`         | `div`    | `data-unavailable`, `data-resource-id`.                                            |
-| `TimelineViewResource`        | `row`         | `div`    | The resource cell; sticks to the start edge.                                       |
-| `TimelineViewLane`            | `row`         | `div`    | Holds the row's unavailable time and events.                                       |
-| `TimelineViewUnavailable`     | `segment`     | `div`    | `aria-hidden`.                                                                     |
-| `TimelineViewBackground`      | `background`  | `div`    | `aria-hidden`, `data-layer`, `data-kind`; render inside `TimelineViewLane`.        |
-| `TimelineViewBackgroundEvent` | `segment`     | `div`    | `aria-hidden`, continuation flags; render inside `TimelineViewLane`.               |
-| `TimelineViewEvent`           | `segment`     | `button` | `data-all-day`, `data-multi-day`, `data-continues-before`, `data-continues-after`. |
-| `TimelineViewNowIndicator`    | `model`       | `div`    | `aria-hidden`. Renders only while now is inside the range.                         |
+| Part                          | Model prop                | Element  | Notes                                                                                            |
+| ----------------------------- | ------------------------- | -------- | ------------------------------------------------------------------------------------------------ |
+| `TimelineView`                | `model`                   | `div`    | `role='region'`, labelled "Timeline". Scrolls both ways.                                         |
+| `TimelineViewHeader`          | none                      | `div`    | Sticky; holds the day headers and the slot labels.                                               |
+| `TimelineViewDayHeader`       | `day`                     | `div`    | `data-today`, `data-date`, `data-weekday`.                                                       |
+| `TimelineViewDayTrigger`      | `calendar`, `day`, `view` | `button` | Navigates through `calendar` to `view` on the day. See [day triggers](../features/day-triggers). |
+| `TimelineViewSlotLabel`       | `slot`                    | `div`    | `slot` is the time slot, not the HTML attribute.                                                 |
+| `TimelineViewBody`            | none                      | `div`    | Holds the rows and the now indicator.                                                            |
+| `TimelineViewRow`             | `row`                     | `div`    | `data-unavailable`, `data-resource-id`.                                                          |
+| `TimelineViewResource`        | `row`                     | `div`    | The resource cell; sticks to the start edge.                                                     |
+| `TimelineViewLane`            | `row`                     | `div`    | Holds the row's unavailable time and events.                                                     |
+| `TimelineViewUnavailable`     | `segment`                 | `div`    | `aria-hidden`.                                                                                   |
+| `TimelineViewBackground`      | `background`              | `div`    | `aria-hidden`, `data-layer`, `data-kind`; render inside `TimelineViewLane`.                      |
+| `TimelineViewBackgroundEvent` | `segment`                 | `div`    | `aria-hidden`, continuation flags; render inside `TimelineViewLane`.                             |
+| `TimelineViewEvent`           | `segment`                 | `button` | `data-all-day`, `data-multi-day`, `data-continues-before`, `data-continues-after`.               |
+| `TimelineViewNowIndicator`    | `model`                   | `div`    | `aria-hidden`. Renders only while now is inside the range.                                       |
 
 The parts render no slot cells; themes draw the slot lines as a background of each lane.
 

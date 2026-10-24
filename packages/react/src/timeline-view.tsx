@@ -10,7 +10,9 @@ import type {
   Calendar_TimelineSegment,
   Calendar_TimelineSlot,
   Calendar_UnavailableSegment,
+  Calendar_Views,
 } from '@calendar-tsx/core';
+import type { CalendarParts_NavigateProps } from '#calendar-parts';
 import type { Calendar_HTMLProps } from '#calendar-factory';
 import { calendarFactory_elements as calendar, calendarProps_merge } from '#calendar-factory';
 import {
@@ -82,15 +84,15 @@ export const TimelineViewDayHeader = forwardRef<HTMLDivElement, DayProps>(({ day
   />
 ));
 
-type TimelineViewDayTriggerProps = { day: Calendar_TimelineDay; view: string } & Calendar_HTMLProps<
-  'button',
-  Calendar_TimelineDay
->;
+type TimelineViewDayTriggerProps<TViews extends Calendar_Views> = {
+  day: Calendar_TimelineDay;
+} & CalendarParts_NavigateProps<TViews> &
+  Calendar_HTMLProps<'button', Calendar_TimelineDay>;
 
-export const TimelineViewDayTrigger = forwardRef<HTMLButtonElement, TimelineViewDayTriggerProps>(
-  ({ day, view, ...props }, ref) => {
+export const TimelineViewDayTrigger = forwardRef<HTMLButtonElement, TimelineViewDayTriggerProps<Calendar_Views>>(
+  ({ day, calendar: instance, view, ...props }, ref) => {
     const { locale } = useCalendarContext();
-    const navigate = useCalendarParts_NavigateTrigger(view, day.date);
+    const navigate = useCalendarParts_NavigateTrigger({ calendar: instance, view }, day.date);
 
     return (
       <calendar.button
@@ -108,7 +110,9 @@ export const TimelineViewDayTrigger = forwardRef<HTMLButtonElement, TimelineView
       />
     );
   },
-);
+) as <const TViews extends Calendar_Views>(
+  props: TimelineViewDayTriggerProps<TViews> & RefAttributes<HTMLButtonElement>,
+) => ReactElement | null;
 
 /** `slot` is the header's slot model, not the native HTML attribute. */
 export const TimelineViewSlotLabel = forwardRef<

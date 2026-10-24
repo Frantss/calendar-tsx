@@ -16,10 +16,10 @@ import {
 } from '@calendar-tsx/react';
 import { useCalendarSelector } from '@calendar-tsx/react';
 
-import type { State } from '../core/setup';
+import type { DayCalendar, State } from '../core/setup';
 
 // #region view
-export const Week = () => {
+export const Week = ({ calendar }: { calendar: DayCalendar }) => {
   const grid = useCalendarSelector((state: State) => state.layout);
 
   if (grid.kind !== 'timeGrid') return null;
@@ -29,7 +29,7 @@ export const Week = () => {
       <TimeGridViewHeader>
         {grid.columns.map(column => (
           <TimeGridViewColumnHeader key={column.key} column={column}>
-            <TimeGridViewColumnTrigger column={column} view='day'>
+            <TimeGridViewColumnTrigger calendar={calendar} column={column} view='day'>
               {column.date.toLocaleString('en-US', { weekday: 'short', day: 'numeric' })}
             </TimeGridViewColumnTrigger>
           </TimeGridViewColumnHeader>

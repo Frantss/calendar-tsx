@@ -13,10 +13,10 @@ import {
   DayGridViewSection,
 } from '@calendar-tsx/react';
 
-import type { State } from '../core/setup';
+import type { DayCalendar, State } from '../core/setup';
 
 // #region view
-export const DayGrid = ({ onOverflow }: { onOverflow: (date: string) => void }) => {
+export const DayGrid = ({ calendar, onOverflow }: { calendar: DayCalendar; onOverflow: (date: string) => void }) => {
   const layout = useCalendarSelector((state: State) => state.layout);
 
   if (layout.kind !== 'dayGrid') return null;
@@ -42,7 +42,7 @@ export const DayGrid = ({ onOverflow }: { onOverflow: (date: string) => void }) 
             <DayGridViewRow key={week.key} row={week}>
               {week.days.map(day => (
                 <DayGridViewDay key={day.key} day={day}>
-                  <DayGridViewDayTrigger day={day} view='day'>
+                  <DayGridViewDayTrigger calendar={calendar} day={day} view='day'>
                     {day.date.day}
                   </DayGridViewDayTrigger>
                   <DayGridViewOverflow day={day} onClick={() => onOverflow(day.date.toString())}>

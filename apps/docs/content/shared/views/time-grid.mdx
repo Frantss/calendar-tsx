@@ -122,23 +122,23 @@ the cluster shares the cluster's lane count. Events that only touch do not overl
 
 <section id='parts-table'>
 
-| Part                                | Model prop       | Element  | Notes                                                                                      |
-| ----------------------------------- | ---------------- | -------- | ------------------------------------------------------------------------------------------ |
-| `TimeGridView`                      | `model`          | `div`    | `role='region'`, labelled "Time grid". Scrolls.                                            |
-| `TimeGridViewHeader`                | none             | `div`    | Sticky column headers.                                                                     |
-| `TimeGridViewColumnHeader`          | `column`         | `div`    | `data-today`, `data-weekday`, `data-unavailable`, `data-resource-id`.                      |
-| `TimeGridViewColumnTrigger`         | `column`, `view` | `button` | Navigates to `view` on the column's date.                                                  |
-| `TimeGridViewAllDay`                | none             | `div`    | Render it only when `allDay` is set.                                                       |
-| `TimeGridViewAllDayEvent`           | `segment`        | `button` | A bar segment; `data-all-day`, `data-multi-day`.                                           |
-| `TimeGridViewAllDayBackgroundEvent` | `segment`        | `div`    | `aria-hidden`. Render it before the bars.                                                  |
-| `TimeGridViewBody`                  | `model`          | `div`    | Holds the axis and the columns.                                                            |
-| `TimeGridViewAxis`                  | none             | `div`    | Optional.                                                                                  |
-| `TimeGridViewAxisLabel`             | `slot`           | `div`    | `slot` is the time slot, not the HTML attribute.                                           |
-| `TimeGridViewColumn`                | `column`         | `div`    | `data-today`, `data-weekday`, `data-unavailable`.                                          |
-| `TimeGridViewBackgroundEvent`       | `segment`        | `div`    | `aria-hidden`. Render it before the events.                                                |
-| `TimeGridViewBackground`            | `background`     | `div`    | `aria-hidden`. A [background layer](../features/background-layers)'s shading.              |
-| `TimeGridViewEvent`                 | `segment`        | `button` | Placed by time and lane; `data-overlap` when it shares lanes, `data-short` when `isShort`. |
-| `TimeGridViewNowIndicator`          | `column`         | `div`    | `aria-hidden`. Renders only in today's column.                                             |
+| Part                                | Model prop                   | Element  | Notes                                                                                      |
+| ----------------------------------- | ---------------------------- | -------- | ------------------------------------------------------------------------------------------ |
+| `TimeGridView`                      | `model`                      | `div`    | `role='region'`, labelled "Time grid". Scrolls.                                            |
+| `TimeGridViewHeader`                | none                         | `div`    | Sticky column headers.                                                                     |
+| `TimeGridViewColumnHeader`          | `column`                     | `div`    | `data-today`, `data-weekday`, `data-unavailable`, `data-resource-id`.                      |
+| `TimeGridViewColumnTrigger`         | `calendar`, `column`, `view` | `button` | Navigates through `calendar` to `view` on the column's date.                               |
+| `TimeGridViewAllDay`                | none                         | `div`    | Render it only when `allDay` is set.                                                       |
+| `TimeGridViewAllDayEvent`           | `segment`                    | `button` | A bar segment; `data-all-day`, `data-multi-day`.                                           |
+| `TimeGridViewAllDayBackgroundEvent` | `segment`                    | `div`    | `aria-hidden`. Render it before the bars.                                                  |
+| `TimeGridViewBody`                  | `model`                      | `div`    | Holds the axis and the columns.                                                            |
+| `TimeGridViewAxis`                  | none                         | `div`    | Optional.                                                                                  |
+| `TimeGridViewAxisLabel`             | `slot`                       | `div`    | `slot` is the time slot, not the HTML attribute.                                           |
+| `TimeGridViewColumn`                | `column`                     | `div`    | `data-today`, `data-weekday`, `data-unavailable`.                                          |
+| `TimeGridViewBackgroundEvent`       | `segment`                    | `div`    | `aria-hidden`. Render it before the events.                                                |
+| `TimeGridViewBackground`            | `background`                 | `div`    | `aria-hidden`. A [background layer](../features/background-layers)'s shading.              |
+| `TimeGridViewEvent`                 | `segment`                    | `button` | Placed by time and lane; `data-overlap` when it shares lanes, `data-short` when `isShort`. |
+| `TimeGridViewNowIndicator`          | `column`                     | `div`    | `aria-hidden`. Renders only in today's column.                                             |
 
 Give the root a height, such as `max-block-size: 40rem`, to scroll inside the page instead of showing all 24 hours.
 

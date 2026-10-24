@@ -629,7 +629,6 @@ export type Calendar_Options<
   TFeatures extends Calendar_Features = Calendar_Features,
 > = {
   timeZone: string;
-  locale?: string;
   /** Usually `createCalendarViews(…).views`; tracked by reference. */
   views: TViews;
   /** Usually `{ ...views.features }` plus calendar-wide features. Read once at creation. */
@@ -659,9 +658,18 @@ export type Calendar_Options<
   atoms?: { [K in keyof Calendar_FeatureState<TFeatures>]?: Calendar_Atom<Calendar_FeatureState<TFeatures>[K]> };
 } & Calendar_PickFeatures<Calendar_Options_FeatureMap<TData, TResourceData>, TFeatures>;
 
-/** One layout per view, each shaped by the features that view lists. */
-export type Calendar_Layout<TData, TResourceData, TViews extends Calendar_Views = Calendar_Views> = {
-  [K in keyof TViews]: Calendar_Layout_FeatureMap<TData, TResourceData, TViews[K]['~features']>[TViews[K]['~layout']];
+/** One layout per view, with its declared features and calendar-only features that run in every view. */
+export type Calendar_Layout<
+  TData,
+  TResourceData,
+  TViews extends Calendar_Views = Calendar_Views,
+  TFeatures extends Calendar_Features = {},
+> = {
+  [K in keyof TViews]: Calendar_Layout_FeatureMap<
+    TData,
+    TResourceData,
+    TViews[K]['~features'] & Omit<TFeatures, keyof Calendar_FeaturesOf<TViews>>
+  >[TViews[K]['~layout']];
 }[keyof TViews];
 
 export type Calendar_State<
@@ -671,7 +679,7 @@ export type Calendar_State<
   TFeatures extends Calendar_Features = Calendar_Features,
 > = {
   context: Calendar_ViewContext<TViews>;
-  layout: Calendar_Layout<TData, TResourceData, TViews>;
+  layout: Calendar_Layout<TData, TResourceData, TViews, TFeatures>;
   now: Temporal.ZonedDateTime;
 } & Calendar_FeatureState<TFeatures>;
 

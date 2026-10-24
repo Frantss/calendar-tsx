@@ -24,11 +24,12 @@ import {
   TimeGridView,
   TimeGridViewUnavailable,
 } from '#time-grid-view';
-import { useCalendarSelector } from '#use-calendar';
+import { useCalendarContext, useCalendarSelector } from '#use-calendar';
 import type { CalendarSolidSetup_Overrides } from '#tests/calendar-solid.setup';
 import { calendarSolidSetup_render } from '#tests/calendar-solid.setup';
 
 const TimeGridBody = () => {
+  const { instance: calendar } = useCalendarContext();
   const grid = useCalendarSelector(state => state.layout as Calendar_TimeGridLayout<Fixtures_EventData, null>);
 
   return (
@@ -38,7 +39,7 @@ const TimeGridBody = () => {
           {column => (
             <TimeGridViewColumnHeader column={column}>
               {column.resource?.title}
-              <TimeGridViewColumnTrigger column={column} view='day' />
+              <TimeGridViewColumnTrigger calendar={calendar} column={column} view='day' />
             </TimeGridViewColumnHeader>
           )}
         </For>

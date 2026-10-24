@@ -59,7 +59,8 @@ A range is timed, `{ start, end }` as `Temporal.ZonedDateTime`s, or all-day, `{ 
   coverage, preserving DST gaps and combining repeated hours. Coverage merges before inverse gaps are computed.
   Hidden weekdays contribute no shading; range callbacks receive `inputRange`.
 - Resource-limited layers skip rows or columns without a matching resource, including ungrouped timelines.
-- The fields exist only in views that list `backgroundFeature`. The time grid's all-day row and the list aren't shaded.
+- Fields follow the feature's scope: declaring views get them, or every supported view gets them when
+  `backgroundFeature` is registered only on the calendar. The time grid's all-day row and the list aren't shaded.
 
 </section>
 

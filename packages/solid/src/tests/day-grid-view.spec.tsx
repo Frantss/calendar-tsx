@@ -18,11 +18,12 @@ import {
   DayGridViewRowEvent,
   DayGridViewSection,
 } from '#day-grid-view';
-import { useCalendarSelector } from '#use-calendar';
+import { useCalendarContext, useCalendarSelector } from '#use-calendar';
 import type { CalendarSolidSetup_Overrides } from '#tests/calendar-solid.setup';
 import { calendarSolidSetup_render } from '#tests/calendar-solid.setup';
 
 const MonthBody = (props: { onTriggerClick?: (event: MouseEvent) => void }) => {
+  const { instance: calendar } = useCalendarContext();
   const month = useCalendarSelector(state => state.layout as Calendar_DayGridLayout<Fixtures_EventData>);
 
   return (
@@ -39,7 +40,7 @@ const MonthBody = (props: { onTriggerClick?: (event: MouseEvent) => void }) => {
                   <For each={week.days}>
                     {day => (
                       <DayGridViewDay day={day}>
-                        <DayGridViewDayTrigger day={day} view='day' onClick={event => props.onTriggerClick?.(event)}>
+                        <DayGridViewDayTrigger calendar={calendar} day={day} view='day' onClick={event => props.onTriggerClick?.(event)}>
                           {day.date.day}
                         </DayGridViewDayTrigger>
                         <DayGridViewOverflow day={day}>see all</DayGridViewOverflow>

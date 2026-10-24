@@ -17,9 +17,10 @@ import {
 import { For, Show } from 'solid-js';
 
 import { useLayout } from './layouts';
+import type { DayCalendar } from '../core/setup';
 
 // #region view
-export const Week = () => {
+export const Week = (props: { calendar: DayCalendar }) => {
   const grid = useLayout('timeGrid');
 
   return (
@@ -30,7 +31,7 @@ export const Week = () => {
             <For each={grid().columns}>
               {column => (
                 <TimeGridViewColumnHeader column={column}>
-                  <TimeGridViewColumnTrigger column={column} view='day'>
+                  <TimeGridViewColumnTrigger calendar={props.calendar} column={column} view='day'>
                     {column.date.toLocaleString('en-US', { weekday: 'short', day: 'numeric' })}
                   </TimeGridViewColumnTrigger>
                 </TimeGridViewColumnHeader>

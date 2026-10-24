@@ -1,7 +1,11 @@
 <section id='intro'>
 
-`DayGridViewDayTrigger`, `TimeGridViewColumnTrigger` and `TimelineViewDayTrigger` jump from a day to another view. Give them a `view` key, and a
-click navigates to that view on the trigger's date, through `onNavigate`.
+`DayGridViewDayTrigger`, `TimeGridViewColumnTrigger` and `TimelineViewDayTrigger` jump from a day to another view.
+Pass `calendar={calendar}` and a registered `view` key. A click navigates through that instance's `onNavigate` on the trigger's date.
+
+Use the typed instance returned by `useCalendar` or `createCalendar`, passing it down to your view parts. TypeScript
+checks `view` against that instance's registered keys. An instance obtained from `useCalendarContext` has erased
+view types and cannot provide that check.
 
 - Your own `onClick` runs first. Call `event.preventDefault()` in it to skip the navigation.
 - The default accessible name is "Go to" followed by the full date, in the provider's `locale`. Pass `aria-label` to

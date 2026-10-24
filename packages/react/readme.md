@@ -67,6 +67,10 @@ Parts render no styles: position them with CSS reading `--cal-*` custom properti
 `left: calc(var(--cal-col-start) / var(--cal-columns) * 100%)`). Every part accepts `render={<El />}` or
 `render={(props, state) => …}` to swap its element.
 
+Navigation triggers require `calendar={calendar}` and a `view` key checked against that typed instance. Pass the
+instance returned by `useCalendar` down to your view parts; context erases the registered keys. Set accessible-label
+`locale` on `CalendarProvider` or `Calendar`, rather than hook options.
+
 ## Visible dates and hours
 
 Configure `hiddenDays` on the core view factories and `timeWindow` on `timeGridView` or `timelineView`. The parts

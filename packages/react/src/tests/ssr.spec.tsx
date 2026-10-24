@@ -15,7 +15,7 @@ import {
   TimeGridViewNowIndicator,
   TimeGridView,
 } from '#time-grid-view';
-import { Calendar, useCalendarSelector } from '#use-calendar';
+import { Calendar, useCalendarContext, useCalendarSelector } from '#use-calendar';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -31,6 +31,7 @@ const defaults = {
 };
 
 const Week = () => {
+  const { instance: calendar } = useCalendarContext();
   const grid = useCalendarSelector(state => state.layout) as Calendar_TimeGridLayout<null, unknown>;
 
   return (
@@ -38,7 +39,7 @@ const Week = () => {
       <TimeGridViewHeader>
         {grid.columns.map(column => (
           <TimeGridViewColumnHeader key={column.key} column={column}>
-            <TimeGridViewColumnTrigger column={column} view='week' />
+            <TimeGridViewColumnTrigger calendar={calendar} column={column} view='week' />
           </TimeGridViewColumnHeader>
         ))}
       </TimeGridViewHeader>

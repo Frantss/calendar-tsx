@@ -9,7 +9,8 @@ description: useCalendar, Calendar, CalendarProvider, useCalendarSelector and us
 const calendar = useCalendar(() => options);
 ```
 
-Takes an accessor returning the [options](options), and returns the [instance](instance).
+Takes an accessor returning the [options](options), and returns the [instance](instance). Set accessible-label
+`locale` on `CalendarProvider` or `Calendar`; it is rejected in hook options.
 
 - The instance is created once, from the options read untracked.
 - It mounts with the owner, which starts the clock, and unmounts on cleanup.
@@ -42,7 +43,7 @@ Puts an instance in context for the parts and `useCalendarSelector`. Every part 
 
 ## `Calendar`
 
-`useCalendar` and `CalendarProvider` in one component. It takes the options as props, including `locale`, and re-syncs
+`useCalendar` and `CalendarProvider` in one component. It takes the core options plus `locale` as props, and re-syncs
 when they change. Use it when nothing outside the tree needs the instance.
 
 <include lang='tsx'>../../../../examples/solid/primitives.tsx#calendar</include>

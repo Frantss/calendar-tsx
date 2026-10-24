@@ -1,11 +1,20 @@
 import type { Calendar_DayGridDay } from '@calendar-tsx/core';
 import { DayGridViewDayTrigger } from '@calendar-tsx/react';
 
-import type { Booking } from '../core/setup';
+import type { Booking, DayCalendar } from '../core/setup';
 
 // #region trigger
-export const DayNumber = ({ day, locked }: { day: Calendar_DayGridDay<Booking>; locked: boolean }) => (
+export const DayNumber = ({
+  calendar,
+  day,
+  locked,
+}: {
+  calendar: DayCalendar;
+  day: Calendar_DayGridDay<Booking>;
+  locked: boolean;
+}) => (
   <DayGridViewDayTrigger
+    calendar={calendar}
     day={day}
     view='day'
     onClick={event => {

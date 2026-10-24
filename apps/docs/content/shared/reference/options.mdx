@@ -23,7 +23,6 @@ the others, and view keys widen to `string`. Type `events` as `Calendar_EventInp
 | `eventOrder`     | `(a, b, context) => number`              | see below       | No             |
 | `clock`          | `Calendar_Clock`                         | one-minute tick | No             |
 | `initialNow`     | `Temporal.Instant`                       | clock's `now()` | No             |
-| `locale`         | `string`                                 | none            | No             |
 | `state`          | Controlled feature state slices          | none            | Yes, per slice |
 | `atoms`          | External stores for feature state slices | none            | Read once      |
 
@@ -82,6 +81,4 @@ See [now and today](../features/now-and-today) and [server rendering](../feature
 
 Where feature state lives; see [feature state](../extending/features#state).
 
-## `locale`
-
-Not read by the core. Adapters use it for accessible labels; the framework bindings take it on the provider.
+Accessible-label `locale` belongs on the framework's `CalendarProvider` or `Calendar`, rather than core or hook options.

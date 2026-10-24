@@ -9,7 +9,9 @@ import type {
   Calendar_TimelineSegment,
   Calendar_TimelineSlot,
   Calendar_UnavailableSegment,
+  Calendar_Views,
 } from '@calendar-tsx/core';
+import type { CalendarParts_NavigateProps } from '#calendar-parts';
 import type { Calendar_HTMLProps } from '#calendar-factory';
 import { calendarFactory_elements as calendar, calendarProps_merge } from '#calendar-factory';
 import {
@@ -83,15 +85,13 @@ export const TimelineViewDayHeader = (
   );
 };
 
-export const TimelineViewDayTrigger = (
-  props: { day: Calendar_TimelineDay; view: string } & Calendar_HTMLProps<'button', Calendar_TimelineDay>,
+export const TimelineViewDayTrigger = <const TViews extends Calendar_Views>(
+  props: { day: Calendar_TimelineDay } & CalendarParts_NavigateProps<TViews> &
+    Calendar_HTMLProps<'button', Calendar_TimelineDay>,
 ) => {
-  const [local, rest] = splitProps(props, ['day', 'view']);
+  const [local, rest] = splitProps(props, ['day', 'calendar', 'view']);
   const context = useCalendarContext();
-  const navigate = useCalendarParts_NavigateTrigger(
-    () => local.view,
-    () => local.day.date,
-  );
+  const navigate = useCalendarParts_NavigateTrigger(local, () => local.day.date);
 
   return (
     <calendar.button
