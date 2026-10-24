@@ -110,4 +110,3 @@ export type Calendar_ValidateDependencies<_V extends Calendar_Views, F> = [Featu
   : { features: `Error: missing prerequisite '${FeatureDependencies<F> & string}'` };
 export type Calendar_ValidateFeatures<V extends Calendar_Views, F> = ValidateFeatureImplementations<V, F> &
   Calendar_ValidateDependencies<V, NoInfer<F>>;
-

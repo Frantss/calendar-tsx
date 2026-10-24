@@ -1,12 +1,12 @@
-import type { Calendar_TimeGridLayout } from '#layouts/time-grid/time-grid.types';
-import type { Calendar_TimelineLayout } from '#layouts/timeline/timeline.types';
-import { layoutDayGrid_locate, layoutDayGrid_project, layoutTimeGrid_locate, layoutTimeGrid_project, layoutTimeline_locate, layoutTimeline_project } from '#layouts/shared/layout-interactions';
+import type { Calendar_TimeGridLayout, Calendar_TimeGridViewSettings } from '#layouts/time-grid/time-grid.types';
+import type { Calendar_TimelineLayout, Calendar_TimelineViewSettings } from '#layouts/timeline/timeline.types';
+import { layoutDayGrid_locate, layoutDayGrid_project } from '#layouts/day-grid/day-grid-interactions';
+import { layoutTimeGrid_locate, layoutTimeGrid_project } from '#layouts/time-grid/time-grid-interactions';
+import { layoutTimeline_locate, layoutTimeline_project } from '#layouts/timeline/timeline-interactions';
 import type { Calendar_DayGridViewSettings } from '#layouts/day-grid/day-grid.types';
 import type { Calendar_ListViewSettings } from '#layouts/list/list.types';
 import type { Calendar_Range } from '#dates/date.types';
 import type { Calendar_TimeViewSettings } from '#views/view.types';
-import type { Calendar_TimeGridViewSettings } from '#layouts/time-grid/time-grid.types';
-import type { Calendar_TimelineViewSettings } from '#layouts/timeline/timeline.types';
 import type { Calendar_LayoutFeature } from '#features/feature.types';
 import {
   calendarPeriods_groups,

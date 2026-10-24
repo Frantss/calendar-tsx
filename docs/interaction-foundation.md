@@ -1,6 +1,6 @@
 # Interaction foundation
 
-Status: **implemented** (D56–D58). Production features install selection, movement, resizing, input drivers,
+Status: **implemented** (D58–D60). Production features install selection, movement, resizing, input drivers,
 external creation and cross-calendar transfers. Layout capabilities provide day-grid, time-grid and timeline
 location/projection. Core and adapter browser tests verify the shared runtime and bindings. Source/public compiler
 fixtures live under each package's `tests/types` directory and run through `check:types`. The prototype has been removed.
@@ -127,7 +127,7 @@ observe that store. Ordinary event normalization, ordering and base layout must 
 moved. This avoids routing draft updates through today's `Calendar_FeatureContext.setState`, whose state slices
 participate in the base calendar derivation.
 
-D56 accepts this amendment to D29 for transient interaction state. Preserve internal, controlled and external-atom
+D58 accepts this amendment to D29 for transient interaction state. Preserve internal, controlled and external-atom
 ownership choices at the interaction-store seam. Compiler fixtures verify a discriminated ownership option and requires
 controlled hosts to echo requested snapshot objects. Token leases stay runtime-owned so delayed writes cannot permit
 competing sessions or duplicate completion. Production lifecycle tests now exercise adapter subscriptions. Persistent
@@ -154,7 +154,7 @@ during a drag is a possible later preview policy, not a reason to change event i
 D40's mapping is not invertible at DST transitions. `locate` must retain the local clock target and any ambiguous
 instant choices. Proposed policy: reject nonexistent local times; for movement preserve the source offset when it
 matches a repeated-time candidate, otherwise choose the earlier occurrence. Explicit programmatic instants remain
-unambiguous. The user accepted this policy for production target resolution in D57; D40 alone did not settle it.
+unambiguous. The user accepted this policy for production target resolution in D59; D40 alone did not settle it.
 
 ## Proposals, validation and ownership
 
@@ -231,7 +231,7 @@ resource hits, actual segment projection and exclusive timed midnight boundaries
 
 Permanent compiler fixtures under `packages/{core,react,solid}/tests/types` verify source and built declarations.
 They check display-only providers, independent operations, consumer payloads, missing prerequisites and third-party
-operation/layout extensions. The runtime fixture in `packages/core/src/tests/fixtures/priority.ts` supplies a non-date
+operation/layout extensions. The runtime fixture in `packages/core/src/tests/support/priority.ts` supplies a non-date
 operation without range/before/after fields. It exercises shared dispatch and DOM transport without adding branches
 to either runtime. `pnpm run check:types` includes these checks; build packages first for public declarations.
 
@@ -257,11 +257,11 @@ package instead of augmenting around missing built-in entries.
 Committed selection now uses the production D29 state owner. Movement/resizing emit current callbacks while leaving
 events unchanged. Production DOM bindings use that path and consume layout location/projection capabilities.
 
-## Production layout capabilities (D57)
+## Production layout capabilities (D59)
 
 Layouts now contribute optional `locate/project` methods. The interaction runtime resolves the active layout and
 publishes derived preview results alongside semantic snapshots. An open layout-interaction map supplies typed
 points, targets and arbitrary geometry. Time-grid and timeline use the production D40 layout math; a public-package
 third-party fixture uses boolean targets and non-rectangular geometry without runtime changes. Controlled and
 external owners retain only semantic state. React/Solid bindings consume these production methods and previews.
-D58 adds month/day-grid capabilities and production drivers, covered by core and adapter tests.
+D60 adds month/day-grid capabilities and production drivers, covered by core and adapter tests.

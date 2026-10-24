@@ -113,7 +113,12 @@ export type Calendar_NavigateTarget<TViews extends Calendar_Views> = {
 };
 
 /** Actions only emit `onNavigate`; they never write state (D5). */
-export type Calendar_Api<TViews extends Calendar_Views, TFeatures extends Calendar_Features = Calendar_Features, TData = unknown, TResourceData = unknown> = {
+export type Calendar_Api<
+  TViews extends Calendar_Views,
+  TFeatures extends Calendar_Features = Calendar_Features,
+  TData = unknown,
+  TResourceData = unknown,
+> = {
   next: () => void;
   prev: () => void;
   today: () => void;

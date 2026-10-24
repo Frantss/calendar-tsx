@@ -1,3 +1,5 @@
+import type { Calendar_DatePreview } from '#layouts/interaction.types';
+import type { DatePoint } from '#layouts/interaction.types';
 import type {
   Calendar_DurationSettings,
   Calendar_TimeViewSettings,
@@ -13,6 +15,7 @@ import type {
   Calendar_TimelineSegment_FeatureMap,
   Calendar_TimelineRow_FeatureMap,
 } from '#features/feature-maps.types';
+import type { Calendar_DateTarget } from '#features/interaction/date-target.types';
 
 export type Calendar_TimelineViewSettings = Calendar_DurationSettings &
   Calendar_TimeViewSettings & {
@@ -88,3 +91,11 @@ export type Calendar_TimelineLayout<TData, TResourceData, TFeatures = {}> = {
   now?: number;
   minSlotWidth?: string;
 };
+export type Calendar_TimelinePoint = DatePoint & {
+  kind: 'timeline';
+  surface: { kind: 'lane'; key: string };
+};
+
+export interface Timeline_LayoutInteractionMap {
+  timeline: { point: Calendar_TimelinePoint; target: Calendar_DateTarget; geometry: readonly Calendar_DatePreview[] };
+}

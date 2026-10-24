@@ -1,3 +1,5 @@
+import type { Calendar_DatePreview } from '#layouts/interaction.types';
+import type { DatePoint } from '#layouts/interaction.types';
 import type {
   Calendar_ResourceGrouping,
   Calendar_VisibilitySettings,
@@ -12,6 +14,7 @@ import type { Calendar_Range } from '#dates/date.types';
 import type { Temporal } from 'temporal-polyfill';
 import type { Calendar_DayGridDay_FeatureMap } from '#features/feature-maps.types';
 import type { LayoutCoordinates_DateAxis } from '#layouts/shared/coordinates';
+import type { Calendar_DateTarget } from '#features/interaction/date-target.types';
 
 export type Calendar_MonthGrouping =
   | 'month'
@@ -81,3 +84,12 @@ export type Calendar_DayGridLayout<TData, TResourceData = unknown, TFeatures = {
   coordinates: LayoutCoordinates_DateAxis;
   sections: Calendar_DayGridSection<TData, TResourceData, TFeatures>[];
 };
+export type Calendar_DayGridPoint = DatePoint & {
+  kind: 'dayGrid';
+  surface: { kind: 'row'; section: string; row: string };
+  time?: string;
+};
+
+export interface DayGrid_LayoutInteractionMap {
+  dayGrid: { point: Calendar_DayGridPoint; target: Calendar_DateTarget; geometry: readonly Calendar_DatePreview[] };
+}

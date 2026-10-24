@@ -9,8 +9,13 @@ import type { Calendar_Range } from '#dates/date.types';
 /** What feature hooks receive. */
 export type Calendar_FeatureContext<TConfig = any> = {
   readonly features: Calendar_Features;
-  readonly state: import('#calendar/calendar.types').Calendar_State<unknown, unknown, Calendar_Views, Calendar_Features>;
-  readonly layout: import('#calendar-layout-interaction.types').Calendar_ActiveLayout;
+  readonly state: import('#calendar/calendar.types').Calendar_State<
+    unknown,
+    unknown,
+    Calendar_Views,
+    Calendar_Features
+  >;
+  readonly layout: import('#layouts/interaction.types').Calendar_ActiveLayout;
   onOptionsChange: (callback: () => void) => void;
   onMount: (callback: () => () => void) => void;
   settings: <TSettings>(key: string, defaults: TSettings) => TSettings;
@@ -32,7 +37,7 @@ export type Calendar_FeatureStage<TValue, TConfig = any> = {
 
 /** Hooks supplied by a feature definition. */
 export interface Calendar_FeatureExtensions {
-  interaction?: import('#calendar-interaction.types').Calendar_InteractionContribution;
+  interaction?: import('#features/interaction/interaction.types').Calendar_InteractionContribution;
 }
 export type Calendar_Feature<TConfig = any> = {
   requires?: readonly string[];
@@ -66,7 +71,7 @@ export type Calendar_LayoutFeature<
   /** The date one period before or after `date`. */
   step: (date: Temporal.PlainDate, settings: TSettings, direction: 1 | -1) => Temporal.PlainDate;
   build: (input: Calendar_LayoutInput<any, any>, settings: TSettings) => TModel;
-} & import('#calendar-layout-interaction.types').Calendar_LayoutCapabilities<TKind, TModel, TSettings>;
+} & import('#layouts/interaction.types').Calendar_LayoutCapabilities<TKind, TModel, TSettings>;
 
 export type Calendar_Features = Record<string, Calendar_Feature>;
 

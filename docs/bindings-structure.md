@@ -10,6 +10,9 @@ packages/{react,solid}/
       calendar.tsx
       calendar.types.ts
       tests/calendar.spec.tsx
+    interactions/
+      use-calendar-interactions.ts
+      tests/interactions.spec.tsx
     events/
       use-calendar-event-store.ts
     rendering/
@@ -53,6 +56,8 @@ packages/{react,solid}/
 ```
 
 `calendar/` owns calendar creation, lifecycle, context, selectors, providers and the `Calendar` wrapper. Its erased instance contract lives in `calendar.types.ts`. `events/` owns the managed event-store hook.
+
+`interactions/` owns the framework hook for DOM host lifecycle, callback refs and transient state subscriptions. Its browser tests exercise the shared core host through each framework.
 
 `rendering/` owns the element factory, prop merging and ref composition. Public rendering contracts live in `rendering.types.ts`. React keeps its element-cloning and forwarded-ref behavior; Solid keeps its accessor-based render function and prop merging.
 

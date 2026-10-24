@@ -244,3 +244,18 @@ Checked at `fd13cd8` while proposing the optional interaction foundation.
 - **Export contract after the second rebase:** `packages/core/export/index.ts` exports the DOM helpers from the
   root alongside the other public APIs, matching D55. The former `@calendar-tsx/core/dom` references above describe
   the pre-rebase package. Browser listeners still require mounting a host; importing the package does not mount one.
+
+## Module ownership after the main rebase (2026-10-24)
+
+- **What:** the interaction implementation follows main's module ownership structure. Each opt-in feature owns its
+  factory, contracts and map contributions; the shared runtime stays in `features/interaction/`.
+- **Where:** `packages/core/src/features/interaction/interaction-runtime.ts:1`,
+  `packages/core/src/features/feature-maps.types.ts:1`, `packages/core/src/interactions/dom.ts:1`,
+  `packages/core/src/layouts/shared/interaction-geometry.ts:1`,
+  `packages/react/src/interactions/use-calendar-interactions.ts:1` and
+  `packages/solid/src/interactions/use-calendar-interactions.ts:1`. Layout-specific location/projection lives beside
+  each layout. Cross-feature tests and shared fixtures follow `tests/integration/` and `tests/support/`.
+- **Why it matters:** direct owner imports preserve the single public entry and third-party augmentation without
+  restoring the removed central type facade. All 53 moved runtime declarations retain their previous bodies.
+- **Decision references:** main owns D56–D57; interaction decisions now use D58–D60. Earlier report entries retain
+  their historical paths and decision numbers.

@@ -1,4 +1,3 @@
-import type { Calendar_LayoutFeature } from '#features/feature.types';
 import type { Calendar_LayoutInput } from '#layouts/layout.types';
 import {
   calendarFeatures_collect,

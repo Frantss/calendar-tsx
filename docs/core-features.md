@@ -98,6 +98,11 @@ packages/core/
         tests/
           recurrence.spec.ts
 
+    interactions/
+      dom.ts
+      dom.types.ts
+      tests/dom.spec.ts
+
     tests/
       integration/
       support/
@@ -121,6 +126,20 @@ packages/core/
 view contracts belong to `views/view.types.ts`; each layout owns its settings and models. Common layout contracts
 and the inferred layout union belong to `layouts/layout.types.ts`. Feature folders retain their own concrete
 types and contributions to the shared extension maps.
+
+Interaction factories follow the same ownership rule. `features/interaction/` owns the shared runtime, operation
+contracts and date-target helpers. `date-selection/`, `event-move/`, `event-resize/`, `constraints/`, `pointer/`,
+`touch/`, `auto-scroll/`, `external-drop/` and `cross-calendar/` each own their factory, types and feature-map
+contributions. Shared maps compose these interfaces through type-only imports. The operation map remains open to
+third-party augmentation.
+
+Each layout owns its `locate` and `project` implementation in its `*-interactions.ts` file and its point types in
+its existing `*.types.ts` file. `layouts/interaction.types.ts` owns the common capability contracts and extension
+map; `layouts/shared/interaction-geometry.ts` owns the shared clock and selection geometry helpers.
+
+`interactions/dom.ts` owns browser transport and host coordination. Its public host and surface contracts live in
+`interactions/dom.types.ts`. Cross-feature editing and layout tests live in `tests/integration/`; reusable setup
+and the third-party operation fixture live in `tests/support/`.
 
 Internal modules import declarations directly from their owners. There are no internal index barrels or central
 type re-export module. `export/index.ts` explicitly selects the existing public names, keeping internal helpers

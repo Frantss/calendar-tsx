@@ -34,6 +34,8 @@ export type {
 } from '#calendar/calendar.types';
 export type {
   Calendar_Api_FeatureMap,
+  Calendar_Options_FeatureMap,
+  Calendar_ViewSettings_FeatureMap,
   Calendar_BarSegment_FeatureMap,
   Calendar_DayGridDay_FeatureMap,
   Calendar_EventInput_FeatureMap,
@@ -51,6 +53,7 @@ export type {
   Calendar_ConfiguredFeatures,
   Calendar_Feature,
   Calendar_FeatureContext,
+  Calendar_FeatureExtensions,
   Calendar_FeatureOverride,
   Calendar_Features,
   Calendar_FeatureStage,
@@ -76,6 +79,7 @@ export type {
   Calendar_ResourceGrouping,
   Calendar_TimeViewSettings,
   Calendar_ValidateFeatures,
+  Calendar_ValidateDependencies,
   Calendar_ValidateOverrides,
   Calendar_View,
   Calendar_ViewFeatureSettings,
@@ -141,34 +145,93 @@ export { recurrenceFeature } from '#features/recurrence/recurrence-feature';
 export { createRecurringEvent } from '#features/recurrence/recurrence-events';
 export { calendarFeatures } from '#features/calendar-features';
 
-export type * from '#calendar-interaction.types';
-export type * from '#calendar-layout-interaction.types';
 export type {
-  Calendar_DateTarget,
+  Calendar_OperationMap,
+  Calendar_OperationKind,
+  Calendar_InteractionIntent,
+  Calendar_OperationTarget,
+  Calendar_InteractionProposal,
+  Calendar_InteractionEvaluation,
+  Calendar_InteractionStart,
+  Calendar_InteractionSession,
+  Calendar_InteractionSnapshot,
+  Calendar_InteractionState,
+  Calendar_InteractionOwnership,
+  Calendar_InteractionInput,
+  Calendar_OperationCommands,
+  Calendar_OperationSpec,
+  Calendar_Operation,
+  Calendar_InteractionContribution,
+  Calendar_InteractionControls,
+} from '#features/interaction/interaction.types';
+export type { Calendar_TimeGridPoint } from '#layouts/time-grid/time-grid.types';
+export type { Calendar_TimelinePoint } from '#layouts/timeline/timeline.types';
+export type { Calendar_DayGridPoint } from '#layouts/day-grid/day-grid.types';
+export type {
+  Calendar_DatePreview,
+  Calendar_LayoutInteractionMap,
+  Calendar_LayoutInteractionKind,
+  Calendar_LayoutPoint,
+  Calendar_LayoutUnavailable,
+  Calendar_LayoutLocation,
+  Calendar_LayoutProjection,
+  Calendar_LayoutInteractionContext,
+  Calendar_ActiveLayout,
+  Calendar_LayoutCapabilities,
+} from '#layouts/interaction.types';
+export type { Calendar_DateTarget, Calendar_DateProposal } from '#features/interaction/date-target.types';
+export type {
   Calendar_Selection,
   Calendar_SelectIntent,
-  Calendar_MoveIntent,
-  Calendar_ResizeIntent,
   Calendar_SelectProposal,
-  Calendar_MoveProposal,
-  Calendar_ResizeProposal,
-  Calendar_DateProposal,
   Calendar_SelectionApi,
-  Calendar_MoveApi,
-  Calendar_ResizeApi,
-} from '#calendar-editing';
-export { interactionFeature, createInteractionOperation } from '#calendar-interactions';
-export { dateSelectionFeature, eventMoveFeature, eventResizeFeature, constraintsFeature } from '#calendar-editing';
-
-export { pointerFeature, touchFeature, autoScrollFeature } from '#calendar-input';
-export type * from '#calendar-input';
-export { externalDropFeature, crossCalendarFeature } from '#calendar-transfers';
-export type * from '#calendar-transfers';
+} from '#features/date-selection/date-selection.types';
 export type {
-  Calendar_MovementSettings,
-  Calendar_ResizeSettings,
-  Calendar_ConstraintSettings,
-} from '#calendar-policies';
+  Calendar_MoveIntent,
+  Calendar_MoveProposal,
+  Calendar_MoveApi,
+} from '#features/event-move/event-move.types';
+export type {
+  Calendar_ResizeIntent,
+  Calendar_ResizeProposal,
+  Calendar_ResizeApi,
+} from '#features/event-resize/event-resize.types';
+export { interactionFeature } from '#features/interaction/interaction-feature';
+export { createInteractionOperation } from '#features/interaction/interaction-runtime';
+export { dateSelectionFeature } from '#features/date-selection/date-selection-feature';
+export { eventMoveFeature } from '#features/event-move/event-move-feature';
+export { eventResizeFeature } from '#features/event-resize/event-resize-feature';
+export { constraintsFeature } from '#features/constraints/constraints-feature';
+
+export { pointerFeature } from '#features/pointer/pointer-feature';
+export { touchFeature } from '#features/touch/touch-feature';
+export { autoScrollFeature } from '#features/auto-scroll/auto-scroll-feature';
+export type {
+  Calendar_PointerSettings,
+  Calendar_InputSettings,
+  Calendar_PointerApi,
+} from '#features/pointer/pointer.types';
+export type { Calendar_TouchSettings } from '#features/touch/touch.types';
+export type { Calendar_AutoScrollSettings } from '#features/auto-scroll/auto-scroll.types';
+export { externalDropFeature } from '#features/external-drop/external-drop-feature';
+export { crossCalendarFeature } from '#features/cross-calendar/cross-calendar-feature';
+export type {
+  Calendar_CreateIntent,
+  Calendar_CreateProposal,
+  Calendar_ExternalDropSettings,
+  Calendar_ExternalDropApi,
+} from '#features/external-drop/external-drop.types';
+export type {
+  Calendar_TransferProposal,
+  Calendar_TransferSource,
+  Calendar_TransferIntent,
+  Calendar_CrossCalendarSettings,
+  Calendar_TransferApi,
+  Calendar_CrossCalendarApi,
+} from '#features/cross-calendar/cross-calendar.types';
+export type { Calendar_MovementSettings } from '#features/event-move/event-move.types';
+export type { Calendar_ResizeSettings } from '#features/event-resize/event-resize.types';
+export type { Calendar_ConstraintSettings } from '#features/constraints/constraints.types';
 
 export {
   createCalendarInteractionHost,
@@ -177,7 +240,7 @@ export {
   timeGridSurface,
   timelineSurface,
   dayGridSurface,
-} from '#calendar-dom';
+} from '#interactions/dom';
 export type {
   Calendar_DomCalendar,
   Calendar_DomHost,
@@ -186,4 +249,4 @@ export type {
   Calendar_DomSurface,
   Calendar_DomSource,
   Calendar_DomOperation,
-} from '#calendar-dom';
+} from '#interactions/dom.types';

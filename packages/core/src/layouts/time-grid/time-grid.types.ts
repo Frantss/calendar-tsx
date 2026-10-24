@@ -1,3 +1,5 @@
+import type { Calendar_DatePreview } from '#layouts/interaction.types';
+import type { DatePoint } from '#layouts/interaction.types';
 import type {
   Calendar_DurationSettings,
   Calendar_TimeViewSettings,
@@ -18,6 +20,7 @@ import type {
   Calendar_TimeGridColumn_FeatureMap,
 } from '#features/feature-maps.types';
 import type { Temporal } from 'temporal-polyfill';
+import type { Calendar_DateTarget } from '#features/interaction/date-target.types';
 
 /** How overlapping timed events share a column (D38). */
 export type Calendar_TimeGridOverlap = 'side-by-side' | 'cascade';
@@ -97,3 +100,11 @@ export type Calendar_TimeGridLayout<TData, TResourceData, TFeatures = {}> = {
   };
   minColumnWidth?: string;
 };
+export type Calendar_TimeGridPoint = DatePoint & {
+  kind: 'timeGrid';
+  surface: { kind: 'column'; key: string } | { kind: 'allDay' };
+};
+
+export interface TimeGrid_LayoutInteractionMap {
+  timeGrid: { point: Calendar_TimeGridPoint; target: Calendar_DateTarget; geometry: readonly Calendar_DatePreview[] };
+}

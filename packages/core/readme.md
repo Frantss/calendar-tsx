@@ -269,7 +269,7 @@ touch. Render them with `TimeGridViewBackground` and `DayGridViewDayBackground`.
 
 ## Interaction operations
 
-Selection, movement and resizing are independent programmatic features (D56):
+Selection, movement and resizing are independent programmatic features (D58):
 
 ```ts
 import {
@@ -343,7 +343,7 @@ cleanup runs in reverse order on the last release and supports remount.
 
 ## Layout interaction capabilities
 
-Day-grid, time-grid and timeline layouts provide optional `locate` and `project` methods (D57). `interactionFeature` dispatches
+Day-grid, time-grid and timeline layouts provide optional `locate` and `project` methods (D59). `interactionFeature` dispatches
 through the active resolved layout, including replacements and third-party layouts:
 
 ```ts

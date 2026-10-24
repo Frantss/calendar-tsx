@@ -1655,7 +1655,7 @@ The React/Solid interaction tests consume production location and preview result
 
 **Serves:** D2, D29, D40, D58–D59; completion of the interaction foundation proposal.
 
-**Decision:** keep browser implementation in `calendar-dom.ts`, exported through the single `@calendar-tsx/core` entry (D55). `pointerFeature`, `touchFeature` and
+**Decision:** keep browser implementation in `interactions/dom.ts`, exported through the single `@calendar-tsx/core` entry (D55). `pointerFeature`, `touchFeature` and
 `autoScrollFeature` contribute settings through the existing feature lifecycle. A mounted DOM host measures
 registered surfaces, resolves semantic targets through the active layout, and drives the shared operation runtime.
 Registration alone installs no listeners. React and Solid share this host through `useCalendarInteractions` refs;

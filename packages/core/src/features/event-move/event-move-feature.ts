@@ -1,0 +1,62 @@
+import { calendarMovement_place } from '#features/event-move/movement';
+import type { Calendar_ConfiguredFeature } from '#features/feature.types';
+import { createInteractionOperation } from '#features/interaction/interaction-runtime';
+import type { Calendar_InteractionEvaluation } from '#features/interaction/interaction.types';
+import type { Calendar_DateTarget } from '#features/interaction/date-target.types';
+import type { Calendar_MoveProposal } from '#features/event-move/event-move.types';
+import { isDateTarget, calendarDateTarget_equal } from '#features/interaction/date-target';
+
+const moveOperation = createInteractionOperation({
+  enabled: input => (input.views[input.view].movement?.enabled ?? input.movement?.enabled) !== false,
+  source: (intent, input) => input.events.find(event => event.id === intent.eventId),
+  acceptsTarget: isDateTarget,
+  sameTarget: calendarDateTarget_equal,
+  kind: 'move',
+  create(intent, target, input): Calendar_InteractionEvaluation<Calendar_MoveProposal> {
+    if (intent.kind !== 'move') return { status: 'unavailable', reason: 'wrong-operation' };
+    const before = input.events.find(event => event.id === intent.eventId);
+    if (!before) return { status: 'rejected', reason: 'source-removed' };
+    if (before['~source']) return { status: 'unavailable', reason: 'source-unsupported' };
+    const after = calendarMovement_place(
+      before,
+      target,
+      { ...input.movement, ...input.views[input.view].movement },
+      intent.sourceResourceId,
+    );
+    return typeof after === 'string'
+      ? { status: 'unavailable', reason: after }
+      : { status: 'valid', proposal: { kind: 'move', before, after } };
+  },
+  api: commands => ({
+    move: {
+      begin: (eventId: string, sourceResourceId?: string) =>
+        commands.begin({ kind: 'move', eventId, sourceResourceId }),
+      evaluate: (eventId: string, target: Calendar_DateTarget, sourceResourceId?: string) =>
+        commands.evaluate({ kind: 'move', eventId, sourceResourceId }, target),
+    },
+  }),
+  emit: (proposal, context) => context.options.onEventMove?.(proposal),
+});
+
+export const eventMoveFeature = (
+  config: import('#features/event-move/event-move.types').Calendar_MovementSettings = {},
+) =>
+  ({
+    '~id': 'eventMoveFeature',
+    '~config': config,
+    requires: ['interactionFeature'],
+    interaction: {
+      settings: 'movement',
+      deps: input => [
+        input.movement?.enabled,
+        input.movement?.allowConversion,
+        input.movement?.conversionDuration,
+        input.movement?.defaultTimedMinutes,
+        input.movement?.resourceMode,
+        input.movement?.allowResourceChange,
+        input.movement?.canMove,
+        ...Object.values(input.views[input.view].movement ?? {}),
+      ],
+      operation: moveOperation,
+    },
+  }) as const satisfies Calendar_ConfiguredFeature;
