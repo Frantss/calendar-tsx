@@ -94,6 +94,15 @@ it('exposes a labelled region with grid geometry', async () => {
   expect(ui.region.element().style.getPropertyValue('--cal-all-day-rows')).toBe('0');
 });
 
+it('exposes the minimum column width on the grid root', () => {
+  const { ui } = setup({
+    view: 'week',
+    views: { week: timeGridView({ days: 7, minColumnWidth: '480px' }) },
+  });
+
+  expect(ui.region.element().style.getPropertyValue('--cal-min-column-width')).toBe('480px');
+});
+
 it('positions timed events and flags overlaps', async () => {
   const { ui } = setup({
     events: [

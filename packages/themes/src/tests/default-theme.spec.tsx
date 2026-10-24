@@ -131,6 +131,31 @@ const Month = () => {
 
 const event = (title: string) => themesSetup_part('time-grid-event').find(element => element.textContent === title);
 
+it('honors minimum column widths and keeps scrolling time-grid sections aligned', async () => {
+  await themesSetup_render(<TimeGrid />, {
+    view: 'week',
+    views: { week: timeGridView({ days: 7, minColumnWidth: '480px' }) },
+    events: [themesSetup_allDay('Conference', { start: '2026-03-11', end: '2026-03-13' })],
+  });
+  const root = themesSetup_part('time-grid-root')[0];
+  const columns = themesSetup_part('time-grid-column').map(themesSetup_rect);
+  const headers = themesSetup_part('time-grid-column-header').map(themesSetup_rect);
+  const bar = themesSetup_rect(themesSetup_part('time-grid-all-day-event')[0]);
+
+  expect(columns).toHaveLength(7);
+  expect(headers).toHaveLength(7);
+  for (const [index, column] of columns.entries()) {
+    expect(column.width).toBeGreaterThanOrEqual(480);
+    expect(headers[index].left).toBeCloseTo(column.left, 0);
+    expect(headers[index].width).toBeCloseTo(column.width, 0);
+  }
+  expect(bar.left).toBeCloseTo(columns[3].left + 2, 0);
+  expect(bar.right).toBeCloseTo(columns[5].right - 2, 0);
+  expect(root.scrollWidth).toBeGreaterThan(root.clientWidth);
+  root.scrollLeft = 100;
+  expect(root.scrollLeft).toBe(100);
+});
+
 it('places a timed event at its fraction of the day', async () => {
   await themesSetup_render(<TimeGrid />, { events: [themesSetup_timed('Yoga', { date: '2026-03-11', start: '09:00', end: '10:00' })] });
   const column = themesSetup_rect(themesSetup_part('time-grid-column')[0]);

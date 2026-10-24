@@ -43,6 +43,7 @@ export const TimeGridView = forwardRef<HTMLDivElement, TimeGridViewProps<unknown
             slots: model.slots.length,
             'slot-units': model.slotUnits,
             'all-day-rows': model.allDay?.rows,
+            'min-column-width': model.minColumnWidth,
           }),
           ...part('time-grid-root'),
         },
@@ -179,7 +180,6 @@ export const TimeGridViewBody = forwardRef<HTMLDivElement, TimeGridViewProps<unk
           style: vars({
             slots: model.slots.length,
             'slot-units': model.slotUnits,
-            'min-column-width': model.minColumnWidth,
           }),
           ...part('time-grid-body'),
         },

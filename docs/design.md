@@ -1172,7 +1172,7 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - `timeGridView({ days: 1, groupBy: 'resource' })` yields one column per resource, in input order. _(C7, D4, app R1.4)_
 - `groupOrder: 'resource-first'` orders columns resource → dates; `'date-first'` orders dates → resources. _(D19)_
 - `timeGridView({ allDay: false })` yields no all-day row in the model. _(C1, app R1.4)_
-- `minColumnWidth` is emitted as `--cal-min-column-width` on `TimeGridView_Body`. _(C11, D9)_
+- `minColumnWidth` is emitted as `--cal-min-column-width` on the `TimeGridView` root, where the shared column tracks are defined. _(C11, D9)_
 
 ### Events, time zones and order
 
@@ -1583,7 +1583,7 @@ export const TimeGridView_AllDayEvent = ({
   ...props
 }: { segment: Calendar_MonthSegment<unknown> } & PartProps<'button'>) => {};
 export const TimeGridView_Body = (props: PartProps<'div'>) => {
-  // --cal-slots, --cal-min-column-width
+  // --cal-slots
 };
 export const TimeGridView_Axis = (props: PartProps<'div'>) => {};
 export const TimeGridView_AxisLabel = ({

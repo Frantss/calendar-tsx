@@ -44,6 +44,7 @@ export const TimeGridView = <TData, TResourceData>(props: TimeGridViewProps<TDat
             slots: local.model.slots.length,
             'slot-units': local.model.slotUnits,
             'all-day-rows': local.model.allDay?.rows,
+            'min-column-width': local.model.minColumnWidth,
           }),
           ...part('time-grid-root'),
         }),
@@ -181,7 +182,6 @@ export const TimeGridViewBody = <TData, TResourceData>(props: TimeGridViewProps<
           style: vars({
             slots: local.model.slots.length,
             'slot-units': local.model.slotUnits,
-            'min-column-width': local.model.minColumnWidth,
           }),
           ...part('time-grid-body'),
         }),
