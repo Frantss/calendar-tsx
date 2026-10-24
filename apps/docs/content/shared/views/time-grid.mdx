@@ -1,7 +1,7 @@
 <section id='setup'>
 
-Days as columns on a time axis, with timed events placed by time and overlapping events side by side. All-day events
-sit in a row above.
+Days as columns on a time axis, with timed events placed by time and overlapping events side by side or cascaded.
+All-day events sit in a row above.
 
 <CalendarPreview view='week' />
 
@@ -14,16 +14,38 @@ timeGridView({ days: 1 }); // a day
 
 ## Settings
 
-| Setting          | Type                               | Default            | Description                                                          |
-| ---------------- | ---------------------------------- | ------------------ | -------------------------------------------------------------------- |
-| `days`           | `number`                           | required           | Days shown. `7` starts on `firstDayOfWeek`; others start on `date`.  |
-| `allDay`         | `boolean`                          | `true`             | `false` drops the all-day row from the layout.                       |
-| `slotMinutes`    | `number`                           | `30`               | Length of each time slot; should divide a day evenly.                |
-| `minColumnWidth` | `string`                           | none               | Passed through for horizontal scrolling, for example `'8rem'`.       |
-| `groupBy`        | `'resource'`                       | none               | One column per resource and day. See [resource view](resource-view). |
-| `groupOrder`     | `'resource-first' \| 'date-first'` | `'resource-first'` | Column order when grouped.                                           |
+| Setting             | Type                               | Default            | Description                                                          |
+| ------------------- | ---------------------------------- | ------------------ | -------------------------------------------------------------------- |
+| `days`              | `number`                           | required           | Days shown. `7` starts on `firstDayOfWeek`; others start on `date`.  |
+| `allDay`            | `boolean`                          | `true`             | `false` drops the all-day row from the layout.                       |
+| `slotMinutes`       | `number`                           | `30`               | Length of each time slot; should divide a day evenly.                |
+| `minColumnWidth`    | `string`                           | none               | Passed through for horizontal scrolling, for example `'8rem'`.       |
+| `groupBy`           | `'resource'`                       | none               | One column per resource and day. See [resource view](resource-view). |
+| `groupOrder`        | `'resource-first' \| 'date-first'` | `'resource-first'` | Column order when grouped.                                           |
+| `overlap`           | `'side-by-side' \| 'cascade'`      | `'side-by-side'`   | How overlapping events share a column. See [overlap](#overlap).      |
+| `minEventMinutes`   | `number`                           | `15`               | Shorter events are laid out this long. `0` turns it off.             |
+| `shortEventMinutes` | `number`                           | `30`               | Events laid out shorter than this are flagged `isShort`.             |
 
 `next()` and `prev()` move by `days` days.
+
+## Overlap
+
+Overlapping events take lanes: each takes the lowest lane free at its start. An event then widens to the right until
+the next lane holding an event it overlaps, or to the column's edge.
+
+- `'side-by-side'` keeps every event beside the others.
+- `'cascade'` doubles each event's width, up to the column's edge, so a later lane covers at most half of it. Later
+  lanes paint on top.
+
+## Brief events
+
+A 5-minute event at its true length is a few pixels tall. So the core lays out any event shorter than `minEventMinutes`
+as that long, and gives it its own lane if it would now cover the next event. The event itself keeps its real `end`,
+so label it from `segment.event`.
+
+An event laid out shorter than `shortEventMinutes` is flagged `isShort`, emitted as `data-short`. The default theme puts
+a short event's content on one line. Both settings are minutes, not pixels: with the default `3rem` slots, 15 minutes is
+24px. Lower them if you make the slots taller.
 
 </section>
 
@@ -37,7 +59,7 @@ timeGridView({ days: 1 }); // a day
 
 - `slots` holds one `{ key, time }` per `slotMinutes` across the day, for axis labels.
 - `columns` holds one column per day.
-- `allDay` holds bar `segments` and `rows` for all-day events, with columns indexed like `columns`. It is absent when the
+- `allDay` holds bar `segments`, `backgroundEvents` and `rows` for all-day events, with columns indexed like `columns`. It is absent when the
   view sets `allDay: false`.
 
 Positions inside a column are **fractions of that day**, 0 at midnight and 1 at the next midnight, in real time: a
@@ -48,18 +70,23 @@ daylight-saving day is 23 or 25 hours long.
 | `date`                                     | The day.                                                          |
 | `isToday`                                  | The day is today in `timeZone`.                                   |
 | `segments`                                 | Timed events in this column.                                      |
+| `lanes`                                    | The most lanes any overlap cluster in the column uses.            |
+| `backgroundEvents`                         | See [background events](../features/background-events).           |
 | `now`                                      | Fraction of the day for the current time, only on today's column. |
 | `resource`, `isUnavailable`, `unavailable` | See [resource view](resource-view).                               |
 
-| Timed segment field                 | Description                                          |
-| ----------------------------------- | ---------------------------------------------------- |
-| `event`                             | The event, in the calendar's time zone.              |
-| `start`, `span`                     | Fractions of the day.                                |
-| `lane`, `lanes`                     | Its lane, and the lane count of its overlap cluster. |
-| `continuesBefore`, `continuesAfter` | The event is clipped at midnight.                    |
+| Timed segment field                 | Description                                                      |
+| ----------------------------------- | ---------------------------------------------------------------- |
+| `event`                             | The event, in the calendar's time zone.                          |
+| `start`, `span`                     | Fractions of the day.                                            |
+| `lane`, `lanes`                     | Its lane, and the lane count of its overlap cluster.             |
+| `inlineStart`, `inlineSize`         | Fractions of the column's width, after widening and any cascade. |
+| `isShort`                           | Laid out shorter than `shortEventMinutes`.                       |
+| `continuesBefore`, `continuesAfter` | The event is clipped at midnight.                                |
 
 Events that overlap, directly or through others, form a cluster. Each takes the lowest free lane, and every event in
-the cluster shares the cluster's lane count. Events that only touch do not overlap.
+the cluster shares the cluster's lane count. Events that only touch do not overlap. Place events with `inlineStart` and
+`inlineSize`; `lane` and `lanes` remain for CSS written against them.
 
 </section>
 
@@ -67,20 +94,23 @@ the cluster shares the cluster's lane count. Events that only touch do not overl
 
 <section id='parts-table'>
 
-| Part                        | Model prop       | Element  | Notes                                                         |
-| --------------------------- | ---------------- | -------- | ------------------------------------------------------------- |
-| `TimeGridView`              | `model`          | `div`    | `role='region'`, labelled "Time grid". Scrolls.               |
-| `TimeGridViewHeader`        | none             | `div`    | Sticky column headers.                                        |
-| `TimeGridViewColumnHeader`  | `column`         | `div`    | `data-today`, `data-unavailable`, `data-resource-id`.         |
-| `TimeGridViewColumnTrigger` | `column`, `view` | `button` | Navigates to `view` on the column's date.                     |
-| `TimeGridViewAllDay`        | none             | `div`    | Render it only when `allDay` is set.                          |
-| `TimeGridViewAllDayEvent`   | `segment`        | `button` | A bar segment.                                                |
-| `TimeGridViewBody`          | `model`          | `div`    | Holds the axis and the columns.                               |
-| `TimeGridViewAxis`          | none             | `div`    | Optional.                                                     |
-| `TimeGridViewAxisLabel`     | `slot`           | `div`    | `slot` is the time slot, not the HTML attribute.              |
-| `TimeGridViewColumn`        | `column`         | `div`    | `data-today`, `data-unavailable`.                             |
-| `TimeGridViewEvent`         | `segment`        | `button` | Placed by time and lane; `data-overlap` when it shares lanes. |
-| `TimeGridViewNowIndicator`  | `column`         | `div`    | `aria-hidden`. Renders only in today's column.                |
+| Part                                | Model prop       | Element  | Notes                                                                                      |
+| ----------------------------------- | ---------------- | -------- | ------------------------------------------------------------------------------------------ |
+| `TimeGridView`                      | `model`          | `div`    | `role='region'`, labelled "Time grid". Scrolls.                                            |
+| `TimeGridViewHeader`                | none             | `div`    | Sticky column headers.                                                                     |
+| `TimeGridViewColumnHeader`          | `column`         | `div`    | `data-today`, `data-unavailable`, `data-resource-id`.                                      |
+| `TimeGridViewColumnTrigger`         | `column`, `view` | `button` | Navigates to `view` on the column's date.                                                  |
+| `TimeGridViewAllDay`                | none             | `div`    | Render it only when `allDay` is set.                                                       |
+| `TimeGridViewAllDayEvent`           | `segment`        | `button` | A bar segment.                                                                             |
+| `TimeGridViewAllDayBackgroundEvent` | `segment`        | `div`    | `aria-hidden`. Render it before the bars.                                                  |
+| `TimeGridViewBody`                  | `model`          | `div`    | Holds the axis and the columns.                                                            |
+| `TimeGridViewAxis`                  | none             | `div`    | Optional.                                                                                  |
+| `TimeGridViewAxisLabel`             | `slot`           | `div`    | `slot` is the time slot, not the HTML attribute.                                           |
+| `TimeGridViewColumn`                | `column`         | `div`    | `data-today`, `data-unavailable`.                                                          |
+| `TimeGridViewBackgroundEvent`       | `segment`        | `div`    | `aria-hidden`. Render it before the events.                                                |
+| `TimeGridViewBackground`            | `background`     | `div`    | `aria-hidden`. A [background layer](../features/background-layers)'s shading.              |
+| `TimeGridViewEvent`                 | `segment`        | `button` | Placed by time and lane; `data-overlap` when it shares lanes, `data-short` when `isShort`. |
+| `TimeGridViewNowIndicator`          | `column`         | `div`    | `aria-hidden`. Renders only in today's column.                                             |
 
 Give the root a height, such as `max-block-size: 40rem`, to scroll inside the page instead of showing all 24 hours.
 

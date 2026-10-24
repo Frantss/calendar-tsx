@@ -4,20 +4,28 @@ An event is timed or all-day, as its `kind` says. Both carry a unique `id` and a
 
 <include lang='ts'>../../../examples/core/setup.ts#events</include>
 
-| Field         | Timed                    | All-day                                              |
-| ------------- | ------------------------ | ---------------------------------------------------- |
-| `id`          | `string`, unique         | `string`, unique                                     |
-| `kind`        | `'timed'`                | `'allDay'`                                           |
-| `start`       | `Temporal.ZonedDateTime` | `Temporal.PlainDate`                                 |
-| `end`         | `Temporal.ZonedDateTime` | `Temporal.PlainDate`, inclusive; defaults to `start` |
-| `resourceIds` | `string[]`, optional     | `string[]`, optional                                 |
-| `data`        | `TData`                  | `TData`                                              |
+| Field         | Timed                              | All-day                                              |
+| ------------- | ---------------------------------- | ---------------------------------------------------- |
+| `id`          | `string`, unique                   | `string`, unique                                     |
+| `kind`        | `'timed'`                          | `'allDay'`                                           |
+| `start`       | `Temporal.ZonedDateTime`           | `Temporal.PlainDate`                                 |
+| `end`         | `Temporal.ZonedDateTime`           | `Temporal.PlainDate`, inclusive; defaults to `start` |
+| `resourceIds` | `string[]`, optional               | `string[]`, optional                                 |
+| `display`     | `'auto' \| 'background'`, optional | `'auto' \| 'background'`, optional                   |
+| `data`        | `TData`                            | `TData`                                              |
 
 - Timed events may be in any zone. The calendar converts them to its `timeZone`, and the model holds the converted
   copies.
 - A timed event ending exactly at midnight ends on the previous day, so 22:00–00:00 stays on one day.
 - Duplicate ids log an error in development. Ids also key the model's segments.
 - Pass a new array to change events; the calendar compares the array by reference.
+- `display: 'background'` shades the event's time instead of laying it out. See
+  [background events](background-events).
+
+`createEvent` returns its argument. Use it to type an event where you write it, with `kind` kept as a literal and the
+payload type inferred from `data`:
+
+<include lang='ts'>../../../examples/core/events.ts#create</include>
 
 ## Hiding events
 

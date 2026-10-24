@@ -6,6 +6,7 @@ import {
   MonthViewHeaderCell,
   MonthViewOverflow,
   MonthViewWeek,
+  MonthViewWeekBackgroundEvent,
   MonthViewWeekEvent,
 } from '@calendar-tsx/solid';
 import { For, Show } from 'solid-js';
@@ -44,6 +45,7 @@ export const Month = (props: { onOverflow: (date: string) => void }) => {
                     </MonthViewDay>
                   )}
                 </For>
+                <For each={week.backgroundEvents}>{segment => <MonthViewWeekBackgroundEvent segment={segment} />}</For>
                 <For each={week.segments}>
                   {segment => <MonthViewWeekEvent segment={segment}>{segment.event.data.title}</MonthViewWeekEvent>}
                 </For>

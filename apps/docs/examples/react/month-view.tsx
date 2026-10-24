@@ -6,6 +6,7 @@ import {
   MonthViewHeaderCell,
   MonthViewOverflow,
   MonthViewWeek,
+  MonthViewWeekBackgroundEvent,
   MonthViewWeekEvent,
   useCalendarSelector,
 } from '@calendar-tsx/react';
@@ -38,6 +39,9 @@ export const Month = ({ onOverflow }: { onOverflow: (date: string) => void }) =>
                 {day.hiddenCount} more
               </MonthViewOverflow>
             </MonthViewDay>
+          ))}
+          {week.backgroundEvents.map(segment => (
+            <MonthViewWeekBackgroundEvent key={segment.key} segment={segment} />
           ))}
           {week.segments.map(segment => (
             <MonthViewWeekEvent key={segment.key} segment={segment}>

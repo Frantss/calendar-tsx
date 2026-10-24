@@ -1,9 +1,11 @@
 import {
   TimeGridView,
   TimeGridViewAllDay,
+  TimeGridViewAllDayBackgroundEvent,
   TimeGridViewAllDayEvent,
   TimeGridViewAxis,
   TimeGridViewAxisLabel,
+  TimeGridViewBackgroundEvent,
   TimeGridViewBody,
   TimeGridViewColumn,
   TimeGridViewColumnHeader,
@@ -38,6 +40,10 @@ export const Week = () => {
           <Show when={grid().allDay}>
             {allDay => (
               <TimeGridViewAllDay>
+                {/* before the bars: grid items paint in DOM order */}
+                <For each={allDay().backgroundEvents}>
+                  {segment => <TimeGridViewAllDayBackgroundEvent segment={segment} />}
+                </For>
                 <For each={allDay().segments}>
                   {segment => (
                     <TimeGridViewAllDayEvent segment={segment}>{segment.event.data.title}</TimeGridViewAllDayEvent>
@@ -59,6 +65,9 @@ export const Week = () => {
             <For each={grid().columns}>
               {column => (
                 <TimeGridViewColumn column={column}>
+                  <For each={column.backgroundEvents}>
+                    {segment => <TimeGridViewBackgroundEvent segment={segment} />}
+                  </For>
                   <For each={column.segments}>
                     {segment => <TimeGridViewEvent segment={segment}>{segment.event.data.title}</TimeGridViewEvent>}
                   </For>

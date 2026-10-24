@@ -1,0 +1,73 @@
+<section id='intro'>
+
+`backgroundFeature` shades time from rules, such as business hours or holidays, in the time-grid and month views that
+list it. Each layer in the `backgrounds` option is one kind of shading: fixed ranges, ranges computed for the visible
+period, or the time they leave uncovered.
+
+<include lang='ts'>../../../examples/core/backgrounds.ts#layers</include>
+
+Register the feature on the views that shade, and pass `backgrounds` to the calendar:
+
+<include lang='ts'>../../../examples/core/backgrounds.ts#views</include>
+
+For dated items from your data, such as one holiday with its own id and payload, use
+[background events](background-events) instead. Both can shade the same view.
+
+</section>
+
+<section id='layers'>
+
+## Layers
+
+| Field         | Type                                       | Description                                                                      |
+| ------------- | ------------------------------------------ | -------------------------------------------------------------------------------- |
+| `id`          | `string`                                   | Unique; emitted as `data-layer`.                                                 |
+| `kind`        | `string`                                   | Emitted as `data-kind`; style by it.                                             |
+| `ranges`      | `Calendar_BackgroundRange[]` or a function | What the layer shades. A function receives the visible range and the `timeZone`. |
+| `inverse`     | `boolean`                                  | Shade what the ranges leave uncovered instead.                                   |
+| `resourceIds` | `string[]`                                 | Shade only these resources' columns. Omitted, it shades every column.            |
+
+A range is timed, `{ start, end }` as `Temporal.ZonedDateTime`s, or all-day, `{ allDay: true, start, end? }` as
+`Temporal.PlainDate`s with an inclusive `end`.
+
+- `createBackgroundLayer` returns its argument. It types the layer where you write it and keeps `kind` a literal.
+- `createWeeklyRanges(rules)` returns a ranges function from weekly opening hours. Each rule takes ISO `daysOfWeek`
+  (`1` Monday to `7` Sunday), a `startTime` and an `endTime`. An `endTime` at or before the `startTime` ends the next
+  day, so `22:00` to `02:00` works.
+- Keep `backgrounds` and every ranges function at module scope or memoized. The calendar compares them by reference
+  and re-derives when they change.
+- An inverse layer with no ranges shades everything, the same rule as a resource with no availability.
+
+</section>
+
+<section id='model'>
+
+## Model
+
+| View      | Field                | Contents                                                      |
+| --------- | -------------------- | ------------------------------------------------------------- |
+| Time grid | `column.backgrounds` | `{ key, layer, kind, start, span }`, as fractions of the day. |
+| Month     | `day.backgrounds`    | `{ key, layer, kind }` for each layer that shades the day.    |
+
+- In the time grid, an all-day range shades the whole column. Overlapping ranges within a layer merge; layers stack in
+  input order.
+- In the month view, a day takes a layer when one of the layer's all-day ranges covers it. Timed ranges don't shade
+  month days, except through inverse layers: an inverse layer marks the days none of its ranges touch, so business
+  hours mark the weekends.
+- The fields exist only in views that list `backgroundFeature`. The time grid's all-day row, the list and the
+  timeline aren't shaded.
+
+</section>
+
+<section id='parts'>
+
+## Parts
+
+| Part                     | Model prop   | Where                                       |
+| ------------------------ | ------------ | ------------------------------------------- |
+| `TimeGridViewBackground` | `background` | In `TimeGridViewColumn`, before the events. |
+| `MonthViewDayBackground` | `background` | In `MonthViewDay`, before its content.      |
+
+Both render an `aria-hidden` `div` with `data-layer` and `data-kind`. A label such as "Closed" is your own text.
+
+</section>

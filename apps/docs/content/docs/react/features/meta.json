@@ -1,3 +1,13 @@
 {
-  "pages": ["navigation", "events", "overflow", "now-and-today", "day-triggers", "accessibility", "server-rendering"]
+  "pages": [
+    "navigation",
+    "events",
+    "background-events",
+    "background-layers",
+    "overflow",
+    "now-and-today",
+    "day-triggers",
+    "accessibility",
+    "server-rendering"
+  ]
 }

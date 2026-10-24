@@ -1,0 +1,91 @@
+<section id='setup'>
+
+Resources as rows on a horizontal time axis. Overlapping events in a row stack, and the row grows to fit them. An event
+that crosses midnight is one bar.
+
+```ts
+import { timelineView } from '@calendar-tsx/core';
+
+timelineView({ days: 7, groupBy: 'resource' }); // a week, one row per resource
+timelineView({ days: 1, groupBy: 'resource', slotMinutes: 30 }); // a day
+```
+
+## Settings
+
+| Setting        | Type         | Default  | Description                                                          |
+| -------------- | ------------ | -------- | -------------------------------------------------------------------- |
+| `days`         | `number`     | required | Days shown. `7` starts on `firstDayOfWeek`; others start on `date`.  |
+| `groupBy`      | `'resource'` | none     | One row per resource. Without it, the layout has one row.            |
+| `slotMinutes`  | `number`     | `60`     | Length of each slot; should divide a day evenly.                     |
+| `minSlotWidth` | `string`     | none     | Passed through as the slot columns' minimum width, such as `'3rem'`. |
+
+`next()` and `prev()` move by `days` days.
+
+- An event appears in every row whose resource it names.
+- All-day events have no separate row. They stack with the timed events, from the start of their first day to the
+  start of the day after their last.
+- A resource's [availability](resource-view) is shaded as in the resource view.
+- [Background events](../features/background-events) and [background layers](../features/background-layers) don't
+  shade the timeline yet.
+
+</section>
+
+<section id='reference'>
+
+<section id='model'>
+
+## Model
+
+`layout` is `{ kind: 'timeline', days, slots, rows, now, minSlotWidth }`. Every `start` and `span` is a **fraction of the
+whole range**, 0 at its first midnight and 1 at its last, in real time.
+
+- `days` holds one `{ key, date, isToday, colStart, colSpan }` per day, for the header. `colStart` and `colSpan` count
+  slot columns.
+- `slots` holds one `{ key, date, time, col }` per slot across the range.
+- `rows` holds one row per resource, or a single row without `groupBy`.
+- `now` is the current time's fraction of the range, only while the clock is inside it.
+
+| Row field       | Description                                                 |
+| --------------- | ----------------------------------------------------------- |
+| `resource`      | The resource; absent without `groupBy`.                     |
+| `segments`      | The row's events.                                           |
+| `rows`          | Stack depth: how many events stack at the busiest point.    |
+| `unavailable`   | Fractions of the range outside the resource's availability. |
+| `isUnavailable` | The resource has no availability in the range.              |
+
+| Segment field                       | Description                                                        |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| `event`                             | The event, in the calendar's time zone.                            |
+| `start`, `span`                     | Fractions of the range.                                            |
+| `row`                               | Zero-based stack row; each event takes the lowest row free for it. |
+| `isAllDay`                          | The event is all-day.                                              |
+| `continuesBefore`, `continuesAfter` | The event extends past the range.                                  |
+
+Stacking follows [event order](../features/events#order). Events that only touch don't overlap.
+
+</section>
+
+## Parts
+
+<section id='parts-table'>
+
+| Part                       | Model prop    | Element  | Notes                                                                         |
+| -------------------------- | ------------- | -------- | ----------------------------------------------------------------------------- |
+| `TimelineView`             | `model`       | `div`    | `role='region'`, labelled "Timeline". Scrolls both ways.                      |
+| `TimelineViewHeader`       | none          | `div`    | Sticky; holds the day headers and the slot labels.                            |
+| `TimelineViewDayHeader`    | `day`         | `div`    | `data-today`, `data-date`.                                                    |
+| `TimelineViewDayTrigger`   | `day`, `view` | `button` | Navigates to `view` on the day. See [day triggers](../features/day-triggers). |
+| `TimelineViewSlotLabel`    | `slot`        | `div`    | `slot` is the time slot, not the HTML attribute.                              |
+| `TimelineViewBody`         | none          | `div`    | Holds the rows and the now indicator.                                         |
+| `TimelineViewRow`          | `row`         | `div`    | `data-unavailable`, `data-resource-id`.                                       |
+| `TimelineViewResource`     | `row`         | `div`    | The resource cell; sticks to the start edge.                                  |
+| `TimelineViewLane`         | `row`         | `div`    | Holds the row's unavailable time and events.                                  |
+| `TimelineViewUnavailable`  | `segment`     | `div`    | `aria-hidden`.                                                                |
+| `TimelineViewEvent`        | `segment`     | `button` | `data-all-day`, `data-continues-before`, `data-continues-after`.              |
+| `TimelineViewNowIndicator` | `model`       | `div`    | `aria-hidden`. Renders only while now is inside the range.                    |
+
+The parts render no slot cells; themes draw the slot lines as a background of each lane.
+
+</section>
+
+</section>

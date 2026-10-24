@@ -1,0 +1,27 @@
+<section id='setup'>
+
+A grid of whole weeks that doesn't follow the month: one week, two weeks, or any number of them.
+
+```ts
+import { dayGridView } from '@calendar-tsx/core';
+
+dayGridView({ weeks: 1, maxEventsPerDay: Infinity }); // one tall week
+dayGridView({ weeks: 2, maxEventsPerDay: 3 });
+```
+
+## Settings
+
+| Setting           | Type                                    | Description                                                            |
+| ----------------- | --------------------------------------- | ---------------------------------------------------------------------- |
+| `weeks`           | `number`                                | Weeks shown, from the week containing `date`.                          |
+| `maxEventsPerDay` | `number`                                | Bar rows shown per week. `Infinity` removes the cap.                   |
+| `dayOverflow`     | `(date: Temporal.PlainDate) => boolean` | Marks a day as having more events, as in the [month view](month-view). |
+
+The grid starts on `firstDayOfWeek`. `next()` and `prev()` move by `weeks` weeks. No day is outside the period, so no
+day has `isOutside`.
+
+A day grid builds the month model, `{ kind: 'month', weekdays, weeks }`, so render it with the
+[month view](month-view)'s parts and styles. The view's own kind is `'dayGrid'`: check `context.kind` in
+[`eventOrder`](../features/events#order) to order it apart from the month.
+
+</section>

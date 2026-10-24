@@ -8,11 +8,15 @@ An agenda: the days that have events, each with its events in order.
 import { listView } from '@calendar-tsx/core';
 
 listView({ days: 7 });
+listView({ period: 'month' });
 ```
 
-| Setting | Type     | Description                                                           |
-| ------- | -------- | --------------------------------------------------------------------- |
-| `days`  | `number` | Days covered. `7` starts on `firstDayOfWeek`; others start on `date`. |
+Pass either `days` or `period`, not both.
+
+| Setting  | Type                | Description                                                                                |
+| -------- | ------------------- | ------------------------------------------------------------------------------------------ |
+| `days`   | `number`            | Days covered. `7` starts on `firstDayOfWeek`; others start on `date`.                      |
+| `period` | `'month' \| 'year'` | The calendar month or year containing `date`. `next()` and `prev()` land on its first day. |
 
 Only days with at least one event are listed, so a quiet range has no days; render an empty state for it.
 
