@@ -6,6 +6,8 @@ import type {
   LayoutCoordinates_Plan,
 } from '#layout/layout-coordinates';
 
+import type { Calendar_RecurringEventInput } from '#calendar-recurrence.types';
+
 /** `'background'` shades the range under the other events instead of laying it out as one (D37). */
 export type Calendar_EventDisplay = 'auto' | 'background';
 
@@ -41,8 +43,9 @@ export type Calendar_EventInput<TData> = Calendar_TimedEventInput<TData> | Calen
 export type Calendar_EventSource<TData> = { id: string; data: TData; '~source': string };
 
 /** Feature-owned event definitions, keyed by the feature's export name. */
-// oxlint-disable-next-line no-unused-vars -- merges must repeat the generic
-export interface Calendar_EventInput_FeatureMap<TData> {}
+export interface Calendar_EventInput_FeatureMap<TData> {
+  recurrenceFeature: Calendar_RecurringEventInput<TData>;
+}
 
 /** One-off inputs plus definitions supported by the registered features. */
 export type Calendar_EventDefinition<TData, TFeatures = Calendar_Features> =
@@ -57,8 +60,12 @@ export type Calendar_Event<TData> = Calendar_EventInput<TData> & {
   occurrence?: { seriesId: string; originalStart: Temporal.ZonedDateTime | Temporal.PlainDate };
 };
 
-/** Resolution is calendar-wide and memoized by definitions, visible range and display zone (D50). */
-export type Calendar_EventSourceContext = { range: Calendar_Range; timeZone: string };
+/** Resolution is calendar-wide and memoized by definitions, input range and display zone (D50). */
+export type Calendar_EventSourceContext = {
+  /** Inclusive input coverage, including the following date needed by an overnight view. */
+  range: Calendar_Range;
+  timeZone: string;
+};
 
 export type Calendar_Availability = { start: Temporal.ZonedDateTime; end: Temporal.ZonedDateTime };
 

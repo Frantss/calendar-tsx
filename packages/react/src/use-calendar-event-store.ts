@@ -10,9 +10,9 @@ type EventStore<TEvent extends { id: string }> = Calendar_EventStore<TEvent> & {
 export function useCalendarEventStore<TData>(
   initial?: Calendar_EventInput<TData>[],
 ): EventStore<Calendar_EventInput<TData>>;
-export function useCalendarEventStore<TData>(
-  initial: Calendar_EventDefinition<TData>[],
-): EventStore<Calendar_EventDefinition<TData>>;
+export function useCalendarEventStore<TData, TSource extends string = string>(
+  initial: (Calendar_EventDefinition<TData> & { '~source'?: TSource })[],
+): EventStore<Calendar_EventDefinition<TData, Record<TSource, unknown>>>;
 export function useCalendarEventStore<TData>(
   initial: Calendar_EventDefinition<TData>[] = [],
 ): EventStore<Calendar_EventInput<TData>> | EventStore<Calendar_EventDefinition<TData>> {

@@ -5,7 +5,7 @@ import {
   createEventStore,
   fixedClock,
   listView,
-  monthView,
+  dayGridView,
   timeGridView,
   timelineView,
 } from '@calendar-tsx/core';
@@ -188,10 +188,14 @@ it('rejects conflicting seeds, raw instances, malformed selectors and mismatched
 const views = createCalendarViews({
   list: listView({ days: 3 }),
   grid: timeGridView({ days: 3, allDay: true, groupBy: 'resource' }),
-  month: monthView({ maxEventsPerDay: 4 }),
+  month: dayGridView({ period: 'month', maxEventsPerDay: 4 }),
   timeline: timelineView({ days: 3, groupBy: 'resource' }),
 });
-const calendar = (events: Calendar_EventDefinition<{ title: string }>[], feature: Calendar_Feature = rruleFeature, clock?: Calendar_Clock) =>
+const calendar = (
+  events: Calendar_EventDefinition<{ title: string }, { rruleFeature: typeof rruleFeature }>[],
+  feature: Calendar_Feature = rruleFeature,
+  clock?: Calendar_Clock,
+) =>
   createCalendar({
     timeZone: 'America/New_York',
     views: views.views,
@@ -270,7 +274,9 @@ it('renders foreground and background occurrences through all layouts with resou
   );
   instance['~update']({ ...instance.options, view: 'month' });
   layout = instance.store.state.layout;
-  expect(layout.kind === 'month' && layout.weeks.flatMap(week => week.backgroundEvents).length).toBeGreaterThan(0);
+  expect(layout.kind === 'dayGrid' && layout.sections.flatMap(section => section.rows.flatMap(row => row.backgroundEvents)).length).toBeGreaterThan(
+    0,
+  );
   instance['~update']({ ...instance.options, view: 'timeline' });
   layout = instance.store.state.layout;
   expect(layout.kind === 'timeline' && layout.rows[0]?.segments.length).toBe(3);

@@ -30,9 +30,9 @@ export type Calendar_EventStore<TEvent extends { id: string }> = ReturnType<type
 export function createEventStore<TData>(
   initial?: Calendar_EventInput<TData>[],
 ): Calendar_EventStore<Calendar_EventInput<TData>>;
-export function createEventStore<TData>(
-  initial: Calendar_EventDefinition<TData>[],
-): Calendar_EventStore<Calendar_EventDefinition<TData>>;
+export function createEventStore<TData, TSource extends string = string>(
+  initial: (Calendar_EventDefinition<TData> & { '~source'?: TSource })[],
+): Calendar_EventStore<Calendar_EventDefinition<TData, Record<TSource, unknown>>>;
 export function createEventStore<TData>(
   initial: Calendar_EventDefinition<TData>[] = [],
 ): Calendar_EventStore<Calendar_EventInput<TData>> | Calendar_EventStore<Calendar_EventDefinition<TData>> {

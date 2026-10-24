@@ -12,7 +12,7 @@
 
 A headless calendar library that satisfies `docs/calendar-spec.md` (R1–R11): a framework-agnostic core on TanStack Store, Temporal for all date math, a React adapter with Ark-style composable parts, and no styles.
 
-- **In scope:** views, navigation and visible range, event layout, optional RRule recurrence (D50), background events (D37), resources and availability shading, overflow, now indicator, click/focus targets, geometry exposed as CSS variables and data attributes.
+- **In scope:** views, navigation and visible range, event layout, optional native and RRule recurrence (D50, D52), background events (D37), resources and availability shading, overflow, now indicator, click/focus targets, geometry exposed as CSS variables and data attributes.
 - **Out of scope (consumer's job):** URL sync, header controls and selectors, data fetching, the drawer, drafts as data, colours and copy per event kind.
 - **Not supported:** drag and resize, date selection. Recurrence was here until D50. Timeline views were here until D34.
 
@@ -1270,7 +1270,7 @@ The builder adds `~source: 'rruleFeature'`. Explicit feature types gate definiti
 
 A feature's pure `resolveEvents(source, { range, timeZone })` runs calendar-wide before normalization, range filtering,
 background splitting, ordering and existing feature stages. It receives the inclusive `inputRange`, including month padding and any following date needed by an overnight window.
-Core memoizes the latest resolution by definitions reference, range and display zone. The optional package weakly
+Core memoizes the latest resolution by definitions reference, input range and display zone. The optional package weakly
 caches compiled definitions and at most four range/zone expansions per definition. Clock ticks do not expand again.
 Inputs are immutable. Layouts and adapters receive ordinary concrete events; stores retain definitions.
 
@@ -1305,7 +1305,7 @@ Large or complex queries still do not have a fixed CPU-time guarantee.
 DST, nanoseconds, overlap lookback, stable IDs, store ownership, memoization and all layouts. Adapter tests render
 occurrences and remove a series through each framework's event store.
 
-### D42 — Exclusion rules may own a Temporal seed
+### D51 — Exclusion rules may own a Temporal seed
 
 **Decision:** each options-object `exrule` accepts an optional `start`, a `ZonedDateTime` for timed series or a
 `PlainDate` for all-day series. Omitting it retains the parent seed. String exclusions and inline EXRULE lines
@@ -1325,6 +1325,47 @@ surviving occurrences keep their IDs.
 **Verification:** recurrence tests cover independently bounded all-day and timed windows, omitted seeds, COUNT and
 INTERVAL alignment, multiple exclusion seeds, RDATE precedence, inclusive nanosecond bounds, cross-zone DST,
 overlapping prior starts, empty bounds and date-kind validation.
+
+### D52 — Native daily/weekly recurrence shares the RRule event shape
+
+**Decision:** `@calendar-tsx/core` exports `createRecurringEvent` and `recurrenceFeature`, with no recurrence-engine
+dependency. Native recurrence is opt-in through feature registration and lives in core modules. Definitions use the
+existing source resolver and stores. Core and framework adapters need no new hooks. Store overloads retain inferred
+source keys so importing both implementations does not require registering an unused resolver. Explicit data
+generics may supply a second source-key generic; its default retains the existing broad definition union.
+`Calendar_RecurringEventDefinition<TData>` is structurally compatible with the RRule definition type.
+
+Keep the `rrule` field name for compatibility. Accept plain options objects with DAILY/WEEKLY frequencies, positive
+integer INTERVAL, nonnegative COUNT and inclusive Temporal UNTIL. Weekly rules support non-ordinal `byDay` weekdays
+and `wkst`, defaulting to Monday; omitted weekdays use the seed weekday. Daily rules reject both selectors. Strings,
+monthly/yearly and subdaily frequencies, ordinal weekdays and other selectors require the RRule package. Unsupported
+options throw, including options passed through untyped input.
+
+Weekly interval periods start at WKST, independently of display settings. Dates before the seed do not participate;
+the seed itself must match the rule. COUNT counts nominal matching starts before exclusions and before range
+filtering. Native rules may combine COUNT and UNTIL. Preserve D50's compatible DST, explicit seed offset, nanosecond
+precision, elapsed timed durations, inclusive all-day ends, ISO calendar and seed-year constraints.
+
+Keep `rdate`, `exdate` and independently bounded `exrule` objects/arrays with D51's seed ownership, kind validation
+and instant/date matching. Exclusions use the same native subset, win over all inclusions and do not replenish COUNT.
+Copy resources, background display and data. Generated IDs use the existing RRule scheme so changing implementations
+does not change IDs for matching occurrences. Both features may coexist in one calendar.
+
+The engine seeks directly into the query by daily/weekly period index and calculates prior COUNT arithmetically.
+This avoids replaying old series. Look back for overlapping durations and pad timed candidate dates for compatible
+DST shifts. Each rule query permits at most 10,000 periods after seeking and clipping COUNT/UNTIL; exhaustion throws.
+Weakly cache prepared definitions and at most four range/zone queries, matching the existing immutability contract.
+
+**Alternatives considered:** full native RRULE support would duplicate a parser and complex selector engine already
+available through the optional RRule package. Monthly/yearly selectors were omitted to keep the accepted API small.
+Renaming the `rrule` field would add a conversion when changing implementations. Making native recurrence depend on the optional RRule
+package would couple their dependency graphs. Native recurrence belongs in core; the optional RRule
+package owns its engine integration and the compatibility tests against core. A separate native package was rejected
+in favor of the core exports.
+
+**Verification:** compare shared native rules directly against the installed RRule integration, including complete
+occurrence snapshots and IDs. Cover week starts, partial seed weeks, interval phase, COUNT/UNTIL, exclusions, DST,
+lookback, old-series seeking, explicit unsupported-option errors, feature types and both adapter stores.
 
 ## Test cases
 

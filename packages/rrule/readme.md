@@ -10,6 +10,10 @@ one-off events. React and Solid use their existing hooks and parts.
 pnpm add @calendar-tsx/rrule @calendar-tsx/core temporal-polyfill
 ```
 
+For native daily/weekly schedules with compatible options and no recurrence-engine dependency, use
+[native recurrence in `@calendar-tsx/core`](../core/recurrence.md). Switching factories and registered features preserves
+matching occurrences and their IDs.
+
 ## Timed series
 
 ```ts

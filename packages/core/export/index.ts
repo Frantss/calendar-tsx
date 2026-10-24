@@ -8,3 +8,5 @@ export { getCalendarNavigation } from '#calendar-navigation';
 export { dayGridLayout, listLayout, timeGridLayout, timelineLayout } from '#calendar-layouts';
 export { dayGridView, listView, timeGridView, timelineView, createCalendarViews } from '#calendar-views';
 export { backgroundFeature, createBackgroundLayer, createWeeklyRanges } from '#calendar-backgrounds';
+export type * from '#calendar-recurrence.types';
+export { createRecurringEvent, recurrenceFeature } from '#calendar-recurrence';

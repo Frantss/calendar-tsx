@@ -1,5 +1,51 @@
 <section id='intro'>
 
+Use `recurrenceFeature` from `@calendar-tsx/core` for native daily and weekly schedules. It uses Temporal directly and has no
+recurrence-engine dependency. Use `@calendar-tsx/rrule` for more capable rules.
+
+```bash
+pnpm add @calendar-tsx/core temporal-polyfill
+```
+
+Register `recurrenceFeature` and create definitions with `createRecurringEvent`. Pass them in `events` alongside
+one-off events. `start` owns the seed and zone; `duration` supplies each occurrence's length.
+
+<include lang='ts'>../../../examples/core/native-recurrence.ts#series</include>
+
+</section>
+
+<section id='behavior'>
+
+## Native daily and weekly rules
+
+The native feature accepts plain `rrule` objects with `freq: 'DAILY'` or `'WEEKLY'`, positive integer `interval`,
+nonnegative integer `count`, and an inclusive Temporal `until`. Weekly rules also accept non-ordinal `byDay`
+weekdays (`'MO'` through `'SU'`) and `wkst`, defaulting to Monday. An omitted `byDay` uses the seed weekday.
+Daily rules do not accept `byDay` or `wkst`. Strings and unsupported selectors throw.
+
+Weekly intervals are anchored to `wkst`, independently of the calendar's first weekday. Matching dates are sorted
+and deduplicated; the seed is included only if it matches. COUNT applies to nominal starts before exclusions,
+including starts before the visible range. COUNT and UNTIL may be combined.
+
+`rdate`, `exdate` and independently bounded `exrule` objects or arrays use the same shape as the RRule package.
+Exception rules use the same daily/weekly subset. Exclusions win over all inclusions and do not replenish COUNT.
+
+<include lang='ts'>../../../examples/core/native-recurrence.ts#exceptions</include>
+
+Both implementations share the time-zone, duration, store and occurrence behavior below. Native expansion seeks
+directly into the range without replaying historical starts. Each rule query allows at most 10,000 daily or weekly
+periods after seeking and clipping COUNT/UNTIL; exceeding the limit throws without returning partial results.
+
+## Switching to RRule
+
+Native definitions are structurally compatible with `createRRuleEvent`. Replace the factory and registered feature
+to switch implementations. Matching occurrences keep their starts, ends, metadata and IDs. Both features may
+coexist in one calendar.
+
+<include lang='ts'>../../../examples/core/native-recurrence.ts#upgrade</include>
+
+## RRule strings and options objects
+
 Add the optional `@calendar-tsx/rrule` package to expand repeating definitions in the visible range. It uses `rrule-temporal`
 2.2.8 and keeps the core free of that dependency.
 
@@ -11,12 +57,6 @@ Register `rruleFeature` and create definitions with `createRRuleEvent`. Pass the
 events. `start` owns the recurrence's seed and zone; `duration` supplies each occurrence's length.
 
 <include lang='ts'>../../../examples/core/recurrence.ts#series</include>
-
-</section>
-
-<section id='behavior'>
-
-## Strings and options objects
 
 Use an RRULE string or a plain options object. Both support monthly/yearly rules, ordinal weekdays and BYSETPOS.
 Options use string frequencies and camel-case arrays such as `byDay: ['2FR']` and `bySetPos: [-1]`. Instantiated
@@ -64,11 +104,11 @@ Event stores retain definitions. Update or remove the series by its ID. To repla
 original start and add a one-off event. Replace definitions and arrays when editing; they are compared by reference.
 For an initially empty store that will hold series, type its initial array as `Calendar_EventDefinition<EventData>[]`.
 
-Clock ticks reuse expansion. Each definition caches at most four range/zone queries; the engine's full-result
-cache is disabled. Nominal wall times travel as UTC Temporal values before the calendar applies compatible DST
-resolution in the seed zone.
+Clock ticks reuse expansion. Each definition caches at most four range/zone queries. In the RRule implementation,
+the engine's full-result cache is disabled. Its nominal wall times travel as UTC Temporal values before the calendar
+applies compatible DST resolution in the seed zone. Native expansion resolves nominal dates directly in that zone.
 
-The engine enforces default limits of 10,000 outer iterations and 1,000,000 candidate evaluations. Options objects
+The RRule engine enforces default limits of 10,000 outer iterations and 1,000,000 candidate evaluations. Options objects
 can set `maxIterations` and `maxCandidateEvaluations`. Exhaustion throws instead of returning partial occurrences;
 large or complex queries can still be expensive. The former `rrule` subdaily selector stall no longer applies.
 
