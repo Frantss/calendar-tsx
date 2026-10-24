@@ -1,0 +1,60 @@
+<section id='durations'>
+
+Every view factory takes exactly one of `days`, `weeks`, `months` or `period`. Counts are positive integers.
+
+| Duration    | Range                                                                 | `next()` / `prev()`                   |
+| ----------- | --------------------------------------------------------------------- | ------------------------------------- |
+| `days: N`   | N dates from `date`; `7` keeps week alignment.                        | N days.                               |
+| `weeks: N`  | N whole weeks from `firstDayOfWeek`.                                  | N weeks, keeping the weekday.         |
+| `months: N` | N calendar months from the first of the anchor month.                 | N months, landing on the first day.   |
+| `period`    | `'month'`, `'quarter'` or `'year'`, aligned to its calendar boundary. | One period, landing on its first day. |
+
+</section>
+
+<section id='hidden-days'>
+
+`hiddenDays` omits ISO weekdays. Use the exported `DayOfWeek` constants (`DayOfWeek.Monday` is `1`, `DayOfWeek.Sunday`
+is `7`) or the numbers; the same values work for `firstDayOfWeek` and weekly background `daysOfWeek`.
+
+```ts
+import { DayOfWeek, timeGridView } from '@calendar-tsx/core';
+
+timeGridView({ weeks: 1, hiddenDays: [DayOfWeek.Saturday, DayOfWeek.Sunday] }); // a workweek
+```
+
+Hidden weekdays change neither the nominal `period`, the inclusive fetch range nor the navigation step. Hiding all
+seven weekdays throws. When every date in the range is hidden, such as a one-day view on a hidden Saturday, the range
+shows its dates anyway.
+
+</section>
+
+<section id='time-window'>
+
+`timeWindow` limits the clock hours shown, in integer clock minutes: `0 <= startMinutes < 1440` and
+`startMinutes < endMinutes <= startMinutes + 1440`. The default is `[0, 1440)`.
+
+```ts
+timeGridView({ days: 7, timeWindow: { startMinutes: 480, endMinutes: 1080 } }); // 08:00 to 18:00
+timelineView({ days: 1, timeWindow: { startMinutes: 1320, endMinutes: 1800 } }); // 22:00 to 06:00
+```
+
+An overnight window belongs to its starting date, so hiding Tuesday still shows Monday's Tuesday-morning portion.
+All-day items keep their calendar dates. `slotMinutes` need not divide the window; the final slot keeps its actual
+size, and each slot's `dayOffset` labels after-midnight times. Fetch events for navigation's `inputRange`, which adds
+the following date when an overnight window needs it.
+
+</section>
+
+<section id='clock-axis'>
+
+Time grids and timelines use a fixed clock axis in `timeZone`: 09:00 sits at the 09:00 position on daylight-saving
+days too, and missing hours stay on the axis. The two occurrences of a repeated hour share clock positions;
+overlapping events then take separate lanes or stack rows. A bar that crosses a transition encloses every clock
+position its real interval visits, and `segment.event` keeps the real timestamps and offsets. Each timed segment's
+`fragments` keeps its exact coverage (offsets, occurrences and the reason each fragment stops) apart from that
+enclosing rectangle.
+
+The core builds one coordinate plan (`layout.coordinates`) per stable view definition and reuses it across event,
+resource and clock updates. Navigation, `timeZone`, `firstDayOfWeek`, `hiddenDays` or `timeWindow` changes rebuild it.
+
+</section>

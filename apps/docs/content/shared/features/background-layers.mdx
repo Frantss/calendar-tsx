@@ -1,6 +1,6 @@
 <section id='intro'>
 
-`backgroundFeature(layers)` shades time from rules, such as business hours or holidays, in the time-grid, month and timeline views. Each layer passed to the factory is one kind of shading: fixed ranges, ranges computed for the visible
+`backgroundFeature(layers)` shades time from rules, such as business hours or holidays, in the time-grid, day-grid and timeline views. Each layer passed to the factory is one kind of shading: fixed ranges, ranges computed for the visible
 period, or the time they leave uncovered.
 
 <include lang='ts'>../../../examples/core/backgrounds.ts#layers</include>
@@ -45,7 +45,7 @@ A range is timed, `{ start, end }` as `Temporal.ZonedDateTime`s, or all-day, `{ 
 | View      | Field                | Contents                                                                |
 | --------- | -------------------- | ----------------------------------------------------------------------- |
 | Time grid | `column.backgrounds` | `{ key, layer, kind, start, span }`, as fractions of the day.           |
-| Month     | `day.backgrounds`    | `{ key, layer, kind }` for each layer that shades the day.              |
+| Day grid  | `day.backgrounds`    | `{ key, layer, kind }` for each layer that shades the day.              |
 | Timeline  | `row.backgrounds`    | `{ key, layer, kind, start, span }`, as fractions of the visible track. |
 
 - In the time grid, an all-day range shades the whole column. Overlapping ranges within a layer merge; layers stack in

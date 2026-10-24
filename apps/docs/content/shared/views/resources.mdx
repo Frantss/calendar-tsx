@@ -11,9 +11,9 @@ import { timeGridView } from '@calendar-tsx/core';
 timeGridView({ days: 1, groupBy: 'resource' });
 ```
 
-For date cells without a time axis, use `dayGridView({ days: 1, groupBy: 'resource', maxEventsPerDay: 3 })`. The [day grid](day-grid-view#grouping) also supports month grouping and ordered month/resource combinations.
-
-For an event list, use `listView({ weeks: 1, groupBy: 'resource' })`. The [resource agenda](list-view#resource-grouping) supports resource-first and date-first sections, with live examples and playground links for both orders.
+Day grids (`dayGridView({ days: 1, groupBy: 'resource', maxEventsPerDay: 3 })`, see
+[grouping](day-grid-view#grouping)), lists (`listView({ weeks: 1, groupBy: 'resource' })`, see
+[resource grouping](list-view#resource-grouping)) and [timelines](timeline-view) group by resource too.
 
 Pass the resources to the calendar, in the order their columns should appear:
 
@@ -26,10 +26,9 @@ Pass the resources to the calendar, in the order their columns should appear:
 | `availability` | Absolute intervals the resource is available; the gaps are shaded. |
 | `data`         | Your payload, typed as `TResourceData`.                            |
 
-- An event appears in every column whose resource id is in its `resourceIds`. Events without `resourceIds` appear in no
-  resource column.
-- With `days` above 1, `groupOrder: 'resource-first'` (the default) keeps each resource's days together, so all-day bars
-  can span them. `'date-first'` groups by day instead, and splits all-day bars per column.
+An event appears in every column whose resource ID is in its `resourceIds`; events without `resourceIds` appear in no
+resource column. With more than one day, `groupOrder: 'resource-first'` (the default) keeps each resource's days
+together so all-day bars can span them, and `'date-first'` groups by day and splits all-day bars per column.
 
 </section>
 

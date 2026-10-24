@@ -1,67 +1,65 @@
-External drops create event proposals. Cross-calendar transfers move an existing event between two calendars.
-Both use the same layout hit testing, previews and constraints as [event editing](interactions).
+External drops create events from outside the calendar. Transfers move an existing event between two calendars. Both
+use the hit testing, previews and constraints of [event editing](interactions).
 
 ## External event sources
 
-Register `interactionFeature()`, `pointerFeature()` and `externalDropFeature()` on the receiving calendar.
-Movement and selection are unnecessary. Add `onExternalDrop: ({ after }) => addEvent(after)` to insert the
-accepted event into your application state.
+On the receiving calendar, register `interactionFeature()`, `pointerFeature()` and `externalDropFeature()`; movement
+and selection are optional. `onExternalDrop` receives `{ kind: 'create', after, metadata }`, so
+`onExternalDrop: ({ after }) => addEvent(after)` inserts the accepted event into your state.
 
 Attach a palette item after its element mounts:
 
 <include lang='ts'>../../../examples/core/interaction-commands.ts#external</include>
 
-Create a `dragScope` with `createCalendarDragScope()` and pass it to the receiving hook as
-`useCalendarInteractionBindings(calendar, { dragScope })`. The palette uses that same scope and its own pointer/touch
-activation settings. Call the returned cleanup on unmount. `makeEvent` runs when a gesture begins; give each new event a unique ID.
-The payload preserves your event data type. Metadata is optional and arrives on the proposal.
+Create a scope with `createCalendarDragScope()` and pass it to both the receiver,
+`useCalendarInteractionBindings(calendar, { dragScope })`, and the palette. The palette owns its `pointer` and optional
+`touch` activation settings; the receiver owns its scrolling. Call the returned cleanup on unmount. `makeEvent` runs
+when a gesture begins, so give each new event a unique ID. The event keeps your data type, and the optional metadata
+arrives on the proposal.
 
-`externalDrop.accept(event, metadata)` can reject a source. `externalDrop.relocationPolicy` overrides the
-calendar's `eventRelocationPolicy` by field, independently of movement. Without a policy, conversion is opt-in
-and resource assignment defaults to replacing the list.
-Duplicate destination IDs are rejected.
+`externalDrop.accept(event, metadata)` can reject a source. `externalDrop.relocationPolicy` overrides fields of the
+calendar's `eventRelocationPolicy`, independently of movement. By default conversion is off and the destination
+resource replaces the assignment list. Drops whose ID already exists in the destination are rejected.
 
-For a keyboard equivalent, call `api.externalDrop.begin(event, metadata?)`, update the returned active session with
-a date target, then commit. The application still inserts the emitted `after` event.
+For keyboard users, call `api.externalDrop.begin(event, metadata?)`, update the active session with a date target and
+commit. Your application still inserts `after`.
 
 ## Cross-calendar transfers
 
-Register `interactionFeature()`, `pointerFeature()` and `eventTransferFeature()` on both calendars. Give each
-a unique calendar-level `id`, such as `id: 'left'` and `id: 'right'`. Each ID identifies its own calendar.
-Transfer settings live under `transfer`, containing `enabled`, `accept` and `relocationPolicy`.
-The source also needs `eventMoveFeature()`; the receiver can accept transfers
-without movement or selection.
+Register `interactionFeature()`, `pointerFeature()` and `eventTransferFeature()` on both calendars, and give each a
+distinct calendar-level `id`, such as `'left'` and `'right'`. Neither calendar references the other. The source also
+needs `eventMoveFeature()`; the receiver needs neither movement nor selection. Settings live under `transfer`:
+`enabled`, `accept` and `relocationPolicy`.
 
-For bidirectional dragging, register movement and transfer on both calendars and share one `dragScope`. Either
-calendar can be source or receiver on each gesture. Calendar construction needs no peer reference.
+Pass the same `{ dragScope }` to both calendars' bindings; a host without one is isolated. To drag both ways, register
+movement and transfer on both, and either calendar can be source or receiver on each gesture.
 
-Pass the same `{ dragScope }` to both calendars' binding hooks. Hosts without an explicit scope are isolated.
-Mount each calendar's bindings and register its event sources and surfaces. Dragging an event onto another
-calendar reserves the source movement session and validates the destination proposal. The receiver applies its
-own constraints and `eventRelocationPolicy` defaults and `transfer.relocationPolicy` overrides. Duplicate IDs in the destination are rejected.
+Dragging an event onto the other calendar holds the source's movement session while the receiver validates the
+proposal against its own constraints, its `eventRelocationPolicy` and `transfer.relocationPolicy`. The source calendar's
+settings don't apply. Duplicate IDs in the destination are rejected. `transfer.accept(sourceId)` on the receiver
+restricts senders.
 
-Commit calls `onEventTransfer` once on the **source**, with:
+On commit, the **source** calls `onEventTransfer` once with:
 
 ```ts
 ({ kind: 'transfer', sourceId, destinationId, before, after });
 ```
 
-Remove `before.id` from the source and add `after` to the destination in one application transaction.
-The library mutates neither array. Keep authoritative event state shared between the calendars so the UI cannot
-apply only half of a transfer. Use `transfer.accept(sourceId)` on the destination to restrict senders.
-
-Use the same transaction callback for both calendars; each proposal identifies which event arrays to update:
+Remove `before.id` from the source and add `after` to the destination in one transaction. The library changes neither
+array, so keep event state shared between the calendars to avoid applying half a transfer. One callback can serve both
+calendars, since each proposal names its arrays:
 
 <include lang='ts'>../../../examples/core/transfers.ts#transaction</include>
 
 ## Programmatic transfers
 
-Programmatic creation and transfer require no `pointerFeature`. The source uses `api.transfer.prepare` to prepare a handle; the receiver begins a session with that handle. Release prepared handles when
-abandoning a transfer. The DOM driver manages these lifetimes for pointer gestures.
+Programmatic creation and transfer need no `pointerFeature`. Call `api.transfer.prepare(eventId, resourceId?)` on the
+source, then the receiver's `transfer.begin` or `transfer.evaluate` with the handle. Always call the handle's
+`release()` when abandoning a transfer; the DOM driver does this for pointer gestures.
 
-This helper assumes the default internal draft owner. Controlled ownership must acknowledge pending snapshots
-before the coordinator continues or releases the prepared source.
+This helper assumes the default internal owner. A controlled owner must acknowledge pending snapshots before the
+coordinator continues or releases the prepared source.
 
 <include lang='ts'>../../../examples/core/interaction-commands.ts#transfer</include>
 
-See [editing policies](editing-policies) for conversion and resource assignment rules.
+See [editing policies](editing-policies) for conversion and resource rules.

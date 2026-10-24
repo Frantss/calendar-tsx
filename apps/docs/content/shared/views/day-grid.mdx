@@ -1,23 +1,18 @@
 <section id='setup'>
 
-Days as columns with spanning event bars. Show a single day, an N-day range, whole weeks, or calendar months, quarters and years.
+Days as columns with spanning event bars, for a day, an N-day range, whole weeks, or calendar months, quarters and
+years.
 
 <CalendarPreview view='month' />
 
 <include lang='ts'>../../../examples/core/view-variants.ts#day-grid</include>
 
-## Duration and navigation
+## Duration
 
-Choose exactly one of `days`, `weeks`, `months`, or `period`. Counts must be positive integers.
+<include>./common.mdx#durations</include>
 
-| Setting  | Period                                                               | Navigation                                              |
-| -------- | -------------------------------------------------------------------- | ------------------------------------------------------- |
-| `days`   | Days starting on `date`; `7` retains week alignment.                 | Advances that many days.                                |
-| `weeks`  | Whole weeks starting on `firstDayOfWeek`.                            | Advances that many weeks, preserving the weekday.       |
-| `months` | Whole months starting with the month of `date`.                      | Advances that many months, landing on the first day.    |
-| `period` | `'month'`, `'quarter'`, or `'year'`, aligned to the calendar period. | Advances one calendar period, landing on its first day. |
-
-Day ranges use one row. Week ranges use one row per week. Month-based ranges are padded to full weeks; padding days have `isOutside: true`. A continuous year uses one section containing its weeks.
+Day ranges use one row, week ranges one row per week. Month-based ranges are padded to whole weeks, and padding days
+have `isOutside: true`. A continuous year is one section of weeks.
 
 ## Grouping
 
@@ -31,20 +26,28 @@ Day ranges use one row. Week ranges use one row per week. Month-based ranges are
 | `['month', 'resource']`        | Month sections, each containing resource columns.                             |
 | `['resource', 'month']`        | Each resource's month sections, in resource input order and then month order. |
 
-`groupOrder: 'resource-first'` keeps each resource's dates together inside a row and lets bars span them. `'date-first'` groups columns by date and splits bars at resource boundaries. It does not change the outer section order chosen by `groupBy`.
+`groupOrder: 'resource-first'` keeps each resource's dates together in a row so bars can span them. `'date-first'`
+groups columns by date and splits bars at resource boundaries. Neither changes the section order `groupBy` sets.
 
-An event appears in every resource it names. Unassigned events appear only in ungrouped grids. A background event without resource IDs shades all resources. A cell has `isUnavailable` when its resource has no availability overlapping that day.
+An event appears under every resource it names; unassigned events appear only in ungrouped grids. A background event
+without resource IDs shades all resources. A cell is `isUnavailable` when its resource has no availability that day.
 
-## Visibility and overflow
+## Overflow
 
-| Setting                          | Description                                                                                             |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `hiddenDays`                     | ISO weekdays to omit, `1` for Monday through `7` for Sunday. At least one weekday must remain visible.  |
-| `fixedWeekCount`                 | Show six rows per month. Allowed for `period: 'month'`, or when grouping by month. Defaults to `false`. |
-| `maxEventsPerDay`                | Visible bar rows per grid row. Further rows are hidden and counted; `Infinity` removes the cap.         |
-| `dayOverflow(date, resourceId?)` | Marks a date/resource cell as having more events, such as events not loaded yet.                        |
+| Setting                          | Description                                                                                     |
+| -------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `maxEventsPerDay`                | Visible bar rows per grid row. Further rows are hidden and counted; `Infinity` removes the cap. |
+| `dayOverflow(date, resourceId?)` | Marks a date/resource cell as having more events, such as events not loaded yet.                |
+| `fixedWeekCount`                 | Six rows per month. Allowed with `period: 'month'` or month grouping. Defaults to `false`.      |
 
-Hidden weekdays do not change `period`, its inclusive fetch `range`, or navigation steps. Bars project onto the remaining columns; events entirely on hidden dates disappear. When every date in the selected range is a hidden weekday, the range shows its dates anyway, so a one-day grid on a hidden day still has its columns. See [overflow](../features/overflow).
+See [overflow](../features/overflow).
+
+## Hidden weekdays
+
+<include>./common.mdx#hidden-days</include>
+
+Bars project onto the remaining columns, and events entirely on hidden dates disappear. Month rows keep their
+calendar-week boundaries.
 
 </section>
 
@@ -55,9 +58,12 @@ Hidden weekdays do not change `period`, its inclusive fetch `range`, or navigati
 
 `layout` is `{ kind: 'dayGrid', sections }`. The view context also has `kind: 'dayGrid'`.
 
-Each section has `key`, `period`, `range`, optional `month` and `resource`, header `columns`, `columnCount`, and `rows`. A section's month is its first date. Its `isOutside` flags are relative to that section's period, so a date may be an outside day in one month and an inside day in the next.
+Each section has `key`, `period`, `range`, optional `month` and `resource`, header `columns`, `columnCount` and `rows`.
+A section's `month` is its first date. `isOutside` is relative to the section's period, so a date can be outside in one
+month and inside the next.
 
-Each row has `key`, `days`, bar `segments`, `backgroundEvents`, `columnCount`, and `stackCount`, the number of visible bar rows. Columns contain `key`, `date`, and optional `resource`. Day cells add these fields:
+Each row has `key`, `days`, bar `segments`, `backgroundEvents`, `columnCount` and `stackCount` (visible bar rows).
+Columns hold `key`, `date` and optional `resource`. Day cells add:
 
 | Day field       | Description                                                      |
 | --------------- | ---------------------------------------------------------------- |
@@ -100,9 +106,17 @@ Keys are stable within their parent. Render background events before bars. [Back
 | `DayGridViewDayBackground`      | `background`              | `div`    | A background layer's shading; `aria-hidden`.                                                             |
 | `DayGridViewOverflow`           | `day`                     | `button` | Renders only when `day.hasMore`.                                                                         |
 
-Render each section's header and rows inside `DayGridViewSection`. Bars belong inside their row, alongside its day cells. The default theme arranges sections responsively; override `--calendar-section-min-width` or style the root's grid to choose another arrangement.
+Render each section's header and rows inside `DayGridViewSection`, and bars inside their row beside its day cells.
 
-For a year overview, use `groupBy: 'month'` with `fixedWeekCount: true`. Calendar-only multi-month grids emit `data-multi-month`; the supplied themes give them compact rows, centered headings and padded month panels. When section and weekday headers are present, CSS subgrid aligns neighboring months' header and week tracks. The root's `--cal-month-rows` is the largest section row count. Resource grids and single-month views keep their usual sizing.
+The default theme lays sections out in a responsive grid: `--calendar-section-min-width` (default `20rem`) sets the
+minimum section width and `--calendar-section-gap` (default `1rem`) the gap. Override them, or style the root's grid,
+for another arrangement.
+
+For a year overview, use `groupBy: 'month'` with `fixedWeekCount: true`. Calendar-only multi-month grids emit
+`data-multi-month`, and the supplied themes give them compact rows, centered headings and padded month panels.
+`--calendar-section-gap` also sets their spacing (defaults `2rem` between columns, `1.5rem` between rows). With section
+and weekday headers present, CSS subgrid aligns neighboring months' header and week tracks. The root's
+`--cal-month-rows` is the largest section row count. Resource grids and single months keep their usual sizing.
 
 </section>
 </section>

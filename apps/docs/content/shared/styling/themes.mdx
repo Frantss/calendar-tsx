@@ -1,5 +1,5 @@
 `@calendar-tsx/themes` styles the parts of the React and Solid bindings. The stylesheets select parts by their
-`data-scope`/`data-part` attributes and lay them out from the `--cal-*` geometry the parts emit, so they need no
+`data-scope`/`data-part` attributes and position them from the `--cal-*` geometry the parts emit. They need no
 JavaScript and no class names.
 
 ## Install
@@ -8,7 +8,7 @@ JavaScript and no class names.
 npm i @calendar-tsx/themes
 ```
 
-Import one theme, and optionally a density and the print layer after it:
+Import one theme, then optionally a density and the print layer:
 
 ```ts
 import '@calendar-tsx/themes/default.css';
@@ -18,22 +18,21 @@ import '@calendar-tsx/themes/print.css';
 
 ## Files
 
-| File                  | Contents                                                                                            |
-| --------------------- | --------------------------------------------------------------------------------------------------- |
-| `base.css`            | Positioning only: day-grid bars, time-grid columns and lanes, the now line. Every theme imports it. |
-| `default.css`         | `base.css` plus the default look.                                                                   |
-| `high-contrast.css`   | Black on white and white on black, with outlined events.                                            |
-| `shadcn.css`          | The default look with its tokens read from shadcn/ui's variables.                                   |
-| `material-ui.css`     | The default look with its tokens read from Material UI's CSS theme variables.                       |
-| `revenuecat.css`      | The default look in RevenueCat's brand colors.                                                      |
-| `stripe.css`          | The default look in Stripe's colors.                                                                |
-| `fullcalendar.css`    | FullCalendar's classic theme, for apps migrating from it.                                           |
-| `google-calendar.css` | Google Calendar's web look.                                                                         |
-| `compact.css`         | Density only: smaller slots, bars and text. Import it after any theme.                              |
-| `print.css`           | Print only: paper colors, outlined events, no scrolling. Import it after any theme.                 |
+| File                  | Contents                                                                                                     |
+| --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `base.css`            | Positioning only: day-grid bars, time-grid columns and lanes, timeline rows, the now line. Themes import it. |
+| `default.css`         | `base.css` plus the default look.                                                                            |
+| `high-contrast.css`   | Black on white and white on black, with outlined events.                                                     |
+| `shadcn.css`          | The default look with its tokens read from shadcn/ui's variables.                                            |
+| `material-ui.css`     | The default look with its tokens read from Material UI's CSS theme variables.                                |
+| `revenuecat.css`      | The default look in RevenueCat's brand colors.                                                               |
+| `stripe.css`          | The default look in Stripe's colors.                                                                         |
+| `fullcalendar.css`    | FullCalendar's classic theme, for apps migrating from it.                                                    |
+| `google-calendar.css` | Google Calendar's web look.                                                                                  |
+| `compact.css`         | Density only: smaller slots, bars and text. Import it after any theme.                                       |
+| `print.css`           | Print only: paper colors, outlined events, no scrolling. Import it after any theme.                          |
 
-Import `base.css` alone to write
-[your own look](custom-themes) on top of working layout.
+Import `base.css` alone to write [your own look](custom-themes) on a working layout.
 
 ## Layers
 
@@ -44,27 +43,29 @@ Every file declares the same cascade layers, in this order:
 ```
 
 `base.css` fills `calendar.base`, themes fill `calendar.theme`, `compact.css` fills `calendar.density` and `print.css`
-fills `calendar.print`, so a density wins over any theme, and print over both, whatever the import order. All selectors are wrapped in `:where()`, with zero specificity.
+fills `calendar.print`. A density therefore wins over any theme, and print over both, whatever the import order. Every
+selector is wrapped in `:where()`, with zero specificity.
 
-As a result, your own unlayered CSS always wins over the themes without `!important`. CSS in your own layers wins only
-when those layers come after the calendar's. See [overriding rules](customizing#overriding-rules).
+Your unlayered CSS always wins over the themes without `!important`. CSS in your own layers wins only when those layers
+come after the calendar's. See [overriding rules](customizing#overriding-rules).
 
 ## Expected composition
 
 `base.css` expects the parts nested as the [view pages](../views/day-grid-view) show them:
 
-- `DayGridView` holds sections; each `DayGridViewSection` holds its header and rows. `DayGridViewRow` holds its `DayGridViewDay` cells and `DayGridViewRowEvent` bars.
-- `TimeGridView` holds `TimeGridViewHeader`, an optional `TimeGridViewAllDay` and `TimeGridViewBody`.
-- `TimeGridViewBody` holds an optional `TimeGridViewAxis` and the `TimeGridViewColumn`s.
+- `DayGridView` holds sections. Each `DayGridViewSection` holds its header and rows, and each `DayGridViewRow` holds
+  its `DayGridViewDay` cells and `DayGridViewRowEvent` bars.
+- `TimeGridView` holds `TimeGridViewHeader`, an optional `TimeGridViewAllDay` and `TimeGridViewBody`. The body holds
+  an optional `TimeGridViewAxis` and the `TimeGridViewColumn`s.
 
 ## Built-in themes
 
-Each theme imports `base.css` itself, so import exactly one of them.
+Each theme imports `base.css` itself, so import exactly one.
 
 <CalendarPreview view='month' pickTheme />
 
-The [playground](/docs/playground) shows every theme in every view, with light and dark, a token editor and a contrast
-readout.
+The [playground](/docs/playground) shows every theme in every view, in light and dark, with a token editor and a
+contrast readout.
 
 ### Default
 
@@ -73,11 +74,9 @@ import '@calendar-tsx/themes/default.css';
 ```
 
 A neutral gray look with an ink accent for today, blue events and a red now line. Colors follow the inherited
-`color-scheme` through `light-dark()`, and every value is a [token](customizing#tokens) you can override. It sets no
-font family; the calendar inherits the page's.
-
-Each role has its own color, so events, today, now, background events, unavailable time and weekends read apart. See
-[roles](customizing#roles).
+`color-scheme` through `light-dark()`, and every value is a [token](customizing#tokens). It sets no font family, so the
+calendar inherits the page's. Events, today, now, background events, unavailable time and weekends each get their own
+color; see [roles](customizing#roles).
 
 ### High contrast
 
@@ -89,16 +88,16 @@ import '@calendar-tsx/themes/high-contrast.css';
 black in dark mode.
 
 - Every text pairing is 9:1 or more, above WCAG AAA's 7:1.
-- Borders are 5.3:1 or more against the surface. Against muted surfaces, such as header bands, they are
-  4.47:1 in light mode and 5.1:1 in dark mode.
-- Timed events are outlined instead of tinted: the surface with a 2px border and a 4px stripe in the text color, and
+- Borders are 5.3:1 or more against the surface. Against muted surfaces, such as header bands, they are 4.47:1 in
+  light mode and 5.1:1 in dark mode.
+- Timed events are outlined instead of tinted: the surface with a 2px border, a 4px stripe in the text color and
   semibold text. All-day and multi-day bars are solid in the text color. `--calendar-event` and
   `--calendar-event-border` still override them.
 - A bar that continues past a week edge, or a time-grid event that continues past midnight, gets a dashed edge, so
   continuation does not depend on a missing corner radius.
 - Focus rings are 3px, and corners are tighter.
 - The accent is deep blue (`#0035a8`) in light mode and yellow (`#ffd500`) in dark mode. The now line is red
-  (`#c00000`, 6.48:1; `#ff8080`, 8.65:1) and background events green (`#006b4f`, `#5fe0b5`).
+  (`#c00000`, 6.48:1; `#ff8080`, 8.65:1) and background events are green (`#006b4f`, `#5fe0b5`).
 
 This theme is separate from Windows High Contrast. Under `forced-colors: active` the browser chooses the colors, and
 every theme falls back to the default theme's [forced-colors rules](customizing#forced-colors).
@@ -125,12 +124,12 @@ the app's palette, radius and dark mode with no further setup:
 | `--calendar-focus-ring`                                     | `--ring`                             |
 | `--calendar-radius`, `--calendar-bar-radius`                | `--radius`, `--radius` × 0.6         |
 
-- Events take `--chart-1`, apart from today's `--primary`. shadcn's `--secondary`, `--muted` and `--accent` sit almost on
-  the background in light mode, so they would not separate events from the grid.
+- Events take `--chart-1`, apart from today's `--primary`. shadcn's `--secondary`, `--muted` and `--accent` sit almost
+  on the background in light mode, so they would not separate events from the grid.
 - Solid all-day bars write `--foreground` on `--chart-1`. shadcn's default charts are mid-lightness in light mode and
-  mid-darkness in dark mode, so it reads on both; with a custom chart palette, check that pairing or set
+  mid-darkness in dark mode, so the pair reads in both. With a custom chart palette, check it or set
   `--calendar-event-color-contrast`.
-- It expects the Tailwind v4 variable naming: full `oklch()` colors, not the v3 HSL channels.
+- It expects Tailwind v4 variable naming: full `oklch()` colors, not the v3 HSL channels.
 - Dark mode follows shadcn's `.dark` class, on `<html>` or on any element around the calendar. `color-scheme` is not
   needed.
 
@@ -168,8 +167,8 @@ const theme = createTheme({
 - Events take the secondary color, apart from today's primary.
 - The muted surface is MUI's translucent hover color, which always sits on the opaque paper.
 - Dark mode follows MUI's built-in `colorSchemeSelector` values: `media`, or `class`, `data` and
-  `data-mui-color-scheme` set on `<html>` or on any element around the calendar. `color-scheme` is not needed. A
-  custom selector, such as `[data-theme="%s"]`, works only on `<html>`.
+  `data-mui-color-scheme` set on `<html>` or on any element around the calendar. `color-scheme` is not needed. A custom
+  selector, such as `[data-theme="%s"]`, works only on `<html>`.
 
 ### RevenueCat
 
@@ -182,10 +181,9 @@ the brand colors as accents.
 
 - The brand red (`#f2545b`) marks today and the now line, with black purple numbers on it.
 - Royal blue (`#576cdb`, with white at 4.59:1) colors events and draws the focus ring. Dark mode uses a lighter blue
-  (`#8b9bf0`) with black purple text.
-- Dark mode uses black purple as the surface.
-- On white the brand red has a 3.39:1 contrast ratio, too low for small text, so the theme keeps it to fills and lines.
-  In light mode today's time-grid header uses the text color instead.
+  (`#8b9bf0`) with black purple text, and black purple as the surface.
+- On white the brand red is 3.39:1, too low for small text, so the theme keeps it to fills and lines. In light mode
+  today's time-grid header uses the text color instead.
 
 ### Stripe
 
@@ -195,12 +193,12 @@ import '@calendar-tsx/themes/stripe.css';
 
 `stripe.css` replaces `default.css` with the colors from the public `--hds-color-*` tokens on stripe.com.
 
-- Blurple `#533afd` colors events and the focus ring. It is a step deeper than the logo's `#635bff`, and takes white
-  text at 6.19:1; dark mode uses `#7389ff`.
-- Today is marked in slate (`#061b31` in light mode, white in dark mode), so it reads apart from the events.
+- Blurple `#533afd` (`brand-600`) colors events and the focus ring. It is a step deeper than the logo's `#635bff` and
+  takes white text at 6.19:1. Dark mode uses `#7389ff`.
+- Today is marked in slate (`#061b31` in light mode, white in dark mode), apart from the events.
 - The now line is ruby (`#e2225f`, `#ea2261` in dark mode), and background events are green (`#00b261`).
-- Slate neutrals: `#061b31` text on white in light mode, white on `#0d1738` in dark mode.
-- Borders are one step stronger than Stripe's quieter borders, which would lose the grid.
+- Neutrals are slate: `#061b31` text on white in light mode, white on `#0d1738` in dark mode.
+- Borders are one step stronger than Stripe's quiet borders, which at 1.2:1 would lose the grid.
 
 This theme is not affiliated with or endorsed by Stripe. Stripe's [Marks Usage Terms](https://stripe.com/marks/legal)
 cover its names, design elements and trade dress.
@@ -214,20 +212,20 @@ import '@calendar-tsx/themes/fullcalendar.css';
 `fullcalendar.css` reproduces FullCalendar's classic theme (v7.1.3) on the calendar's parts, so an app moving off
 FullCalendar keeps its look while it migrates.
 
-- Today washes its cell and time-grid column in yellow (`#facc1526`) instead of taking a marker, and day numbers sit at
+- Today washes its cell and time-grid column in yellow (`#facc1526`) instead of taking a marker. Day numbers sit at
   the top end of the cell, underlined on hover.
 - Events are solid `#3788d8` with white 12px text and a 4px radius. A timed single-day event in a day grid is an 8px dot
-  and a bold title, with no fill, and list rows lead with a 10px dot.
-- Weekends are unshaded, outside-month dates are faint (`#9ca3af`), non-business time is a flat faint fill and
+  and a bold title, with no fill. List rows lead with a 10px dot.
+- Weekends are unshaded and outside-month dates faint (`#9ca3af`). Non-business time is a flat faint fill, and
   background events are a 15% green wash with no edge.
 - The time grid has 25px slots with dotted slot lines and solid hour lines, and a 1px red (`#ef4444`) now line with an
   arrow at its start. List days are a full-width bold header band above their events.
 - Borders are `#ddd`, text `#030712`, corners square.
 
-The tokens read FullCalendar's own `--fc-classic-*` variables first, with the classic palette as the fallback, so an
-app that customized FullCalendar's palette keeps its colors. Set those variables on `:root` or on the element that
-carries `data-color-scheme`, as FullCalendar does. `data-color-scheme="dark"` switches to the classic dark palette, as
-it does in FullCalendar; `color-scheme: dark` works too.
+The tokens read FullCalendar's own `--fc-classic-*` variables first and fall back to the classic palette, so an app
+that customized FullCalendar's palette keeps its colors. Set those variables on `:root` or on the element that carries
+`data-color-scheme`, as in FullCalendar. `data-color-scheme="dark"` switches to the classic dark palette;
+`color-scheme: dark` works too.
 
 | Token                                                       | FullCalendar variable                                                       |
 | ----------------------------------------------------------- | --------------------------------------------------------------------------- |
@@ -239,19 +237,19 @@ it does in FullCalendar; `color-scheme: dark` works too.
 | `--calendar-now`, `--calendar-background-event-color`       | `--fc-classic-now`, `--fc-classic-background-event`                         |
 | today's wash, non-business fill, outside-month dates        | `--fc-classic-today`, `--fc-classic-faint`, `--fc-classic-faint-foreground` |
 
-Where it differs from FullCalendar:
+Differences from FullCalendar:
 
-- Event content is yours: FullCalendar renders times such as "9a" and "+2 more", and the calendar renders what you put
+- You render event content. FullCalendar renders times such as "9a" and "+2 more"; the calendar renders what you put
   in each part.
-- FullCalendar gives timed events a 15px minimum height (`eventMinHeight`); set `minEventMinutes: 18` on the view for
+- FullCalendar gives timed events a 15px minimum height (`eventMinHeight`). Set `minEventMinutes: 18` on the view for
   the same height at 25px slots. At the default 15 minutes, short events drop their top and bottom borders so their
   11px line still fits.
 - List rows keep a 44px minimum height for touch, where FullCalendar's are about 37px.
 - Timeline slot lines are solid rather than dotted.
 - Outside-month dates are 2.54:1 against white, below WCAG AA, as in FullCalendar. Set
   `--fc-classic-faint-foreground` to raise them.
-- White event text on `#3788d8` is 3.7:1, below WCAG AA, as in FullCalendar. Set `--fc-classic-event` to a darker
-  blue to raise it.
+- White event text on `#3788d8` is 3.7:1, below WCAG AA, as in FullCalendar. Set `--fc-classic-event` to a darker blue
+  to raise it.
 
 This theme is not affiliated with or endorsed by FullCalendar.
 
@@ -265,24 +263,24 @@ import '@calendar-tsx/themes/google-calendar.css';
 Calendar's rendered styles in October 2026.
 
 - Today is a filled circle in the primary blue (`#0b57d0`, white number): 24px in a month, 46px in a week's header,
-  where today's weekday label turns blue too. Day numbers are centered; weekday labels are 11px spaced capitals in
+  where today's weekday label turns blue too. Day numbers are centered. Weekday labels are 11px spaced capitals in
   `#444746`.
 - Events are solid `#3f51b5`, one of Google Calendar's event colors, with white 12px text and a 6px radius. A timed
-  single-day event in a month is an 8px dot and its text, with no fill, and list rows lead with a 12px dot.
+  single-day event in a month is an 8px dot and its text, with no fill. List rows lead with a 12px dot.
 - The time grid draws hour lines only, 40px apart, and a 2px `#db372d` now line with a 12px dot.
-- Lines are `#dde3ea`, text `#1f1f1f`, and weekends and today's column are unshaded. The calendar is a card with 28px
+- Lines are `#dde3ea` and text `#1f1f1f`. Weekends and today's column are unshaded. The calendar is a card with 28px
   corners and no outline; place it on `#f8fafd`, Google Calendar's app background.
 
 For the closest match, put the weekday outside the day-number trigger in time-grid headers, so the label sits above
-the number as in Google Calendar, and load Google Sans if your app has a license for it: the theme sets no font.
+the number, and load Google Sans if your app has a license for it. The theme sets no font.
 
-Dark mode uses Google's own Material 3 dark values for the same roles (`#131314` surface, `#333537` lines, `#e3e3e3`
-text, `#a8c7fa` today), read from Google Calendar's stylesheet. Which role each part takes in dark mode is inferred
-rather than measured, and the event and now colors stay the light ones; the event blue is 2.7:1 against the dark
-surface, below the 3:1 a dot should have.
+Dark mode uses Google's Material 3 dark values for the same roles (`#131314` surface, `#333537` lines, `#e3e3e3` text,
+`#a8c7fa` today), read from Google Calendar's stylesheet. Which role each part takes in dark mode is inferred rather
+than measured. The event and now colors stay the light ones, so the event blue is 2.7:1 against the dark surface,
+below the 3:1 a dot should have.
 
-Google Calendar has no timeline view; the timeline keeps the default theme's layout in these colors. Its hour height
-depends on the density setting; the 40px measured here is `--calendar-slot-height: 20px`.
+Google Calendar has no timeline view; the timeline keeps the default theme's layout in these colors. Google's hour
+height depends on its density setting; the 40px measured here is `--calendar-slot-height: 20px`.
 
 This theme is not affiliated with or endorsed by Google. Google Calendar is a trademark of Google LLC.
 
@@ -309,9 +307,9 @@ import '@calendar-tsx/themes/compact.css';
 | `--calendar-axis-width`        | `4rem`      | `3.25rem`   |
 
 The density sets these tokens on `:root` in a later layer. A token you set on an element around the calendar still
-wins, because the element is closer than `:root`. The values are absolute, so with a look that already uses smaller sizes, such as
-`fullcalendar.css` (25px slots) or `google-calendar.css` (20px slots), `compact.css` makes slots taller; set the tokens
-yourself instead.
+wins, because that element is closer than `:root`. The values are absolute: with a look that already uses smaller
+sizes, such as `fullcalendar.css` (25px slots) or `google-calendar.css` (20px slots), `compact.css` makes slots taller.
+Set the tokens yourself instead.
 
 ### Print
 
@@ -321,19 +319,19 @@ import '@calendar-tsx/themes/print.css';
 ```
 
 `print.css` applies only when printing, on top of any theme and density, so the printed calendar needs no separate
-view. It fills a fourth layer, `calendar.print`, and changes nothing on screen.
+view. It fills the `calendar.print` layer and changes nothing on screen.
 
-- Browsers leave backgrounds out of a print unless the reader opts in, so nothing relies on a fill. Events are outlined
-  in their event color with the text in black, solid all-day bars included, and today's marker is a black outline.
+- Browsers leave backgrounds out of a print unless the reader opts in, so nothing relies on a fill. Events, solid
+  all-day bars included, are outlined in their event color with black text. Today's marker is a black outline.
 - Neutrals are black on white with `color-scheme: light`, so an app in dark mode still prints on paper. Event, now and
   background-event colors stay the theme's. With shadcn/ui or Material UI the event colors follow the app's dark
   variables, because those themes switch on a class rather than `color-scheme`.
 - Slot and hour lines, unavailable hatching, background layers and background events print as drawn
   (`print-color-adjust: exact`).
 - The now line is hidden.
-- The time grid, timeline and list stop scrolling, drop a height limit set in a layer, and their headers stop sticking,
-  so every hour prints from the top. A height limit in your own unlayered CSS, on the calendar or its container, still
-  cuts it; lift it in a `@media print` rule.
+- The time grid, timeline and list stop scrolling, drop a height limit set in a layer, and their headers stop
+  sticking, so every hour prints from the top. A height limit in your own unlayered CSS, on the calendar or its
+  container, still cuts it; lift it in a `@media print` rule.
 - Month weeks, months in a year view, list days, timeline rows and events avoid breaking across pages.
-- A timeline prints at the width it lays out, so a long range is cut at the page edge. Use landscape, a shorter range or
-  a smaller `minSlotWidth` on the view.
+- A timeline prints at the width it lays out, so the page edge cuts a long range. Use landscape, a shorter range or a
+  smaller `minSlotWidth` on the view.

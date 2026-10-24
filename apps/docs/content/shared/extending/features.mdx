@@ -1,21 +1,22 @@
 <section id='intro'>
 
-Features add behavior beyond navigation, the event pipeline and the clock. Call a feature factory with its default
-configuration, then collect the definitions with `calendarFeatures`. `calendarViews` binds the registry to your
-named view definitions. View factories supply layouts automatically.
-
-See [selection and event editing](../features/interactions) for built-in operations and browser bindings.
+Features add behavior beyond navigation, the event pipeline and the clock. Call each factory with its default
+configuration, collect the definitions with `calendarFeatures`, and bind the registry to named views with
+`calendarViews`. View factories supply their layouts. For built-in operations and browser bindings, see
+[selection and event editing](../features/interactions).
 
 </section>
 
 <section id='registering'>
 
-Every view inherits the registered features. A view's `features` object contains configuration overrides keyed by
-registry alias. Adding an override to one view does not change another view's participation.
+Every view inherits every registered feature. A view's `features` object overrides configuration by registry alias;
+an override on one view doesn't affect another.
 
-Unknown override keys and invalid configuration types are errors. Pass the same registry to `calendarViews` and
-the calendar. Feature definitions and factory defaults are fixed at calendar creation; keep them at module scope
-or memoize them. To update an override, supply a new view definition and a new `views` map.
+Pass the same registry to `calendarViews` and the calendar. The calendar rejects unknown override keys, invalid
+configuration types, a feature identity registered twice, and a registry key equal to a view's layout kind.
+Definitions and factory defaults are fixed at creation: keep them at module scope or memoize them, because passing
+different definitions through `~update` throws. To change an override, pass a new view definition in a new `views`
+map.
 
 </section>
 
@@ -23,59 +24,58 @@ or memoize them. To update an override, supply a new view definition and a new `
 
 ## Settings
 
-Each factory defines its configuration input shape. For example, `backgroundFeature(layers)` takes an array, and
-`recurrenceFeature()` takes no configuration. An override uses that same shape. Hooks read the resolved value
-through `context.config`.
+Each factory defines its configuration shape, and overrides use the same shape: `backgroundFeature(layers)` takes an
+array, `recurrenceFeature()` takes nothing. Hooks read the resolved value from `context.config`.
 
-An omitted override inherits the factory defaults. Object overrides shallow-merge with defaults. Arrays replace
-them; use an explicit spread to extend an array. An empty background array clears the view's layers while keeping
-the feature registered. Nested objects are replaced rather than recursively merged.
+Omitted overrides inherit the defaults. Objects merge shallowly, so nested objects are replaced. Arrays replace the
+default; spread it to extend. An empty background array clears that view's layers and keeps the feature registered.
 
-The runtime caches resolved configuration per view definition and includes its identity in stage dependencies.
-There is no generic switch to remove a registered feature from a view. Interaction operations and input drivers
-support `enabled: false` in their own configuration. Duplicate registrations of one feature identity are rejected.
+The runtime caches resolved configuration per view definition and includes it in stage dependencies. No generic
+switch removes a registered feature from one view; interaction operations and input drivers have their own
+`enabled: false`.
 
 ## State
 
-A feature declares state slices with `getInitialState`. They appear on `calendar.store.state`, and each slice lives in
-one of three places:
+A feature declares state slices with `getInitialState`. They appear on `calendar.store.state`, and each lives in one
+of three places:
 
-| Ownership    | How                                            | Writes through `setState`                     |
+| Ownership    | How                                            | `setState`                                    |
 | ------------ | ---------------------------------------------- | --------------------------------------------- |
-| Uncontrolled | Default; the calendar keeps it.                | Update the slice.                             |
+| Uncontrolled | Default; the calendar keeps it.                | Updates the slice.                            |
 | Controlled   | Pass the value in `state: { slice }`.          | Ignored; the slice changes only with `state`. |
-| External     | Pass a store in `atoms: { slice }`, read once. | Update the store.                             |
+| External     | Pass a store in `atoms: { slice }`, read once. | Updates the store.                            |
 
-An atom is any `{ state, setState(updater) }`, so a TanStack Store fits. A controlled slice reports nothing by itself:
-a feature that supports control calls its own configured `on…Change` callback. State and actions belong to the
-calendar instance and are shared across its views. Factories and view assembly do not initialize state.
+An atom is any `{ state, setState(updater) }`, so a TanStack Store fits. A controlled slice reports nothing by itself;
+a feature that supports control calls its own `on…Change` callback. State and actions belong to the instance and are
+shared across its views. Factories and view assembly don't create state.
 
 ## Writing a feature
 
 <include lang='ts'>../../../examples/features/highlight-feature.ts#feature</include>
 
-Return a `Calendar_ConfiguredFeature<'yourFeatureIdentity', YourConfig>` from the factory. `~id` is the stable
-identity used by declaration maps and event sources; `~config` contains resolved factory defaults. A definition
-whose `~config` is `undefined` takes no configuration overrides. The optional `~validateConfig` function can check
-configuration values at runtime, including merged view overrides.
-
-Features can supply these optional members:
+A factory returns a `Calendar_ConfiguredFeature<'yourFeatureIdentity', YourConfig>`. `~id` is the stable identity
+that declaration maps and event sources use; `~config` holds the resolved defaults, and `undefined` means the feature
+takes no overrides. An optional `~validateConfig` checks values at runtime, including merged view overrides.
 
 | Member            | Description                                                                              |
 | ----------------- | ---------------------------------------------------------------------------------------- |
 | `getInitialState` | Returns the initial value of each state slice the feature owns.                          |
 | `constructApi`    | Returns actions, merged onto `calendar.api`.                                             |
-| `requires`        | Canonical feature identities required before APIs can install.                           |
+| `requires`        | Canonical feature identities required before APIs install.                               |
 | `interaction`     | Optional operation descriptor, settings key, validators and dependencies.                |
 | `resolveEvents`   | Resolves definitions carrying the feature's stable source identity before normalization. |
 | `events`          | A stage over events after the core sort, before layout.                                  |
 | `decorate`        | A stage over the built layout; adds the feature's model fields.                          |
 
-A stage is `{ deps?, run }`. It reruns when its input, resolved configuration or one of its `deps` changes. List
-other values read by `run` in `deps`. Configured stages run in registry order. Source resolution remains
-calendar-wide and uses the registered implementation rather than creating a resolver for each view.
+A stage is `{ deps?, run }` and reruns when its input, resolved configuration or a `deps` value changes, so list every
+other value `run` reads. Stages run in registry order. `requires` is checked by identity when the calendar is created,
+and cycles are rejected.
 
-The stage and action hooks receive a context:
+Sources carry a `~source` identity matched to the registering feature's `~id`, so aliases keep both types and runtime
+lookup. Resolution is calendar-wide, uses the registered implementation, and reuses its result while the input array
+reference, input range and display zone stay the same.
+
+Hooks receive a context:
 
 | Member                      | Description                                                         |
 | --------------------------- | ------------------------------------------------------------------- |
@@ -86,23 +86,27 @@ The stage and action hooks receive a context:
 | `features`                  | Resolved definitions keyed by canonical feature identity.           |
 | `state`                     | Current calendar state when a command runs.                         |
 | `layout`                    | Active layout model, input, settings and capabilities.              |
-| `onOptionsChange(callback)` | Runs after each options sync.                                       |
+| `onOptionsChange(callback)` | Runs after every options sync, even when layout inputs are equal.   |
 | `onMount(callback)`         | Acquires resources and returns cleanup for the mounted lifetime.    |
 | `settings(key, defaults)`   | Reads interaction defaults, live options and active-view overrides. |
 | `getState(key)`             | A state slice, from wherever it lives.                              |
 | `setState(key, updater)`    | Writes a state slice; see [state](#state).                          |
 
+Register `onOptionsChange` and `onMount` inside `constructApi`. Mount callbacks run once per mounted lifetime, and
+their cleanups run in reverse order on the last unmount, so a remount acquires them again.
+
 ## Typing a feature
 
-Contributions use declaration merging into feature maps keyed by the definition's stable `~id`. Consumer aliases
-can differ: registering `highlight: highlightFeature()` still selects the `highlightFeature` map entries.
-Configuration types travel on the factory result. Interaction features additionally use `Calendar_Options_FeatureMap<TData, TResourceData>` for live callbacks and ownership inputs; API maps receive the same payload types.
+Contributions use declaration merging into feature maps keyed by the stable `~id`, so registering
+`highlight: highlightFeature()` still selects the `highlightFeature` entries. Configuration types travel on the
+factory result.
 
 <include lang='ts'>../../../examples/features/highlight-feature.ts#types</include>
 
 | Map                                   | Adds                                                |
 | ------------------------------------- | --------------------------------------------------- |
 | `Calendar_EventInput_FeatureMap`      | Event definitions resolved by the feature.          |
+| `Calendar_Options_FeatureMap`         | Options, such as live callbacks and ownership.      |
 | `Calendar_State_FeatureMap`           | State slices, also accepted by `state` and `atoms`. |
 | `Calendar_Api_FeatureMap`             | Actions on `api`.                                   |
 | `Calendar_DayGridDay_FeatureMap`      | Fields on day-grid days.                            |
@@ -113,65 +117,92 @@ Configuration types travel on the factory result. Interaction features additiona
 | `Calendar_TimelineRow_FeatureMap`     | Fields on timeline rows.                            |
 | `Calendar_TimelineSegment_FeatureMap` | Fields on timeline segments.                        |
 
-Every registered feature contributes to every supported view model. Layout feature maps receive canonical
-feature keys, so aliases do not affect model composition. Use `Calendar_StateOf<typeof calendar>` for typed
-selectors. Providers accept calendars independently of which feature-state maps are imported.
+`Calendar_Options_FeatureMap<TData, TResourceData>` and `Calendar_Api_FeatureMap<TData, TResourceData>` receive the
+calendar's event and resource payload types; declarations without type parameters stay valid. `createCalendar` and
+the adapters infer them. An explicit annotation is `Calendar_Api<TViews, TFeatures, TData, TResourceData>`, where
+omitted payload types default to `unknown`.
+
+Every registered feature contributes to every view model it supports. Layout maps use canonical identities, so
+aliases don't change model composition. Use `Calendar_StateOf<typeof calendar>` for typed selectors. Providers accept
+calendars whichever feature-state maps you import.
 
 ## Operation lifecycle
 
-`interactionFeature()` constructs one transient runtime from the resolved descriptors. Register operation features
-independently with `dateSelectionFeature()`, `eventMoveFeature()` and `eventResizeFeature()`. Their programmatic APIs install
-through `constructApi` on both core and adapter instances. Mount `useCalendarInteractionBindings` or the core DOM host to attach pointer listeners.
+`interactionFeature()` builds one transient runtime from the registered descriptors. `dateSelectionFeature()`,
+`eventMoveFeature()` and `eventResizeFeature()` register independently and install their APIs through `constructApi`
+on core and adapter instances. Pointer listeners come from `useCalendarInteractionBindings` or the core DOM host.
 
-Third-party features declare their intent, target and result in `Calendar_OperationMap<TData>`, provide a descriptor
-with `createInteractionOperation`, and add `interaction: { operation, validate?, deps? }`. A `settings` key on this
-contribution exposes resolved factory configuration on the corresponding operation input field. They also extend the usual
-API/options maps and declare `requires: ['interactionFeature'] as const`. Targets can be non-date values; callbacks
-and results retain consumer data. Dependency values compare by reference; use primitive setting fields or stable
-input references. Shared controls expose no unrestricted begin/evaluate route.
+A third-party operation declares its intent, target and proposal types in `Calendar_OperationMap<TData>`, builds a
+descriptor with `createInteractionOperation`, and contributes `interaction: { operation, validate?, deps? }`. A
+`settings` key on that contribution exposes the resolved factory configuration on the matching operation input field.
+The feature also extends the options and API maps and declares `requires: ['interactionFeature'] as const`. The
+descriptor owns activation, source identity, equality, evaluation, API binding and completion. Targets can be
+non-date values, and callbacks and results keep consumer data. `deps` compare by reference: depend on primitive
+setting fields or stable references. Shared controls have no unrestricted `begin`/`evaluate`. See the
+[public extension fixture](https://github.com/Frantss/calendar-tsx/blob/main/packages/core/tests/types/third-party/public-feature.ts).
 
-Drafts live in a readonly TanStack store at `api.interactions.store`; draft changes do not rebuild the base layout.
-Selection writes its accepted range through D29 state. Event changes remain callback proposals for the consumer.
-Option-update and mount hooks refresh current inputs and cancel sessions at final unmount. Constructed APIs and
-subscriptions survive remount. Core callers use `~mount`/cleanup and `~update`; adapter hooks drive them automatically.
+An operation's API returns `Calendar_InteractionStart<'operationKind', TData>`. An active result holds a typed session
+whose `update` takes that operation's target and whose `commit` returns the consumer's proposal type. To take part in
+built-in constraints and previews, implement `scheduling(proposal)` returning `{ kind: 'range', range }` or
+`{ kind: 'event', event, excludeEventId? }`. Non-date operations omit it and rely on custom layout projection.
+
+For browser input, bind `createCalendarDomOperation({ acceptsTarget, begin, target? })` through `host.source`; the
+optional `target` maps a layout hit to the operation's target. `createCalendarDomHost` takes only pointer settings and
+interaction controls, and needs no events or time zone. `createCalendarInteractionHost` adds the built-in event and
+selection bindings on the same gesture engine.
+
+Drafts live in the readonly store at `api.interactions.store` and don't rebuild the base layout. Selection writes its
+accepted range through feature state; event changes stay proposals for you to apply. Options updates refresh current
+inputs, and the last unmount cancels sessions. APIs and subscriptions survive remounts. Core callers drive `~mount`,
+its cleanup and `~update`; adapter hooks do it for you.
 
 ## Layout features
 
 A layout feature supplies a view kind:
 
-| Member    | Description                                                       |
-| --------- | ----------------------------------------------------------------- |
-| `kind`    | The layout's `kind`.                                              |
-| `period`  | `(date, settings, { firstDayOfWeek })` → the nominal period.      |
-| `range`   | `(period, settings, { firstDayOfWeek })` → the visible days.      |
-| `step`    | `(date, settings, direction)` → the date one period away.         |
-| `build`   | `(input, settings)` → the layout model.                           |
-| `locate`  | Optional conversion from a surface position to a semantic target. |
-| `project` | Optional conversion from a proposal to preview geometry.          |
+| Member    | Description                                                  |
+| --------- | ------------------------------------------------------------ |
+| `kind`    | The layout's `kind`.                                         |
+| `period`  | `(date, settings, { firstDayOfWeek })` → the nominal period. |
+| `range`   | `(period, settings, { firstDayOfWeek })` → the visible days. |
+| `step`    | `(date, settings, direction)` → the date one period away.    |
+| `build`   | `(input, settings)` → the layout model.                      |
+| `locate`  | Optional: a surface position → a semantic target.            |
+| `project` | Optional: a proposal → preview geometry.                     |
 
 `build` receives `range`, `period`, `inputRange`, foreground and background events, resources, `timeZone` and `now`;
-`settings` is the view definition. A new kind also needs an entry in `Calendar_Layout_FeatureMap`, keyed by the
-layout feature's name. Its view supplies the layout implementation; it is not a configured registry entry.
+`settings` is the view definition. A new kind needs an entry in `Calendar_Layout_FeatureMap` keyed by the layout
+feature's name. Its view supplies the layout; it isn't a registry entry.
 
-Day-grid, time-grid and timeline implement `locate/project`. Register `interactionFeature` to call them through
-`api.interactions` and observe derived `store.state.preview`. Missing capabilities return `unavailable`; semantic
-operations still work. Draft previews use separate overlays and do not rebuild the base model.
+### Locating and projecting
 
-Third-party layouts extend `Calendar_LayoutInteractionMap`, keyed by layout kind, with `point`, `target` and
-`geometry` types. Annotate their descriptor with `Calendar_LayoutFeature<'myKind', MySettings, MyModel>`.
-Both capabilities receive the decorated model, the actual layout input and the active view settings. The runtime
-dispatches to that descriptor without a builtin-kind switch. Controlled/external draft ownership stores semantic
-snapshots only; preview geometry derives locally from the draft and base model.
+Day grids, time grids and timelines implement both capabilities. With `interactionFeature` registered,
+`api.interactions.locate(point)` and `api.interactions.project(proposal)` dispatch to the active layout, including
+replacements and third-party layouts. `project` previews a proposal without starting a session or applying it.
+
+Points use fractions of a measured surface, not DOM objects:
+
+| Layout    | Point                                                                                    |
+| --------- | ---------------------------------------------------------------------------------------- |
+| Time grid | `{ kind: 'timeGrid', surface: { kind: 'column', key } \| { kind: 'allDay' }, fraction }` |
+| Timeline  | `{ kind: 'timeline', surface: { kind: 'lane', key }, fraction }`                         |
+| Day grid  | `{ kind: 'dayGrid', surface: { kind: 'row', section, row }, fraction }`                  |
+
+Points also take optional `dateKind`, `offset` and `edge`; `dateKind: 'allDay'` selects dates in timeline lanes.
+Fractions follow the visible dates and clock window. Fraction 1 is the end of the last visible window for timed
+targets and the last displayed date for all-day targets. Timed positions snap to the view's `slotMinutes`, by default
+30 in time grids and 60 in timelines, on the fixed clock axis. A valid hit keeps its local `clock` and its distinct
+instant `candidates`.
+
+A failed lookup returns `{ status: 'unavailable', reason }`, with `different-layout` for a point of another kind,
+`locate-unsupported` or `project-unsupported` when the layout lacks the capability. Semantic operations still work
+without them. The derived `preview` is `null` for an invalid or absent candidate.
+
+Third-party layouts add a `Calendar_LayoutInteractionMap` entry, keyed by layout kind, with `point`, `target` and
+`geometry` types of any shape, and annotate the descriptor with `Calendar_LayoutFeature<'myKind', MySettings, MyModel>`.
+Both capabilities receive the decorated model, the actual layout input and the active view settings; the runtime has
+no built-in kind switch. Custom DOM surfaces return their own `Calendar_LayoutPoint` variant. Controlled and external
+owners store semantic snapshots only, and preview geometry derives from the draft and base model. See the
+[public layout fixture](https://github.com/Frantss/calendar-tsx/blob/main/packages/core/tests/types/third-party/public-layout.ts).
 
 </section>
-
-An operation's API returns `Calendar_InteractionStart<'operationKind', TData>`. An active result contains a typed
-session; `update` accepts that operation's target, and `commit` returns a structured result with the consumer's
-proposal type. Describe scheduling participation with `scheduling(proposal)`: return `{ kind: 'range', range }`
-or `{ kind: 'event', event, excludeEventId? }`. Built-in constraints and previews consume that description.
-Non-date operations can omit it and provide custom layout projection instead.
-
-For browser input, use `createCalendarDomOperation({ acceptsTarget, begin, target? })`. The optional target mapping
-converts a layout hit into the operation's typed target. `createCalendarDomHost` accepts only interaction controls
-and pointer settings; it requires no event array or time zone. The event-aware host adds built-in convenience
-bindings using the same gesture engine.

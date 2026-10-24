@@ -15,20 +15,11 @@ timeGridView({ weeks: 1, hiddenDays: [6, 7] }); // a workweek
 
 ## Settings
 
-Choose exactly one of `days`, `weeks`, `months`, or `period`. Counts must be positive integers.
-
-| Duration    | Meaning                                                                |
-| ----------- | ---------------------------------------------------------------------- |
-| `days: N`   | N dates from `date`; `7` keeps its existing week alignment.            |
-| `weeks: N`  | N whole weeks from `firstDayOfWeek`.                                   |
-| `months: N` | N calendar months from the first day of the anchor month.              |
-| `period`    | `'month'`, `'quarter'`, or `'year'`, aligned to its calendar boundary. |
-
-`next()` and `prev()` advance the configured duration. Month-based steps land on the first day. `hiddenDays` omits ISO weekdays (`1` Monday to `7` Sunday) without changing the nominal period or its inclusive fetch range; at least one weekday must remain visible.
+<include>./common.mdx#durations</include>
 
 | Setting             | Type                               | Default               | Description                                                          |
 | ------------------- | ---------------------------------- | --------------------- | -------------------------------------------------------------------- |
-| `allDay`            | `boolean`                          | `true`                | `false` drops the all-day row from the layout.                       |
+| `allDay`            | `boolean`                          | `true`                | `false` drops the all-day row.                                       |
 | `slotMinutes`       | `number`                           | `30`                  | Positive integer slot length; the final slot may be shorter.         |
 | `minColumnWidth`    | `string`                           | none                  | Passed through for horizontal scrolling, for example `'8rem'`.       |
 | `groupBy`           | `'resource'` or `['resource']`     | none                  | One column per resource and day. See [resource view](resource-view). |
@@ -36,40 +27,32 @@ Choose exactly one of `days`, `weeks`, `months`, or `period`. Counts must be pos
 | `overlap`           | `'side-by-side' \| 'cascade'`      | `'side-by-side'`      | How overlapping events share a column. See [overlap](#overlap).      |
 | `minEventMinutes`   | `number`                           | half of `slotMinutes` | Shorter events are laid out this long. `0` turns it off.             |
 | `shortEventMinutes` | `number`                           | `30`                  | Events laid out shorter than this are flagged `isShort`.             |
+| `hiddenDays`        | ISO weekdays                       | none                  | See [hidden weekdays](#hidden-weekdays).                             |
+| `timeWindow`        | `{ startMinutes, endMinutes }`     | `[0, 1440)`           | See [visible hours](#visible-hours).                                 |
 
 ## Overlap
 
-Overlapping events take lanes: each takes the lowest lane free at its start. An event then widens to the right until
-the next lane holding an event it overlaps, or to the column's edge.
-
-- `'side-by-side'` keeps every event beside the others.
-- `'cascade'` doubles each event's width, up to the column's edge, so a later lane covers at most half of it. Later
-  lanes paint on top.
+Each overlapping event takes the lowest lane free at its start, then widens to the right until the next lane holding
+an event it overlaps, or to the column's edge. `'side-by-side'` keeps events beside each other. `'cascade'` doubles
+each event's width, up to the column's edge, so a later lane covers at most half of it; later lanes paint on top.
 
 ## Brief events
 
-A 5-minute event at its true length is a few pixels tall. So the core lays out any event shorter than `minEventMinutes`,
-half a slot by default, as that long, and gives it its own lane if it would now cover the next event. The event itself keeps its real `end`,
-so label it from `segment.event`.
+The core lays out an event shorter than `minEventMinutes` (half a slot by default) as that long, and gives it its own
+lane if it would then cover the next event. The event keeps its real `end`, so label it from `segment.event`. Both
+settings are minutes, measured on the displayed clock: half a slot is 24px with the default `3rem` slots and 16px with
+`compact.css`, before the gap between events.
 
-An event laid out shorter than `shortEventMinutes` is flagged `isShort`, emitted as `data-short`. The default theme puts
-a short event's content on one line, and covers the content of an event too short for one line, so it shows the bar
-without a clipped slice of text. Both settings are minutes, not pixels. Half a slot is always half the slot height: 24px
-with the default `3rem` slots, 16px with `compact.css`, before the gap between events.
+An event laid out shorter than `shortEventMinutes` gets `isShort` and `data-short`. The default theme puts its content
+on one line, and hides the content of an event too short for one line.
 
-`hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`). A range whose dates are
-all hidden, such as a one-day view on a Saturday, shows them anyway.
+## Hidden weekdays
 
-`timeWindow: { startMinutes: 480, endMinutes: 1080 }` shows 08:00–18:00. For 22:00–06:00 use
-`{ startMinutes: 1320, endMinutes: 1800 }`; the following morning belongs to the starting date. Hiding Tuesday
-still leaves Monday's Tuesday-morning portion visible. All-day items retain their calendar-date membership.
+<include>./common.mdx#hidden-days</include>
 
-Bounds are integer clock minutes: `0 <= startMinutes < 1440` and
-`startMinutes < endMinutes <= startMinutes + 1440`. Defaults are no hidden weekdays and `[0, 1440)`.
-`slotMinutes` is a positive integer; a final partial slot keeps its actual size. Fetch events for navigation's
-`inputRange`, which includes the following date when needed.
+## Visible hours
 
-Hiding all seven weekdays is invalid. A controlled date with no visible weekdays produces an empty layout.
+<include>./common.mdx#time-window</include>
 
 </section>
 
@@ -81,17 +64,16 @@ Hiding all seven weekdays is invalid. A controlled date with no visible weekdays
 
 `layout` is `{ kind: 'timeGrid', coordinates, slotUnits, slotMinutes, hourOffset, slots, columns, allDay, minColumnWidth }`.
 
-- `slots` holds `{ key, time, dayOffset, start, span }` for axis labels. Bounds are fractions of the visible window.
-- `slotMinutes` is each slot's length, and `hourOffset` the slot units from the window's start to its first hour, `0`
-  when it starts on the hour. Themes draw hour lines from them.
+- `slots` holds `{ key, time, dayOffset, start, span }` for axis labels, as fractions of the visible window.
+- `slotMinutes` is each slot's length, and `hourOffset` the slot units from the window's start to its first hour (`0`
+  on the hour). Themes draw hour lines from them.
 - `columns` holds one column per day.
-- `allDay` holds bar `segments`, `backgroundEvents` and `rows` for all-day events, with columns indexed like `columns`.
-  Its segments are the [month view's bar segments](month#model), with `isAllDay` and `isMultiDay`. It is absent when the
-  view sets `allDay: false`.
+- `allDay` holds bar `segments`, `backgroundEvents` and `rows`, with columns indexed like `columns`. Its segments are
+  the [day grid's bar segments](day-grid-view#model). It is absent when the view sets `allDay: false`.
 
-Positions inside a column are **fractions of its visible clock window**. The default window is a fixed 24-hour
-clock day, where 09:00 sits at 9/24 on daylight-saving days too. Missing clock hours remain on the axis; repeated hours share their
-clock positions, and visually overlapping events take separate lanes. Event timestamps retain their real offsets.
+Positions inside a column are fractions of its visible clock window.
+
+<include>./common.mdx#clock-axis</include>
 
 | Column field                               | Description                                                         |
 | ------------------------------------------ | ------------------------------------------------------------------- |
@@ -107,14 +89,14 @@ clock positions, and visually overlapping events take separate lanes. Event time
 | ----------------------------------- | ---------------------------------------------------------------- |
 | `event`                             | The event, in the calendar's time zone.                          |
 | `start`, `span`                     | Fractions of the visible window.                                 |
+| `fragments`                         | Exact coverage before clock enclosure and minimum sizing.        |
 | `lane`, `lanes`                     | Its lane, and the lane count of its overlap cluster.             |
 | `inlineStart`, `inlineSize`         | Fractions of the column's width, after widening and any cascade. |
 | `isShort`                           | Laid out shorter than `shortEventMinutes`.                       |
 | `continuesBefore`, `continuesAfter` | The event is clipped at a window boundary.                       |
 
-Events that overlap, directly or through others, form a cluster. Each takes the lowest free lane, and every event in
-the cluster shares the cluster's lane count. Events that only touch do not overlap. Place events with `inlineStart` and
-`inlineSize`; `lane` and `lanes` remain for CSS written against them.
+Events that overlap, directly or through others, form a cluster that shares one lane count. Events that only touch do
+not overlap. Place events with `inlineStart` and `inlineSize`; `lane` and `lanes` remain for CSS written against them.
 
 </section>
 
@@ -131,9 +113,9 @@ the cluster shares the cluster's lane count. Events that only touch do not overl
 | `TimeGridViewAllDay`                | none                         | `div`    | Render it only when `allDay` is set.                                                       |
 | `TimeGridViewAllDayEvent`           | `segment`                    | `button` | A bar segment; `data-all-day`, `data-multi-day`.                                           |
 | `TimeGridViewAllDayBackgroundEvent` | `segment`                    | `div`    | `aria-hidden`. Render it before the bars.                                                  |
-| `TimeGridViewBody`                  | `model`                      | `div`    | Holds the axis and the columns.                                                            |
+| `TimeGridViewBody`                  | `model`                      | `div`    | Holds the axis and the columns. Emits `--cal-slot-units` for the grid height.              |
 | `TimeGridViewAxis`                  | none                         | `div`    | Optional.                                                                                  |
-| `TimeGridViewAxisLabel`             | `slot`                       | `div`    | `slot` is the time slot, not the HTML attribute.                                           |
+| `TimeGridViewAxisLabel`             | `slot`                       | `div`    | `slot` is the time slot, not the HTML attribute. Emits `--cal-start`, `--cal-span`.        |
 | `TimeGridViewColumn`                | `column`                     | `div`    | `data-today`, `data-weekday`, `data-unavailable`.                                          |
 | `TimeGridViewBackgroundEvent`       | `segment`                    | `div`    | `aria-hidden`. Render it before the events.                                                |
 | `TimeGridViewBackground`            | `background`                 | `div`    | `aria-hidden`. A [background layer](../features/background-layers)'s shading.              |

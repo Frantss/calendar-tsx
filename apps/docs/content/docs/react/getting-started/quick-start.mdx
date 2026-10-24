@@ -9,7 +9,8 @@ description: A month calendar with navigation, in one component.
 
 ## What it does
 
-1. Features are configured once with `calendarFeatures`, views are bound with `calendarViews`, and both results are passed directly.
+1. `calendarFeatures` configures the features once, `calendarViews` binds the views to them, and `useCalendar`
+   receives both.
 2. `view` and `date` live in React state. The buttons call `calendar.api`, which reports the next view and date to
    `onNavigate`; setting them moves the calendar.
 3. `CalendarProvider` makes the calendar available to the parts.

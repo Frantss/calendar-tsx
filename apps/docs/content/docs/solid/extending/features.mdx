@@ -7,9 +7,7 @@ description: Add state, options, actions and model fields to the views that use 
 
 ## Registering features
 
-Configure each feature with its factory, collect the definitions with `calendarFeatures`, and bind named views
-with `calendarViews`. Registered features contribute state, actions and model fields to every supported view.
-Per-view `features` entries override the factory defaults using consumer-chosen registry keys:
+Per-view `features` entries override factory defaults by registry key:
 
 <include lang='tsx'>../../../../examples/features/solid/solid.tsx#register</include>
 

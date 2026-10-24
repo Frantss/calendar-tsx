@@ -22,7 +22,7 @@ Navigation actions emit a request for the owner to apply. See [navigation](../fe
 
 ## Interaction APIs
 
-Register operation features to install their APIs. These methods do not exist on display-only calendar types.
+Each operation feature installs its API when registered; calendars without it have no such methods in their types.
 
 | API            | Methods                                                                                            |
 | -------------- | -------------------------------------------------------------------------------------------------- |
@@ -34,11 +34,16 @@ Register operation features to install their APIs. These methods do not exist on
 | `interactions` | `refresh()`, `locate(point)`, `project(proposal)`                                                  |
 | `pointer`      | `settings()` returns the resolved pointer, touch and scroll configuration.                         |
 
-`interactions.store` exposes the readonly session, candidate, outcome and derived preview. Start a session through
-its operation API; the shared controls do not provide an unrestricted `begin`. `evaluate` returns a proposal or
-reason without opening a session. An active `begin` returns a typed `session` with `update(target)`, `commit()`,
-`cancel(reason?)`, `unavailable(reason)` and `isActive()`. Commands return an object with `status`; a committed result
-includes its typed `proposal`. Tokens are confined to ownership snapshots. A valid commit emits the operation's callback and, for selection, updates its
-owned state slice. See [selection and editing](../features/interactions#programmatic-edits).
+`interactions.store` exposes the readonly session, candidate, outcome and derived preview. Sessions start only through
+an operation API; the shared controls have no generic `begin`. `evaluate` returns a proposal or a reason without
+opening a session. An active `begin` returns a typed `session` with `update(target)`, `commit()`, `cancel(reason?)`,
+`unavailable(reason)` and `isActive()`. Commands return an object with `status`, and a committed result includes its
+typed `proposal`. Tokens appear only in ownership snapshots. A valid commit calls the operation's callback and, for
+selection, updates its state slice. See [selection and editing](../features/interactions#programmatic-edits).
+
+## Types
+
+To annotate `api` explicitly, use `Calendar_Api<TViews, TFeatures, TData, TResourceData>`. `TFeatures` defaults to
+`Calendar_Features`, and the payload parameters default to `unknown`.
 
 </section>

@@ -7,8 +7,7 @@ description: Opt into selection, movement and resizing with typed proposals and 
 
 <include>../../../shared/features/interactions.mdx#setup</include>
 
-The example imports typed sample events, the initial date and the registry from `core/interactions.ts`.
-React receives current options directly; its interaction preview is a value.
+The example imports typed events, the initial date and the registry from `core/interactions.ts`. React receives current options directly, and the preview is a value.
 
 <include lang='tsx' meta='title="react/interactions.tsx"'>
   ../../../../examples/react/interactions.tsx#setup
@@ -16,7 +15,7 @@ React receives current options directly; its interaction preview is a value.
 
 <include>../../../shared/features/interactions.mdx#bindings</include>
 
-`EditableDay` maps the time-grid layout's columns inside `TimeGridViewBody`. Each column renders its sources:
+`EditableDay` maps the time-grid columns inside `TimeGridViewBody`, and each column renders its sources:
 
 <include lang='tsx'>../../../../examples/react/interactions.tsx#bindings</include>
 

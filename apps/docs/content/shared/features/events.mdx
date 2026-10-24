@@ -16,7 +16,7 @@ An event is timed or all-day, as its `kind` says. Both carry a unique `id` and a
 
 - Timed events may be in any zone. The calendar converts them to its `timeZone`, and the model holds the converted
   copies.
-- A timed event ending exactly at midnight ends on the previous day, so 22:00–00:00 stays on one day.
+- A timed event ending exactly at midnight ends on the previous day, so 22:00 to 00:00 stays on one day.
 - Duplicate ids log an error in development. Ids also key the model's segments.
 - Pass a new array to change events; the calendar compares the array by reference.
 - `display: 'background'` shades the event's time instead of laying it out. See
@@ -56,8 +56,8 @@ view. It is read when the layout derives: changing it alone does not re-order un
 
 ## Event store
 
-If you have no data cache of your own, the event store keeps the list for you. `add` upserts by id; `update`, `remove`
-and `reset` do what they say. Every change produces a new array. Don't use it to mirror another store; pass that
+If you have no data cache of your own, the event store keeps the list for you. `add(events)` upserts by id, `update(id, event => next)` replaces one event, `remove(id)` deletes one and
+`reset(events)` replaces the list. Every change produces a new array. Don't use it to mirror another store; pass that
 store's data directly.
 
 </section>
