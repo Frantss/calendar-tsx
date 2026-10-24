@@ -1,6 +1,6 @@
 {
   "name": "@calendar-tsx/themes",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "Stylesheets for @calendar-tsx parts: a positioning base, themes and density.",
   "license": "MIT",
   "author": "Frantss <frantss.bongiovanni@gmail.com>",
