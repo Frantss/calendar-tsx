@@ -34,6 +34,9 @@ import '@calendar-tsx/themes/default.css';
 import '@calendar-tsx/themes/compact.css';
 ```
 
+`compact.css` sets absolute sizes, so with a look that already uses smaller ones, such as `fullcalendar.css` (25px
+slots) or `google-calendar.css` (20px slots), it makes slots taller; set the tokens yourself instead.
+
 ## Customizing
 
 The default theme lays month sections out in a responsive grid. `--calendar-section-min-width` defaults to `20rem` and `--calendar-section-gap` to `1rem`; override them or the root grid to choose a different arrangement.
@@ -231,6 +234,8 @@ Where it differs from FullCalendar:
 - Timeline slot lines are solid rather than dotted.
 - Outside-month dates are 2.54:1 against white, below WCAG AA, as in FullCalendar. Set
   `--fc-classic-faint-foreground` to raise them.
+- White event text on `#3788d8` is 3.7:1, below WCAG AA, as in FullCalendar. Set `--fc-classic-event` to a darker
+  blue to raise it.
 
 This theme is not affiliated with or endorsed by FullCalendar.
 

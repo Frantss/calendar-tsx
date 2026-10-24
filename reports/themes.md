@@ -71,3 +71,14 @@
   at `packages/themes/default.css:290`; outside-month days take the muted text at `packages/themes/default.css:294`.
 - **Why it matters:** the color is the app's own, so the theme cannot raise it without overriding the palette it adopts,
   but the themes page does not say that an adopted muted color can drop below AA on the weekend shade.
+
+## `compact.css` enlarges looks that already use smaller sizes
+
+- **What:** `compact.css` sets absolute size tokens in `calendar.density`, which wins over every look. Looks that set
+  smaller values of their own lose them: with `compact.css`, `google-calendar.css` slots grow from 20px to 32px and
+  `fullcalendar.css` slots from 25px to 32px, so the density makes those calendars less compact.
+- **Where:** `packages/themes/compact.css:17` sets `--calendar-slot-height: 2rem`; the looks set it at
+  `packages/themes/google-calendar.css:34` and `packages/themes/fullcalendar.css:36`.
+- **Why it matters:** the density is documented as working with any look. CSS cannot read a lower layer's value of the
+  same property, so a relative density would need a new mechanism (for example a base-size alias each look declares);
+  for now the readme and themes page tell apps to set the tokens themselves with those looks.

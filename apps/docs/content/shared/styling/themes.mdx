@@ -250,6 +250,8 @@ Where it differs from FullCalendar:
 - Timeline slot lines are solid rather than dotted.
 - Outside-month dates are 2.54:1 against white, below WCAG AA, as in FullCalendar. Set
   `--fc-classic-faint-foreground` to raise them.
+- White event text on `#3788d8` is 3.7:1, below WCAG AA, as in FullCalendar. Set `--fc-classic-event` to a darker
+  blue to raise it.
 
 This theme is not affiliated with or endorsed by FullCalendar.
 
@@ -307,7 +309,9 @@ import '@calendar-tsx/themes/compact.css';
 | `--calendar-axis-width`        | `4rem`      | `3.25rem`   |
 
 The density sets these tokens on `:root` in a later layer. A token you set on an element around the calendar still
-wins, because the element is closer than `:root`.
+wins, because the element is closer than `:root`. The values are absolute, so with a look that already uses smaller sizes, such as
+`fullcalendar.css` (25px slots) or `google-calendar.css` (20px slots), `compact.css` makes slots taller; set the tokens
+yourself instead.
 
 ### Print
 
