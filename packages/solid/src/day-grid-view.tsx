@@ -142,6 +142,7 @@ export const DayGridViewDay = <TData, TResourceData>(props: DayGridViewDayProps<
           role: 'gridcell',
           'data-today': flag(local.day.isToday),
           'data-outside': flag(local.day.isOutside),
+          'data-weekday': local.day.date.dayOfWeek,
           'data-date': local.day.date.toString(),
           'data-resource-id': local.day.resource?.id,
           'data-unavailable': flag(local.day.isUnavailable),
@@ -220,6 +221,8 @@ export const DayGridViewRowEvent = <TData,>(props: DayGridViewRowEventProps<TDat
       {...calendarProps_merge(
         () => ({
           type: 'button',
+          'data-all-day': flag(local.segment.isAllDay),
+          'data-multi-day': flag(local.segment.isMultiDay),
           'data-continues-before': flag(local.segment.continuesBefore),
           'data-continues-after': flag(local.segment.continuesAfter),
           style: vars({

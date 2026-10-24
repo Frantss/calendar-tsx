@@ -92,6 +92,10 @@ it('exposes a labelled region with grid geometry', async () => {
   expect(ui.region.element().style.getPropertyValue('--cal-columns')).toBe('7');
   expect(ui.region.element().style.getPropertyValue('--cal-slots')).toBe('48');
   expect(ui.region.element().style.getPropertyValue('--cal-all-day-rows')).toBe('0');
+  expect(ui.region.element().style.getPropertyValue('--cal-slots-per-hour')).toBe('2');
+  expect(ui.region.element().style.getPropertyValue('--cal-hour-offset')).toBe('0');
+  expect(ui.part('time-grid-column-header').map(element => element.getAttribute('data-weekday'))).toEqual(['7', '1', '2', '3', '4', '5', '6']);
+  expect(ui.part('time-grid-column')[6]?.getAttribute('data-weekday')).toBe('6');
 });
 
 it('exposes the minimum column width on the grid root', () => {
@@ -135,6 +139,8 @@ it('renders all-day events in the all-day row only', async () => {
   const { ui } = setup({ events: [fixtures_allDay('Fair', { start: '2026-03-11' })] });
 
   await expect.element(ui.event('Fair')).toHaveAttribute('data-part', 'time-grid-all-day-event');
+  await expect.element(ui.event('Fair')).toHaveAttribute('data-all-day', '');
+  await expect.element(ui.event('Fair')).not.toHaveAttribute('data-multi-day');
 });
 
 it('marks unavailable resources and shades their columns', async () => {

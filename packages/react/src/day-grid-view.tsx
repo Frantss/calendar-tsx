@@ -141,6 +141,7 @@ export const DayGridViewDay = forwardRef<HTMLDivElement, DayGridViewDayProps<unk
           role: 'gridcell',
           'data-today': flag(day.isToday),
           'data-outside': flag(day.isOutside),
+          'data-weekday': day.date.dayOfWeek,
           'data-date': day.date.toString(),
           'data-resource-id': day.resource?.id,
           'data-unavailable': flag(day.isUnavailable),
@@ -217,6 +218,8 @@ export const DayGridViewRowEvent = forwardRef<HTMLButtonElement, DayGridViewRowE
       {...calendarProps_merge(
         {
           type: 'button',
+          'data-all-day': flag(segment.isAllDay),
+          'data-multi-day': flag(segment.isMultiDay),
           'data-continues-before': flag(segment.continuesBefore),
           'data-continues-after': flag(segment.continuesAfter),
           style: vars({ 'col-start': segment.colStart, 'col-span': segment.colSpan, row: segment.row }),

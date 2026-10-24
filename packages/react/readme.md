@@ -75,7 +75,8 @@ consume the resulting geometry; callers keep mapping columns, slots and segments
 
 For custom CSS, use `--cal-columns` for day-grid widths, each axis label's `--cal-start`/`--cal-span` for its position,
 and `--cal-slot-units` for time-grid height. Timeline headers use `--cal-slot-columns` so final partial slots keep
-their proportional width. The bundled themes handle these values. Fetch events for navigation's `inputRange`.
+their proportional width. `--cal-slots-per-hour` and `--cal-hour-offset` place hour lines in a window that starts off
+the hour. The bundled themes handle these values. Fetch events for navigation's `inputRange`.
 
 ## Timeline backgrounds
 

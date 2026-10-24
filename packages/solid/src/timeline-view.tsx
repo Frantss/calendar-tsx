@@ -41,6 +41,8 @@ export const TimelineView = <TData, TResourceData>(props: TimelineViewProps<TDat
           style: vars({
             slots: local.model.slots.length,
             'slot-units': local.model.slotUnits,
+            'slots-per-hour': 60 / local.model.slotMinutes,
+            'hour-offset': local.model.hourOffset,
             days: local.model.days.length,
             'day-slot-units': local.model.slotUnits / Math.max(1, local.model.days.length),
             'slot-columns': local.model.slots.map(slot => `minmax(0, ${slot.span}fr)`).join(' ') || 'minmax(0, 1fr)',
@@ -69,6 +71,7 @@ export const TimelineViewDayHeader = (
       {...calendarProps_merge(
         () => ({
           'data-today': flag(local.day.isToday),
+          'data-weekday': local.day.date.dayOfWeek,
           'data-date': local.day.date.toString(),
           style: vars({ 'col-start': local.day.colStart, 'col-span': local.day.colSpan }),
           ...part('timeline-day-header'),
@@ -201,6 +204,7 @@ export const TimelineViewEvent = <TData,>(props: TimelineViewEventProps<TData>) 
         () => ({
           type: 'button',
           'data-all-day': flag(local.segment.isAllDay),
+          'data-multi-day': flag(local.segment.isMultiDay),
           'data-continues-before': flag(local.segment.continuesBefore),
           'data-continues-after': flag(local.segment.continuesAfter),
           style: vars({ start: local.segment.start, span: local.segment.span, row: local.segment.row }),

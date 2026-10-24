@@ -43,6 +43,8 @@ export const TimeGridView = <TData, TResourceData>(props: TimeGridViewProps<TDat
             columns: local.model.columns.length,
             slots: local.model.slots.length,
             'slot-units': local.model.slotUnits,
+            'slots-per-hour': 60 / local.model.slotMinutes,
+            'hour-offset': local.model.hourOffset,
             'all-day-rows': local.model.allDay?.rows,
             'min-column-width': local.model.minColumnWidth,
           }),
@@ -72,6 +74,7 @@ export const TimeGridViewColumnHeader = <TData, TResourceData>(props: ColumnProp
       {...calendarProps_merge(
         () => ({
           'data-today': flag(local.column.isToday),
+          'data-weekday': local.column.date.dayOfWeek,
           'data-unavailable': flag(local.column.isUnavailable),
           'data-resource-id': local.column.resource?.id,
           ...part('time-grid-column-header'),
@@ -131,6 +134,8 @@ export const TimeGridViewAllDayEvent = <TData,>(props: TimeGridViewAllDayEventPr
       {...calendarProps_merge(
         () => ({
           type: 'button',
+          'data-all-day': flag(local.segment.isAllDay),
+          'data-multi-day': flag(local.segment.isMultiDay),
           'data-continues-before': flag(local.segment.continuesBefore),
           'data-continues-after': flag(local.segment.continuesAfter),
           style: vars({
@@ -182,6 +187,8 @@ export const TimeGridViewBody = <TData, TResourceData>(props: TimeGridViewProps<
           style: vars({
             slots: local.model.slots.length,
             'slot-units': local.model.slotUnits,
+            'slots-per-hour': 60 / local.model.slotMinutes,
+            'hour-offset': local.model.hourOffset,
           }),
           ...part('time-grid-body'),
         }),
@@ -225,6 +232,7 @@ export const TimeGridViewColumn = <TData, TResourceData>(props: ColumnProps<TDat
       {...calendarProps_merge(
         () => ({
           'data-today': flag(local.column.isToday),
+          'data-weekday': local.column.date.dayOfWeek,
           'data-unavailable': flag(local.column.isUnavailable),
           style: vars({ 'column-lanes': local.column.lanes }),
           ...part('time-grid-column'),

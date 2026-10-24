@@ -98,7 +98,10 @@ it('exposes a labelled region with slot geometry', async () => {
   await expect.element(ui.region).toHaveAttribute('data-part', 'timeline-root');
   expect(ui.region.element().style.getPropertyValue('--cal-slots')).toBe('168');
   expect(ui.region.element().style.getPropertyValue('--cal-min-slot-width')).toBe('2rem');
+  expect(ui.region.element().style.getPropertyValue('--cal-slots-per-hour')).toBe('1');
+  expect(ui.region.element().style.getPropertyValue('--cal-hour-offset')).toBe('0');
   expect(ui.part('timeline-day-header')[1]?.getAttribute('style')).toBe('--cal-col-start: 24; --cal-col-span: 24;');
+  expect(ui.part('timeline-day-header')[1]?.getAttribute('data-weekday')).toBe('1');
   expect(ui.part('timeline-slot-label')[25]?.getAttribute('style')).toBe('--cal-col-start: 25;');
 });
 
@@ -115,6 +118,7 @@ it('positions events, stacks overlaps and flags all-day events', async () => {
   expect(ui.event('Yoga').element().getAttribute('style')).toMatch(/^--cal-start: 0\.\d+; --cal-span: 0\.\d+; --cal-row: 0;$/);
   expect(ui.event('Pilates').element().getAttribute('style')).toContain('--cal-row: 1;');
   await expect.element(ui.event('Fair')).toHaveAttribute('data-all-day', '');
+  await expect.element(ui.event('Fair')).not.toHaveAttribute('data-multi-day');
   expect(ui.part('timeline-row')[0]?.getAttribute('style')).toBe('--cal-rows: 2;');
 });
 

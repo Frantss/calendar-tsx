@@ -42,6 +42,8 @@ export const TimeGridView = forwardRef<HTMLDivElement, TimeGridViewProps<unknown
             columns: model.columns.length,
             slots: model.slots.length,
             'slot-units': model.slotUnits,
+            'slots-per-hour': 60 / model.slotMinutes,
+            'hour-offset': model.hourOffset,
             'all-day-rows': model.allDay?.rows,
             'min-column-width': model.minColumnWidth,
           }),
@@ -72,6 +74,7 @@ export const TimeGridViewColumnHeader = forwardRef<HTMLDivElement, ColumnProps<u
       {...calendarProps_merge(
         {
           'data-today': flag(column.isToday),
+          'data-weekday': column.date.dayOfWeek,
           'data-unavailable': flag(column.isUnavailable),
           'data-resource-id': column.resource?.id,
           ...part('time-grid-column-header'),
@@ -132,6 +135,8 @@ export const TimeGridViewAllDayEvent = forwardRef<HTMLButtonElement, TimeGridVie
       {...calendarProps_merge(
         {
           type: 'button',
+          'data-all-day': flag(segment.isAllDay),
+          'data-multi-day': flag(segment.isMultiDay),
           'data-continues-before': flag(segment.continuesBefore),
           'data-continues-after': flag(segment.continuesAfter),
           style: vars({ 'col-start': segment.colStart, 'col-span': segment.colSpan, row: segment.row }),
@@ -180,6 +185,8 @@ export const TimeGridViewBody = forwardRef<HTMLDivElement, TimeGridViewProps<unk
           style: vars({
             slots: model.slots.length,
             'slot-units': model.slotUnits,
+            'slots-per-hour': 60 / model.slotMinutes,
+            'hour-offset': model.hourOffset,
           }),
           ...part('time-grid-body'),
         },
@@ -222,6 +229,7 @@ export const TimeGridViewColumn = forwardRef<HTMLDivElement, ColumnProps<unknown
       {...calendarProps_merge(
         {
           'data-today': flag(column.isToday),
+          'data-weekday': column.date.dayOfWeek,
           'data-unavailable': flag(column.isUnavailable),
           style: vars({ 'column-lanes': column.lanes }),
           ...part('time-grid-column'),

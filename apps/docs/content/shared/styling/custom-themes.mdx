@@ -28,63 +28,65 @@ when true and absent otherwise.
 
 ### Day grid
 
-| `data-part`                     | Component                       | Attributes                                      |
-| ------------------------------- | ------------------------------- | ----------------------------------------------- |
-| `day-grid-section`              | `DayGridViewSection`            | `data-month`, `data-resource-id`                |
-| `day-grid-section-header`       | `DayGridViewSectionHeader`      |                                                 |
-| `day-grid-root`                 | `DayGridView`                   | `data-multi-month`                              |
-| `day-grid-header`               | `DayGridViewHeader`             |                                                 |
-| `day-grid-header-cell`          | `DayGridViewHeaderCell`         | `data-weekday` (1–7), `data-resource-id`        |
-| `day-grid-row`                  | `DayGridViewRow`                |                                                 |
-| `day-grid-day`                  | `DayGridViewDay`                | `data-today`, `data-outside`, `data-date`       |
-| `day-grid-day-trigger`          | `DayGridViewDayTrigger`         |                                                 |
-| `day-grid-row-event`            | `DayGridViewRowEvent`           | `data-continues-before`, `data-continues-after` |
-| `day-grid-row-background-event` | `DayGridViewRowBackgroundEvent` | `data-continues-before`, `data-continues-after` |
-| `day-grid-day-background`       | `DayGridViewDayBackground`      | `data-layer`, `data-kind`                       |
-| `day-grid-overflow`             | `DayGridViewOverflow`           | `data-hidden-count`                             |
+| `data-part`                     | Component                       | Attributes                                                                        |
+| ------------------------------- | ------------------------------- | --------------------------------------------------------------------------------- |
+| `day-grid-section`              | `DayGridViewSection`            | `data-month`, `data-resource-id`                                                  |
+| `day-grid-section-header`       | `DayGridViewSectionHeader`      |                                                                                   |
+| `day-grid-root`                 | `DayGridView`                   | `data-multi-month`                                                                |
+| `day-grid-header`               | `DayGridViewHeader`             |                                                                                   |
+| `day-grid-header-cell`          | `DayGridViewHeaderCell`         | `data-weekday` (1–7), `data-resource-id`                                          |
+| `day-grid-row`                  | `DayGridViewRow`                |                                                                                   |
+| `day-grid-day`                  | `DayGridViewDay`                | `data-today`, `data-outside`, `data-date`, `data-weekday`                         |
+| `day-grid-day-trigger`          | `DayGridViewDayTrigger`         |                                                                                   |
+| `day-grid-row-event`            | `DayGridViewRowEvent`           | `data-all-day`, `data-multi-day`, `data-continues-before`, `data-continues-after` |
+| `day-grid-row-background-event` | `DayGridViewRowBackgroundEvent` | `data-continues-before`, `data-continues-after`                                   |
+| `day-grid-day-background`       | `DayGridViewDayBackground`      | `data-layer`, `data-kind`                                                         |
+| `day-grid-overflow`             | `DayGridViewOverflow`           | `data-hidden-count`                                                               |
 
 ### Time grid
 
-| `data-part`                          | Component                           | Attributes                                                                    |
-| ------------------------------------ | ----------------------------------- | ----------------------------------------------------------------------------- |
-| `time-grid-root`                     | `TimeGridView`                      |                                                                               |
-| `time-grid-header`                   | `TimeGridViewHeader`                |                                                                               |
-| `time-grid-column-header`            | `TimeGridViewColumnHeader`          | `data-today`, `data-unavailable`, `data-resource-id`                          |
-| `time-grid-column-trigger`           | `TimeGridViewColumnTrigger`         |                                                                               |
-| `time-grid-all-day`                  | `TimeGridViewAllDay`                |                                                                               |
-| `time-grid-all-day-event`            | `TimeGridViewAllDayEvent`           | `data-continues-before`, `data-continues-after`                               |
-| `time-grid-all-day-background-event` | `TimeGridViewAllDayBackgroundEvent` | `data-continues-before`, `data-continues-after`                               |
-| `time-grid-body`                     | `TimeGridViewBody`                  |                                                                               |
-| `time-grid-axis`                     | `TimeGridViewAxis`                  |                                                                               |
-| `time-grid-axis-label`               | `TimeGridViewAxisLabel`             |                                                                               |
-| `time-grid-column`                   | `TimeGridViewColumn`                | `data-today`, `data-unavailable`                                              |
-| `time-grid-unavailable`              | `TimeGridViewUnavailable`           |                                                                               |
-| `time-grid-background`               | `TimeGridViewBackground`            | `data-layer`, `data-kind`                                                     |
-| `time-grid-background-event`         | `TimeGridViewBackgroundEvent`       | `data-continues-before`, `data-continues-after`                               |
-| `time-grid-event`                    | `TimeGridViewEvent`                 | `data-overlap`, `data-short`, `data-continues-before`, `data-continues-after` |
-| `time-grid-now`                      | `TimeGridViewNowIndicator`          |                                                                               |
+| `data-part`                          | Component                           | Attributes                                                                        |
+| ------------------------------------ | ----------------------------------- | --------------------------------------------------------------------------------- |
+| `time-grid-root`                     | `TimeGridView`                      |                                                                                   |
+| `time-grid-header`                   | `TimeGridViewHeader`                |                                                                                   |
+| `time-grid-column-header`            | `TimeGridViewColumnHeader`          | `data-today`, `data-weekday`, `data-unavailable`, `data-resource-id`              |
+| `time-grid-column-trigger`           | `TimeGridViewColumnTrigger`         |                                                                                   |
+| `time-grid-all-day`                  | `TimeGridViewAllDay`                |                                                                                   |
+| `time-grid-all-day-event`            | `TimeGridViewAllDayEvent`           | `data-all-day`, `data-multi-day`, `data-continues-before`, `data-continues-after` |
+| `time-grid-all-day-background-event` | `TimeGridViewAllDayBackgroundEvent` | `data-continues-before`, `data-continues-after`                                   |
+| `time-grid-body`                     | `TimeGridViewBody`                  |                                                                                   |
+| `time-grid-axis`                     | `TimeGridViewAxis`                  |                                                                                   |
+| `time-grid-axis-label`               | `TimeGridViewAxisLabel`             |                                                                                   |
+| `time-grid-column`                   | `TimeGridViewColumn`                | `data-today`, `data-weekday`, `data-unavailable`                                  |
+| `time-grid-unavailable`              | `TimeGridViewUnavailable`           |                                                                                   |
+| `time-grid-background`               | `TimeGridViewBackground`            | `data-layer`, `data-kind`                                                         |
+| `time-grid-background-event`         | `TimeGridViewBackgroundEvent`       | `data-continues-before`, `data-continues-after`                                   |
+| `time-grid-event`                    | `TimeGridViewEvent`                 | `data-overlap`, `data-short`, `data-continues-before`, `data-continues-after`     |
+| `time-grid-now`                      | `TimeGridViewNowIndicator`          |                                                                                   |
 
 `data-overlap` marks an event whose overlap cluster needs more than one lane. `data-short` marks an event laid out
-shorter than the view's `shortEventMinutes`.
+shorter than the view's `shortEventMinutes`. `data-all-day` marks an all-day event's bar and `data-multi-day` one whose
+event covers more than one date, before clipping; a timed event ending at midnight covers only its start date.
+`data-weekday` is the ISO day of the week, 1 (Monday) to 7 (Sunday).
 
 ### Timeline
 
-| `data-part`                 | Component                     | Attributes                                                      |
-| --------------------------- | ----------------------------- | --------------------------------------------------------------- |
-| `timeline-root`             | `TimelineView`                |                                                                 |
-| `timeline-header`           | `TimelineViewHeader`          |                                                                 |
-| `timeline-day-header`       | `TimelineViewDayHeader`       | `data-today`, `data-date`                                       |
-| `timeline-day-trigger`      | `TimelineViewDayTrigger`      |                                                                 |
-| `timeline-slot-label`       | `TimelineViewSlotLabel`       |                                                                 |
-| `timeline-body`             | `TimelineViewBody`            |                                                                 |
-| `timeline-row`              | `TimelineViewRow`             | `data-unavailable`, `data-resource-id`                          |
-| `timeline-resource`         | `TimelineViewResource`        | `data-unavailable`, `data-resource-id`                          |
-| `timeline-lane`             | `TimelineViewLane`            | `data-unavailable`                                              |
-| `timeline-unavailable`      | `TimelineViewUnavailable`     |                                                                 |
-| `timeline-background`       | `TimelineViewBackground`      | `data-layer`, `data-kind`                                       |
-| `timeline-background-event` | `TimelineViewBackgroundEvent` | `data-continues-before`, `data-continues-after`                 |
-| `timeline-event`            | `TimelineViewEvent`           | `data-all-day`, `data-continues-before`, `data-continues-after` |
-| `timeline-now`              | `TimelineViewNowIndicator`    |                                                                 |
+| `data-part`                 | Component                     | Attributes                                                                        |
+| --------------------------- | ----------------------------- | --------------------------------------------------------------------------------- |
+| `timeline-root`             | `TimelineView`                |                                                                                   |
+| `timeline-header`           | `TimelineViewHeader`          |                                                                                   |
+| `timeline-day-header`       | `TimelineViewDayHeader`       | `data-today`, `data-date`, `data-weekday`                                         |
+| `timeline-day-trigger`      | `TimelineViewDayTrigger`      |                                                                                   |
+| `timeline-slot-label`       | `TimelineViewSlotLabel`       |                                                                                   |
+| `timeline-body`             | `TimelineViewBody`            |                                                                                   |
+| `timeline-row`              | `TimelineViewRow`             | `data-unavailable`, `data-resource-id`                                            |
+| `timeline-resource`         | `TimelineViewResource`        | `data-unavailable`, `data-resource-id`                                            |
+| `timeline-lane`             | `TimelineViewLane`            | `data-unavailable`                                                                |
+| `timeline-unavailable`      | `TimelineViewUnavailable`     |                                                                                   |
+| `timeline-background`       | `TimelineViewBackground`      | `data-layer`, `data-kind`                                                         |
+| `timeline-background-event` | `TimelineViewBackgroundEvent` | `data-continues-before`, `data-continues-after`                                   |
+| `timeline-event`            | `TimelineViewEvent`           | `data-all-day`, `data-multi-day`, `data-continues-before`, `data-continues-after` |
+| `timeline-now`              | `TimelineViewNowIndicator`    |                                                                                   |
 
 ### List
 
@@ -104,24 +106,24 @@ Parts emit their layout as unitless `--cal-*` custom properties on their own ele
 
 `list-day` emits `--cal-events`, the number of event rows spanned by its date heading.
 
-| Part                                                                          | Variables                                                                                                                                           |
-| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `day-grid-week`                                                               | `--cal-rows`: bar rows shown                                                                                                                        |
-| `day-grid-week-event`, `time-grid-all-day-event`                              | `--cal-col-start`, `--cal-col-span`, `--cal-row` (zero-based)                                                                                       |
-| `day-grid-week-background-event`, `time-grid-all-day-background-event`        | `--cal-col-start`, `--cal-col-span`                                                                                                                 |
-| `time-grid-root`                                                              | `--cal-columns`, `--cal-slots`, `--cal-all-day-rows`, `--cal-min-column-width`                                                                      |
-| `time-grid-body`                                                              | `--cal-slots`                                                                                                                                       |
-| `time-grid-column`                                                            | `--cal-column-lanes`: the most lanes in the column                                                                                                  |
-| `time-grid-event`                                                             | `--cal-start`, `--cal-span` (fractions of the day), `--cal-lane`, `--cal-lanes`, `--cal-inline-start`, `--cal-inline-size` (fractions of the width) |
-| `time-grid-unavailable`, `time-grid-background`, `time-grid-background-event` | `--cal-start`, `--cal-span`                                                                                                                         |
-| `time-grid-now`                                                               | `--cal-now` (fraction of the day)                                                                                                                   |
-| `timeline-root`                                                               | `--cal-slots`, `--cal-min-slot-width`, `--cal-track-slots`, `--cal-slot-tracks`, `--cal-slot-lines`                                                 |
-| `timeline-day-header`                                                         | `--cal-col-start`, `--cal-col-span` (slot columns)                                                                                                  |
-| `timeline-slot-label`                                                         | `--cal-col-start`                                                                                                                                   |
-| `timeline-row`                                                                | `--cal-rows`: stack depth                                                                                                                           |
-| `timeline-event`                                                              | `--cal-start`, `--cal-span` (fractions of the range), `--cal-row`                                                                                   |
-| `timeline-unavailable`, `timeline-background`, `timeline-background-event`    | `--cal-start`, `--cal-span`                                                                                                                         |
-| `timeline-now`                                                                | `--cal-now` (fraction of the range)                                                                                                                 |
+| Part                                                                          | Variables                                                                                                                                                                    |
+| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `day-grid-week`                                                               | `--cal-rows`: bar rows shown                                                                                                                                                 |
+| `day-grid-week-event`, `time-grid-all-day-event`                              | `--cal-col-start`, `--cal-col-span`, `--cal-row` (zero-based)                                                                                                                |
+| `day-grid-week-background-event`, `time-grid-all-day-background-event`        | `--cal-col-start`, `--cal-col-span`                                                                                                                                          |
+| `time-grid-root`                                                              | `--cal-columns`, `--cal-slots`, `--cal-all-day-rows`, `--cal-min-column-width`, `--cal-slots-per-hour`, `--cal-hour-offset`: slots from the window's start to its first hour |
+| `time-grid-body`                                                              | `--cal-slots`, `--cal-slots-per-hour`, `--cal-hour-offset`                                                                                                                   |
+| `time-grid-column`                                                            | `--cal-column-lanes`: the most lanes in the column                                                                                                                           |
+| `time-grid-event`                                                             | `--cal-start`, `--cal-span` (fractions of the day), `--cal-lane`, `--cal-lanes`, `--cal-inline-start`, `--cal-inline-size` (fractions of the width)                          |
+| `time-grid-unavailable`, `time-grid-background`, `time-grid-background-event` | `--cal-start`, `--cal-span`                                                                                                                                                  |
+| `time-grid-now`                                                               | `--cal-now` (fraction of the day)                                                                                                                                            |
+| `timeline-root`                                                               | `--cal-slots`, `--cal-min-slot-width`, `--cal-track-slots`, `--cal-slot-tracks`, `--cal-slot-lines`, `--cal-slots-per-hour`, `--cal-hour-offset` (per day)                   |
+| `timeline-day-header`                                                         | `--cal-col-start`, `--cal-col-span` (slot columns)                                                                                                                           |
+| `timeline-slot-label`                                                         | `--cal-col-start`                                                                                                                                                            |
+| `timeline-row`                                                                | `--cal-rows`: stack depth                                                                                                                                                    |
+| `timeline-event`                                                              | `--cal-start`, `--cal-span` (fractions of the range), `--cal-row`                                                                                                            |
+| `timeline-unavailable`, `timeline-background`, `timeline-background-event`    | `--cal-start`, `--cal-span`                                                                                                                                                  |
+| `timeline-now`                                                                | `--cal-now` (fraction of the range)                                                                                                                                          |
 
 For example, `base.css` places a timed event with:
 

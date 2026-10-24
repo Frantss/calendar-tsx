@@ -68,12 +68,14 @@ Each row has `key`, `days`, bar `segments`, `backgroundEvents`, `columnCount`, a
 | `hasMore`       | `hiddenCount > 0`, or `dayOverflow` returned `true`.             |
 | `events`        | Events on this date/resource, including hidden events, in order. |
 
-| Bar segment field                   | Description                                                                  |
-| ----------------------------------- | ---------------------------------------------------------------------------- |
-| `event`                             | The event, in the calendar's time zone.                                      |
-| `colStart`, `colSpan`               | First visible column, zero-based, and the number of visible columns covered. |
-| `row`                               | Stack row, zero-based.                                                       |
-| `continuesBefore`, `continuesAfter` | The event extends beyond the visible dates at that bar's edges.              |
+| Bar segment field                   | Description                                                                                                        |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `event`                             | The event, in the calendar's time zone.                                                                            |
+| `colStart`, `colSpan`               | First visible column, zero-based, and the number of visible columns covered.                                       |
+| `row`                               | Stack row, zero-based.                                                                                             |
+| `isAllDay`                          | The event is all-day.                                                                                              |
+| `isMultiDay`                        | The event covers more than one date, before clipping. A timed event ending at midnight covers only its start date. |
+| `continuesBefore`, `continuesAfter` | The event extends beyond the visible dates at that bar's edges.                                                    |
 
 Keys are stable within their parent. Render background events before bars. [Background layers](../features/background-layers) decorate each cell and respect its resource scope.
 
@@ -83,20 +85,20 @@ Keys are stable within their parent. Render background events before bars. [Back
 
 <section id='parts-table'>
 
-| Part                            | Model prop    | Element  | Notes                                                                                    |
-| ------------------------------- | ------------- | -------- | ---------------------------------------------------------------------------------------- |
-| `DayGridView`                   | `model`       | `div`    | Region labelled "Calendar". Contains sections.                                           |
-| `DayGridViewSection`            | `section`     | `div`    | `role='grid'`; emits `--cal-columns`, `data-month`, and `data-resource-id`.              |
-| `DayGridViewSectionHeader`      | none          | `div`    | Consumer-supplied month or resource label.                                               |
-| `DayGridViewHeader`             | none          | `div`    | `role='row'`.                                                                            |
-| `DayGridViewHeaderCell`         | `column`      | `div`    | `role='columnheader'`, `data-weekday`, `data-resource-id`.                               |
-| `DayGridViewRow`                | `row`         | `div`    | `role='row'`; emits column and stack counts.                                             |
-| `DayGridViewDay`                | `day`         | `div`    | `role='gridcell'`, `data-today`, `data-outside`, `data-unavailable`, `data-resource-id`. |
-| `DayGridViewDayTrigger`         | `day`, `view` | `button` | Navigates to `view` on this date.                                                        |
-| `DayGridViewRowEvent`           | `segment`     | `button` | A bar across the row's visible columns.                                                  |
-| `DayGridViewRowBackgroundEvent` | `segment`     | `div`    | An all-day background span; `aria-hidden`.                                               |
-| `DayGridViewDayBackground`      | `background`  | `div`    | A background layer's shading; `aria-hidden`.                                             |
-| `DayGridViewOverflow`           | `day`         | `button` | Renders only when `day.hasMore`.                                                         |
+| Part                            | Model prop    | Element  | Notes                                                                                                    |
+| ------------------------------- | ------------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| `DayGridView`                   | `model`       | `div`    | Region labelled "Calendar". Contains sections.                                                           |
+| `DayGridViewSection`            | `section`     | `div`    | `role='grid'`; emits `--cal-columns`, `data-month`, and `data-resource-id`.                              |
+| `DayGridViewSectionHeader`      | none          | `div`    | Consumer-supplied month or resource label.                                                               |
+| `DayGridViewHeader`             | none          | `div`    | `role='row'`.                                                                                            |
+| `DayGridViewHeaderCell`         | `column`      | `div`    | `role='columnheader'`, `data-weekday`, `data-resource-id`.                                               |
+| `DayGridViewRow`                | `row`         | `div`    | `role='row'`; emits column and stack counts.                                                             |
+| `DayGridViewDay`                | `day`         | `div`    | `role='gridcell'`, `data-today`, `data-outside`, `data-weekday`, `data-unavailable`, `data-resource-id`. |
+| `DayGridViewDayTrigger`         | `day`, `view` | `button` | Navigates to `view` on this date.                                                                        |
+| `DayGridViewRowEvent`           | `segment`     | `button` | A bar across the row's visible columns; `data-all-day`, `data-multi-day`.                                |
+| `DayGridViewRowBackgroundEvent` | `segment`     | `div`    | An all-day background span; `aria-hidden`.                                                               |
+| `DayGridViewDayBackground`      | `background`  | `div`    | A background layer's shading; `aria-hidden`.                                                             |
+| `DayGridViewOverflow`           | `day`         | `button` | Renders only when `day.hasMore`.                                                                         |
 
 Render each section's header and rows inside `DayGridViewSection`. Bars belong inside their row, alongside its day cells. The default theme arranges sections responsively; override `--calendar-section-min-width` or style the root's grid to choose another arrangement.
 

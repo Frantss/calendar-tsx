@@ -131,6 +131,23 @@ it('renders month sections in the requested resource order', async () => {
   expect(ui.grid.elements().map(section => section.getAttribute('data-month'))).toEqual(['2026-03-01', '2026-04-01', '2026-03-01', '2026-04-01']);
 });
 
+it("flags all-day and multi-day bars and each day's weekday", async () => {
+  const { ui } = await setup({
+    events: [
+      fixtures_allDay('Book Fair', { start: '2026-03-17', end: '2026-03-18' }),
+      fixtures_timed('Standup', { date: '2026-03-19', start: '09:00', end: '09:30' }),
+    ],
+  });
+  const cell = (date: string) => ui.cells.elements().find(element => element.getAttribute('data-date') === date);
+
+  await expect.element(ui.event('Book Fair')).toHaveAttribute('data-all-day', '');
+  await expect.element(ui.event('Book Fair')).toHaveAttribute('data-multi-day', '');
+  await expect.element(ui.event('Standup')).not.toHaveAttribute('data-all-day');
+  await expect.element(ui.event('Standup')).not.toHaveAttribute('data-multi-day');
+  expect(cell('2026-03-14')?.getAttribute('data-weekday')).toBe('6');
+  expect(cell('2026-03-15')?.getAttribute('data-weekday')).toBe('7');
+});
+
 it('renders the overflow trigger only for days with more, with the hidden count', async () => {
   const events = ['09:00', '10:00', '11:00'].map((start, index) =>
     fixtures_timed(`Session ${index}`, { date: '2026-03-25', start, end: start.replace(':00', ':30') }),

@@ -40,6 +40,8 @@ export const TimelineView = forwardRef<HTMLDivElement, TimelineViewProps<unknown
           style: vars({
             slots: model.slots.length,
             'slot-units': model.slotUnits,
+            'slots-per-hour': 60 / model.slotMinutes,
+            'hour-offset': model.hourOffset,
             days: model.days.length,
             'day-slot-units': model.slotUnits / Math.max(1, model.days.length),
             'slot-columns': model.slots.map(slot => `minmax(0, ${slot.span}fr)`).join(' ') || 'minmax(0, 1fr)',
@@ -68,6 +70,7 @@ export const TimelineViewDayHeader = forwardRef<HTMLDivElement, DayProps>(({ day
     {...calendarProps_merge(
       {
         'data-today': flag(day.isToday),
+        'data-weekday': day.date.dayOfWeek,
         'data-date': day.date.toString(),
         style: vars({ 'col-start': day.colStart, 'col-span': day.colSpan }),
         ...part('timeline-day-header'),
@@ -188,6 +191,7 @@ export const TimelineViewEvent = forwardRef<HTMLButtonElement, TimelineViewEvent
         {
           type: 'button',
           'data-all-day': flag(segment.isAllDay),
+          'data-multi-day': flag(segment.isMultiDay),
           'data-continues-before': flag(segment.continuesBefore),
           'data-continues-after': flag(segment.continuesAfter),
           style: vars({ start: segment.start, span: segment.span, row: segment.row }),
