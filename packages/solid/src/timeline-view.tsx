@@ -1,6 +1,8 @@
 import { Show, splitProps } from 'solid-js';
 
 import type {
+  Calendar_BackgroundEventSegment,
+  Calendar_BackgroundSegment,
   Calendar_TimelineDay,
   Calendar_TimelineLayout,
   Calendar_TimelineRow,
@@ -223,6 +225,51 @@ export const TimelineViewUnavailable = (
           'aria-hidden': true,
           style: vars({ start: local.segment.start, span: local.segment.span }),
           ...part('timeline-unavailable'),
+        }),
+        rest,
+      )}
+      state={local.segment}
+    />
+  );
+};
+
+export const TimelineViewBackground = (
+  props: { background: Calendar_BackgroundSegment } & Calendar_HTMLProps<'div', Calendar_BackgroundSegment>,
+) => {
+  const [local, rest] = splitProps(props, ['background']);
+  return (
+    <calendar.div
+      {...calendarProps_merge(
+        () => ({
+          'aria-hidden': true,
+          'data-kind': local.background.kind,
+          'data-layer': local.background.layer,
+          style: vars({ start: local.background.start, span: local.background.span }),
+          ...part('timeline-background'),
+        }),
+        rest,
+      )}
+      state={local.background}
+    />
+  );
+};
+
+type TimelineViewBackgroundEventProps<TData> = { segment: Calendar_BackgroundEventSegment<TData> } & Calendar_HTMLProps<
+  'div',
+  Calendar_BackgroundEventSegment<TData>
+>;
+
+export const TimelineViewBackgroundEvent = <TData,>(props: TimelineViewBackgroundEventProps<TData>) => {
+  const [local, rest] = splitProps(props, ['segment']);
+  return (
+    <calendar.div
+      {...calendarProps_merge(
+        () => ({
+          'aria-hidden': true,
+          'data-continues-before': flag(local.segment.continuesBefore),
+          'data-continues-after': flag(local.segment.continuesAfter),
+          style: vars({ start: local.segment.start, span: local.segment.span }),
+          ...part('timeline-background-event'),
         }),
         rest,
       )}

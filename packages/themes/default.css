@@ -98,7 +98,8 @@
     [data-scope='calendar']:is(
       [data-part='month-week-background-event'],
       [data-part='time-grid-all-day-background-event'],
-      [data-part='time-grid-background-event']
+      [data-part='time-grid-background-event'],
+      [data-part='timeline-background-event']
     )
   ) {
     background: var(--calendar-background-event, color-mix(in oklab, var(--calendar-accent) 10%, transparent));
@@ -279,7 +280,13 @@
   }
 
   /* One fill for every kind; style a kind with [data-kind] or set --calendar-background */
-  :where([data-scope='calendar']:is([data-part='time-grid-background'], [data-part='month-day-background'])) {
+  :where(
+    [data-scope='calendar']:is(
+      [data-part='time-grid-background'],
+      [data-part='month-day-background'],
+      [data-part='timeline-background']
+    )
+  ) {
     background: var(--calendar-background, color-mix(in oklab, var(--calendar-text) 6%, transparent));
   }
 
@@ -493,7 +500,13 @@
     }
 
     /* Hatched the other way from unavailable time, so the two stay apart */
-    :where([data-scope='calendar']:is([data-part='time-grid-background'], [data-part='month-day-background'])) {
+    :where(
+      [data-scope='calendar']:is(
+        [data-part='time-grid-background'],
+        [data-part='month-day-background'],
+        [data-part='timeline-background']
+      )
+    ) {
       forced-color-adjust: none;
       background: repeating-linear-gradient(45deg, transparent 0 6px, GrayText 6px 7px);
     }
@@ -503,7 +516,8 @@
       [data-scope='calendar']:is(
         [data-part='month-week-background-event'],
         [data-part='time-grid-all-day-background-event'],
-        [data-part='time-grid-background-event']
+        [data-part='time-grid-background-event'],
+        [data-part='timeline-background-event']
       )
     ) {
       forced-color-adjust: none;

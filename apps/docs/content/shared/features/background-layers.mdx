@@ -1,6 +1,6 @@
 <section id='intro'>
 
-`backgroundFeature` shades time from rules, such as business hours or holidays, in the time-grid and month views that
+`backgroundFeature` shades time from rules, such as business hours or holidays, in the time-grid, month and timeline views that
 list it. Each layer in the `backgrounds` option is one kind of shading: fixed ranges, ranges computed for the visible
 period, or the time they leave uncovered.
 
@@ -19,13 +19,13 @@ For dated items from your data, such as one holiday with its own id and payload,
 
 ## Layers
 
-| Field         | Type                                       | Description                                                                      |
-| ------------- | ------------------------------------------ | -------------------------------------------------------------------------------- |
-| `id`          | `string`                                   | Unique; emitted as `data-layer`.                                                 |
-| `kind`        | `string`                                   | Emitted as `data-kind`; style by it.                                             |
-| `ranges`      | `Calendar_BackgroundRange[]` or a function | What the layer shades. A function receives the visible range and the `timeZone`. |
-| `inverse`     | `boolean`                                  | Shade what the ranges leave uncovered instead.                                   |
-| `resourceIds` | `string[]`                                 | Shade only these resources' columns. Omitted, it shades every column.            |
+| Field         | Type                                       | Description                                                                              |
+| ------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `id`          | `string`                                   | Unique; emitted as `data-layer`.                                                         |
+| `kind`        | `string`                                   | Emitted as `data-kind`; style by it.                                                     |
+| `ranges`      | `Calendar_BackgroundRange[]` or a function | What the layer shades. A function receives the visible range and the `timeZone`.         |
+| `inverse`     | `boolean`                                  | Shade what the ranges leave uncovered instead.                                           |
+| `resourceIds` | `string[]`                                 | Shade only these resources' columns or timeline rows. Omitted, it shades every resource. |
 
 A range is timed, `{ start, end }` as `Temporal.ZonedDateTime`s, or all-day, `{ allDay: true, start, end? }` as
 `Temporal.PlainDate`s with an inclusive `end`.
@@ -44,18 +44,22 @@ A range is timed, `{ start, end }` as `Temporal.ZonedDateTime`s, or all-day, `{ 
 
 ## Model
 
-| View      | Field                | Contents                                                      |
-| --------- | -------------------- | ------------------------------------------------------------- |
-| Time grid | `column.backgrounds` | `{ key, layer, kind, start, span }`, as fractions of the day. |
-| Month     | `day.backgrounds`    | `{ key, layer, kind }` for each layer that shades the day.    |
+| View      | Field                | Contents                                                                |
+| --------- | -------------------- | ----------------------------------------------------------------------- |
+| Time grid | `column.backgrounds` | `{ key, layer, kind, start, span }`, as fractions of the day.           |
+| Month     | `day.backgrounds`    | `{ key, layer, kind }` for each layer that shades the day.              |
+| Timeline  | `row.backgrounds`    | `{ key, layer, kind, start, span }`, as fractions of the visible track. |
 
 - In the time grid, an all-day range shades the whole column. Overlapping ranges within a layer merge; layers stack in
   input order.
 - In the month view, a day takes a layer when one of the layer's all-day ranges covers it. Timed ranges don't shade
   month days, except through inverse layers: an inverse layer marks the days none of its ranges touch, so business
   hours mark the weekends.
-- The fields exist only in views that list `backgroundFeature`. The time grid's all-day row, the list and the
-  timeline aren't shaded.
+- In timelines, all-day ranges cover anchor windows, including overnight portions. Timed ranges use exact source
+  coverage, preserving DST gaps and combining repeated hours. Coverage merges before inverse gaps are computed.
+  Hidden weekdays contribute no shading; range callbacks receive `inputRange`.
+- Resource-limited layers skip rows or columns without a matching resource, including ungrouped timelines.
+- The fields exist only in views that list `backgroundFeature`. The time grid's all-day row and the list aren't shaded.
 
 </section>
 
@@ -63,11 +67,12 @@ A range is timed, `{ start, end }` as `Temporal.ZonedDateTime`s, or all-day, `{ 
 
 ## Parts
 
-| Part                     | Model prop   | Where                                       |
-| ------------------------ | ------------ | ------------------------------------------- |
-| `TimeGridViewBackground` | `background` | In `TimeGridViewColumn`, before the events. |
-| `MonthViewDayBackground` | `background` | In `MonthViewDay`, before its content.      |
+| Part                     | Model prop   | Where                                             |
+| ------------------------ | ------------ | ------------------------------------------------- |
+| `TimeGridViewBackground` | `background` | In `TimeGridViewColumn`, before the events.       |
+| `MonthViewDayBackground` | `background` | In `MonthViewDay`, before its content.            |
+| `TimelineViewBackground` | `background` | In `TimelineViewLane`, beneath foreground events. |
 
-Both render an `aria-hidden` `div` with `data-layer` and `data-kind`. A label such as "Closed" is your own text.
+Each renders an `aria-hidden` `div` with `data-layer` and `data-kind`. A label such as "Closed" is your own text.
 
 </section>

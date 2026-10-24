@@ -27,8 +27,8 @@ timelineView({ days: 1, groupBy: 'resource', slotMinutes: 30 }); // a day
 - All-day events have no separate row. They stack with the timed events, from the start of their first day to the
   start of the day after their last.
 - A resource's [availability](resource-view) is shaded as in the resource view.
-- [Background events](../features/background-events) and [background layers](../features/background-layers) don't
-  shade the timeline yet.
+- [Background events](../features/background-events) shade the track without taking stack rows.
+  Register `backgroundFeature` to add [background layers](../features/background-layers).
 
 `hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`).
 
@@ -61,13 +61,15 @@ widths across daylight-saving transitions. Repeated hours share clock positions;
 - `rows` holds one row per resource, or a single row without `groupBy`.
 - `now` is the current time's fraction of the range, only while the clock is inside it.
 
-| Row field       | Description                                                 |
-| --------------- | ----------------------------------------------------------- |
-| `resource`      | The resource; absent without `groupBy`.                     |
-| `segments`      | The row's events.                                           |
-| `rows`          | Stack depth: how many events stack at the busiest point.    |
-| `unavailable`   | Fractions of the range outside the resource's availability. |
-| `isUnavailable` | The resource has no availability in the range.              |
+| Row field          | Description                                                      |
+| ------------------ | ---------------------------------------------------------------- |
+| `resource`         | The resource; absent without `groupBy`.                          |
+| `segments`         | The row's events.                                                |
+| `backgroundEvents` | Timed and all-day background-event coverage, without stack rows. |
+| `backgrounds`      | Layer coverage, only with `backgroundFeature`.                   |
+| `rows`             | Stack depth: how many events stack at the busiest point.         |
+| `unavailable`      | Fractions of the range outside the resource's availability.      |
+| `isUnavailable`    | The resource has no availability in the range.                   |
 
 | Segment field                       | Description                                                        |
 | ----------------------------------- | ------------------------------------------------------------------ |
@@ -79,26 +81,35 @@ widths across daylight-saving transitions. Repeated hours share clock positions;
 
 Stacking follows [event order](../features/events#order). Events that only touch don't overlap.
 
+Timed shading is clipped to visible anchor windows and can split at dates or DST gaps. All-day shading follows
+anchor dates, including their overnight portions. Hidden weekdays contribute no shading. Layer ranges are merged
+before inverse gaps are computed. Range callbacks receive `inputRange`, including any following morning.
+
+Unassigned background events shade every resource; assigned ones shade their matching rows. An ungrouped timeline
+includes all background events. Resource-limited layers apply only to matching resource rows.
+
 </section>
 
 ## Parts
 
 <section id='parts-table'>
 
-| Part                       | Model prop    | Element  | Notes                                                                         |
-| -------------------------- | ------------- | -------- | ----------------------------------------------------------------------------- |
-| `TimelineView`             | `model`       | `div`    | `role='region'`, labelled "Timeline". Scrolls both ways.                      |
-| `TimelineViewHeader`       | none          | `div`    | Sticky; holds the day headers and the slot labels.                            |
-| `TimelineViewDayHeader`    | `day`         | `div`    | `data-today`, `data-date`.                                                    |
-| `TimelineViewDayTrigger`   | `day`, `view` | `button` | Navigates to `view` on the day. See [day triggers](../features/day-triggers). |
-| `TimelineViewSlotLabel`    | `slot`        | `div`    | `slot` is the time slot, not the HTML attribute.                              |
-| `TimelineViewBody`         | none          | `div`    | Holds the rows and the now indicator.                                         |
-| `TimelineViewRow`          | `row`         | `div`    | `data-unavailable`, `data-resource-id`.                                       |
-| `TimelineViewResource`     | `row`         | `div`    | The resource cell; sticks to the start edge.                                  |
-| `TimelineViewLane`         | `row`         | `div`    | Holds the row's unavailable time and events.                                  |
-| `TimelineViewUnavailable`  | `segment`     | `div`    | `aria-hidden`.                                                                |
-| `TimelineViewEvent`        | `segment`     | `button` | `data-all-day`, `data-continues-before`, `data-continues-after`.              |
-| `TimelineViewNowIndicator` | `model`       | `div`    | `aria-hidden`. Renders only while now is inside the range.                    |
+| Part                          | Model prop    | Element  | Notes                                                                         |
+| ----------------------------- | ------------- | -------- | ----------------------------------------------------------------------------- |
+| `TimelineView`                | `model`       | `div`    | `role='region'`, labelled "Timeline". Scrolls both ways.                      |
+| `TimelineViewHeader`          | none          | `div`    | Sticky; holds the day headers and the slot labels.                            |
+| `TimelineViewDayHeader`       | `day`         | `div`    | `data-today`, `data-date`.                                                    |
+| `TimelineViewDayTrigger`      | `day`, `view` | `button` | Navigates to `view` on the day. See [day triggers](../features/day-triggers). |
+| `TimelineViewSlotLabel`       | `slot`        | `div`    | `slot` is the time slot, not the HTML attribute.                              |
+| `TimelineViewBody`            | none          | `div`    | Holds the rows and the now indicator.                                         |
+| `TimelineViewRow`             | `row`         | `div`    | `data-unavailable`, `data-resource-id`.                                       |
+| `TimelineViewResource`        | `row`         | `div`    | The resource cell; sticks to the start edge.                                  |
+| `TimelineViewLane`            | `row`         | `div`    | Holds the row's unavailable time and events.                                  |
+| `TimelineViewUnavailable`     | `segment`     | `div`    | `aria-hidden`.                                                                |
+| `TimelineViewBackground`      | `background`  | `div`    | `aria-hidden`, `data-layer`, `data-kind`; render inside `TimelineViewLane`.   |
+| `TimelineViewBackgroundEvent` | `segment`     | `div`    | `aria-hidden`, continuation flags; render inside `TimelineViewLane`.          |
+| `TimelineViewEvent`           | `segment`     | `button` | `data-all-day`, `data-continues-before`, `data-continues-after`.              |
+| `TimelineViewNowIndicator`    | `model`       | `div`    | `aria-hidden`. Renders only while now is inside the range.                    |
 
 The parts render no slot cells; themes draw the slot lines as a background of each lane.
 

@@ -268,6 +268,8 @@
   }
 
   :where([data-scope='calendar'][data-part='timeline-unavailable']),
+  :where([data-scope='calendar'][data-part='timeline-background']),
+  :where([data-scope='calendar'][data-part='timeline-background-event']),
   :where([data-scope='calendar'][data-part='timeline-event']) {
     position: absolute;
     inset-inline-start: calc(var(--cal-start) * 100%);
@@ -276,6 +278,13 @@
 
   :where([data-scope='calendar'][data-part='timeline-unavailable']) {
     inset-block: 0;
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-background']),
+  :where([data-scope='calendar'][data-part='timeline-background-event']) {
+    inset-block: 0;
+    z-index: 0;
+    pointer-events: none;
   }
 
   :where([data-scope='calendar'][data-part='timeline-event']) {

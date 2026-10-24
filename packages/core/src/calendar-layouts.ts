@@ -132,6 +132,7 @@ export const timelineLayout: Calendar_LayoutFeature<'timeline', Calendar_Timelin
       definition: settings,
       range: input.range,
       events: input.events,
+      backgroundEvents: input.backgroundEvents,
       resources: input.resources,
       timeZone: input.timeZone,
       now: input.now,

@@ -7,6 +7,7 @@ import {
   createWeeklyRanges,
   monthView,
   timeGridView,
+  timelineView,
 } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
 
@@ -40,6 +41,7 @@ export const backgrounds = [
 export const views = createCalendarViews({
   week: timeGridView({ days: 7, features: { backgroundFeature } }),
   month: monthView({ maxEventsPerDay: 3, features: { backgroundFeature } }),
+  timeline: timelineView({ days: 7, groupBy: 'resource', features: { backgroundFeature } }),
 });
 
 export const calendar = createCalendar({

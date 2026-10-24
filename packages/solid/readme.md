@@ -84,6 +84,12 @@ For custom CSS, use `--cal-columns` for month widths, each axis label's `--cal-s
 and `--cal-slot-units` for time-grid height. Timeline headers use `--cal-slot-columns` so final partial slots keep
 their proportional width. The bundled themes handle these values. Fetch events for navigation's `inputRange`.
 
+## Timeline backgrounds
+
+Timeline lanes can render `row.backgroundEvents` with `TimelineViewBackgroundEvent`. Views registering
+`backgroundFeature` also expose `row.backgrounds` for `TimelineViewBackground`. Both take geometry from the core,
+render `aria-hidden` divs, and sit beneath foreground events when using the bundled themes.
+
 ## Server rendering
 
 The package renders with `renderToString` and hydrates with `hydrate`; no separate entry is needed. Pass the same

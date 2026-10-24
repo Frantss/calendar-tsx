@@ -12,7 +12,7 @@ Background events go in `events` with the rest, so they share the id space, the
 - They take no lane or row, skip `eventOrder`, and never count toward `maxEventsPerDay`.
 - The core leaves them out of every event list it hands out: `day.events`, bar segments, timed segments and list days.
   Your own code that reads the `events` input, such as a search box or a count, filters on `display`.
-- Without `resourceIds`, a background event shades every resource column. A normal event appears only in the columns
+- Without `resourceIds`, a background event shades every resource column or timeline row. A normal event appears only in the resources
   it names.
 
 </section>
@@ -21,13 +21,13 @@ Background events go in `events` with the rest, so they share the id space, the
 
 ## Model
 
-| View      | Field                     | Contents                                                                                                                               |
-| --------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Time grid | `column.backgroundEvents` | `{ key, event, start, span }` as fractions of the day. An all-day background event covers the whole column, even with `allDay: false`. |
-| Time grid | `allDay.backgroundEvents` | `{ key, event, colStart, colSpan }` across the all-day row.                                                                            |
-| Month     | `week.backgroundEvents`   | `{ key, event, colStart, colSpan }`, for all-day background events only.                                                               |
-| List      | none                      | Background events are left out.                                                                                                        |
-| Timeline  | none                      | Not shaded yet.                                                                                                                        |
+| View      | Field                     | Contents                                                                                                                                            |
+| --------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Time grid | `column.backgroundEvents` | `{ key, event, start, span }` as fractions of the day. An all-day background event covers the whole column, even with `allDay: false`.              |
+| Time grid | `allDay.backgroundEvents` | `{ key, event, colStart, colSpan }` across the all-day row.                                                                                         |
+| Month     | `week.backgroundEvents`   | `{ key, event, colStart, colSpan }`, for all-day background events only.                                                                            |
+| List      | none                      | Background events are left out.                                                                                                                     |
+| Timeline  | `row.backgroundEvents`    | `{ key, event, start, span }` as fractions of the visible track. All-day events follow anchor dates; timed coverage can split at dates or DST gaps. |
 
 Every entry also has `continuesBefore` and `continuesAfter`, as bars do. A timed background event doesn't tint a month
 day, since part of a day would read as the whole day.
@@ -43,6 +43,7 @@ day, since part of a day would read as the whole day.
 | `TimeGridViewBackgroundEvent`       | `segment`  | In `TimeGridViewColumn`, before the events.             |
 | `TimeGridViewAllDayBackgroundEvent` | `segment`  | In `TimeGridViewAllDay`, before the bars.               |
 | `MonthViewWeekBackgroundEvent`      | `segment`  | In `MonthViewWeek`, after the days and before the bars. |
+| `TimelineViewBackgroundEvent`       | `segment`  | In `TimelineViewLane`, beneath foreground events.       |
 
 Each renders an `aria-hidden` `div` with `data-continues-before` and `data-continues-after`. They aren't interactive:
 `base.css` lets clicks through to the day triggers and events. Render them before the bars and events, because grid

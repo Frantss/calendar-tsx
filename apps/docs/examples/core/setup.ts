@@ -1,5 +1,12 @@
 import type { Calendar_EventInput, Calendar_Resource, Calendar_State } from '@calendar-tsx/core';
-import { createCalendarViews, listView, monthView, timeGridView, timelineView } from '@calendar-tsx/core';
+import {
+  backgroundFeature,
+  createCalendarViews,
+  listView,
+  monthView,
+  timeGridView,
+  timelineView,
+} from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
 
 export type Booking = { title: string; color?: string };
@@ -13,7 +20,7 @@ export const views = createCalendarViews({
   day: timeGridView({ days: 1 }),
   rooms: timeGridView({ days: 1, groupBy: 'resource' }),
   agenda: listView({ days: 7 }),
-  timeline: timelineView({ days: 7, groupBy: 'resource' }),
+  timeline: timelineView({ days: 7, groupBy: 'resource', features: { backgroundFeature } }),
 });
 // #endregion views
 

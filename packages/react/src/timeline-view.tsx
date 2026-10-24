@@ -2,6 +2,8 @@ import type { ReactElement, RefAttributes } from 'react';
 import { forwardRef } from 'react';
 
 import type {
+  Calendar_BackgroundEventSegment,
+  Calendar_BackgroundSegment,
   Calendar_TimelineDay,
   Calendar_TimelineLayout,
   Calendar_TimelineRow,
@@ -216,6 +218,50 @@ export const TimelineViewUnavailable = forwardRef<
     ref={ref}
   />
 ));
+
+export const TimelineViewBackground = forwardRef<
+  HTMLDivElement,
+  { background: Calendar_BackgroundSegment } & Calendar_HTMLProps<'div', Calendar_BackgroundSegment>
+>(({ background, ...props }, ref) => (
+  <calendar.div
+    {...calendarProps_merge(
+      {
+        'aria-hidden': true,
+        'data-kind': background.kind,
+        'data-layer': background.layer,
+        style: vars({ start: background.start, span: background.span }),
+        ...part('timeline-background'),
+      },
+      props,
+    )}
+    state={background}
+    ref={ref}
+  />
+));
+
+type TimelineViewBackgroundEventProps<TData> = { segment: Calendar_BackgroundEventSegment<TData> } & Calendar_HTMLProps<
+  'div',
+  Calendar_BackgroundEventSegment<TData>
+>;
+
+export const TimelineViewBackgroundEvent = forwardRef<HTMLDivElement, TimelineViewBackgroundEventProps<unknown>>(
+  ({ segment, ...props }, ref) => (
+    <calendar.div
+      {...calendarProps_merge(
+        {
+          'aria-hidden': true,
+          'data-continues-before': flag(segment.continuesBefore),
+          'data-continues-after': flag(segment.continuesAfter),
+          style: vars({ start: segment.start, span: segment.span }),
+          ...part('timeline-background-event'),
+        },
+        props,
+      )}
+      state={segment}
+      ref={ref}
+    />
+  ),
+) as <TData>(props: TimelineViewBackgroundEventProps<TData> & RefAttributes<HTMLDivElement>) => ReactElement | null;
 
 /** Renders only when now is inside the range (D11, D34). */
 export const TimelineViewNowIndicator = forwardRef<HTMLDivElement, TimelineViewProps<unknown, unknown>>(

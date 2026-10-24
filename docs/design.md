@@ -1021,7 +1021,7 @@ Layout:
 - **Time grid:** each column gets `backgroundEvents` segments as fractions of its day, clipped at midnight like timed events (D17) but without lanes. An all-day background event also covers its whole column (`start: 0, span: 1`), so a holiday shades the day even in a view with `allDay: false`. The all-day row gets `allDay.backgroundEvents` spans across columns, placed per resource group like the bars (D19) but without rows.
 - **Month and day grids (D35):** each week gets `backgroundEvents` spans for all-day background events only. A timed one would tint a whole day cell for an hour of it.
 - **List:** background events are ignored; the list shows only days with events (D18).
-- **Timeline (D34):** not shaded yet; the timeline layout ignores background events.
+- **Timeline (D34, extended by D42):** row background coverage follows the shared coordinates without taking stack rows.
 - **Resources:** a background event without `resourceIds` covers every resource column, unlike an event, which appears only in the columns it names. A closure usually applies to everyone, so this matches FullCalendar.
 - **Overflow:** background events take no row, so they never count toward `maxEventsPerDay` or `hiddenCount` (D17).
 
@@ -1150,6 +1150,32 @@ duplicating date/time arithmetic inside adapters. Branch-specific inverse shadin
 remain separate possible policy changes; D41 does not adopt them.
 
 Implementation details are recorded in [the coordinate model](coordinate-model.md).
+
+### D42 — Timeline rows render background events and background layers
+
+**Status:** accepted through the requested timeline implementation. Extends D33 and D37 to D34's timeline rows.
+
+- **Model:** every row has `backgroundEvents: Calendar_BackgroundEventSegment<TData>[]`. Views registering
+  `backgroundFeature` also have `row.backgrounds: Calendar_BackgroundSegment[]`, through the row feature map.
+  Both use fractions of the concatenated visible windows and take no stack rows.
+- **Projection:** timed background events are split into visible anchor-date bands. Each band unions exact source
+  fragments, preserving DST gaps and combining repeated-hour coverage under D40. All-day events cover their visible
+  anchor dates, including the following morning of an overnight window. Continuation flags follow clipping to the
+  anchor window, as in the time grid. Hidden-only dates contribute no shading.
+- **Layers:** timed and all-day coverage is merged within each layer before its inverse is computed across the
+  visible track. Layers keep input order. Range callbacks receive `inputRange` and the calendar's time zone;
+  empty axes do not invoke them. All-day ranges follow anchor-date membership rather than midnight instants.
+- **Resources:** an unassigned background event shades every resource row. An assigned event shades the named rows;
+  an ungrouped timeline includes all background events, matching the time grid. A layer without `resourceIds` shades
+  all rows; a scoped layer shades only matching resource rows and is skipped in an ungrouped timeline.
+- **Parts and themes:** React and Solid expose `TimelineViewBackgroundEvent` (`segment`) and `TimelineViewBackground`
+  (`background`) inside `TimelineViewLane`. Both render non-interactive `aria-hidden` divs with `--cal-start/span`.
+  Event parts expose continuation attributes; layer parts expose `data-layer/kind`. Existing background color tokens
+  and forced-color hatching apply. Events paint above shading regardless of DOM order.
+
+**Rejected:** enclosing timed background events like foreground bars, which fills real gaps in projected coverage;
+counting shading in stack depth, which changes event geometry; separate timeline background input options, which
+duplicate the established event and layer contracts.
 
 ## Test cases
 

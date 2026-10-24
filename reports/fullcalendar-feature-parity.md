@@ -419,3 +419,20 @@ the shared track template (`packages/react/src/time-grid-view.tsx:46`; `packages
 The permanent Chromium regression at `packages/themes/src/tests/default-theme.spec.tsx:134` verifies seven columns
 of at least 480px inside a 700px container, header and all-day bar alignment, and horizontal scrolling. It failed
 against the previous code with 90.5625px columns. See the [verification record](time-grid-min-column-width.md).
+
+### Timeline shading status update: 2026-10-24
+
+- **What:** Finding 15 is closed. Timeline rows expose background events and opt-in background layers, including
+  resource targeting, all-day anchor membership, weekly/inverse ranges and exact timed coverage. Hidden weekdays,
+  overnight windows and DST gaps/folds use D41's coordinates. Shading takes no stack rows.
+- **Where:** `packages/core/src/layout/layout-timeline.ts:128`; `packages/core/src/calendar-backgrounds.ts:155`;
+  `packages/core/src/tests/layout-timeline-backgrounds.spec.ts:1`;
+  `packages/themes/src/tests/timeline-backgrounds.spec.tsx:1`; `docs/design.md` (D42).
+- **Why it matters:** background closures and business-hour layers now retain their shading when switching to a
+  timeline. Both adapters expose parts; themes position them beneath events with existing color tokens and
+  forced-color hatching. Consumer-owned labels remain separate.
+
+Verification: workspace build, `check:all` and **355 tests passed**. The new coverage includes resource matching,
+spring gaps, repeated autumn coverage and rollback gaps, exclusive transition ends, Lord Howe's half-hour change,
+overnight ownership, hidden weekdays, skipped midnight, opt-in layers and updates. Browser assertions cover both
+adapters, lane geometry, click-through, light/dark tokens and forced colors.

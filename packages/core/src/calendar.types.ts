@@ -71,7 +71,7 @@ export type Calendar_BackgroundLayer<TKind extends string = string> = {
   kind: TKind;
   /** Shade what the ranges leave uncovered. */
   inverse?: boolean;
-  /** Limits the layer to these resources' columns; omitted, it shades every column. */
+  /** Limits the layer to these resources' columns or rows; omitted, it shades all resources. */
   resourceIds?: string[];
   /** A list, or a function of the input date envelope and `timeZone`; both are compared by reference. */
   ranges: Calendar_BackgroundRange[] | ((range: Calendar_Range, timeZone: string) => Calendar_BackgroundRange[]);
@@ -84,7 +84,7 @@ export type Calendar_WeeklyRule = {
   endTime: Temporal.PlainTime;
 };
 
-/** A shaded span in a time-grid column, as fractions of the column's visible clock window. */
+/** A shaded span, as fractions of a time-grid column or timeline track. */
 export type Calendar_BackgroundSegment = { key: string; layer: string; kind: string; start: number; span: number };
 
 /** A layer that shades a whole month day. */
@@ -136,7 +136,9 @@ export interface Calendar_TimeGridColumn_FeatureMap {
 }
 export interface Calendar_TimeGridSegment_FeatureMap {}
 export interface Calendar_ListDay_FeatureMap {}
-export interface Calendar_TimelineRow_FeatureMap {}
+export interface Calendar_TimelineRow_FeatureMap {
+  backgroundFeature: { backgrounds: Calendar_BackgroundSegment[] };
+}
 export interface Calendar_TimelineSegment_FeatureMap {}
 
 export type Calendar_DateViewSettings = {
@@ -260,7 +262,7 @@ export type Calendar_TimeGridSegment<TData, TFeatures = {}> = {
 
 export type Calendar_UnavailableSegment = { key: string; start: number; span: number };
 
-/** A background event clipped to one time-grid column, as fractions of the column's visible clock window (D37). */
+/** Background-event coverage, as fractions of a time-grid column or timeline track (D37, D42). */
 export type Calendar_BackgroundEventSegment<TData> = {
   key: string;
   event: Calendar_Event<TData>;
@@ -359,6 +361,7 @@ export type Calendar_TimelineRow<TData, TResourceData, TFeatures = {}> = {
   resource?: Calendar_Resource<TResourceData>;
   isUnavailable: boolean;
   segments: Calendar_TimelineSegment<TData, TFeatures>[];
+  backgroundEvents: Calendar_BackgroundEventSegment<TData>[];
   /** Stack depth. */
   rows: number;
   /** Fractions of the range. */

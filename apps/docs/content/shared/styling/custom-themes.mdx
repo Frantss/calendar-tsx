@@ -67,20 +67,22 @@ shorter than the view's `shortEventMinutes`.
 
 ### Timeline
 
-| `data-part`            | Component                  | Attributes                                                      |
-| ---------------------- | -------------------------- | --------------------------------------------------------------- |
-| `timeline-root`        | `TimelineView`             |                                                                 |
-| `timeline-header`      | `TimelineViewHeader`       |                                                                 |
-| `timeline-day-header`  | `TimelineViewDayHeader`    | `data-today`, `data-date`                                       |
-| `timeline-day-trigger` | `TimelineViewDayTrigger`   |                                                                 |
-| `timeline-slot-label`  | `TimelineViewSlotLabel`    |                                                                 |
-| `timeline-body`        | `TimelineViewBody`         |                                                                 |
-| `timeline-row`         | `TimelineViewRow`          | `data-unavailable`, `data-resource-id`                          |
-| `timeline-resource`    | `TimelineViewResource`     | `data-unavailable`, `data-resource-id`                          |
-| `timeline-lane`        | `TimelineViewLane`         | `data-unavailable`                                              |
-| `timeline-unavailable` | `TimelineViewUnavailable`  |                                                                 |
-| `timeline-event`       | `TimelineViewEvent`        | `data-all-day`, `data-continues-before`, `data-continues-after` |
-| `timeline-now`         | `TimelineViewNowIndicator` |                                                                 |
+| `data-part`                 | Component                     | Attributes                                                      |
+| --------------------------- | ----------------------------- | --------------------------------------------------------------- |
+| `timeline-root`             | `TimelineView`                |                                                                 |
+| `timeline-header`           | `TimelineViewHeader`          |                                                                 |
+| `timeline-day-header`       | `TimelineViewDayHeader`       | `data-today`, `data-date`                                       |
+| `timeline-day-trigger`      | `TimelineViewDayTrigger`      |                                                                 |
+| `timeline-slot-label`       | `TimelineViewSlotLabel`       |                                                                 |
+| `timeline-body`             | `TimelineViewBody`            |                                                                 |
+| `timeline-row`              | `TimelineViewRow`             | `data-unavailable`, `data-resource-id`                          |
+| `timeline-resource`         | `TimelineViewResource`        | `data-unavailable`, `data-resource-id`                          |
+| `timeline-lane`             | `TimelineViewLane`            | `data-unavailable`                                              |
+| `timeline-unavailable`      | `TimelineViewUnavailable`     |                                                                 |
+| `timeline-background`       | `TimelineViewBackground`      | `data-layer`, `data-kind`                                       |
+| `timeline-background-event` | `TimelineViewBackgroundEvent` | `data-continues-before`, `data-continues-after`                 |
+| `timeline-event`            | `TimelineViewEvent`           | `data-all-day`, `data-continues-before`, `data-continues-after` |
+| `timeline-now`              | `TimelineViewNowIndicator`    |                                                                 |
 
 ### List
 
@@ -112,7 +114,7 @@ Parts emit their layout as unitless `--cal-*` custom properties on their own ele
 | `timeline-slot-label`                                                         | `--cal-col-start`                                                                                                                                   |
 | `timeline-row`                                                                | `--cal-rows`: stack depth                                                                                                                           |
 | `timeline-event`                                                              | `--cal-start`, `--cal-span` (fractions of the range), `--cal-row`                                                                                   |
-| `timeline-unavailable`                                                        | `--cal-start`, `--cal-span`                                                                                                                         |
+| `timeline-unavailable`, `timeline-background`, `timeline-background-event`    | `--cal-start`, `--cal-span`                                                                                                                         |
 | `timeline-now`                                                                | `--cal-now` (fraction of the range)                                                                                                                 |
 
 For example, `base.css` places a timed event with:

@@ -37,6 +37,8 @@ export {
   TimeGridViewUnavailable,
 } from '#time-grid-view';
 export {
+  TimelineViewBackground,
+  TimelineViewBackgroundEvent,
   TimelineViewBody,
   TimelineViewDayHeader,
   TimelineViewDayTrigger,

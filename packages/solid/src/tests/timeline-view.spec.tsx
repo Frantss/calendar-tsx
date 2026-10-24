@@ -4,10 +4,12 @@ import { expect, it } from 'vitest';
 import { page } from 'vitest/browser';
 
 import type { Calendar_TimelineLayout, Calendar_Views } from '@calendar-tsx/core';
-import { timeGridView, timelineView } from '@calendar-tsx/core';
+import { backgroundFeature, timeGridView, timelineView } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
-import { fixtures_allDay, fixtures_resource, fixtures_timed } from '#tests/calendar.fixtures';
+import { fixtures_allDay, fixtures_background, fixtures_resource, fixtures_timed } from '#tests/calendar.fixtures';
 import {
+  TimelineViewBackground,
+  TimelineViewBackgroundEvent,
   TimelineViewBody,
   TimelineViewDayHeader,
   TimelineViewDayTrigger,
@@ -32,7 +34,9 @@ const views: Calendar_Views = {
 };
 
 const Timeline = () => {
-  const timeline = useCalendarSelector(state => state.layout as Calendar_TimelineLayout<Fixtures_EventData, null>);
+  const timeline = useCalendarSelector(
+    state => state.layout as Calendar_TimelineLayout<Fixtures_EventData, null, { backgroundFeature: typeof backgroundFeature }>,
+  );
 
   return (
     <TimelineView model={timeline()}>
@@ -52,6 +56,8 @@ const Timeline = () => {
             <TimelineViewRow row={row}>
               <TimelineViewResource row={row}>{row.resource?.title}</TimelineViewResource>
               <TimelineViewLane row={row}>
+                <For each={row.backgrounds}>{background => <TimelineViewBackground background={background} />}</For>
+                <For each={row.backgroundEvents}>{segment => <TimelineViewBackgroundEvent segment={segment} />}</For>
                 <For each={row.unavailable}>{segment => <TimelineViewUnavailable segment={segment} />}</For>
                 <For each={row.segments}>{segment => <TimelineViewEvent segment={segment}>{segment.event.data.title}</TimelineViewEvent>}</For>
               </TimelineViewLane>
@@ -138,4 +144,30 @@ it('navigates from a day trigger', async () => {
 
   expect(mocks.onNavigate.mock.calls[0]?.[0]).toMatchObject({ view: 'day' });
   expect(mocks.onNavigate.mock.calls[0]?.[0].date.toString()).toBe('2026-03-13');
+});
+
+it('renders targeted background events and layers as hidden, non-interactive geometry', async () => {
+  const { ui } = setup({
+    views: { timeline: timelineView({ days: 1, groupBy: 'resource', features: { backgroundFeature } }) },
+    resources: [fixtures_resource('Ana'), fixtures_resource('Room')],
+    events: [fixtures_background(fixtures_timed('closure', { date: '2026-03-11', start: '12:00', end: '13:00', resourceIds: ['Ana'] }))],
+    backgrounds: [
+      { id: 'holiday', kind: 'holiday', resourceIds: ['Room'], ranges: [{ allDay: true, start: Temporal.PlainDate.from('2026-03-11') }] },
+    ],
+  });
+  await expect.element(ui.region).toBeInTheDocument();
+  const events = ui.part('timeline-background-event');
+  const layers = ui.part('timeline-background');
+  expect(events).toHaveLength(1);
+  expect(layers).toHaveLength(1);
+  expect(events[0]?.closest('[data-part="timeline-row"]')?.getAttribute('data-resource-id')).toBe('Ana');
+  expect(layers[0]?.closest('[data-part="timeline-row"]')?.getAttribute('data-resource-id')).toBe('Room');
+  expect(events[0]?.style.getPropertyValue('--cal-start')).toBe('0.5');
+  expect(events[0]?.style.getPropertyValue('--cal-span')).toBe(String(1 / 24));
+  expect(layers[0]?.dataset).toMatchObject({ scope: 'calendar', kind: 'holiday', layer: 'holiday' });
+  expect(layers[0]?.style.getPropertyValue('--cal-span')).toBe('1');
+  expect([...events, ...layers].every(node => node.tagName === 'DIV' && node.getAttribute('aria-hidden') === 'true' && node.tabIndex === -1)).toBe(
+    true,
+  );
+  expect(ui.part('timeline-event')).toHaveLength(0);
 });

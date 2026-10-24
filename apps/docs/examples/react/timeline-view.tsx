@@ -1,5 +1,7 @@
 import {
   TimelineView,
+  TimelineViewBackground,
+  TimelineViewBackgroundEvent,
   TimelineViewBody,
   TimelineViewDayHeader,
   TimelineViewDayTrigger,
@@ -43,6 +45,12 @@ export const Timeline = () => {
           <TimelineViewRow key={row.key} row={row}>
             <TimelineViewResource row={row}>{row.resource?.title}</TimelineViewResource>
             <TimelineViewLane row={row}>
+              {row.backgrounds.map(background => (
+                <TimelineViewBackground key={background.key} background={background} />
+              ))}
+              {row.backgroundEvents.map(segment => (
+                <TimelineViewBackgroundEvent key={segment.key} segment={segment} />
+              ))}
               {row.unavailable.map(segment => (
                 <TimelineViewUnavailable key={segment.key} segment={segment} />
               ))}

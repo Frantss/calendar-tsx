@@ -9,6 +9,7 @@ import type {
   Calendar_MonthLayout,
   Calendar_Range,
   Calendar_TimeGridLayout,
+  Calendar_TimelineLayout,
   Calendar_WeeklyRule,
 } from '#calendar.types';
 import type { LayoutIntervals_Interval } from '#layout/layout-intervals';
@@ -17,7 +18,7 @@ import {
   layoutCoordinates_length,
   layoutCoordinates_projectTime,
 } from '#layout/layout-coordinates';
-import { layoutIntervals_complement, layoutIntervals_day } from '#layout/layout-intervals';
+import { layoutIntervals_complement, layoutIntervals_day, layoutIntervals_merge } from '#layout/layout-intervals';
 
 /** Returns `layer` unchanged; it types the layer where it is written and keeps `kind` a literal (D33). */
 export const createBackgroundLayer = <const TKind extends string>(
@@ -151,7 +152,63 @@ const month_decorate = (month: Calendar_MonthLayout<unknown>, layers: Calendar_B
   };
 };
 
-/** Shades time from `backgrounds` layers in the time-grid and month views that list it (D33). */
+const timeline_decorate = (
+  timeline: Calendar_TimelineLayout<unknown, unknown>,
+  layers: Calendar_BackgroundLayer[],
+  timeZone: string,
+) => {
+  const plan = timeline.coordinates;
+  const length = layoutCoordinates_length(plan);
+  const total = length * plan.dates.dates.length;
+  const resolved = plan.dates.dates.length
+    ? layers_resolve(layers, plan.dates.inputRange, timeZone).map(({ layer, ranges }) => {
+        const intervals = ranges.flatMap((range, index) =>
+          'allDay' in range
+            ? plan.dates.dates.flatMap((date, index) =>
+                Temporal.PlainDate.compare(range.start, date) <= 0 &&
+                Temporal.PlainDate.compare(range.end ?? range.start, date) >= 0
+                  ? [{ startMs: index * length, endMs: (index + 1) * length }]
+                  : [],
+              )
+            : layoutCoordinates_coverFragments(
+                plan,
+                layoutCoordinates_projectTime(
+                  plan,
+                  {
+                    start: range.start.toInstant(),
+                    end: range.end.toInstant(),
+                  },
+                  `${layer.id}:${index}`,
+                ),
+              ),
+        );
+        const covered = layoutIntervals_merge(intervals.sort((a, b) => a.startMs - b.startMs));
+        return {
+          layer,
+          intervals: layer.inverse ? layoutIntervals_complement(covered, { startMs: 0, endMs: total }) : covered,
+        };
+      })
+    : [];
+  return {
+    ...timeline,
+    rows: timeline.rows.map(row => ({
+      ...row,
+      backgrounds: resolved.flatMap(({ layer, intervals }): Calendar_BackgroundSegment[] =>
+        appliesTo(layer, row.resource?.id)
+          ? intervals.map(interval => ({
+              key: `${row.key}:${layer.id}:${interval.startMs}`,
+              layer: layer.id,
+              kind: layer.kind,
+              start: interval.startMs / total,
+              span: (interval.endMs - interval.startMs) / total,
+            }))
+          : [],
+      ),
+    })),
+  };
+};
+
+/** Shades time from `backgrounds` layers in views that list it (D33, D42). */
 export const backgroundFeature = {
   trackedOptions: ['backgrounds'],
   decorate: {
@@ -163,6 +220,8 @@ export const backgroundFeature = {
       if (layout.kind === 'timeGrid')
         return timeGrid_decorate(layout as Calendar_TimeGridLayout<unknown, unknown>, layers, timeZone);
       if (layout.kind === 'month') return month_decorate(layout as Calendar_MonthLayout<unknown>, layers, timeZone);
+      if (layout.kind === 'timeline')
+        return timeline_decorate(layout as Calendar_TimelineLayout<unknown, unknown>, layers, timeZone);
 
       return layout;
     },

@@ -51,6 +51,11 @@ Backgrounds, availability and the now indicator use the same axis. All-day spans
 midnight is skipped. Minimum and short event lengths measure displayed clock minutes (design D40).
 Timed shading can split into separate bands at a DST transition; inverse layers retain the gaps between them.
 
+Timeline rows expose `backgroundEvents` independently of foreground `segments`. Register `backgroundFeature` on
+`timelineView` to add `row.backgrounds` for fixed, weekly or inverse layers. Both use fractions of the visible
+track and take no stack rows. Unassigned background events shade every resource; scoped layers require a matching
+resource row. All-day shading follows anchor dates; timed shading uses exact projected coverage.
+
 ## Hidden weekdays and visible hours
 
 All built-in views accept `hiddenDays`, using ISO weekdays (`1` Monday through `7` Sunday). Time grids and timelines
