@@ -1,33 +1,28 @@
-import { Temporal } from 'temporal-polyfill';
+import type { Temporal } from 'temporal-polyfill';
 import type { Calendar_Atom, Calendar_EventInput, Calendar_Feature } from '../../src/calendar.types.ts';
 
-export type Target =
-  | { kind: 'timed'; at: Temporal.ZonedDateTime; resourceId?: string }
-  | { kind: 'allDay'; at: Temporal.PlainDate; resourceId?: string };
-export type Selection =
-  | { kind: 'timed'; start: Temporal.ZonedDateTime; end: Temporal.ZonedDateTime; resourceIds?: string[] }
-  | { kind: 'allDay'; start: Temporal.PlainDate; end: Temporal.PlainDate; resourceIds?: string[] };
-export type SelectIntent = { kind: 'select'; anchor: Target };
-export type MoveIntent = { kind: 'move'; eventId: string };
-export type ResizeIntent = { kind: 'resize'; eventId: string; edge: 'start' | 'end' };
-export type Intent = SelectIntent | MoveIntent | ResizeIntent;
-export type SelectProposal = { kind: 'select'; range: Selection };
-export type MoveProposal<TData = unknown> = {
-  kind: 'move';
-  before: Calendar_EventInput<TData>;
-  after: Calendar_EventInput<TData>;
-};
-export type ResizeProposal<TData = unknown> = {
-  kind: 'resize';
-  edge: ResizeIntent['edge'];
-  before: Calendar_EventInput<TData>;
-  after: Calendar_EventInput<TData>;
-};
-export type Proposal<TData = unknown> = SelectProposal | MoveProposal<TData> | ResizeProposal<TData>;
+// oxlint-disable-next-line no-unused-vars -- operation declarations share the consumer's payload type
+export interface OperationMap<TData = unknown> {}
+export interface InputSettings {}
+export type OperationKind = Extract<keyof OperationMap, string>;
+type Envelope = { kind: string };
+type Entry<K extends OperationKind, D = unknown> = OperationMap<D>[K] extends {
+  intent: infer I extends Envelope;
+  target: infer T;
+  proposal: infer P extends Envelope;
+}
+  ? { intent: I; target: T; proposal: P }
+  : never;
+export type Intent<K extends OperationKind = OperationKind> = { [P in K]: Entry<P>['intent'] & { kind: P } }[K];
+export type OperationTarget<K extends OperationKind = OperationKind> = { [P in K]: Entry<P>['target'] }[K];
+export type Proposal<D = unknown, K extends OperationKind = OperationKind> = {
+  [P in K]: Entry<P, D>['proposal'] & { kind: P };
+}[K];
 export type Evaluation<T = Proposal> =
   | { status: 'valid'; proposal: T }
   | { status: 'rejected' | 'unavailable'; reason: string };
-export type Session = { token: number; intent: Intent; source?: Calendar_EventInput<unknown>; target?: Target };
+export type Start = { status: 'active'; token: number } | { status: 'busy' | 'awaiting-owner' | 'unavailable' };
+export type Session = { token: number; intent: Intent; source?: unknown; target?: OperationTarget };
 export type Snapshot = { session: Session | null; candidate: Evaluation | null; outcome: string | null };
 export type Ownership =
   | { mode: 'internal' }
@@ -38,179 +33,68 @@ export type Input<TData = unknown> = {
   date: Temporal.PlainDate;
   timeZone: string;
   events: Calendar_EventInput<TData>[];
-  views: Record<
-    string,
-    {
-      '~features': object;
-      selection?: { enabled?: boolean };
-      movement?: { enabled?: boolean };
-      resizing?: { enabled?: boolean };
-      constraints?: { preventOverlap?: boolean };
-    }
-  >;
-  selection?: { enabled?: boolean };
-  movement?: { enabled?: boolean };
-  resizing?: { enabled?: boolean };
-  constraints?: { preventOverlap?: boolean };
+  views: Record<string, { '~features': object } & InputSettings>;
+} & InputSettings;
+export type OperationCommands<K extends OperationKind> = {
+  begin: (intent: Intent<K>) => Start;
+  evaluate: (intent: Intent<K>, target: OperationTarget<K>) => Evaluation<Proposal<unknown, K>>;
 };
-export type Rule = (proposal: Proposal, input: Input) => string | undefined;
+export type OperationSpec<K extends OperationKind> = {
+  kind: K;
+  enabled?: (input: Input) => boolean;
+  source?: (intent: Intent<K>, input: Input) => unknown;
+  acceptsTarget: (target: unknown) => target is OperationTarget<K>;
+  sameTarget?: (a: OperationTarget<K>, b: OperationTarget<K>) => boolean;
+  create: (intent: Intent<K>, target: OperationTarget<K>, input: Input) => Evaluation<Proposal<unknown, K>>;
+  api?: (commands: OperationCommands<K>) => Record<string, unknown>;
+  emit?: (proposal: Proposal<unknown, K>, options: unknown) => void;
+};
+type Commands = {
+  begin: (intent: Envelope) => Start;
+  evaluate: (intent: Envelope, target: unknown) => Evaluation<Envelope>;
+};
 export type Operation = {
-  kind: Intent['kind'];
-  create: (intent: Intent, target: Target, input: Input) => Evaluation;
+  kind: string;
+  enabled?: (input: Input) => boolean;
+  source?: (intent: Envelope, input: Input) => unknown;
+  acceptsTarget: (target: unknown) => boolean;
+  sameTarget?: (a: unknown, b: unknown) => boolean;
+  create: (intent: Envelope, target: unknown, input: Input) => Evaluation<Envelope>;
+  bind?: (commands: Commands) => Record<string, unknown>;
+  emit?: (proposal: Envelope, options: unknown) => void;
 };
+
+/** Erases typed descriptors for registry dispatch; kind and target are checked before creation. */
+export const defineOperation = <const K extends OperationKind>(spec: OperationSpec<K>): Operation & { kind: K } => ({
+  kind: spec.kind,
+  enabled: spec.enabled,
+  source: spec.source ? (intent, input) => spec.source!(intent as Intent<K>, input) : undefined,
+  acceptsTarget: spec.acceptsTarget,
+  sameTarget: spec.sameTarget
+    ? (a, b) => spec.sameTarget!(a as OperationTarget<K>, b as OperationTarget<K>)
+    : undefined,
+  create: (intent, target, input) => spec.create(intent as Intent<K>, target as OperationTarget<K>, input),
+  bind: commands =>
+    spec.api?.({
+      begin: intent => commands.begin(intent),
+      evaluate: (intent, target) => commands.evaluate(intent, target) as Evaluation<Proposal<unknown, K>>,
+    }) ?? {},
+  emit: (proposal, options) => spec.emit?.(proposal as Proposal<unknown, K>, options),
+});
 export type Feature = Calendar_Feature & {
   requires?: readonly string[];
   operation?: Operation;
-  validate?: Rule;
+  bindRuntime?: (runtime: Runtime) => Record<string, unknown>;
+  validate?: (proposal: Proposal, input: Input) => string | undefined;
+  interactionDeps?: (input: Input) => readonly unknown[];
 };
 export type Features = Record<string, Feature>;
-
 export const idle = (): Snapshot => ({ session: null, candidate: null, outcome: null });
-
-const selectOperation: Operation = {
-  kind: 'select',
-  create(intent, target) {
-    if (intent.kind !== 'select' || intent.anchor.kind !== target.kind)
-      return { status: 'unavailable', reason: 'different-date-kinds' };
-    const anchor = intent.anchor;
-    if (anchor.resourceId !== target.resourceId) return { status: 'rejected', reason: 'different-resources' };
-    const resourceIds = target.resourceId ? [target.resourceId] : undefined;
-    if (anchor.kind === 'timed' && target.kind === 'timed') {
-      const forward = Temporal.ZonedDateTime.compare(anchor.at, target.at) < 0;
-      const start = forward ? anchor.at : target.at;
-      const end = forward ? target.at : anchor.at;
-      if (start.equals(end)) return { status: 'rejected', reason: 'empty-range' };
-      return { status: 'valid', proposal: { kind: 'select', range: { kind: 'timed', start, end, resourceIds } } };
-    }
-    if (anchor.kind === 'allDay' && target.kind === 'allDay') {
-      const forward = Temporal.PlainDate.compare(anchor.at, target.at) <= 0;
-      return {
-        status: 'valid',
-        proposal: {
-          kind: 'select',
-          range: {
-            kind: 'allDay',
-            start: forward ? anchor.at : target.at,
-            end: forward ? target.at : anchor.at,
-            resourceIds,
-          },
-        },
-      };
-    }
-    return { status: 'unavailable', reason: 'different-date-kinds' };
-  },
+type InternalSnapshot = {
+  session: { token: number; intent: Envelope; source?: unknown; target?: unknown } | null;
+  candidate: Evaluation<Envelope> | null;
+  outcome: string | null;
 };
-
-const moveOperation: Operation = {
-  kind: 'move',
-  create(intent, target, input) {
-    if (intent.kind !== 'move') return { status: 'unavailable', reason: 'wrong-operation' };
-    const before = input.events.find(event => event.id === intent.eventId);
-    if (!before) return { status: 'rejected', reason: 'source-removed' };
-    const resourceIds = target.resourceId ? [target.resourceId] : before.resourceIds;
-    if (before.kind === 'timed' && target.kind === 'timed') {
-      const milliseconds = before.end.epochMilliseconds - before.start.epochMilliseconds;
-      if (milliseconds <= 0) return { status: 'rejected', reason: 'invalid-source-range' };
-      return {
-        status: 'valid',
-        proposal: {
-          kind: 'move',
-          before,
-          after: { ...before, start: target.at, end: target.at.add({ milliseconds }), resourceIds },
-        },
-      };
-    }
-    if (before.kind === 'allDay' && target.kind === 'allDay') {
-      const days = before.start.until(before.end ?? before.start).days;
-      if (days < 0) return { status: 'rejected', reason: 'invalid-source-range' };
-      return {
-        status: 'valid',
-        proposal: {
-          kind: 'move',
-          before,
-          after: { ...before, start: target.at, end: target.at.add({ days }), resourceIds },
-        },
-      };
-    }
-    return { status: 'unavailable', reason: 'conversion-not-prototyped' };
-  },
-};
-
-const resizeOperation: Operation = {
-  kind: 'resize',
-  create(intent, target, input) {
-    if (intent.kind !== 'resize') return { status: 'unavailable', reason: 'wrong-operation' };
-    if (intent.edge !== 'start' && intent.edge !== 'end') return { status: 'rejected', reason: 'invalid-edge' };
-    const before = input.events.find(event => event.id === intent.eventId);
-    if (!before) return { status: 'rejected', reason: 'source-removed' };
-    if (target.resourceId && before.resourceIds?.length && !before.resourceIds.includes(target.resourceId))
-      return { status: 'rejected', reason: 'different-resources' };
-    if (before.kind === 'timed' && target.kind === 'timed') {
-      if (Temporal.ZonedDateTime.compare(before.start, before.end) >= 0)
-        return { status: 'rejected', reason: 'invalid-source-range' };
-      const start = intent.edge === 'start' ? target.at : before.start;
-      const end = intent.edge === 'end' ? target.at : before.end;
-      if (Temporal.ZonedDateTime.compare(start, end) >= 0) return { status: 'rejected', reason: 'invalid-range' };
-      return {
-        status: 'valid',
-        proposal: { kind: 'resize', edge: intent.edge, before, after: { ...before, start, end } },
-      };
-    }
-    if (before.kind === 'allDay' && target.kind === 'allDay') {
-      const fixedEnd = before.end ?? before.start;
-      if (Temporal.PlainDate.compare(before.start, fixedEnd) > 0)
-        return { status: 'rejected', reason: 'invalid-source-range' };
-      const start = intent.edge === 'start' ? target.at : before.start;
-      const end = intent.edge === 'end' ? target.at : fixedEnd;
-      if (Temporal.PlainDate.compare(start, end) > 0) return { status: 'rejected', reason: 'invalid-range' };
-      return {
-        status: 'valid',
-        proposal: { kind: 'resize', edge: intent.edge, before, after: { ...before, start, end } },
-      };
-    }
-    return { status: 'unavailable', reason: 'conversion-not-prototyped' };
-  },
-};
-
-export const interactionFeature = { trackedOptions: [] } as const satisfies Feature;
-export const dateSelectionFeature = {
-  trackedOptions: [],
-  requires: ['interactionFeature'],
-  operation: selectOperation,
-} as const satisfies Feature;
-export const eventMoveFeature = {
-  trackedOptions: [],
-  requires: ['interactionFeature'],
-  operation: moveOperation,
-} as const satisfies Feature;
-export const eventResizeFeature = {
-  trackedOptions: [],
-  requires: ['interactionFeature'],
-  operation: resizeOperation,
-} as const satisfies Feature;
-export const constraintsFeature = {
-  trackedOptions: [],
-  requires: ['interactionFeature'],
-  validate(proposal, input) {
-    if ((input.views[input.view].constraints?.preventOverlap ?? input.constraints?.preventOverlap) === false) return;
-    const range = proposal.kind === 'select' ? proposal.range : proposal.after;
-    if (range.kind === 'allDay') return;
-    const overlapping = input.events.some(event => {
-      if (event.kind !== 'timed' || (proposal.kind !== 'select' && event.id === proposal.before.id)) return false;
-      if (
-        range.resourceIds?.length &&
-        event.resourceIds?.length &&
-        !range.resourceIds.some(id => event.resourceIds!.includes(id))
-      )
-        return false;
-      return (
-        range.start.epochMilliseconds < event.end.epochMilliseconds &&
-        range.end.epochMilliseconds > event.start.epochMilliseconds
-      );
-    });
-    return overlapping ? 'overlap' : undefined;
-  },
-} as const satisfies Feature;
 
 const activeKeys = (features: Features, input: Input) => {
   const declared = new Set(Object.values(input.views).flatMap(view => Object.keys(view['~features'])));
@@ -241,9 +125,6 @@ export const validateRegistration = (features: Features, input: Input) => {
   return [...new Set(errors)];
 };
 
-const sameTarget = (a: Target | undefined, b: Target) =>
-  a?.kind === b.kind && a.resourceId === b.resourceId && a.at.toString() === b.at.toString();
-
 export const createRuntime = (host: {
   features: Features;
   read: () => Input;
@@ -251,12 +132,12 @@ export const createRuntime = (host: {
   ownership?: Ownership;
 }) => {
   const ownership = host.ownership ?? { mode: 'internal' };
-  let internal = idle();
+  let internal: InternalSnapshot = idle();
   let sequence = 0;
   let lease: number | null = null;
-  let pending: Snapshot | null = null;
+  let pending: InternalSnapshot | null = null;
   const listeners = new Set<() => void>();
-  const read = () =>
+  const read = (): InternalSnapshot =>
     ownership.mode === 'controlled'
       ? ownership.read()
       : ownership.mode === 'external'
@@ -269,30 +150,44 @@ export const createRuntime = (host: {
     observed = current;
     listeners.forEach(listener => listener());
   };
-  const publish = (next: Snapshot) => {
+  const publish = (next: InternalSnapshot) => {
     if (ownership.mode === 'controlled') {
       pending = next;
-      ownership.onChange(next);
+      ownership.onChange(next as Snapshot);
       if (read() === next) pending = null;
-    } else if (ownership.mode === 'external') ownership.atom.setState(() => next);
+    } else if (ownership.mode === 'external') ownership.atom.setState(() => next as Snapshot);
     else internal = next;
     notify();
   };
   const errors = validateRegistration(host.features, host.read());
   if (errors.length) throw new Error(errors.join('; '));
+  const registry = new Map<string, { key: string; operation: Operation }>();
+  for (const [key, feature] of Object.entries(host.features))
+    if (feature.operation) {
+      if (registry.has(feature.operation.kind)) throw new Error(`duplicate operation: ${feature.operation.kind}`);
+      registry.set(feature.operation.kind, { key, operation: feature.operation });
+    }
+  const operationFor = (kind: string, input: Input) => {
+    const entry = registry.get(kind);
+    return entry && activeKeys(host.features, input).includes(entry.key) && entry.operation.enabled?.(input) !== false
+      ? entry.operation
+      : undefined;
+  };
+  const depsFor = (input: Input) =>
+    activeKeys(host.features, input).flatMap(key => host.features[key].interactionDeps?.(input) ?? []);
   let context = host.read();
-  const evaluate = (intent: Intent, target: Target): Evaluation => {
+  let dependencies = depsFor(context);
+  const evaluate = (intent: Envelope, target: unknown): Evaluation<Envelope> => {
     const input = host.read();
     const active = activeKeys(host.features, input).map(key => host.features[key]);
-    const operation = active.find(feature => feature.operation?.kind === intent.kind)?.operation;
+    const operation = operationFor(intent.kind, input);
     if (!operation) return { status: 'unavailable', reason: 'operation-disabled' };
-    const setting = ({ select: 'selection', move: 'movement', resize: 'resizing' } as const)[intent.kind];
-    if ((input.views[input.view][setting]?.enabled ?? input[setting]?.enabled) === false)
-      return { status: 'unavailable', reason: 'operation-disabled' };
+    if (!operation.acceptsTarget(target)) return { status: 'unavailable', reason: 'unsupported-target' };
     const result = operation.create(intent, target, input);
     if (result.status !== 'valid') return result;
+    if (result.proposal.kind !== operation.kind) return { status: 'rejected', reason: 'operation-result-mismatch' };
     for (const feature of active) {
-      const reason = feature.validate?.(result.proposal, input);
+      const reason = feature.validate?.(result.proposal as Proposal, input);
       if (reason) return { status: 'rejected', reason };
     }
     return result;
@@ -310,7 +205,13 @@ export const createRuntime = (host: {
     const session = read().session;
     const changedContext =
       input.view !== context.view || !input.date.equals(context.date) || input.timeZone !== context.timeZone;
-    const changed = changedContext || input.events !== context.events || input.views !== context.views;
+    const nextDependencies = depsFor(input);
+    const changed =
+      changedContext ||
+      input.events !== context.events ||
+      input.views !== context.views ||
+      dependencies.length !== nextDependencies.length ||
+      dependencies.some((value, index) => !Object.is(value, nextDependencies[index]));
     if (changedContext && lease !== null) {
       cancel(lease, 'context-changed');
       context = input;
@@ -318,42 +219,50 @@ export const createRuntime = (host: {
     }
     if (!session || session.token !== lease) return;
     context = input;
-    if (!changed) return;
-    if (session.intent.kind !== 'select') {
-      const id = session.intent.eventId;
-      if (input.events.find(event => event.id === id) !== session.source) {
-        cancel(session.token, 'source-changed');
-        return;
-      }
+    dependencies = nextDependencies;
+    const operation = operationFor(session.intent.kind, input);
+    if (!operation) {
+      cancel(session.token, 'operation-disabled');
+      return;
     }
-    if (session.target) publish({ ...read(), candidate: evaluate(session.intent, session.target) });
+    if (operation.source && operation.source(session.intent, input) !== session.source) {
+      cancel(session.token, 'source-changed');
+      return;
+    }
+    if (changed && session.target !== undefined)
+      publish({ ...read(), candidate: evaluate(session.intent, session.target) });
   };
-  const begin = (intent: Intent) => {
+  const begin = (intent: Envelope): Start => {
     if (lease !== null) return { status: 'busy' } as const;
     refresh();
     if (pending) return { status: 'awaiting-owner' } as const;
     const input = host.read();
-    const operation = activeKeys(host.features, input).some(key => host.features[key].operation?.kind === intent.kind);
-    if (!operation) return { status: 'unavailable' } as const;
-    const setting = ({ select: 'selection', move: 'movement', resize: 'resizing' } as const)[intent.kind];
-    if ((input.views[input.view][setting]?.enabled ?? input[setting]?.enabled) === false)
-      return { status: 'unavailable' } as const;
-    const source = intent.kind !== 'select' ? input.events.find(event => event.id === intent.eventId) : undefined;
-    if (intent.kind !== 'select' && !source) return { status: 'unavailable' } as const;
+    const operation = operationFor(intent.kind, input);
+    if (!operation) return { status: 'unavailable' };
+    const source = operation.source?.(intent, input);
+    if (operation.source && source === undefined) return { status: 'unavailable' };
     const token = ++sequence;
     lease = token;
     context = input;
+    dependencies = depsFor(input);
     publish({ session: { token, intent, source }, candidate: null, outcome: null });
     return { status: 'active', token } as const;
   };
-  const update = (token: number, target: Target) => {
+  const update = (token: number, target: OperationTarget) => {
     if (lease !== token) return 'stale-token';
     refresh();
     if (lease !== token) return 'stale-token';
     if (pending || read().session?.token !== token) return 'awaiting-owner';
     const current = read();
     if (!current.session) return current.outcome;
-    if (sameTarget(current.session.target, target)) return 'unchanged';
+    const operation = operationFor(current.session.intent.kind, host.read());
+    if (
+      current.session.target !== undefined &&
+      operation?.acceptsTarget(current.session.target) &&
+      operation.acceptsTarget(target) &&
+      (operation.sameTarget?.(current.session.target, target) ?? Object.is(current.session.target, target))
+    )
+      return 'unchanged';
     publish({
       ...current,
       session: { ...current.session, target },
@@ -368,7 +277,7 @@ export const createRuntime = (host: {
     if (pending || read().session?.token !== token) return 'awaiting-owner';
     const { session } = read();
     if (!session) return read().outcome;
-    if (!session.target) return 'no-target';
+    if (session.target === undefined) return 'no-target';
     const result = evaluate(session.intent, session.target);
     if (result.status !== 'valid') {
       publish({ ...read(), candidate: result });
@@ -376,13 +285,13 @@ export const createRuntime = (host: {
     }
     lease = null;
     publish({ ...idle(), outcome: 'committed' });
-    host.emit(result.proposal);
+    host.emit(result.proposal as Proposal);
     return 'committed';
   };
-  return {
+  const runtime = {
     store: {
       get state() {
-        return read();
+        return read() as Snapshot;
       },
       subscribe(listener: () => void) {
         listeners.add(listener);
@@ -391,8 +300,21 @@ export const createRuntime = (host: {
         };
       },
     },
-    evaluate,
-    begin,
+    evaluate: evaluate as <const I extends Intent>(
+      intent: I,
+      target: NoInfer<OperationTarget<I['kind']>>,
+    ) => Evaluation<Proposal<unknown, I['kind']>>,
+    begin: begin as (intent: Intent) => Start,
+    bind() {
+      const api: Record<string, unknown> = {};
+      for (const feature of Object.values(host.features)) {
+        Object.assign(api, feature.bindRuntime?.(runtime), feature.operation?.bind?.({ begin, evaluate }));
+      }
+      return api;
+    },
+    dispatch(proposal: Envelope, options: unknown) {
+      registry.get(proposal.kind)?.operation.emit?.(proposal, options);
+    },
     update,
     unavailable(token: number, reason: string) {
       if (lease !== token) return 'stale-token';
@@ -408,22 +330,12 @@ export const createRuntime = (host: {
     commit,
     cancel,
     refresh,
-    dispose() {
+    dispose: () => {
       if (lease !== null) cancel(lease, 'unmounted');
       listeners.clear();
     },
   };
+  return runtime;
 };
 
 export type Runtime = ReturnType<typeof createRuntime>;
-
-export const resolveClockTarget = (local: string, timeZone: string, sourceOffset?: string): Evaluation<Target> => {
-  const dateTime = Temporal.PlainDateTime.from(local);
-  const earlier = dateTime.toZonedDateTime(timeZone, { disambiguation: 'earlier' });
-  const later = dateTime.toZonedDateTime(timeZone, { disambiguation: 'later' });
-  const choices = [earlier, later].filter(at => at.toPlainDateTime().equals(dateTime));
-  const at = choices.find(choice => choice.offset === sourceOffset) ?? choices[0];
-  return at
-    ? { status: 'valid', proposal: { kind: 'timed', at } }
-    : { status: 'unavailable', reason: 'nonexistent-time' };
-};

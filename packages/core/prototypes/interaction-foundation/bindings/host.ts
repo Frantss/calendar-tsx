@@ -1,11 +1,13 @@
 import {
   createRuntime,
+  isBuiltinProposal,
+  isDateTarget,
   resolveClockTarget,
   type Ownership,
   type Proposal,
   type Selection,
   type Target,
-} from '../runtime';
+} from '../operations';
 import { locate, project, surfaceKey, type Geometry, type Located, type Preview, type Surface } from './geometry';
 import type { Instance, Setup } from './setup';
 
@@ -48,6 +50,7 @@ export const createHost = (
     read: () => calendar.options,
     ownership,
     emit: proposal => {
+      if (!isBuiltinProposal(proposal)) return;
       setup.counts.lastDraftBuilds = setup.counts.baseBuilds - baseline;
       setup.counts.emissions++;
       if (proposal.kind !== 'select') lastMove = proposal;
@@ -73,7 +76,10 @@ export const createHost = (
     const model = calendar.store.state.layout;
     if (candidate !== previousCandidate || model !== previousLayout) {
       const context = geometry();
-      previews = context && candidate?.status === 'valid' ? project(context, candidate.proposal) : [];
+      previews =
+        context && candidate?.status === 'valid' && isBuiltinProposal(candidate.proposal)
+          ? project(context, candidate.proposal)
+          : [];
       if (context && candidate?.status === 'valid') setup.counts.previewBuilds++;
       previousCandidate = candidate;
       previousLayout = model;
@@ -359,7 +365,7 @@ export const createHost = (
       const token = runtime.store.state.session?.token;
       if (token !== undefined) {
         const target = runtime.store.state.session?.target;
-        if (target) {
+        if (isDateTarget(target)) {
           request = { token, target, finish: true };
           pump();
         }

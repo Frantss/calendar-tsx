@@ -9,7 +9,7 @@ import type {
 } from '../../../src/calendar.types';
 import { timeGridLayout, timelineLayout } from '../../../src/calendar-layouts';
 import { layoutAxis_create, layoutAxis_date } from '../../../src/layout/layout-axis';
-import { resolveClockTarget, type Evaluation, type Proposal, type Target } from '../runtime';
+import { resolveClockTarget, type Evaluation, type Proposal, type Target } from '../operations';
 
 export type Model = Calendar_TimeGridLayout<unknown, unknown> | Calendar_TimelineLayout<unknown, unknown>;
 export type Surface = { kind: 'column'; key: string } | { kind: 'lane'; key: string } | { kind: 'allDay' };

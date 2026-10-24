@@ -11,8 +11,8 @@ import {
   eventResizeFeature,
   interactionFeature,
   idle,
-} from '../runtime';
-import type { Selection } from '../runtime';
+} from '../operations';
+import type { Selection } from '../operations';
 import type {} from '../feature-types';
 
 export type Data = { title: string };

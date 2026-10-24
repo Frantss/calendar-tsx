@@ -26,7 +26,7 @@
     "publish": "changeset publish",
     "prepublish": "vp run -w build && vp run -w check:all",
     "prototype:interactions": "node packages/core/prototypes/interaction-foundation/bindings/serve.mjs",
-    "prototype:interactions:types": "vp exec tsc -p packages/core/prototypes/interaction-foundation/tsconfig.json && vp exec tsc -p packages/core/prototypes/interaction-foundation/tsconfig.public.json && vp exec tsc -p packages/react/prototypes/interaction-foundation && vp exec tsc -p packages/solid/prototypes/interaction-foundation && vp exec tsc -p packages/react/prototypes/interaction-foundation/tsconfig.public.json && vp exec tsc -p packages/solid/prototypes/interaction-foundation/tsconfig.public.json",
+    "prototype:interactions:types": "vp exec tsc -p packages/core/prototypes/interaction-foundation/tsconfig.json && vp exec tsc -p packages/core/prototypes/interaction-foundation/third-party/tsconfig.json && vp exec tsc -p packages/core/prototypes/interaction-foundation/tsconfig.public.json && vp exec tsc -p packages/react/prototypes/interaction-foundation && vp exec tsc -p packages/solid/prototypes/interaction-foundation && vp exec tsc -p packages/react/prototypes/interaction-foundation/tsconfig.public.json && vp exec tsc -p packages/solid/prototypes/interaction-foundation/tsconfig.public.json",
     "prototype:interactions:build": "vp build --config packages/react/prototypes/interaction-foundation/vite.config.ts && vp build --config packages/solid/prototypes/interaction-foundation/vite.config.ts"
   },
   "devDependencies": {

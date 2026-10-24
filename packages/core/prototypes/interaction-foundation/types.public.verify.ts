@@ -1,7 +1,8 @@
+import { eventPriorityFeature, type PriorityApi } from './third-party/priority';
 import { createCalendar, createCalendarViews, timeGridView } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
-import { eventMoveFeature, eventResizeFeature, interactionFeature } from './runtime';
-import type { Evaluation, MoveProposal, ResizeProposal, Target } from './runtime';
+import { eventMoveFeature, eventResizeFeature, interactionFeature } from './operations';
+import type { Evaluation, MoveProposal, ResizeProposal, Target } from './operations';
 
 declare module '@calendar-tsx/core' {
   interface Calendar_State_FeatureMap {
@@ -70,3 +71,33 @@ void resizeCalendar.api.move;
 void resizeCalendar.api.selection;
 // @ts-expect-error resize-only public declarations omit selection state
 void resizeCalendar.store.state.selectedRange;
+
+declare module '@calendar-tsx/core' {
+  interface Calendar_Api_FeatureMap<TData, TResourceData> {
+    eventPriorityFeature: { priority: PriorityApi<TData> };
+  }
+}
+const priorityViews = createCalendarViews({
+  grid: timeGridView({ days: 1, features: { interactionFeature, eventPriorityFeature } }),
+});
+const priorityCalendar = createCalendar({
+  ...priorityViews,
+  date,
+  timeZone: 'UTC',
+  view: 'grid',
+  events: calendar.options.events,
+  onNavigate: () => {},
+});
+const priorityResult = priorityCalendar.api.priority.evaluate('appointment', 'Customer request', {
+  kind: 'priority',
+  value: 'high',
+});
+if (priorityResult.status === 'valid') {
+  const title: string = priorityResult.proposal.event.data.title;
+  void title;
+  // @ts-expect-error built feature API retains the extension's payload type
+  const wrong: number = priorityResult.proposal.event.data.title;
+  void wrong;
+}
+// @ts-expect-error custom operation does not register resizing
+void priorityCalendar.api.resize;

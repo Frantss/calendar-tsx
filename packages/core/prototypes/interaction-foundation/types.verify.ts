@@ -1,3 +1,4 @@
+import type {} from './third-party/priority';
 import { Temporal } from 'temporal-polyfill';
 import { createCalendar } from '../../src/calendar.ts';
 import { createCalendarViews, listView, timeGridView } from '../../src/calendar-views.ts';
@@ -10,7 +11,7 @@ import {
   eventResizeFeature,
   interactionFeature,
   type Snapshot,
-} from './runtime.ts';
+} from './operations.ts';
 
 const date = Temporal.PlainDate.from('2026-10-23');
 const target = { kind: 'timed', at: date.toZonedDateTime('UTC') } as const;
@@ -259,3 +260,12 @@ displayOptions.onEventResize = () => {};
 const missingResizeRuntime = createCalendarViews({ day: timeGridView({ days: 1, features: { eventResizeFeature } }) });
 // @ts-expect-error resize requires the shared runtime, independently of movement and selection
 createTypedRuntime({ ...base, ...missingResizeRuntime, view: 'day' });
+
+const checkMixedOperationMap = (runtime: import('./runtime').Runtime) => {
+  runtime.evaluate({ kind: 'priority', eventId: 'a', reason: 'Customer request' }, { kind: 'priority', value: 'high' });
+  // @ts-expect-error custom operation cannot use a built-in target
+  runtime.evaluate({ kind: 'priority', eventId: 'a', reason: 'Customer request' }, target);
+  // @ts-expect-error built-in operation cannot use a custom target
+  runtime.evaluate({ kind: 'move', eventId: 'a' }, { kind: 'priority', value: 'high' });
+};
+void checkMixedOperationMap;

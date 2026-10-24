@@ -48,7 +48,12 @@ import {
   type HostState,
 } from '../../../core/prototypes/interaction-foundation/bindings/host';
 import { surfaceKey, type Surface } from '../../../core/prototypes/interaction-foundation/bindings/geometry';
-import { idle, type Ownership, type Selection } from '../../../core/prototypes/interaction-foundation/runtime';
+import {
+  idle,
+  isDateTarget,
+  type Ownership,
+  type Selection,
+} from '../../../core/prototypes/interaction-foundation/operations';
 import '../../../core/prototypes/interaction-foundation/bindings/style.css';
 
 const bind = (host: Host, surface: Surface) => {
@@ -246,7 +251,10 @@ const Harness = (props: { preset: Preset; owner: Ownership['mode']; mode: Mode }
   const fields = () => ({
     Features: state().features.join(', '),
     Session: state().draft.session ? `${state().draft.session!.intent.kind} / ${state().draft.session!.token}` : 'Idle',
-    Target: state().draft.session?.target?.at.toString() ?? 'None',
+    Target: (() => {
+      const target = state().draft.session?.target;
+      return isDateTarget(target) ? target.at.toString() : 'None';
+    })(),
     Candidate: (() => {
       const candidate = state().draft.candidate;
       return candidate

@@ -32,7 +32,7 @@ pnpm exec node packages/core/prototypes/interaction-foundation/build-demo.mjs
 pnpm exec tsc -p packages/core/prototypes/interaction-foundation/tsconfig.json
 ```
 
-The generator strips TypeScript with Node's `stripTypeScriptTypes`, embedding the same [runtime.ts](runtime.ts) used
+The generator strips TypeScript with Node's `stripTypeScriptTypes`, embedding the shared [runtime.ts](runtime.ts), common feature and operation descriptors used
 in direct probes, plus Temporal's standalone global build and license. Edit [demo.template.html](demo.template.html)
 and regenerate; do not edit generated HTML.
 
@@ -87,7 +87,7 @@ Package validation initially reported `Command failed: npm pack`; using a writab
 
 Production construction, automatic state subscriptions, persistent selection wiring, React/Solid lifetimes and real
 layout `locate/project` capabilities remain unproved. The demo uses one simplified UTC surface; a timeline and second
-framework adapter still need to exercise those seams. The open third-party operation map and tree shaking are unverified.
+framework adapter still need to exercise those seams. The open operation map was unverified in this initial proof; the extension below covers it. Tree shaking remains unverified.
 
 Moves target a new start, preserving elapsed timed duration or inclusive all-day length, and can replace resources
 with one resource. Pointer grab offset, timed/all-day conversion, grouped movement, resource/all-day-overlap policies
@@ -144,8 +144,7 @@ assertions also compile. Runtime behavior is unchanged.
 - Workspace build, both harness bundles, all three prototype type checks, `check:all` and all 275 existing tests
   passed. Browser verification used direct interactions/probes, with no prototype runtime test suite added.
 
-Still unproved: production feature/capability registration, arbitrary controlled snapshot cloning, a third-party
-operation registry and tree shaking. Conversion, grouped movement, touch, auto-scroll and complete
+Still unproved: production feature/capability registration, arbitrary controlled snapshot cloning, tree shaking. Third-party registration is verified by the open-map extension below. Conversion, grouped movement, touch, auto-scroll and complete
 resource/availability policy are outside this extension. Movement previews currently build an isolated event model;
 extracting a shared interval projector would be a separate production implementation decision.
 
@@ -190,6 +189,47 @@ Verification:
   demo had no page-level overflow. Existing development servers were reused after a duplicate start reported
   `Error: Port 5177 is already in use`.
 
-The operation union and API facade still enumerate operation kinds; this proves a third built-in operation, not
-arbitrary third-party registration. Production capability registration, constraints beyond supplied timed overlaps,
+At this stage the operation union and API facade still enumerated operation kinds. The open-map extension below
+subsequently verifies independent third-party registration. Production capability registration, constraints beyond supplied timed overlaps,
 edge permission policies, conversion, touch and auto-scroll remain outside the prototype.
+
+## Open operation map extension
+
+Question: can an independently declared operation opt into this lifecycle without adding cases to shared code?
+The prototype now uses `OperationMap<TData>` declaration merging. Each entry supplies its intent, target and proposal;
+`defineOperation` correlates those types. The shared [runtime](runtime.ts), [API facade](feature-types.ts) and
+[common feature](interaction-feature.ts) import no operation implementation. Selection, movement and resizing live
+in [operations.ts](operations.ts).
+
+The [priority extension](third-party/priority.ts) contributes its own declaration, descriptor, settings, API and
+callback. Its target is `{ kind: 'priority', value: 'low' | 'high' }`; its result contains `event`, `value` and `reason`,
+with no date target, range or before/after pair. It registers independently of all three date operations. The
+standalone demo adds priority-only, policy-change and source-replacement walkthroughs.
+
+Descriptors own activation, opaque source identity, target guards/equality, proposal creation, API binding and result
+callbacks. Features declare input dependencies for draft revalidation and may add validators. Shared code owns
+registration, view activation, leases, ownership, validation dispatch and completion. Duplicate operation kinds and
+mismatched result discriminants are rejected. The existing DOM host and geometry projector accept only built-in
+calendar edits; this extension does not define a priority pointer driver.
+
+The isolated [compiler fixture](third-party/types.verify.ts) imports no built-in declarations. It verifies the custom
+intent/target/result relationship, prerequisites, option/API gating and payload inference. A negative assertion that
+`'move'` is not an `OperationKind` checks that isolation. Mixed fixtures reject targets belonging to other operations.
+Core and both adapters also check priority-only instances against source and built declarations, preserving event
+data and omitting movement, resize, selection and selection state.
+
+Fourteen direct extension probes verify custom targets/equality, unsupported-target recovery, callbacks, policy
+refresh and commit validation, source replacement, activation, duplicate registration, result-kind guards and all
+three ownership modes. An isolated executable imports only neutral modules and the extension; its import graph contains no built-in
+operation module. The fourteen resize probes also pass after moving the built-ins out of the runtime.
+This supersedes the earlier closed-union limitation. Production feature construction and bundle guarantees remain
+unproved; no production interaction exports are added.
+
+Extension verification: workspace build, both harness bundles, all seven compiler configurations, `check:all` and
+all 276 existing tests pass. All 17 standalone walkthroughs complete without page errors or overflow at 390px.
+Both resize edges pass real pointer regression checks in both layouts/adapters and all ownership modes (12
+combinations), retaining zero draft-time base builds, at most `0.015625px` preview/applied geometry difference and
+complete cleanup. Mixed selection/movement/resize actions also complete in both adapters. The browser session
+blocked direct `file:` navigation, so the standalone file was served unchanged through the existing Vite server.
+The first lint run reported `TS5097` and `TS2578` for the isolated fixture; its own local TypeScript configuration
+now preserves that import boundary during both lint and explicit compilation.

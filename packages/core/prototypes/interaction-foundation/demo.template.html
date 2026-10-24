@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Selection, movement and resizing — interaction prototype</title>
+    <title>Opt-in calendar operations — interaction prototype</title>
     <link rel="icon" href="data:," />
     <style>
       * {
@@ -196,19 +196,19 @@
   <body>
     <main>
       <div class="eyebrow">Throwaway logic prototype · calendar-tsx</div>
-      <h1>Selection, movement and resizing</h1>
+      <h1>Opt-in calendar operations</h1>
       <p>
-        Can resizing work with movement and selection switched off? Can independently enabled operations share one
-        draft, the same scheduling checks and safe completion, while the application keeps ownership of its events?
-        Explore that model below. This page uses the actual prototype runtime; it does not use the production calendar
-        or framework adapters.
+        Can a separately defined operation use the same draft lifecycle with its own target and result? Set an
+        appointment’s priority without enabling selection, movement or resizing. The shared runtime also runs the
+        existing date-editing walkthroughs below. All data stays in memory.
       </p>
       <section class="panel" aria-labelledby="setup-title">
         <h2 id="setup-title">Feature setup <small class="muted">(changes reset the demo)</small></h2>
         <div class="controls" id="setup">
           <label><input id="select-feature" type="checkbox" /> Selection</label>
           <label><input id="move-feature" type="checkbox" /> Movement</label>
-          <label><input id="resize-feature" type="checkbox" checked /> Resizing</label>
+          <label><input id="resize-feature" type="checkbox" /> Resizing</label>
+          <label><input id="priority-feature" type="checkbox" checked /> Event priority</label>
           <label><input id="constraint-feature" type="checkbox" checked /> Prevent overlaps</label>
           <label><input id="pointer-feature" type="checkbox" /> Pointer input</label>
           <label
@@ -296,7 +296,8 @@
         pending,
         publications,
         driver,
-        listenerCount;
+        listenerCount,
+        priorityCallbacks;
       let ownerWrites,
         scenarioIndex = 0,
         stepIndex = 0,
@@ -306,9 +307,11 @@
           ? `${range.start.toPlainDate()} ${range.start.toPlainTime()} – ${range.end.toPlainDate()} ${range.end.toPlainTime()}`
           : `${range.start} – ${range.end ?? range.start} (inclusive)`;
       const describeProposal = proposal =>
-        proposal.kind === 'select'
-          ? `Select ${describeRange(proposal.range)}`
-          : `${proposal.kind === 'resize' ? `Resize ${proposal.edge}` : 'Move'} ${proposal.before.id}: ${describeRange(proposal.before)} → ${describeRange(proposal.after)}`;
+        proposal.kind === 'priority'
+          ? `Priority ${proposal.event.id}: ${proposal.value} (${proposal.reason})`
+          : proposal.kind === 'select'
+            ? `Select ${describeRange(proposal.range)}`
+            : `${proposal.kind === 'resize' ? `Resize ${proposal.edge}` : 'Move'} ${proposal.before.id}: ${describeRange(proposal.before)} → ${describeRange(proposal.after)}`;
       const show = value => {
         message =
           typeof value === 'object'
@@ -326,16 +329,18 @@
         runtime?.dispose();
         token = oldToken = undefined;
         selected = lastMove = pending = null;
-        emitted = publications = ownerWrites = listenerCount = 0;
+        emitted = publications = ownerWrites = listenerCount = priorityCallbacks = 0;
         controlled = P.idle();
         const features = { interactionFeature: P.interactionFeature };
         if ($('select-feature').checked) features.dateSelectionFeature = P.dateSelectionFeature;
         if ($('move-feature').checked) features.eventMoveFeature = P.eventMoveFeature;
         if ($('resize-feature').checked) features.eventResizeFeature = P.eventResizeFeature;
+        if ($('priority-feature').checked) features.eventPriorityFeature = P.eventPriorityFeature;
         if ($('constraint-feature').checked) features.constraintsFeature = P.constraintsFeature;
         input = {
           date,
           timeZone: 'UTC',
+          onPriorityChange: () => priorityCallbacks++,
           view: 'week',
           views: { week: { '~features': features }, list: { '~features': {} } },
           events: [
@@ -385,8 +390,9 @@
           ownership,
           emit(proposal) {
             emitted++;
+            runtime.dispatch(proposal, input);
             if (proposal.kind === 'select') selected = proposal.range;
-            else lastMove = proposal;
+            else if (P.isBuiltinProposal(proposal)) lastMove = proposal;
           },
         });
         runtime.store.subscribe(() => publications++);
@@ -403,6 +409,26 @@
         return result;
       }
       const actions = {
+        priority: {
+          label: 'Start priority change',
+          run: () => {
+            const api = runtime.bind().priority;
+            if (!api) return 'Priority feature is not registered.';
+            const result = api.begin('appointment', 'Customer request');
+            if (result.status === 'active') token = result.token;
+            return result;
+          },
+        },
+        high: { label: 'Target high priority', run: () => runtime.update(token, { kind: 'priority', value: 'high' }) },
+        low: { label: 'Target low priority', run: () => runtime.update(token, { kind: 'priority', value: 'low' }) },
+        restrictPriority: {
+          label: 'Disallow high priority',
+          run: () => {
+            input = { ...input, priority: { allowHigh: false } };
+            runtime.refresh();
+            return 'Priority policy changed; active draft rechecked.';
+          },
+        },
         resizeStart: {
           label: 'Resize appointment start',
           run: () => begin({ kind: 'resize', eventId: 'appointment', edge: 'start' }),
@@ -542,6 +568,26 @@
       };
       const scenarios = [
         {
+          title: 'Priority only',
+          priorityOnly: true,
+          description:
+            'A separate feature sets priority using its own target and result. Repeating a target does not publish. Completion invokes its callback once; date operations remain unavailable.',
+          steps: ['priority', 'high', 'high', 'commit', 'commit', 'move', 'select', 'resizeEnd'],
+        },
+        {
+          title: 'Priority policy',
+          priorityOnly: true,
+          description:
+            'A new policy invalidates a high-priority draft. Low priority can still complete through the same session.',
+          steps: ['priority', 'high', 'restrictPriority', 'commit', 'low', 'commit'],
+        },
+        {
+          title: 'Priority source',
+          priorityOnly: true,
+          description: 'Replacing the source cancels this operation, just as it cancels a date edit.',
+          steps: ['priority', 'low', 'source', 'commit'],
+        },
+        {
           title: 'Resize only',
           resizeOnly: true,
           description:
@@ -644,8 +690,10 @@
       function startScenario(index) {
         scenarioIndex = index;
         stepIndex = 0;
-        $('select-feature').checked = $('move-feature').checked = !scenarios[index].resizeOnly;
-        $('resize-feature').checked = !!scenarios[index].resizeOnly;
+        $('select-feature').checked = $('move-feature').checked =
+          !scenarios[index].resizeOnly && !scenarios[index].priorityOnly;
+        $('priority-feature').checked = !!scenarios[index].priorityOnly;
+        $('resize-feature').checked = !!scenarios[index].resizeOnly && !scenarios[index].priorityOnly;
         $('constraint-feature').checked = true;
         $('owner').value = scenarios[index].owner ?? 'internal';
         $('pointer-feature').checked = scenarios[index].pointer ?? false;
@@ -706,7 +754,8 @@
               ? state.session.intent.eventId
               : String(state.session.intent.anchor.at)
             : 'None',
-          Target: state.session?.target ? String(state.session.target.at) : 'None',
+          Target: state.session?.target ? String(state.session.target.value ?? state.session.target.at) : 'None',
+          'Priority callbacks': String(priorityCallbacks),
           Candidate: candidate
             ? candidate.status === 'valid'
               ? describeProposal(candidate.proposal)
@@ -787,7 +836,7 @@
         };
         for (const event of input.events) paint(event, event.data.title, false, event.id);
         const candidate = runtime.store.state.candidate;
-        if (candidate?.status === 'valid')
+        if (candidate?.status === 'valid' && P.isBuiltinProposal(candidate.proposal))
           paint(
             candidate.proposal.kind === 'select' ? candidate.proposal.range : candidate.proposal.after,
             'Preview',

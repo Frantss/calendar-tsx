@@ -232,8 +232,8 @@ policy and transient-store ownership amendment. The prototype verifies the selec
 shared lifecycle against TypeScript 7.0.2 and browser walkthroughs. The extension exercises real projection, DOM
 measurement, framework subscriptions/lifetimes and controlled selection wiring. Source and built-declaration checks
 verify display-only, movement-only and selection-enabled calendars in both adapters. Production
-construction/capability registration, third-party operation extensibility and bundle
-guarantees remain unproved. No production interaction feature is marked implemented.
+construction/capability registration and bundle guarantees remain unproved. The open-map extension below
+verifies third-party operation extensibility within the prototype. No production interaction feature is marked implemented.
 
 The independent resize proof registers only `interactionFeature` and `eventResizeFeature`, with optional constraints.
 It reuses session ownership, source-change cancellation, validation and event projection. Both edges retain payloads,
@@ -242,3 +242,21 @@ at the original start. These are prototype choices, pending production agreement
 pointer runs cover core, time-grid/timeline geometry, React/Solid providers and all three ownership modes. Movement
 and selection remain unavailable, with no registered selection state. See the prototype's resize verification for
 scope and evidence. No production resizing feature is marked implemented.
+
+## Extensible operation map proof
+
+The prototype replaces its closed union with declaration-merged `OperationMap<TData>` entries containing intent,
+target and proposal types. A descriptor owns activation, source identity, target guards/equality, construction,
+API binding and completion callbacks. Feature-declared input dependencies trigger draft revalidation. The runtime
+and generic API facade dispatch registered descriptors without enumerating operation kinds. Built-in date operations
+are separate consumers of that contract.
+
+A separately defined priority feature uses a non-date target and a proposal without range/before/after fields.
+It opts in without selection, movement or resizing and without imports from those implementations. An isolated
+compiler configuration loads only the extension and neutral modules. Mixed core and React/Solid source/public
+fixtures preserve the event payload, reject mismatched targets and omit unregistered operation APIs/state. Direct
+probes exercise policy refresh, source cancellation, callbacks and every ownership mode; standalone walkthroughs
+make the extension inspectable. See the [prototype verdict](../packages/core/prototypes/interaction-foundation/readme.md#open-operation-map-extension).
+
+This validates the extensibility seam within the throwaway prototype. Production registration and third-party
+pointer/rendering integration remain separate work. The built-in DOM host continues to project calendar edits only.

@@ -118,3 +118,20 @@ Checked at `fd13cd8` while proposing the optional interaction foundation.
   `packages/core/prototypes/interaction-foundation/bindings/style.css:222`.
 - **Why it matters:** runtime/API independence does not establish usable pointer affordances at every rendering
   density. The real-pointer resize proof uses the separate hour-long `Resizable` fixture.
+
+## 12. Independent operation-map extension verifies the shared dispatch seam
+
+- **What:** a priority feature declares its own intent, non-date target and event-bearing result without loading the
+  built-in operation declarations. Its isolated compiler fixture rejects a built-in operation key. Mixed core and
+  adapter fixtures preserve payload inference and omit unregistered APIs/state. Direct probes cover its own
+  equality, policy changes, source identity, callbacks and all ownership modes; the extension executes with only
+  neutral modules in its import graph. Existing resize probes also pass with the built-ins extracted.
+- **Where:** `packages/core/prototypes/interaction-foundation/runtime.ts:5`;
+  `packages/core/prototypes/interaction-foundation/third-party/priority.ts:18`;
+  `packages/core/prototypes/interaction-foundation/third-party/types.verify.ts:1`;
+  `packages/core/prototypes/interaction-foundation/third-party/tsconfig.json:1`;
+  `packages/react/prototypes/interaction-foundation/types.verify.tsx:140`;
+  `packages/solid/prototypes/interaction-foundation/types.verify.tsx:140`.
+- **Why it matters:** the closed-union limitation in observation 10 no longer reproduces. Prototype extensibility
+  now has independent type and runtime evidence; production registration, tree shaking and third-party pointer
+  integration remain outside that evidence.

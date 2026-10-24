@@ -1,15 +1,16 @@
+import { eventPriorityFeature } from '../../../core/prototypes/interaction-foundation/third-party/priority';
 import type { ComponentProps } from 'solid-js';
 import { Calendar, CalendarProvider, useCalendar, useCalendarSelector } from '@calendar-tsx/solid';
 import type { Calendar_StateOf } from '@calendar-tsx/core';
 import { createCalendarViews, listView, monthView, timeGridView, timelineView } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
-import type { Selection } from '../../../core/prototypes/interaction-foundation/runtime';
+import type { Selection } from '../../../core/prototypes/interaction-foundation/operations';
 import {
   dateSelectionFeature,
   eventMoveFeature,
   eventResizeFeature,
   interactionFeature,
-} from '../../../core/prototypes/interaction-foundation/runtime';
+} from '../../../core/prototypes/interaction-foundation/operations';
 import type {} from '../../../core/prototypes/interaction-foundation/feature-types';
 
 const date = Temporal.PlainDate.from('2026-10-23');
@@ -126,6 +127,44 @@ export const ResizeOnlyTypingProbe = () => {
   // @ts-expect-error resizing must not expose selection
   void calendar.api.selection;
   // @ts-expect-error resizing must not register selection state
+  void calendar.store.state.selectedRange;
+  return (
+    <Calendar {...options}>
+      <CalendarProvider value={calendar}>{null}</CalendarProvider>
+    </Calendar>
+  );
+};
+
+const priorityViews = createCalendarViews({
+  grid: timeGridView({ days: 1, features: { eventPriorityFeature, interactionFeature }, priority: { enabled: true } }),
+});
+export const PriorityOnlyTypingProbe = () => {
+  const options = {
+    ...base,
+    ...priorityViews,
+    view: 'grid' as const,
+    events: [{ id: 'a', kind: 'allDay' as const, start: date, data: { title: 'Appointment', bookingId: 42 } }],
+  };
+  const calendar = useCalendar(() => options);
+  const result = calendar.api.priority.evaluate('a', 'Customer request', { kind: 'priority', value: 'high' });
+  if (result.status === 'valid') {
+    const title: string = result.proposal.event.data.title;
+    const bookingId: number = result.proposal.event.data.bookingId;
+    void title;
+    void bookingId;
+    // @ts-expect-error custom operation results preserve the consumer payload
+    const wrong: number = result.proposal.event.data.title;
+    void wrong;
+    // @ts-expect-error custom proposal does not acquire built-in edit fields
+    void result.proposal.after;
+  }
+  // @ts-expect-error third-party registration does not imply movement
+  void calendar.api.move;
+  // @ts-expect-error third-party registration does not imply resizing
+  void calendar.api.resize;
+  // @ts-expect-error third-party registration does not imply selection
+  void calendar.api.selection;
+  // @ts-expect-error third-party registration does not imply selection state
   void calendar.store.state.selectedRange;
   return (
     <Calendar {...options}>
