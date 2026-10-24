@@ -85,6 +85,8 @@ layered, so see [Tailwind](#tailwind).
 **Scrolling.** `TimeGridView` scrolls, with a sticky header. Give it a height (`max-block-size: 40rem`) to
 scroll inside the page. A view's `timeWindow` limits the clock range before rendering.
 
+**List dates.** Day headings sit beside their event rows. Inside the header, render a `<time>` with a `<strong>` day number and a `<span>` containing the weekday and month/year. `--calendar-list-date-width` caps the date column at `10rem` by default; it narrows with the list, and labels wrap. Keep the header and event parts as direct children of `ListViewDay`.
+
 ## High contrast theme
 
 `high-contrast.css` replaces `default.css` for people who choose more contrast. Every text pairing meets WCAG AAA

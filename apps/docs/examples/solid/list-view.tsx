@@ -14,8 +14,14 @@ export const Agenda = () => {
           <For each={list().days}>
             {day => (
               <ListViewDay day={day}>
-                <ListViewDayHeader day={day}>
-                  {day.date.toLocaleString('en-US', { dateStyle: 'full' })}
+                <ListViewDayHeader day={day} aria-label={day.date.toLocaleString('en-US', { dateStyle: 'full' })}>
+                  <time dateTime={day.date.toString()}>
+                    <strong>{day.date.toLocaleString('en-US', { day: 'numeric' })}</strong>{' '}
+                    <span>
+                      <span>{day.date.toLocaleString('en-US', { weekday: 'short' })}</span>{' '}
+                      <span>{day.date.toLocaleString('en-US', { month: 'short', year: 'numeric' })}</span>
+                    </span>
+                  </time>
                 </ListViewDayHeader>
                 <For each={day.events}>{event => <ListViewEvent event={event}>{event.data.title}</ListViewEvent>}</For>
               </ListViewDay>

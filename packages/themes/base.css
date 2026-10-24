@@ -198,6 +198,22 @@
     pointer-events: none;
   }
 
+  :where([data-scope='calendar'][data-part='list-day']) {
+    display: grid;
+    grid-template-columns: clamp(5.5rem, 28%, var(--calendar-list-date-width, 10rem)) minmax(0, 1fr);
+  }
+
+  :where([data-scope='calendar'][data-part='list-day-header']) {
+    grid-column: 1;
+    grid-row: 1 / span var(--cal-events, 1);
+    min-inline-size: 0;
+  }
+
+  :where([data-scope='calendar'][data-part='list-event']) {
+    grid-column: 2;
+    min-inline-size: 0;
+  }
+
   /* Timeline: a resource column and a track; the header repeats the track as one column per slot (D34) */
 
   :where([data-scope='calendar'][data-part='timeline-root']) {

@@ -411,7 +411,15 @@ const List = () => {
     <ListView model={list}>
       {list.days.map(day => (
         <ListViewDay key={day.key} day={day}>
-          <ListViewDayHeader day={day}>{day.key}</ListViewDayHeader>
+          <ListViewDayHeader day={day} aria-label={day.date.toLocaleString('en-US', { dateStyle: 'full' })}>
+            <time dateTime={day.key}>
+              <strong>{day.date.day}</strong>{' '}
+              <span>
+                <span>{day.date.toLocaleString('en-US', { weekday: 'short' })}</span>{' '}
+                <span>{day.date.toLocaleString('en-US', { month: 'short', year: 'numeric' })}</span>
+              </span>
+            </time>
+          </ListViewDayHeader>
           {day.events.map(event => (
             <ListViewEvent key={event.id} event={event}>
               {event.data.title}
@@ -423,19 +431,31 @@ const List = () => {
   );
 };
 
-it('stacks list events as full-width rows under a muted day header', async () => {
+it('aligns a date rail beside all of its event rows', async () => {
   await themesSetup_render(<List />, {
     views: { list: listView({ days: 1 }) },
     view: 'list',
     events: ['Yoga', 'Swim'].map(id => themesSetup_timed(id, { date: '2026-03-11', start: '09:00', end: '10:00' })),
   });
   const header = themesSetup_part('list-day-header')[0];
+  const date = themesSetup_rect(header);
   const [yoga, swim] = themesSetup_part('list-event').map(themesSetup_rect);
   const root = themesSetup_rect(themesSetup_part('list-root')[0]);
 
   expect(header && getComputedStyle(header).backgroundColor).toBe('rgb(245, 244, 241)');
   expect(swim?.top).toBeGreaterThanOrEqual(yoga?.bottom ?? Infinity);
-  expect(yoga?.width).toBeCloseTo(root.width - 2, 0);
+  expect(date.top).toBeCloseTo(yoga?.top ?? 0, 0);
+  expect(date.bottom).toBeCloseTo(swim?.bottom ?? 0, 0);
+  expect(yoga?.left).toBeCloseTo(date.right, 0);
+  expect(yoga?.width).toBeCloseTo(root.width - date.width - 2, 0);
+  expect(header?.getAttribute('aria-label')).toBe('Wednesday, March 11, 2026');
+  expect(header?.querySelector('time')?.getAttribute('datetime')).toBe('2026-03-11');
+  const label = themesSetup_rect(header?.querySelector('time') ?? undefined);
+  const number = themesSetup_rect(header?.querySelector('strong') ?? undefined);
+  const detail = themesSetup_rect(header?.querySelector('time > span') ?? undefined);
+  expect(label.left).toBeCloseTo(date.left + Number.parseFloat(getComputedStyle(header!).paddingInlineStart), 0);
+  expect(label.top).toBeCloseTo(date.top + Number.parseFloat(getComputedStyle(header!).paddingBlockStart), 0);
+  expect(number.top + number.height / 2).toBeCloseTo(detail.top + detail.height / 2, 0);
 });
 
 it('scrolls a long list once its height is limited', async () => {

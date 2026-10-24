@@ -155,7 +155,15 @@ export const PreviewLayout = ({ onSelect }: { onSelect: (event: Calendar_Event<B
     <ListView model={layout}>
       {layout.days.map(day => (
         <ListViewDay key={day.key} day={day}>
-          <ListViewDayHeader day={day}>{day.date.toLocaleString(locale, { dateStyle: 'full' })}</ListViewDayHeader>
+          <ListViewDayHeader day={day} aria-label={day.date.toLocaleString(locale, { dateStyle: 'full' })}>
+            <time dateTime={day.date.toString()}>
+              <strong>{day.date.toLocaleString(locale, { day: 'numeric' })}</strong>{' '}
+              <span>
+                <span>{day.date.toLocaleString(locale, { weekday: 'short' })}</span>{' '}
+                <span>{day.date.toLocaleString(locale, { month: 'short', year: 'numeric' })}</span>
+              </span>
+            </time>
+          </ListViewDayHeader>
           {day.events.map(event => (
             <ListViewEvent key={event.id} event={event} onClick={() => onSelect(event)}>
               {event.kind === 'allDay' ? 'All day' : time(event.start, locale)} · {event.data.title}

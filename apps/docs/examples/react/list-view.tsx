@@ -19,7 +19,15 @@ export const Agenda = () => {
     <ListView model={list}>
       {list.days.map(day => (
         <ListViewDay key={day.key} day={day}>
-          <ListViewDayHeader day={day}>{day.date.toLocaleString('en-US', { dateStyle: 'full' })}</ListViewDayHeader>
+          <ListViewDayHeader day={day} aria-label={day.date.toLocaleString('en-US', { dateStyle: 'full' })}>
+            <time dateTime={day.date.toString()}>
+              <strong>{day.date.toLocaleString('en-US', { day: 'numeric' })}</strong>{' '}
+              <span>
+                <span>{day.date.toLocaleString('en-US', { weekday: 'short' })}</span>{' '}
+                <span>{day.date.toLocaleString('en-US', { month: 'short', year: 'numeric' })}</span>
+              </span>
+            </time>
+          </ListViewDayHeader>
           {day.events.map(event => (
             <ListViewEvent key={event.id} event={event}>
               {event.data.title}

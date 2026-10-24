@@ -30,6 +30,11 @@ Only days with at least one event are listed, so a quiet range has no days; rend
 `hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`).
 
 Hiding all seven weekdays is invalid. A controlled date with no visible weekdays produces an empty layout.
+## Date headings
+
+The supplied themes place the date beside its event rows. Give `ListViewDayHeader` a `<time dateTime={day.date.toString()}>` containing a `<strong>` day number and a `<span>` with the weekday and month/year. The React and Solid examples show this composition. The full date remains the heading's accessible name, and date formatting belongs to your application.
+
+The date column narrows with the list, and its labels wrap when space is limited. Override `--calendar-list-date-width` (default `10rem`) to cap its width. `ListViewDay` emits `--cal-events` so the heading spans that day's event rows; render the header and events as direct children of the day.
 
 </section>
 

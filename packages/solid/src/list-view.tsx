@@ -4,7 +4,7 @@ import { Show, createContext, splitProps, useContext } from 'solid-js';
 import type { Calendar_Event, Calendar_ListDay, Calendar_ListLayout } from '@calendar-tsx/core';
 import type { Calendar_HTMLProps } from '#calendar-factory';
 import { calendarFactory_elements as calendar, calendarProps_merge } from '#calendar-factory';
-import { calendarParts_attributes as part } from '#calendar-parts';
+import { calendarParts_attributes as part, calendarParts_vars as vars } from '#calendar-parts';
 
 const ListViewContext = createContext<Accessor<Calendar_ListLayout<unknown>>>();
 
@@ -35,7 +35,14 @@ export const ListViewDay = <TData,>(props: ListViewDayProps<TData>) => {
 
   return (
     <calendar.section
-      {...calendarProps_merge(() => ({ 'data-date': local.day.date.toString(), ...part('list-day') }), rest)}
+      {...calendarProps_merge(
+        () => ({
+          'data-date': local.day.date.toString(),
+          style: vars({ events: Math.max(1, local.day.events.length) }),
+          ...part('list-day'),
+        }),
+        rest,
+      )}
       state={local.day}
     />
   );

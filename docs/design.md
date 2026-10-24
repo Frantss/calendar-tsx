@@ -1208,6 +1208,14 @@ Rejected: retaining separate month and week factories (two names for one layout)
 
 Rejected: separate day, resource, workweek, year or multi-month factories (duplicate configuration around shared geometry); a separate `monthGrouping` option (duplicates `groupBy` and cannot express ordered composition); forcing time grids and timelines into one model (D34's geometry distinction remains); hiding dates with CSS (bars, overflow, availability and now would retain incorrect positions).
 
+### D42 — List dates form a rail beside each day's events
+
+**Serves:** C1, C9. Requested by the user, using FullCalendar's live list demo as the visual reference.
+
+The existing list model and parts stay unchanged. `ListViewDay` emits `--cal-events` in React and Solid so its heading spans the event rows. `base.css` places the heading and events in two columns; the date column narrows with the list and is capped by `--calendar-list-date-width` (`10rem` by default). The default theme styles a consumer-supplied `<time>` containing a prominent `<strong>` day number and compact weekday/month/year spans. Labels wrap, and the heading retains a full, localized accessible date. Examples and the playground use this composition for every list duration. Existing plain-text headings remain supported.
+
+Rejected: formatting dates in core or adding another list factory (presentation belongs to the consumer); a single long date string above each group (weak hierarchy and repeated horizontal bands).
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.

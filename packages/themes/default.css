@@ -462,11 +462,37 @@
   }
 
   :where([data-scope='calendar'][data-part='list-day-header']) {
+    display: grid;
+    place-items: start;
     margin: 0;
     padding: 0.5rem 0.75rem;
     background: var(--calendar-surface-muted);
     font-size: var(--calendar-font-size);
     font-weight: 600;
+    text-align: start;
+    overflow-wrap: anywhere;
+  }
+
+  :where([data-scope='calendar'][data-part='list-day-header'] > time) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.25rem 0.5rem;
+  }
+
+  :where([data-scope='calendar'][data-part='list-day-header'] > time > strong) {
+    font-size: 1.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :where([data-scope='calendar'][data-part='list-day-header'] > time > span) {
+    display: grid;
+    color: var(--calendar-text-muted);
+    font-size: var(--calendar-font-size-xs);
+    font-weight: 400;
   }
 
   :where([data-scope='calendar'][data-part='list-event']) {
@@ -475,6 +501,11 @@
     min-block-size: 44px;
     padding: 0.625rem 0.75rem;
     border-block-start: 1px solid var(--calendar-border);
+    overflow-wrap: anywhere;
+  }
+
+  :where([data-scope='calendar'][data-part='list-day-header'] + [data-part='list-event']) {
+    border-block-start: 0;
   }
 
   :where([data-scope='calendar'][data-part='list-event']):hover {
