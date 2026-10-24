@@ -1,3 +1,12 @@
+import type { Calendar_InteractionOwnership, Calendar_InteractionControls } from '#calendar-interaction.types';
+import type {
+  Calendar_Selection,
+  Calendar_MoveProposal,
+  Calendar_ResizeProposal,
+  Calendar_SelectionApi,
+  Calendar_MoveApi,
+  Calendar_ResizeApi,
+} from '#calendar-editing';
 import type {
   Background_DayGridDay_FeatureMap,
   Background_TimeGridColumn_FeatureMap,
@@ -17,11 +26,6 @@ export interface Calendar_EventInput_FeatureMap<TData> extends Recurrence_EventI
  * filtered by the features a calendar or view registers.
  */
 
-/** State slices a feature owns; each is uncontrolled, controlled through `state`, or external through `atoms`. */
-export interface Calendar_State_FeatureMap {}
-/** Actions a feature merges onto `api`. */
-// oxlint-disable-next-line no-unused-vars -- merges must repeat the generics
-export interface Calendar_Api_FeatureMap<TData = unknown, TResourceData = unknown> {}
 /** Model fields a feature adds to the layouts of the views that list it. */
 export interface Calendar_DayGridDay_FeatureMap extends Background_DayGridDay_FeatureMap {}
 export interface Calendar_BarSegment_FeatureMap {}
@@ -37,4 +41,64 @@ export interface Calendar_Layout_FeatureMap<TData, TResourceData, TFeatures> {
   timeGridLayout: Calendar_TimeGridLayout<TData, TResourceData, TFeatures>;
   listLayout: Calendar_ListLayout<TData, TResourceData, TFeatures>;
   timelineLayout: Calendar_TimelineLayout<TData, TResourceData, TFeatures>;
+}
+
+// oxlint-disable-next-line no-unused-vars -- merges must repeat the generics
+export interface Calendar_Options_FeatureMap<TData, TResourceData> {
+  pointerFeature: { pointer?: import('#calendar-input').Calendar_PointerSettings };
+  touchFeature: { touch?: import('#calendar-input').Calendar_TouchSettings };
+  autoScrollFeature: { autoScroll?: import('#calendar-input').Calendar_AutoScrollSettings };
+  externalDropFeature: {
+    externalDrop?: import('#calendar-transfers').Calendar_ExternalDropSettings<TData>;
+    onExternalDrop?: (proposal: import('#calendar-transfers').Calendar_CreateProposal<TData>) => void;
+  };
+  crossCalendarFeature: {
+    crossCalendar?: import('#calendar-transfers').Calendar_CrossCalendarSettings;
+    onEventTransfer?: (proposal: import('#calendar-transfers').Calendar_TransferProposal<TData>) => void;
+    onEventReceive?: (proposal: import('#calendar-transfers').Calendar_TransferProposal<TData>) => void;
+  };
+  interactionFeature: { interactionOwnership?: Calendar_InteractionOwnership };
+  dateSelectionFeature: {
+    selection?: { enabled?: boolean };
+    onSelectionChange?: (range: Calendar_Selection) => void;
+  };
+  eventMoveFeature: {
+    movement?: import('#calendar-policies').Calendar_MovementSettings;
+    onEventMove?: (proposal: Calendar_MoveProposal<TData>) => void;
+  };
+  eventResizeFeature: {
+    resizing?: import('#calendar-policies').Calendar_ResizeSettings;
+    onEventResize?: (proposal: Calendar_ResizeProposal<TData>) => void;
+  };
+  constraintsFeature: { constraints?: import('#calendar-policies').Calendar_ConstraintSettings };
+}
+/** Per-view settings a feature adds; a view accepts them only when it lists the feature. */
+export interface Calendar_ViewSettings_FeatureMap {
+  pointerFeature: { pointer?: import('#calendar-input').Calendar_PointerSettings };
+  touchFeature: { touch?: import('#calendar-input').Calendar_TouchSettings };
+  autoScrollFeature: { autoScroll?: import('#calendar-input').Calendar_AutoScrollSettings };
+  externalDropFeature: { externalDrop?: import('#calendar-transfers').Calendar_ExternalDropSettings };
+  crossCalendarFeature: { crossCalendar?: Partial<import('#calendar-transfers').Calendar_CrossCalendarSettings> };
+  dateSelectionFeature: { selection?: { enabled?: boolean } };
+  eventMoveFeature: { movement?: import('#calendar-policies').Calendar_MovementSettings };
+  eventResizeFeature: { resizing?: import('#calendar-policies').Calendar_ResizeSettings };
+  constraintsFeature: { constraints?: import('#calendar-policies').Calendar_ConstraintSettings };
+}
+/** State slices a feature owns; each is uncontrolled, controlled through `state`, or external through `atoms`. */
+export interface Calendar_State_FeatureMap {
+  dateSelectionFeature: { selectedRange: Calendar_Selection | null };
+}
+/** Actions a feature merges onto `api`, with the consumer's event and resource payload types. */
+// oxlint-disable-next-line no-unused-vars -- merges must repeat the generics
+export interface Calendar_Api_FeatureMap<TData = unknown, TResourceData = unknown> {
+  pointerFeature: { pointer: import('#calendar-input').Calendar_PointerApi };
+  externalDropFeature: { externalDrop: import('#calendar-transfers').Calendar_ExternalDropApi<TData> };
+  crossCalendarFeature: {
+    transfer: import('#calendar-transfers').Calendar_TransferApi<TData>;
+    crossCalendar: import('#calendar-transfers').Calendar_CrossCalendarApi<TData>;
+  };
+  interactionFeature: { interactions: Calendar_InteractionControls };
+  dateSelectionFeature: { selection: Calendar_SelectionApi };
+  eventMoveFeature: { move: Calendar_MoveApi<TData> };
+  eventResizeFeature: { resize: Calendar_ResizeApi<TData> };
 }

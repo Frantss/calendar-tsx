@@ -140,3 +140,50 @@ export { createBackgroundLayer, createWeeklyRanges } from '#features/background/
 export { recurrenceFeature } from '#features/recurrence/recurrence-feature';
 export { createRecurringEvent } from '#features/recurrence/recurrence-events';
 export { calendarFeatures } from '#features/calendar-features';
+
+export type * from '#calendar-interaction.types';
+export type * from '#calendar-layout-interaction.types';
+export type {
+  Calendar_DateTarget,
+  Calendar_Selection,
+  Calendar_SelectIntent,
+  Calendar_MoveIntent,
+  Calendar_ResizeIntent,
+  Calendar_SelectProposal,
+  Calendar_MoveProposal,
+  Calendar_ResizeProposal,
+  Calendar_DateProposal,
+  Calendar_SelectionApi,
+  Calendar_MoveApi,
+  Calendar_ResizeApi,
+} from '#calendar-editing';
+export { interactionFeature, createInteractionOperation } from '#calendar-interactions';
+export { dateSelectionFeature, eventMoveFeature, eventResizeFeature, constraintsFeature } from '#calendar-editing';
+
+export { pointerFeature, touchFeature, autoScrollFeature } from '#calendar-input';
+export type * from '#calendar-input';
+export { externalDropFeature, crossCalendarFeature } from '#calendar-transfers';
+export type * from '#calendar-transfers';
+export type {
+  Calendar_MovementSettings,
+  Calendar_ResizeSettings,
+  Calendar_ConstraintSettings,
+} from '#calendar-policies';
+
+export {
+  createCalendarInteractionHost,
+  createCalendarInteractionBindings,
+  createExternalDraggable,
+  timeGridSurface,
+  timelineSurface,
+  dayGridSurface,
+} from '#calendar-dom';
+export type {
+  Calendar_DomCalendar,
+  Calendar_DomHost,
+  Calendar_DomPosition,
+  Calendar_DomGesture,
+  Calendar_DomSurface,
+  Calendar_DomSource,
+  Calendar_DomOperation,
+} from '#calendar-dom';

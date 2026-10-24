@@ -135,3 +135,112 @@ Checked at `fd13cd8` while proposing the optional interaction foundation.
 - **Why it matters:** the closed-union limitation in observation 10 no longer reproduces. Prototype extensibility
   now has independent type and runtime evidence; production registration, tree shaking and third-party pointer
   integration remain outside that evidence.
+
+## 13. Operation APIs participate in the production feature lifecycle
+
+- **What:** the real constructor installs selection, movement, resizing and a separately declared non-date operation
+  from resolved descriptors. Feature API construction can observe all descriptors without depending on registration
+  order. Option sync refreshes drafts without tracking interaction settings as layout inputs. Final unmount cancels
+  leases even before controlled acknowledgment; remount retains native readonly TanStack store subscriptions.
+  Selection uses D29 persistent state, while event edits retain consumer input ownership. The prototype facade is
+  absent, and both geometry harnesses use the installed instance APIs.
+- **Where:** `packages/core/src/calendar-interactions.ts:251`; `packages/core/src/calendar.ts:137`;
+  `packages/core/src/calendar.types.ts:412`; `packages/core/src/tests/calendar-interactions.spec.ts:233`;
+  `packages/core/prototypes/interaction-foundation/bindings/host.ts:41`.
+- **Why it matters:** the production construction limitation in the earlier observations no longer reproduces.
+  Built-in DOM drivers and layout interaction capabilities remain distinct from API installation.
+
+## 14. Public declaration compilation catches private augmentation paths
+
+- **What:** the installed declaration bundler retained private `#calendar.types` augmentation paths in an intermediate
+  build. Source checks passed, but a public consumer had no move/resize API and rejected the interaction descriptor
+  property. The current published declaration fixture checks the package's built-in maps and a third-party operation
+  with a boolean target, including payload inference and absent APIs.
+- **Where:** `packages/core/src/calendar.types.ts:128`;
+  `packages/core/src/calendar-interaction.types.ts:22`;
+  `packages/core/prototypes/interaction-foundation/types.public.verify.ts:1`;
+  `packages/core/prototypes/interaction-foundation/third-party/public-feature.ts:1`.
+- **Why it matters:** source-only augmentation checks do not establish that a bundled public package exposes the same
+  feature types. The built-declaration fixture no longer requires stand-in declarations for built-in APIs.
+
+## 15. Production completion observation follows the host's mounted lifetime
+
+- **What:** React StrictMode calls the host initializer twice. Assigning completion observation during initialization
+  let a discarded host retain an earlier build baseline, reporting one draft build although actual builds were
+  unchanged. The mounted host's completion observation now reports zero draft builds in both layouts/adapters and
+  every ownership mode. Preview/applied geometry differs by at most `0.015625px`; cleanup releases all observed
+  listeners, surfaces and subscriptions.
+- **Where:** `packages/core/prototypes/interaction-foundation/bindings/host.ts:42`;
+  `packages/core/prototypes/interaction-foundation/bindings/host.ts:436`.
+- **Why it matters:** moving API construction into production changes which instance invokes completion. Constructor
+  side effects in a throwaway host cannot establish the lifetime of that observer under StrictMode.
+
+## 16. Equivalent inline settings retain draft identity during options sync
+
+- **What:** an active draft keeps its snapshot and publishes no notification when new selection/movement/resize or
+  constraint setting objects retain the same values. The regression initially failed at
+  `expect(calendar.api.interactions.store.state).toBe(draft)`: the old and new snapshots were value-equivalent but
+  reference-distinct. Built-in dependency observations now track the fields that affect evaluation.
+- **Where:** `packages/core/src/calendar-editing.ts:211`;
+  `packages/core/src/tests/calendar-interactions.spec.ts:255`.
+- **Why it matters:** a whole-snapshot selector can render a new options object. Republish-on-reference-change would
+  make that render trigger another notification even though the policy did not change.
+
+## Recurrence coexistence after the main rebase — 2026-10-24
+
+- `packages/core/src/calendar-editing.ts:120` and `:168`: movement and resizing look up supplied inputs by ID. Recurring definitions are unavailable sources; generated occurrence IDs are absent from that input array. Editing an occurrence or series remains outside the current operations.
+- `packages/core/src/calendar-editing.ts:240`: overlap validation checks supplied concrete events and skips source definitions. Generated recurring occurrences therefore do not block an interaction through this validator.
+
+## Remaining proposal coverage at 56b1bc1 with restored production work
+
+- **Input and transfers:** `packages/core/export/index.ts:30` exports the runtime and four operation/policy features, but no pointer, touch, autoscroll, external-drop or cross-calendar feature. The pointer host is still under `packages/core/prototypes/interaction-foundation/bindings/host.ts:237`. React/Solid exports contain display parts and calendar hooks, with no production interaction bindings. These proposed behaviors cannot yet be enabled through the published feature/binding surface.
+- **Layout coverage:** `packages/core/src/calendar-layouts.ts:35` builds day grids without locate/project capabilities; `packages/core/src/calendar-layout-interaction.types.ts:22` registers builtin target/preview shapes only for time-grid and timeline. Month/day-grid gesture geometry from the proposal is missing.
+- **Scheduling policy:** `packages/core/src/calendar-editing.ts:230` implements a timed concrete-event overlap check only. It has no allowed-window or resource-availability enforcement, and excludes all-day ranges and recurring definitions. The validator extension seam exists, but the proposed scheduling policy feature is incomplete.
+- **Movement policy:** `packages/core/src/calendar-editing.ts:123` replaces the resource list with the target resource when supplied; `:149` rejects timed/all-day conversion. `packages/core/src/calendar.types.ts:169` exposes only an enabled flag for movement. The proposed conversion and configurable resource behavior are not implemented.
+- **Historical status:** `docs/interaction-foundation.md:234` still calls production layout registration unproved, while its D54 section and production descriptors establish that implementation. Earlier report entries are historical observations rather than a current gap list.
+
+## Production proposal coverage after D55 — 2026-10-24
+
+- **Browser transport:** `packages/core/src/calendar-dom.ts:141` mounts the shared pointer host;
+  `packages/core/src/calendar-input.ts:12` registers pointer, touch and autoscroll settings independently. Core's
+  main entry contains no DOM driver import. Production display-only bundles for core, React and Solid omit the DOM
+  driver, and all four published entries import under Node without browser globals. This establishes the optional
+  browser boundary beyond the historical harness.
+- **Bindings:** `packages/react/src/use-calendar-interactions.ts:7` and
+  `packages/solid/src/use-calendar-interactions.ts:7` share callback refs and transient preview subscriptions.
+  Adapter browser tests exercise native Chromium resizing in both time-grid and timeline layouts without movement
+  or selection. The callbacks preserve event payloads and unmount cancels active sessions.
+- **Transfers:** `packages/core/src/calendar-transfers.ts:82` installs external creation;
+  `packages/core/src/calendar-transfers.ts:133` installs cross-calendar coordination. Controlled source/destination
+  hosts can acknowledge asynchronously while the source lease remains reserved. Only the source emits a transfer
+  proposal; both event arrays remain unchanged. Programmatic callers own prepared-handle release on abandonment.
+- **Geometry and policies:** `packages/core/src/layout/layout-interactions.ts:247` adds day-grid location and
+  projection, including exclusive timed midnight resize boundaries. `packages/core/src/calendar-policies.ts:36`
+  applies the accepted conversion/resource defaults; `packages/core/src/calendar-policies.ts:117` checks allowed
+  windows, business hours, resource availability and concrete timed/all-day/background overlap. These close the
+  corresponding gaps recorded above.
+- **Scope boundary:** recurrence definitions remain excluded from interaction editing and overlap expansion.
+  Consumer preview/handle rendering and applying proposals remain application responsibilities, as specified in the
+  original proposal. The historical prototype still owns its old transport; the production tests verify the new host.
+
+## Prototype removal — 2026-10-24
+
+- **What:** the standalone runtime, demos, framework harnesses and prototype scripts were removed after production
+  integration. Historical paths above identify evidence at the time of each finding and no longer identify live files.
+- **Where:** `packages/core/src/tests/fixtures/priority.ts:1` retains the third-party runtime fixture;
+  `packages/core/tests/types/tsconfig.json:1`, `packages/react/tests/types/tsconfig.json:1` and
+  `packages/solid/tests/types/tsconfig.json:1` retain source/public API verification.
+- **Why it matters:** production tests no longer depend on a prototype directory, and the retained compiler checks
+  run through the normal package `check:types` scripts.
+
+## Factory assembly rebase — 2026-10-24
+
+- **What:** the interaction decisions are now D56–D58 because the rebased design already uses D53–D55.
+- **Where:** `docs/design.md:1504`; `packages/core/src/features/feature-runtime.ts:53` resolves feature contexts,
+  while `packages/core/tests/types/types.public.verify.ts:1` exercises factory assembly through public exports.
+- **Why it matters:** earlier decision numbers in this report are historical. Interaction prerequisites use canonical
+  identities, view overrides use registration aliases, and unregistered operations still contribute no API or state.
+
+- **Export contract after the second rebase:** `packages/core/export/index.ts` exports the DOM helpers from the
+  root alongside the other public APIs, matching D55. The former `@calendar-tsx/core/dom` references above describe
+  the pre-rebase package. Browser listeners still require mounting a host; importing the package does not mount one.

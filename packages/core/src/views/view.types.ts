@@ -4,6 +4,7 @@ import type {
   Calendar_Features,
   Calendar_ConfiguredFeatures,
   Calendar_FeatureOverride,
+  Calendar_FeatureTypes,
   UnionToIntersection,
 } from '#features/feature.types';
 
@@ -88,7 +89,7 @@ type MissingFeatures<TViews extends Calendar_Views, TFeatures> =
     }[keyof Calendar_FeaturesOf<TViews> & keyof TFeatures];
 
 /** Every feature the views use must be in `features`, with a compatible implementation. Wide views are not checked. */
-export type Calendar_ValidateFeatures<
+type ValidateFeatureImplementations<
   TViews extends Calendar_Views,
   TFeatures,
 > = string extends keyof Calendar_FeaturesOf<TViews>
@@ -98,3 +99,15 @@ export type Calendar_ValidateFeatures<
     : {
         features: `Error: views use '${MissingFeatures<TViews, TFeatures> & string}'; pass the registry used by calendarViews`;
       };
+
+type FeatureDependencies<F> = {
+  [K in keyof F]-?: NonNullable<F[K]> extends { requires: readonly (infer D extends string)[] }
+    ? Exclude<D, keyof Calendar_FeatureTypes<F>>
+    : never;
+}[keyof F];
+export type Calendar_ValidateDependencies<_V extends Calendar_Views, F> = [FeatureDependencies<F>] extends [never]
+  ? unknown
+  : { features: `Error: missing prerequisite '${FeatureDependencies<F> & string}'` };
+export type Calendar_ValidateFeatures<V extends Calendar_Views, F> = ValidateFeatureImplementations<V, F> &
+  Calendar_ValidateDependencies<V, NoInfer<F>>;
+

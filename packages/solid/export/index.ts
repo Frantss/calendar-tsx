@@ -64,3 +64,6 @@ export {
 } from '#views/timeline/timeline-view';
 export { Calendar, CalendarProvider, useCalendar, useCalendarContext, useCalendarSelector } from '#calendar/calendar';
 export { useCalendarEventStore } from '#events/use-calendar-event-store';
+export { useCalendarInteractions } from '#use-calendar-interactions';
+export { timeGridSurface, timelineSurface, dayGridSurface, createExternalDraggable } from '@calendar-tsx/core';
+export type { Calendar_DomSurface, Calendar_DomSource, Calendar_DomOperation } from '@calendar-tsx/core';

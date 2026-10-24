@@ -16,6 +16,18 @@ export const calendarFeatures_validate = (features: Calendar_ConfiguredFeatures)
     identities.add(feature['~id']);
     feature['~validateConfig']?.(feature['~config']);
   }
+  const byId = new Map(Object.values(features).map(feature => [feature['~id'], feature]));
+  const visited = new Set<string>();
+  const visit = (id: string, path: string[]) => {
+    if (path.includes(id)) throw new Error(`[calendar] feature prerequisite cycle: ${[...path, id].join(' -> ')}`);
+    if (visited.has(id)) return;
+    for (const dependency of byId.get(id)?.requires ?? []) {
+      if (!byId.has(dependency)) throw new Error(`[calendar] ${id} requires ${dependency}`);
+      visit(dependency, [...path, id]);
+    }
+    visited.add(id);
+  };
+  byId.forEach((_feature, id) => visit(id, []));
 };
 
 /** Collects configured definitions without creating calendar state. */

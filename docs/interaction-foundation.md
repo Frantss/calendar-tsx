@@ -1,11 +1,9 @@
 # Interaction foundation
 
-Status: **proposal for discussion**, based on `fd13cd8`. Production interaction runtime and interfaces are unchanged.
-A [selection/movement/resizing prototype](../packages/core/prototypes/interaction-foundation/readme.md) exercises the shared
-lifecycle and compiles its feature-type sketch. Examples below remain conceptual unless linked to that sketch.
-The extension uses real time-grid/timeline geometry and both adapters' public hooks and parts. The
-[adapter context typing gap](../reports/interaction-foundation.md#6-adapter-context-erasure-retains-required-feature-state)
-is resolved: providers accept calendars without selection while instance types retain feature gating.
+Status: **implemented** (D56–D58). Production features install selection, movement, resizing, input drivers,
+external creation and cross-calendar transfers. Layout capabilities provide day-grid, time-grid and timeline
+location/projection. Core and adapter browser tests verify the shared runtime and bindings. Source/public compiler
+fixtures live under each package's `tests/types` directory and run through `check:types`. The prototype has been removed.
 
 Related decisions: [D2](design.md#d2--events-are-input-with-unique-ids-managed-event-state-is-an-opt-in-helper),
 [D29](design.md#d29--functionality-is-added-through-a-feature-map-views-declare-the-features-they-use),
@@ -16,7 +14,7 @@ Evidence: [FullCalendar interactions](../reports/fullcalendar-event-interactions
 ## Intent and fixed choices
 
 Extend D29 so selection, constraints, movement, resizing and input drivers can be registered independently.
-Retain feature constants, explicit registration, per-view activation and feature-gated types. Rendering-only
+Use D54 feature factories, explicit registration, per-view configuration overrides and feature-gated types. Rendering-only
 calendars must not install interaction listeners. Programmatic operations must work without a browser.
 
 - Events remain consumer input. Interaction completion emits a proposal; it never writes the event array.
@@ -100,11 +98,11 @@ interactions.evaluate(intent, target); // same proposal/validation path, without
 interactions.store; // readonly session, candidate, validity and preview
 ```
 
-The prototype exposes operation entry points through their owning features (`selection.begin/evaluate` and
+The library exposes operation entry points through their owning features (`selection.begin/evaluate` and
 `move.begin/evaluate`). Shared public controls expose update, commit, cancel and observation. An unrestricted public
 `begin(intent)` would otherwise admit movement through a selection-only calendar's interaction API. Production
-`Calendar_Api_FeatureMap<TData, TResourceData>` now carries consumer payload types into feature APIs. The prototype
-uses that map directly; movement results retain event data through core, React and Solid instances.
+`Calendar_Api_FeatureMap<TData, TResourceData>` now carries consumer payload types into feature APIs. The operations
+use that map directly; movement results retain event data through core, React and Solid instances.
 
 One calendar has at most one active draft session. A second begin returns a busy result instead of replacing the
 first session implicitly. Tokens make late pointer-up events, expired timers and callbacks from an older session
@@ -129,10 +127,10 @@ observe that store. Ordinary event normalization, ordering and base layout must 
 moved. This avoids routing draft updates through today's `Calendar_FeatureContext.setState`, whose state slices
 participate in the base calendar derivation.
 
-This is a proposed amendment to D29 for transient interaction state. Preserve internal, controlled and external-atom
-ownership choices at the interaction-store seam. The prototype compiles a discriminated ownership option and requires
+D56 accepts this amendment to D29 for transient interaction state. Preserve internal, controlled and external-atom
+ownership choices at the interaction-store seam. Compiler fixtures verify a discriminated ownership option and requires
 controlled hosts to echo requested snapshot objects. Token leases stay runtime-owned so delayed writes cannot permit
-competing sessions or duplicate completion; adapter subscription behavior remains unproved. Persistent
+competing sessions or duplicate completion. Production lifecycle tests now exercise adapter subscriptions. Persistent
 feature state, such as the accepted selection, can continue to use D29's existing state mechanism. There must be one
 authoritative owner for each slice rather than mirroring it between the two stores.
 
@@ -156,7 +154,7 @@ during a drag is a possible later preview policy, not a reason to change event i
 D40's mapping is not invertible at DST transitions. `locate` must retain the local clock target and any ambiguous
 instant choices. Proposed policy: reject nonexistent local times; for movement preserve the source offset when it
 matches a repeated-time candidate, otherwise choose the earlier occurrence. Explicit programmatic instants remain
-unambiguous. This policy needs agreement before implementing target resolution; it is not already settled by D40.
+unambiguous. The user accepted this policy for production target resolution in D57; D40 alone did not settle it.
 
 ## Proposals, validation and ownership
 
@@ -182,27 +180,35 @@ be applied twice by separate hosts. Cancellation, source identity and destinatio
 
 ## Composition example
 
-Proposed names; configuration and imports will be finalized by the type sketch:
+Feature factories register once; each view overrides their configuration by registration alias:
 
 ```ts
-const views = createCalendarViews({
-  week: timeGridView({
-    days: 7,
-    features: {
-      interactionFeature,
-      dateSelectionFeature,
-      eventMoveFeature,
-      constraintsFeature,
-      pointerFeature,
-      touchFeature,
-      autoScrollFeature,
-    },
-  }),
-  list: listView({ days: 7 }),
+const features = calendarFeatures({
+  interactions: interactionFeature(),
+  selection: dateSelectionFeature(),
+  movement: eventMoveFeature(),
+  constraints: constraintsFeature(),
+  pointer: pointerFeature(),
+  touch: touchFeature(),
+  autoScroll: autoScrollFeature(),
+});
+const views = calendarViews({
+  features,
+  views: {
+    week: timeGridView({ days: 7 }),
+    list: listView({
+      days: 7,
+      features: {
+        selection: { enabled: false },
+        movement: { enabled: false },
+        pointer: { enabled: false },
+      },
+    }),
+  },
 });
 ```
 
-The list remains inactive for these interactions. Adding `eventResizeFeature` enables resizing independently.
+The list disables selection, movement and pointer input through its overrides. Adding `eventResizeFeature` enables resizing independently.
 React/Solid interaction bindings attach surfaces and operation sources through refs/render props. Existing display
 parts do not automatically mount drivers. The feature map alone is sufficient for programmatic use; gesture use
 also mounts the optional adapter bindings.
@@ -216,47 +222,46 @@ also mounts the optional adapter bindings.
 | Reuse only current D29 state/events/decorate hooks                | Smallest initial core change                            | Draft updates invalidate base layout, selection has no event payload, and there is no input lifetime or shared target contract; insufficient alone |
 | Dedicated runtime plus typed contributions and layout/input seams | Shared lifecycle with independently registered behavior | Requires a small D29 extension and transient-store/adapter integration; recommended                                                                |
 
-## Next proof and unresolved decisions
+## Verification
 
-First prove two independent operations against the same runtime: programmatic/pointer range selection and event
-movement in a time grid. Exercise timeline geometry as the second layout and Solid as the second adapter before
-calling the seams general. The resize extension now exercises edge semantics without a separate lifecycle.
+Core browser tests cover independent selection, movement and resizing, feature prerequisites, inactive views,
+validation, stale tokens, source changes, controlled/external ownership, cleanup and preview isolation. Adapter tests
+exercise native Chromium drags against time-grid and timeline surfaces in React and Solid. Day-grid tests cover
+resource hits, actual segment projection and exclusive timed midnight boundaries.
 
-The proof should cover feature-gated types and prerequisites, inactive views, no mounted listeners without drivers,
-programmatic/gesture validation equivalence, stale tokens, source changes, controlled/external state ownership,
-preview isolation from base layout derivation, cleanup and DST gap/fold targets. Verify unrelated input references
-and actual event timestamps remain unchanged by a draft.
+Permanent compiler fixtures under `packages/{core,react,solid}/tests/types` verify source and built declarations.
+They check display-only providers, independent operations, consumer payloads, missing prerequisites and third-party
+operation/layout extensions. The runtime fixture in `packages/core/src/tests/fixtures/priority.ts` supplies a non-date
+operation without range/before/after fields. It exercises shared dispatch and DOM transport without adding branches
+to either runtime. `pnpm run check:types` includes these checks; build packages first for public declarations.
 
-Before implementation, agree the proposed DST target policy, overlay-only preview policy, clear-on-emission commit
-policy and transient-store ownership amendment. The prototype verifies the selection/movement feature types and
-shared lifecycle against TypeScript 7.0.2 and browser walkthroughs. The extension exercises real projection, DOM
-measurement, framework subscriptions/lifetimes and controlled selection wiring. Source and built-declaration checks
-verify display-only, movement-only and selection-enabled calendars in both adapters. Production
-construction/capability registration and bundle guarantees remain unproved. The open-map extension below
-verifies third-party operation extensibility within the prototype. No production interaction feature is marked implemented.
+## Production lifecycle integration
 
-The independent resize proof registers only `interactionFeature` and `eventResizeFeature`, with optional constraints.
-It reuses session ownership, source-change cancellation, validation and event projection. Both edges retain payloads,
-resources and the fixed bound. Timed crossing is rejected; all-day ends remain inclusive, with an omitted end fixed
-at the original start. These are prototype choices, pending production agreement. Resize-only type checks and real
-pointer runs cover core, time-grid/timeline geometry, React/Solid providers and all three ownership modes. Movement
-and selection remain unavailable, with no registered selection state. See the prototype's resize verification for
-scope and evidence. No production resizing feature is marked implemented.
+Register `interactionFeature` with independently chosen operation features, then use `calendar.api.selection`,
+`calendar.api.move` or `calendar.api.resize`. Shared controls are `calendar.api.interactions`; they observe/update,
+reject unavailable targets, complete, cancel and refresh sessions. The core never exposes raw begin/evaluate through
+those shared controls. No second constructor or framework-specific API installer is required.
 
-## Extensible operation map proof
+The shared feature constructs from `context.features` after D29 resolves replacements. `onOptionsChange` refreshes
+the runtime after every options sync without adding interaction settings to layout-tracked options. `onMount`
+observes subscribable external ownership and cancels leases at final unmount. React StrictMode can remount the same
+instance. The ownership mode and external atom are fixed at creation; controlled readers and notifications use
+current options. External atoms without subscriptions can be refreshed explicitly.
 
-The prototype replaces its closed union with declaration-merged `OperationMap<TData>` entries containing intent,
-target and proposal types. A descriptor owns activation, source identity, target guards/equality, construction,
-API binding and completion callbacks. Feature-declared input dependencies trigger draft revalidation. The runtime
-and generic API facade dispatch registered descriptors without enumerating operation kinds. Built-in date operations
-are separate consumers of that contract.
+`Calendar_OperationMap<TData>` and the descriptor's `createInteractionOperation` correlate intent, target and result.
+`Calendar_FeatureExtensions.interaction` holds `operation`, `validate` and `deps`; validators inspect custom results
+only after narrowing their kind. Built-in and third-party entries remain gated by the registered feature keys in
+calendar options, per-view settings, persistent state and APIs. Public declaration fixtures verify the exported
+package instead of augmenting around missing built-in entries.
 
-A separately defined priority feature uses a non-date target and a proposal without range/before/after fields.
-It opts in without selection, movement or resizing and without imports from those implementations. An isolated
-compiler configuration loads only the extension and neutral modules. Mixed core and React/Solid source/public
-fixtures preserve the event payload, reject mismatched targets and omit unregistered operation APIs/state. Direct
-probes exercise policy refresh, source cancellation, callbacks and every ownership mode; standalone walkthroughs
-make the extension inspectable. See the [prototype verdict](../packages/core/prototypes/interaction-foundation/readme.md#open-operation-map-extension).
+Committed selection now uses the production D29 state owner. Movement/resizing emit current callbacks while leaving
+events unchanged. Production DOM bindings use that path and consume layout location/projection capabilities.
 
-This validates the extensibility seam within the throwaway prototype. Production registration and third-party
-pointer/rendering integration remain separate work. The built-in DOM host continues to project calendar edits only.
+## Production layout capabilities (D57)
+
+Layouts now contribute optional `locate/project` methods. The interaction runtime resolves the active layout and
+publishes derived preview results alongside semantic snapshots. An open layout-interaction map supplies typed
+points, targets and arbitrary geometry. Time-grid and timeline use the production D40 layout math; a public-package
+third-party fixture uses boolean targets and non-rectangular geometry without runtime changes. Controlled and
+external owners retain only semantic state. React/Solid bindings consume these production methods and previews.
+D58 adds month/day-grid capabilities and production drivers, covered by core and adapter tests.

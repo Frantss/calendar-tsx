@@ -1571,6 +1571,134 @@ forwarding layers without owning behavior.
 **Verification:** compare moved implementation and test bodies, extracted type declarations, and public exports
 before and after the restructure. Run the existing workspace build, checks and tests, including SSR and hydration.
 
+### D58 — Interaction operations install through the feature lifecycle
+
+**Serves:** D2, D11, D24, D29, D40; independent selection, movement, resizing and third-party operations.
+
+**Status:** implemented for programmatic operations. The user requested production lifecycle integration after the
+open-map prototype. Amends D29's mechanism-only scope and D24/D11's feature lifecycle; built-in gesture drivers and
+production layout interaction capabilities remain separate work.
+
+**Decision:** keep `constructApi`. Its context exposes resolved `features`, a command-time `state` snapshot, and
+`onOptionsChange` / `onMount` registration. The interaction feature reads all operation descriptors, creates one
+runtime per calendar and returns their bound APIs. It does not depend on object spread order or API construction
+order. Third-party descriptors use the same typed `interaction` contribution slot. `Calendar_FeatureExtensions` is
+open to independently owned descriptor slots.
+
+`requires` is checked statically and at creation, using canonical feature identities; JavaScript callers receive cycle
+and missing-prerequisite errors. Implementations resolve through D54's configured registry before construction; per-view configuration overrides use consumer aliases. Feature
+implementations and ownership modes/atoms are fixed at creation. Option callbacks and controlled ownership readers
+are read from current options. Option observers run after every `~update`, even for changes that do not rederive the
+base model. Mount callbacks run on first mount; reverse cleanup runs when the last mount releases the instance.
+Cleanup is idempotent and remount retains the instance's APIs and store subscriptions.
+
+Operation types come from open `Calendar_OperationMap<TData>` entries: intent, target and proposal. Descriptors own
+activation, source identity, target guards/equality, construction, binding and completion. The shared runtime owns
+leases, validation dispatch, current-input revalidation and transient ownership. Missing operations install no APIs;
+shared controls expose no unrestricted begin/evaluate route. Built-in entries live in their owning type interfaces
+so package declarations require no unresolved private module augmentations.
+
+Draft state has its own observable store. It does not write D29 state or rebuild layouts. Committed selection writes
+`selectedRange` through D29 and calls `onSelectionChange`; controlled selection reports the proposal and waits for
+its owner. Move/resize completion only calls the operation's current callback; event arrays remain consumer input.
+The existing prototype semantics carry over: elapsed timed move duration, inclusive all-day dates, fixed opposite
+resize edge, no kind conversion, and optional supplied-input timed overlap checks. No pointer policy is settled by
+this decision. Unmount cancels even a lease whose controlled snapshot is still awaiting acknowledgment.
+
+**Alternatives:** a second feature constructor returning API/update/mount contributions would add a parallel
+construction path. A general runtime-service registry would add indirection for one shared runtime. Both were
+rejected in favor of context registration on the existing constructor. Per-operation lifecycle implementations were
+rejected because cancellation and controlled-write rules would diverge.
+
+**Verification:** core integration tests exercise real API installation, live updates, persistent selection,
+independent opt-in, prerequisites, replacements, transient isolation and ownership lifetimes. Core/React/Solid
+compiler fixtures use the production constructor and hooks, including built declarations and an external operation
+with a boolean target. Framework tests use the installed APIs. The prototype facade is
+removed along with its standalone demo; production tests retain the verification coverage.
+
+### D59 — Layouts own hit location and proposal projection; previews derive outside ownership
+
+**Serves:** D29, D40, D58; production time-grid/timeline geometry and third-party layout capabilities.
+
+**Status:** implemented following the user's request. The user selected the prototype's DST target policy:
+preserve a supplied source offset when possible, otherwise select the earlier occurrence; reject nonexistent times.
+
+**Decision:** add optional `locate/project` methods to layout features. Their context carries the current decorated
+model, actual normalized/staged layout input and active settings. An open `Calendar_LayoutInteractionMap` specifies
+points, targets and geometry by layout kind. The interaction runtime dispatches through the resolved descriptor,
+including replacements; it does not switch on builtin kinds. Unsupported capabilities return explicit unavailable
+results while programmatic operations continue to work. The public methods are feature-gated by `interactionFeature`.
+
+Builtin hits identify a surface and fraction. Timed fractions snap using the layout's slot interval. Hits retain
+the local clock and distinct instant candidates so callers can explain DST resolution. All-day targets retain
+inclusive dates. Previews are separate overlays using D40 geometry, clipping, resource grouping and minimum event
+lengths. Selection projects a range directly without creating an event. Event projection reuses the isolated layout
+builder and does not rerun the base pipeline or repack its neighbors.
+
+`Calendar_InteractionSnapshot` remains the semantic ownership value. The readonly interaction store exposes
+`Calendar_InteractionState`, adding derived `preview`. Preview results discriminate by layout kind and may carry
+third-party geometry. Derivation observes both the semantic store and the base model; it never writes either.
+Invalid/absent candidates yield null, while missing/unsupported projection yields unavailable. Controlled and
+external owners therefore do not echo geometry or maintain a second geometry cache.
+
+**Alternatives:** a central layout-kind switch would require runtime edits for each extension. Keeping geometry
+only in framework hosts would duplicate projection and miss programmatic consumers. Storing preview geometry in
+controlled snapshots would mix derived data with authoritative ownership. These were rejected in favor of layout
+capabilities and local derivation. DOM measurement, gesture policy and production input drivers remain separate.
+
+**Verification:** calendar-level tests exercise both builtin layouts, independent operations, resource surfaces,
+inclusive all-day bounds, minimum sizes, clipping, midnight crossings, DST gaps/folds, ownership and base-layout
+isolation. Source and built-package fixtures cover a third-party layout with boolean targets and custom geometry.
+The React/Solid interaction tests consume production location and preview results.
+
+### D60 — Optional DOM transport, transfers and scheduling policies
+
+**Serves:** D2, D29, D40, D58–D59; completion of the interaction foundation proposal.
+
+**Decision:** keep browser implementation in `calendar-dom.ts`, exported through the single `@calendar-tsx/core` entry (D55). `pointerFeature`, `touchFeature` and
+`autoScrollFeature` contribute settings through the existing feature lifecycle. A mounted DOM host measures
+registered surfaces, resolves semantic targets through the active layout, and drives the shared operation runtime.
+Registration alone installs no listeners. React and Solid share this host through `useCalendarInteractions` refs;
+third-party operations provide `begin/target`, and third-party surfaces provide a layout point resolver.
+
+Pointer activation defaults to four pixels. Touch requires its own feature, a 500 ms hold and eight-pixel tolerance;
+early movement yields to scrolling. Active gestures use pointer capture, nested/window edge scrolling when enabled,
+and cancellation on Escape, pointer cancellation, blur, unmount or required surface removal. Controlled owners may
+acknowledge after pointer release; completion waits for that acknowledgment. Rendering previews and resize handles
+remains the consumer's responsibility. Register the actual date/time track, excluding axis labels and gutters.
+
+Day-grid rows now implement locate/project using visible dates and existing row segment geometry. Timed movement
+retains the source clock in a day grid; blank-space selection chooses inclusive all-day dates. Resize-end targets
+resolve the trailing date boundary. Time-grid and timeline previews also support creation and transfer proposals.
+
+Movement defaults to preserving elapsed timed duration and inclusive all-day length within the same kind.
+Conversion remains opt-in. The user selected reset duration on conversion: one all-day date or one timed hour.
+`defaultTimedMinutes` configures the timed reset; `conversionDuration: 'preserve'` uses elapsed duration, with whole
+all-day dates rounded down and at least one date. The user selected replacing the entire resource list with the
+destination. `replace-source` instead requires the dragged assignment for multi-resource events. Disabling resource
+changes preserves the full original list. Movement and resizing also accept event permission predicates.
+
+Constraints inspect concrete supplied events, including all-day/background intervals. Optional allowed ranges,
+weekly business hours, resource allowlists and availability must contain the whole proposal; adjacent windows
+form a union. Overlap includes timed/all-day intersections in the calendar zone. Every completion revalidates.
+Recurring definitions are excluded; recurrence editing and expansion for conflicts remain outside this proposal.
+
+External sources use `createExternalDraggable`; `externalDropFeature` emits a typed creation proposal and supports
+its own placement settings without installing movement. Cross-calendar sources reserve a movement lease. A receiver
+needs only interaction, pointer and cross-calendar features. Commit emits one `onEventTransfer` on the source,
+containing source/destination identities and before/after events. The application applies both sides atomically.
+Neither event array is changed. Programmatic coordinators release their prepared source handle when abandoning a
+transfer; the DOM coordinator owns this cleanup for pointer gestures.
+
+**Alternatives:** embedding browser code in each adapter would duplicate gesture lifetime and cross-host state.
+Automatically mounting display parts would remove explicit driver opt-in. Separate source/destination mutation
+callbacks could apply half a transfer. These were rejected in favor of a shared optional entry and one proposal.
+
+**Verification:** browser tests cover independent operations, feature gating, delayed ownership, touch activation,
+autoscroll, source removal, external creation, transfers and third-party operation transport. React and Solid tests
+exercise native Chromium drags in time-grid and timeline surfaces, payload types and lifecycle cleanup. Public
+compiler fixtures verify the DOM export and independent feature prerequisites.
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.

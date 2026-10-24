@@ -8,6 +8,12 @@ import type { Calendar_Range } from '#dates/date.types';
 
 /** What feature hooks receive. */
 export type Calendar_FeatureContext<TConfig = any> = {
+  readonly features: Calendar_Features;
+  readonly state: import('#calendar/calendar.types').Calendar_State<unknown, unknown, Calendar_Views, Calendar_Features>;
+  readonly layout: import('#calendar-layout-interaction.types').Calendar_ActiveLayout;
+  onOptionsChange: (callback: () => void) => void;
+  onMount: (callback: () => () => void) => void;
+  settings: <TSettings>(key: string, defaults: TSettings) => TSettings;
   readonly config: TConfig;
   readonly options: Calendar_Options<any, any, Calendar_Views, Calendar_Features>;
   /** The active view. */
@@ -25,7 +31,11 @@ export type Calendar_FeatureStage<TValue, TConfig = any> = {
 };
 
 /** Hooks supplied by a feature definition. */
+export interface Calendar_FeatureExtensions {
+  interaction?: import('#calendar-interaction.types').Calendar_InteractionContribution;
+}
 export type Calendar_Feature<TConfig = any> = {
+  requires?: readonly string[];
   getInitialState?: () => Record<string, unknown>;
   /** Actions merged onto `api`. */
   constructApi?: (context: Calendar_FeatureContext<TConfig>) => Record<string, unknown>;
@@ -38,10 +48,14 @@ export type Calendar_Feature<TConfig = any> = {
   events?: Calendar_FeatureStage<Calendar_Event<unknown>[], TConfig>;
   /** Adds model fields to the built layout, in every view. */
   decorate?: Calendar_FeatureStage<Calendar_AnyLayout, TConfig>;
-};
+} & Calendar_FeatureExtensions;
 
 /** A feature that also supplies a view kind: navigation and the layout builder. */
-export type Calendar_LayoutFeature<TKind extends string = string, TSettings = any> = Calendar_Feature & {
+export type Calendar_LayoutFeature<
+  TKind extends string = string,
+  TSettings = any,
+  TModel extends Calendar_AnyLayout = Calendar_AnyLayout,
+> = Calendar_Feature & {
   kind: TKind;
   /** The nominal period around `date`. */
   period: (date: Temporal.PlainDate, settings: TSettings, options: Calendar_NavigationOptions) => Calendar_Range;
@@ -51,8 +65,8 @@ export type Calendar_LayoutFeature<TKind extends string = string, TSettings = an
   inputRange?: (range: Calendar_Range, settings: TSettings) => Calendar_Range;
   /** The date one period before or after `date`. */
   step: (date: Temporal.PlainDate, settings: TSettings, direction: 1 | -1) => Temporal.PlainDate;
-  build: (input: Calendar_LayoutInput<any, any>, settings: TSettings) => Calendar_AnyLayout;
-};
+  build: (input: Calendar_LayoutInput<any, any>, settings: TSettings) => TModel;
+} & import('#calendar-layout-interaction.types').Calendar_LayoutCapabilities<TKind, TModel, TSettings>;
 
 export type Calendar_Features = Record<string, Calendar_Feature>;
 

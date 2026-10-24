@@ -12,7 +12,7 @@ import type {
 } from '#features/feature.types';
 import type { Calendar_Layout } from '#layouts/layout.types';
 
-import type { Calendar_Api_FeatureMap } from '#features/feature-maps.types';
+import type { Calendar_Api_FeatureMap, Calendar_Options_FeatureMap } from '#features/feature-maps.types';
 import type { ReadonlyStore } from '@tanstack/store';
 
 export type Calendar_Availability = { start: Temporal.ZonedDateTime; end: Temporal.ZonedDateTime };
@@ -94,7 +94,7 @@ export type Calendar_Options<
       Calendar_FeatureState<NoInfer<TFeatures>>[K]
     >;
   };
-};
+} & Calendar_PickFeatures<Calendar_Options_FeatureMap<TData, TResourceData>, Calendar_FeatureTypes<TFeatures>>;
 
 export type Calendar_State<
   TData,

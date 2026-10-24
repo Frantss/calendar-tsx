@@ -1,3 +1,6 @@
+import { useSelector } from '@tanstack/solid-store';
+import { interactionFeature, dateSelectionFeature, eventMoveFeature, eventResizeFeature, timeGridView, timelineView } from '@calendar-tsx/core';
+import { onMount } from 'solid-js';
 import { createEffect, createSignal } from 'solid-js';
 import { Temporal } from 'temporal-polyfill';
 import { expect, it, vi } from 'vitest';
@@ -201,3 +204,119 @@ it('feeds managed events into the calendar', async () => {
 
   await expect.element(page.getByText('Yoga,Swim')).toBeInTheDocument();
 });
+
+it('installs registered interaction APIs, syncs source changes, and cancels on unmount', async () => {
+  const features = calendarFeatures({
+    resize: eventResizeFeature(),
+    move: eventMoveFeature(),
+    select: dateSelectionFeature(),
+    interactions: interactionFeature(),
+  });
+  const views = { features, views: calendarViews({ features, views: { day: listView({ days: 1 }) } }) };
+  const onEventResize = vi.fn();
+  let inspect: (() => { outcome: string | null; keys: string[]; complete: () => unknown }) | undefined;
+  let token = 0;
+  const Harness = () => {
+    const [events, setEvents] = createSignal([defaults.yoga]);
+    const calendar = useCalendar(() => ({
+      ...views,
+      view: 'day',
+      date: defaults.date,
+      timeZone: fixtures_timeZone,
+      events: events(),
+      onNavigate: () => {},
+      onEventResize,
+      resizing: { enabled: true },
+    }));
+    const draft = useSelector(calendar.api.interactions.store, state => state);
+    onMount(() => {
+      // oxlint-disable-next-line react/globals -- Solid onMount runs after rendering; keep the instance for unmount assertions.
+      inspect = () => ({
+        outcome: calendar.api.interactions.store.state.outcome,
+        keys: Object.keys(calendar.api),
+        complete: () => calendar.api.interactions.commit(token),
+      });
+    });
+    return (
+      <CalendarProvider value={calendar}>
+        <p>{draft().outcome ?? 'idle'}</p>
+        <button
+          onClick={() => {
+            const result = calendar.api.resize.begin(defaults.yoga.id, 'end');
+            if (result.status === 'active') {
+              token = result.token;
+              calendar.api.interactions.update(token, { kind: 'timed', at: defaults.yoga.end.add({ hours: 1 }) });
+            }
+          }}
+        >
+          draft resize
+        </button>
+        <button onClick={() => calendar.api.interactions.commit(token)}>complete resize</button>
+        <button onClick={() => setEvents(current => current.map(event => ({ ...event })))}>replace source</button>
+      </CalendarProvider>
+    );
+  };
+  const screen = tests_render(() => <Harness />);
+  await page.getByRole('button', { name: 'draft resize' }).click();
+  await page.getByRole('button', { name: 'complete resize' }).click();
+  expect(onEventResize).toHaveBeenCalledOnce();
+  expect(onEventResize.mock.calls[0][0].edge).toBe('end');
+  await page.getByRole('button', { name: 'draft resize' }).click();
+  await page.getByRole('button', { name: 'replace source' }).click();
+  await expect.element(page.getByText('source-changed', { exact: true })).toBeInTheDocument();
+  expect(inspect!().outcome).toBe('source-changed');
+  expect(inspect!().keys).toEqual(expect.arrayContaining(['selection', 'move', 'resize', 'interactions']));
+  await page.getByRole('button', { name: 'draft resize' }).click();
+  screen.unmount();
+  expect(inspect!().outcome).toBe('unmounted');
+  expect(inspect!().complete()).toBe('stale-token');
+  expect(onEventResize).toHaveBeenCalledOnce();
+});
+
+for (const kind of ['timeGrid', 'timeline'] as const) {
+  it(`observes production ${kind} previews through the native framework selector`, async () => {
+    const features = calendarFeatures({ interactions: interactionFeature(), resize: eventResizeFeature() });
+    const views = {
+      features,
+      views: calendarViews({ features, views: { day: kind === 'timeGrid' ? timeGridView({ days: 1 }) : timelineView({ days: 1 }) } }),
+    };
+    const events = [defaults.yoga];
+    const Harness = () => {
+      const calendar = useCalendar(() => ({
+        ...views,
+        timeZone: fixtures_timeZone,
+        date: defaults.date,
+        view: 'day',
+        events,
+        onNavigate: () => {},
+      }));
+      const preview = useSelector(calendar.api.interactions.store, state => state.preview);
+      const extend = () => {
+        const result = calendar.api.resize.begin(defaults.yoga.id, 'end');
+        if (result.status !== 'active') throw new Error(result.status);
+        const point =
+          kind === 'timeGrid'
+            ? calendar.api.interactions.locate({ kind: 'timeGrid', surface: { kind: 'column', key: 'all:2026-03-11' }, fraction: 11 / 24 })
+            : calendar.api.interactions.locate({ kind: 'timeline', surface: { kind: 'lane', key: 'all' }, fraction: 11 / 24 });
+        if (point.status !== 'valid') throw new Error(point.reason);
+        calendar.api.interactions.update(result.token, point.target);
+      };
+      const value = () => {
+        const current = preview();
+        return current?.status === 'valid' && (current.kind === 'timeGrid' || current.kind === 'timeline')
+          ? current.geometry[0]?.span.toFixed(6)
+          : 'none';
+      };
+      return (
+        <>
+          <button onClick={extend}>preview resize</button>
+          <output>{value()}</output>
+        </>
+      );
+    };
+    tests_render(() => <Harness />);
+    await expect.element(page.getByRole('status')).toHaveTextContent('none');
+    await page.getByRole('button', { name: 'preview resize' }).click();
+    await expect.element(page.getByRole('status')).toHaveTextContent('0.083333');
+  });
+}

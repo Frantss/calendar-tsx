@@ -1,3 +1,6 @@
+import type { Calendar_TimeGridLayout } from '#layouts/time-grid/time-grid.types';
+import type { Calendar_TimelineLayout } from '#layouts/timeline/timeline.types';
+import { layoutDayGrid_locate, layoutDayGrid_project, layoutTimeGrid_locate, layoutTimeGrid_project, layoutTimeline_locate, layoutTimeline_project } from '#layouts/shared/layout-interactions';
 import type { Calendar_DayGridViewSettings } from '#layouts/day-grid/day-grid.types';
 import type { Calendar_ListViewSettings } from '#layouts/list/list.types';
 import type { Calendar_Range } from '#dates/date.types';
@@ -21,8 +24,14 @@ import { layoutCoordinates_dates } from '#layouts/shared/coordinates';
 const inputRange = (range: Calendar_Range, settings: Calendar_TimeViewSettings) =>
   layoutCoordinates_dates(range, settings).inputRange;
 
-export const dayGridLayout: Calendar_LayoutFeature<'dayGrid', Calendar_DayGridViewSettings> = {
+export const dayGridLayout: Calendar_LayoutFeature<
+  'dayGrid',
+  Calendar_DayGridViewSettings,
+  import('#layouts/day-grid/day-grid.types').Calendar_DayGridLayout<unknown, unknown>
+> = {
   kind: 'dayGrid',
+  locate: layoutDayGrid_locate,
+  project: layoutDayGrid_project,
   inputRange,
   period: calendarPeriods_resolve,
   range: (period, settings, { firstDayOfWeek }) => {
@@ -45,10 +54,16 @@ export const dayGridLayout: Calendar_LayoutFeature<'dayGrid', Calendar_DayGridVi
   build: (input, definition) => layoutDayGrid_build({ ...input, definition, today: input.now.toPlainDate() }),
 };
 
-export const timeGridLayout: Calendar_LayoutFeature<'timeGrid', Calendar_TimeGridViewSettings> = {
+export const timeGridLayout: Calendar_LayoutFeature<
+  'timeGrid',
+  Calendar_TimeGridViewSettings,
+  Calendar_TimeGridLayout<unknown, unknown>
+> = {
   kind: 'timeGrid',
   inputRange,
   period: calendarPeriods_resolve,
+  locate: layoutTimeGrid_locate,
+  project: layoutTimeGrid_project,
   range: period => period,
   step: calendarPeriods_step,
   build: (input, definition) => layoutTimeGrid_build({ ...input, definition }),
@@ -63,10 +78,16 @@ export const listLayout: Calendar_LayoutFeature<'list', Calendar_ListViewSetting
   build: (input, definition) => layoutList_build({ ...input, definition }),
 };
 
-export const timelineLayout: Calendar_LayoutFeature<'timeline', Calendar_TimelineViewSettings> = {
+export const timelineLayout: Calendar_LayoutFeature<
+  'timeline',
+  Calendar_TimelineViewSettings,
+  Calendar_TimelineLayout<unknown, unknown>
+> = {
   kind: 'timeline',
   inputRange,
   period: calendarPeriods_resolve,
+  locate: layoutTimeline_locate,
+  project: layoutTimeline_project,
   range: period => period,
   step: calendarPeriods_step,
   build: (input, definition) => layoutTimeline_build({ ...input, definition }),

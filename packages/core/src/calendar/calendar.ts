@@ -1,3 +1,5 @@
+import type { Calendar_LayoutFeature } from '#features/feature.types';
+import type { Calendar_LayoutInput } from '#layouts/layout.types';
 import {
   calendarFeatures_collect,
   calendarFeatures_active,
@@ -82,10 +84,31 @@ export const createCalendar = <
   const clock = () => options.clock ?? defaultClock;
   const definitions = { ...initial.features };
   const features = calendarFeatures_collect(options);
+  const optionObservers = new Set<() => void>();
+  const mountObservers = new Set<() => () => void>();
   const resolveEvents = calendarSources_createResolver(features);
 
   const persisted = createStore(tracked_from(options, options.initialNow ?? clock().now()));
   const featureRuntime = calendarFeatures_createRuntime(features, {
+    get calendarState() {
+      return store.state as unknown as Calendar_FeatureContext['state'];
+    },
+    get layout() {
+      const state = store.state;
+      const settings = calendarNavigation_view(options.views, options.view);
+      return {
+        model: state.layout,
+        input: layoutInput,
+        settings,
+        feature: featureRuntime.resolve(settings, settings['~layout']) as Calendar_LayoutFeature,
+      };
+    },
+    onOptionsChange: callback => {
+      optionObservers.add(callback);
+    },
+    onMount: callback => {
+      mountObservers.add(callback);
+    },
     get options() {
       return options;
     },
@@ -111,6 +134,7 @@ export const createCalendar = <
     return { view, date, ...calendarNavigation_resolve(layout, definition, date, options) };
   };
 
+  let layoutInput: Calendar_LayoutInput<unknown, unknown>;
   const store = createStore((): Calendar_State<TData, TResourceData, TViews, TFeatures> => {
     const input = persisted.state;
     const now = input.now.toZonedDateTimeISO(input.timeZone);
@@ -135,20 +159,18 @@ export const createCalendar = <
       if (feature.events) events = featureRuntime.run(key, `${key}:events`, feature.events, events);
 
     const layout = featureRuntime.resolve(definition, definition['~layout']) as Calendar_LayoutFeature;
-    let model: Calendar_AnyLayout = layout.build(
-      {
-        firstDayOfWeek: input.firstDayOfWeek ?? 7,
-        range: viewContext.range,
-        period: viewContext.period,
-        inputRange: viewContext.inputRange,
-        events,
-        backgroundEvents,
-        resources: input.resources ?? [],
-        timeZone: input.timeZone,
-        now,
-      },
-      definition,
-    );
+    layoutInput = {
+      firstDayOfWeek: input.firstDayOfWeek ?? 7,
+      range: viewContext.range,
+      period: viewContext.period,
+      inputRange: viewContext.inputRange,
+      events,
+      backgroundEvents,
+      resources: input.resources ?? [],
+      timeZone: input.timeZone,
+      now,
+    };
+    let model: Calendar_AnyLayout = layout.build(layoutInput, definition);
 
     for (const [key, feature] of active)
       if (feature.decorate) model = featureRuntime.run(key, `${key}:decorate`, feature.decorate, model);
@@ -192,6 +214,8 @@ export const createCalendar = <
       return tracked_equals(state, next) ? state : next;
     });
 
+  let mounts = 0;
+  let mountedCleanup: (() => void) | undefined;
   return {
     get options() {
       return options as unknown as Calendar_Options<TData, TResourceData, TViews, TFeatures>;
@@ -199,9 +223,30 @@ export const createCalendar = <
     store,
     api,
     '~mount': () => {
-      tick();
-
-      return clock().subscribe(tick);
+      if (mounts++ === 0) {
+        const cleanups: (() => void)[] = [];
+        try {
+          tick();
+          cleanups.push(clock().subscribe(tick));
+          for (const mount of mountObservers) cleanups.push(mount());
+        } catch (error) {
+          mounts = 0;
+          for (const cleanup of cleanups.toReversed()) cleanup();
+          throw error;
+        }
+        mountedCleanup = () => {
+          for (const cleanup of cleanups.toReversed()) cleanup();
+        };
+      }
+      let active = true;
+      return () => {
+        if (!active) return;
+        active = false;
+        if (--mounts === 0) {
+          mountedCleanup?.();
+          mountedCleanup = undefined;
+        }
+      };
     },
     '~update': next => {
       if (
@@ -216,6 +261,7 @@ export const createCalendar = <
 
         return tracked_equals(state, updated) ? state : updated;
       });
+      optionObservers.forEach(callback => callback());
     },
   };
 };

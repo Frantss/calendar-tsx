@@ -32,7 +32,7 @@
     "test": "vp test",
     "test:coverage": "vp test --coverage",
     "test:dev": "vp test --watch",
-    "check:types": "vp exec tsc --noEmit",
+    "check:types": "vp exec tsc --noEmit && vp exec tsc -p tests/types && vp exec tsc -p tests/types/tsconfig.public.json",
     "check:package": "publint --strict && attw --pack --no-emoji --profile esm-only"
   },
   "dependencies": {

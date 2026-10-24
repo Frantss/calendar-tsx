@@ -12,7 +12,11 @@ import type {
 import type { Calendar_Options } from '#calendar/calendar.types';
 import type { Calendar_View, Calendar_Views } from '#views/view.types';
 
-type RuntimeInput = Pick<Calendar_FeatureContext, 'options' | 'view' | 'api'> & {
+type RuntimeInput = Pick<
+  Calendar_FeatureContext,
+  'options' | 'view' | 'api' | 'layout' | 'onOptionsChange' | 'onMount'
+> & {
+  readonly calendarState: Calendar_FeatureContext['state'];
   readonly state: Calendar_Options<any, any, Calendar_Views, Calendar_Features>['state'];
 };
 
@@ -54,6 +58,32 @@ export const calendarFeatures_createRuntime = (features: Calendar_Features, inpu
     if (previous) return previous;
     const feature = features[alias] as Calendar_ConfiguredFeature;
     const result: Calendar_FeatureContext = {
+      features: Object.fromEntries(
+        Object.entries(features).map(([alias, feature]) => [
+          (feature as Calendar_ConfiguredFeature)['~id'] ?? alias,
+          feature,
+        ]),
+      ),
+      get state() {
+        return input.calendarState;
+      },
+      get layout() {
+        return input.layout;
+      },
+      onOptionsChange: input.onOptionsChange,
+      onMount: input.onMount,
+      settings: (key, defaults) => {
+        const match = Object.entries(features).find(([, feature]) => feature.interaction?.settings === key);
+        const configured = match ? (match[1] as Calendar_ConfiguredFeature)['~config'] : undefined;
+        const override = match ? (input.view as { features?: Record<string, object> }).features?.[match[0]] : undefined;
+        return {
+          ...defaults,
+          ...configured,
+          ...((input.options as Record<string, unknown>)[key] as object | undefined),
+          ...override,
+          ...(input.view[key] as object | undefined),
+        };
+      },
       get options() {
         return input.options;
       },
@@ -83,10 +113,10 @@ export const calendarFeatures_createRuntime = (features: Calendar_Features, inpu
 
   const stages = new Map<string, { input: unknown; deps: unknown[] | undefined; output: unknown }>();
 
-  return {
+  const runtime = {
     resolve: (view: Calendar_View, key: string) =>
       (key === view['~layout'] ? (view['~features'] as Calendar_Features)[key] : features[key]) as Calendar_Feature,
-    state: () => {
+    state: (): Record<string, unknown> => {
       const keys = new Set([...Object.keys(internal.state), ...Object.keys(atoms), ...Object.keys(input.state ?? {})]);
 
       return Object.fromEntries([...keys].map(key => [key, getState(key)]));
@@ -109,4 +139,5 @@ export const calendarFeatures_createRuntime = (features: Calendar_Features, inpu
       return output;
     },
   };
+  return runtime;
 };

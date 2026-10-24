@@ -1,3 +1,4 @@
+import { listLayout } from '#layouts/layout-features';
 import type { Calendar_Resource } from '#calendar/calendar.types';
 import { calendarFeatures } from '#features/calendar-features';
 import type { Store } from '@tanstack/store';
@@ -393,4 +394,84 @@ it('types features from the views and options', () => {
   void withoutHighlight.api.highlight;
 
   expect(true).toBe(true);
+});
+
+it('exposes resolved descriptors and command-time state to feature lifecycle hooks', () => {
+  const updates: string[] = [];
+  const mounted = vi.fn();
+  const cleaned = vi.fn();
+  let descriptors: unknown;
+  const lifecycleFeature = {
+    '~id': 'lifecycleFeature',
+    '~config': {},
+    constructApi(context) {
+      descriptors = context.features;
+      context.onOptionsChange(() => updates.push(context.state.context.view));
+      context.onMount(() => {
+        mounted();
+        return cleaned;
+      });
+      return {};
+    },
+  } satisfies Calendar_ConfiguredFeature;
+  const configured = (() => {
+    const features = calendarFeatures({ lifecycleFeature });
+    return { features, views: calendarViews({ features, views: { day: listView({ days: 1 }) } }) };
+  })();
+  const calendar = createCalendar({
+    ...configured,
+    date: Temporal.PlainDate.from('2026-03-11'),
+    view: 'day',
+    timeZone: fixtures_timeZone,
+    events,
+    onNavigate: () => {},
+  });
+  expect(descriptors).toEqual({ ...configured.features, listLayout });
+  const layout = calendar.store.state.layout;
+  calendar['~update']({ ...calendar.options, onNavigate: () => {} });
+  expect(updates).toEqual(['day']);
+  expect(calendar.store.state.layout).toBe(layout);
+  const release = calendar['~mount']();
+  expect(mounted).toHaveBeenCalledOnce();
+  release();
+  release();
+  expect(cleaned).toHaveBeenCalledOnce();
+});
+
+it('releases acquired resources when a feature mount fails and permits a later mount', () => {
+  const cleaned = vi.fn();
+  const subscribe = vi.fn(() => cleaned);
+  const mount = vi
+    .fn<() => () => void>()
+    .mockImplementationOnce(() => {
+      throw new Error('mount failed');
+    })
+    .mockImplementation(() => cleaned);
+  const feature = {
+    '~id': 'feature',
+    '~config': {},
+    constructApi(context) {
+      context.onMount(mount);
+      return {};
+    },
+  } satisfies Calendar_ConfiguredFeature;
+  const configured = (() => {
+    const features = calendarFeatures({ feature });
+    return { features, views: calendarViews({ features, views: { day: listView({ days: 1 }) } }) };
+  })();
+  const calendar = createCalendar({
+    ...configured,
+    date: Temporal.PlainDate.from('2026-03-11'),
+    view: 'day',
+    timeZone: fixtures_timeZone,
+    events,
+    onNavigate: () => {},
+    clock: { now: () => Temporal.Instant.from('2026-03-11T15:00Z'), subscribe },
+  });
+  expect(() => calendar['~mount']()).toThrow('mount failed');
+  expect(cleaned).toHaveBeenCalledOnce();
+  const release = calendar['~mount']();
+  release();
+  expect(subscribe).toHaveBeenCalledTimes(2);
+  expect(cleaned).toHaveBeenCalledTimes(3);
 });

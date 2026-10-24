@@ -9,3 +9,9 @@
 - React effect analysis: `apps/docs/src/routes/_site/docs/playground.tsx:131`, `apps/docs/src/components/calendar-preview.tsx:56`, and `apps/docs/src/routes/playground/preview.tsx:76` report synchronous state updates in effects. These can cause additional render cycles.
 - Await analysis: `packages/solid/src/tests/day-grid-view.spec.tsx:176` and `packages/solid/src/tests/time-grid-view.spec.tsx:160` report awaiting non-Promise values. This matters when determining whether the tests wait for the intended work.
 - Template interpolation analysis: `packages/core/src/layout/layout-time-grid.ts:63`, `packages/core/src/tests/calendar-navigation.spec.ts:17` (two interpolations), and `packages/core/src/tests/calendar.spec.ts:71` report restricted template expressions. This affects the assumptions behind implicit string conversion of Temporal values.
+
+## Interaction rebase verification — 2026-10-24
+
+- Template interpolation analysis also reports `packages/core/src/tests/calendar-layout-interactions.spec.ts:425`
+  and `:430`. The surface-key fixtures interpolate Temporal dates implicitly. This is a lint diagnostic about string
+  conversion, not a failing geometry assertion; both layouts pass their browser tests.
