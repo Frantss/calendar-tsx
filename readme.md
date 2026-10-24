@@ -27,7 +27,9 @@ parts.
 | [`@calendar-tsx/rrule`](packages/rrule)   | Optional recurrence powered by rrule-temporal.       | [readme](packages/rrule/readme.md)  |
 | [`@calendar-tsx/themes`](packages/themes) | Stylesheets: a positioning base and a default theme. | [readme](packages/themes/readme.md) |
 
-The design, requirements and decision log live in [docs/design.md](docs/design.md). The documentation site is a
+The design, requirements and decision log live in [docs/design.md](docs/design.md). The
+[calendar assembly API](docs/calendar-assembly.md) records the target feature-factory configuration and per-view
+overrides; it is not implemented yet. The documentation site is a
 [Fumadocs](https://fumadocs.dev) app on TanStack Start in [apps/docs](apps/docs), with one root per framework. Pages
 in `apps/docs/content/docs` include shared text from `apps/docs/content/shared` and code from `apps/docs/examples`,
 which `check:types` compiles.

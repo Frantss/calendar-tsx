@@ -1408,6 +1408,39 @@ state-map workaround documented before this decision is no longer required.
 feature state with plain and feature-owning providers/roots, rejected trigger keys and missing calendar props,
 navigation through the explicit instance, locale ownership, and accessible-label updates in both compositions.
 
+### D54 — Feature factories configure calendar assembly
+
+**Status:** target API recorded from the assembly discussion; not implemented. The complete API and React example
+are in [Calendar assembly API](./calendar-assembly.md). Typing feasibility for the new signatures is unverified.
+
+**Serves:** D4, D5, D8, D24, D29, D53.
+
+**Decision:** assemble a calendar through `calendarFeatures({ background: backgroundFeature(defaultBackgrounds),
+recurrence: recurrenceFeature() })`, then `calendarViews({ features, views: { ... } })`, then
+`createCalendar({ features, views, ... })`. Adapter hooks accept the same assembly. Each feature factory owns its
+arguments and returns a configured definition. The registry is an object; its keys identify per-view overrides.
+Views take override values in the feature factory's configuration input shape. They inherit omitted entries;
+background arrays are replaced, with an explicit spread when extending defaults.
+
+**Ownership:** factories define configuration; calendar creation owns shared feature state and actions. Views
+continue to supply layout features. Consumers pass `views` directly and no longer unwrap `views.views` or spread
+`views.features`. Feature definitions retain their identity and type contributions when registered under aliases
+such as `background`. Recurrence source resolution remains calendar-wide.
+
+**Effect on existing decisions:** the target replaces D29's constant-only feature registration and
+`createCalendarViews` assembly. It also replaces the cross-view activation rule preserved by D53: each view
+inherits the registered features, and adding an override to one view does not change another view's scope. Other
+D53 binding contracts remain unchanged. Current package documentation continues to describe the implemented API
+until this target is implemented.
+
+**Alternatives considered:** a `{ feature, options }` descriptor repeats the feature's identity; the user rejected
+it. A separate defaults argument disconnects configuration from each feature's factory signature. An array of
+factory results removes explicit registration keys; the user chose an object. Recreating configured features in
+each view is unnecessary because views only override configuration and share the calendar's state.
+
+**Still open:** general object-option merging, disabling syntax, duplicate feature registrations and updating
+configured defaults after creation. The documented examples do not establish those contracts.
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.
