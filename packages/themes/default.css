@@ -14,14 +14,14 @@
 
 @layer calendar.theme {
   :where(:root) {
-    --calendar-surface: light-dark(#ffffff, #171615);
-    --calendar-surface-muted: light-dark(#f5f4f1, #201f1d);
-    --calendar-text: light-dark(#1c1b19, #f2efe9);
-    --calendar-text-muted: light-dark(#5f5c56, #a9a49b);
-    --calendar-border: light-dark(#dedbd4, #34322e);
-    --calendar-border-strong: light-dark(#c4c0b7, #4a4742);
-    --calendar-accent: light-dark(#b4441e, #f08a5d);
-    --calendar-accent-contrast: light-dark(#ffffff, #1a0d07);
+    --calendar-surface: light-dark(#ffffff, #161618);
+    --calendar-surface-muted: light-dark(#f4f4f5, #1f1f22);
+    --calendar-text: light-dark(#18181b, #f1f1f3);
+    --calendar-text-muted: light-dark(#5b5b63, #a3a3ab);
+    --calendar-border: light-dark(#e2e2e5, #323236);
+    --calendar-border-strong: light-dark(#bfbfc5, #48484e);
+    --calendar-accent: light-dark(#18181b, #f1f1f3);
+    --calendar-accent-contrast: light-dark(#ffffff, #18181b);
     --calendar-event-color: light-dark(#2f63d6, #7ea6ff);
     --calendar-event-color-contrast: light-dark(#ffffff, #0b1530);
     --calendar-now: light-dark(#d4321f, #ff6d5a);
@@ -287,13 +287,6 @@
     color: var(--calendar-text-muted);
   }
 
-  :where([data-scope='calendar']:is([data-part='day-grid-day'], [data-part='time-grid-column-header'])[data-today]) {
-    background-color: light-dark(
-      color-mix(in oklab, var(--calendar-accent) 7%, var(--calendar-surface)),
-      color-mix(in oklab, var(--calendar-accent) 12%, var(--calendar-surface))
-    );
-  }
-
   /*
    * Day numbers: a circle so today's accent reads as a marker, not a filled cell. It is 0.5rem shorter than the day
    * header: 0.25rem for the cell's padding above it and 0.25rem of gap above the first bar.
@@ -404,13 +397,6 @@
         color-mix(in oklab, var(--calendar-border) 50%, transparent) 0 1px,
         transparent 1px var(--_calendar-slot)
       );
-  }
-
-  :where([data-scope='calendar'][data-part='time-grid-column'][data-today]) {
-    background-color: light-dark(
-      color-mix(in oklab, var(--calendar-accent) 6%, transparent),
-      color-mix(in oklab, var(--calendar-accent) 8%, transparent)
-    );
   }
 
   /* Hatched so unavailable time reads apart from muted, out-of-range surfaces */
@@ -553,10 +539,6 @@
   }
 
   :where([data-scope='calendar'][data-part='timeline-day-header'][data-today]) {
-    background-color: light-dark(
-      color-mix(in oklab, var(--calendar-accent) 7%, var(--calendar-surface)),
-      color-mix(in oklab, var(--calendar-accent) 12%, var(--calendar-surface))
-    );
     color: var(--calendar-accent);
   }
 

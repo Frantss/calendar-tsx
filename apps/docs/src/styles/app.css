@@ -2,44 +2,44 @@
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
-/* The docs chrome takes the palette of the default calendar theme (`packages/themes/default.css`). */
+/* The docs chrome takes the default calendar theme's neutrals (`packages/themes/default.css`), with its event color as the primary. */
 @theme {
-  --color-fd-background: #f5f4f1;
-  --color-fd-foreground: #1c1b19;
-  --color-fd-muted: #ecebe6;
-  --color-fd-muted-foreground: #5f5c56;
-  --color-fd-popover: #faf9f7;
-  --color-fd-popover-foreground: #1c1b19;
-  --color-fd-card: #fbfaf8;
-  --color-fd-card-foreground: #1c1b19;
-  --color-fd-border: #dedbd4;
-  --color-fd-primary: #b4441e;
+  --color-fd-background: #f4f4f5;
+  --color-fd-foreground: #18181b;
+  --color-fd-muted: #e9e9ec;
+  --color-fd-muted-foreground: #5b5b63;
+  --color-fd-popover: #fafafa;
+  --color-fd-popover-foreground: #18181b;
+  --color-fd-card: #fafafa;
+  --color-fd-card-foreground: #18181b;
+  --color-fd-border: #e2e2e5;
+  --color-fd-primary: #2f63d6;
   --color-fd-primary-foreground: #ffffff;
-  --color-fd-secondary: #ecebe6;
-  --color-fd-secondary-foreground: #1c1b19;
-  --color-fd-accent: #f6e2d8;
-  --color-fd-accent-foreground: #7a2c12;
-  --color-fd-ring: #b4441e;
+  --color-fd-secondary: #e9e9ec;
+  --color-fd-secondary-foreground: #18181b;
+  --color-fd-accent: #e3ebfb;
+  --color-fd-accent-foreground: #1e3f8a;
+  --color-fd-ring: #2f63d6;
 }
 
 .dark,
 .dark #nd-sidebar {
-  --color-fd-background: #171615;
-  --color-fd-foreground: #f2efe9;
-  --color-fd-muted: #201f1d;
-  --color-fd-muted-foreground: #a9a49b;
-  --color-fd-popover: #1c1b19;
-  --color-fd-popover-foreground: #f2efe9;
-  --color-fd-card: #1c1b19;
-  --color-fd-card-foreground: #f2efe9;
-  --color-fd-border: #34322e;
-  --color-fd-primary: #f08a5d;
-  --color-fd-primary-foreground: #1a0d07;
-  --color-fd-secondary: #262422;
-  --color-fd-secondary-foreground: #f2efe9;
-  --color-fd-accent: #3a2219;
-  --color-fd-accent-foreground: #f6b896;
-  --color-fd-ring: #f08a5d;
+  --color-fd-background: #161618;
+  --color-fd-foreground: #f1f1f3;
+  --color-fd-muted: #1f1f22;
+  --color-fd-muted-foreground: #a3a3ab;
+  --color-fd-popover: #1b1b1e;
+  --color-fd-popover-foreground: #f1f1f3;
+  --color-fd-card: #1b1b1e;
+  --color-fd-card-foreground: #f1f1f3;
+  --color-fd-border: #323236;
+  --color-fd-primary: #7ea6ff;
+  --color-fd-primary-foreground: #0b1530;
+  --color-fd-secondary: #232326;
+  --color-fd-secondary-foreground: #f1f1f3;
+  --color-fd-accent: #1c2740;
+  --color-fd-accent-foreground: #b8ccff;
+  --color-fd-ring: #7ea6ff;
 }
 
 html {

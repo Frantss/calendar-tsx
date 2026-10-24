@@ -47,8 +47,8 @@ Override any `--calendar-*` token on an ancestor of the calendar:
 }
 ```
 
-**Roles.** Each kind of thing has its own color, so they read apart. `--calendar-accent` marks today (marker, header,
-column tint) and the focus ring; set `--calendar-accent-contrast` with it for the numbers on today's marker.
+**Roles.** Each kind of thing has its own color, so they read apart. `--calendar-accent` marks today (marker and header)
+and the focus ring; set `--calendar-accent-contrast` with it for the numbers on today's marker.
 `--calendar-event-color` colors events: timed events are tints of it (14% fill and 30% border in light mode, 26% and
 45% in dark mode) with a 3px stripe where they start, and all-day and multi-day bars (`data-all-day`,
 `data-multi-day`) are solid in it with `--calendar-event-color-contrast` text. `--calendar-now` draws the now line,
@@ -59,10 +59,10 @@ colors resolve on each event, so a class on one event part that sets `--calendar
 
 | Token                                                                                     | Default (light, dark)                                                     |
 | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `--calendar-surface`, `--calendar-surface-muted`                                          | `#ffffff` `#f5f4f1`, `#171615` `#201f1d`                                  |
-| `--calendar-text`, `--calendar-text-muted`                                                | `#1c1b19` `#5f5c56`, `#f2efe9` `#a9a49b`                                  |
-| `--calendar-border`, `--calendar-border-strong`                                           | `#dedbd4` `#c4c0b7`, `#34322e` `#4a4742`                                  |
-| `--calendar-accent`, `--calendar-accent-contrast`                                         | `#b4441e` `#ffffff`, `#f08a5d` `#1a0d07`                                  |
+| `--calendar-surface`, `--calendar-surface-muted`                                          | `#ffffff` `#f4f4f5`, `#161618` `#1f1f22`                                  |
+| `--calendar-text`, `--calendar-text-muted`                                                | `#18181b` `#5b5b63`, `#f1f1f3` `#a3a3ab`                                  |
+| `--calendar-border`, `--calendar-border-strong`                                           | `#e2e2e5` `#bfbfc5`, `#323236` `#48484e`                                  |
+| `--calendar-accent`, `--calendar-accent-contrast`                                         | `#18181b` `#ffffff`, `#f1f1f3` `#18181b`                                  |
 | `--calendar-event-color`, `--calendar-event-color-contrast`                               | `#2f63d6` `#ffffff`, `#7ea6ff` `#0b1530`                                  |
 | `--calendar-event`, `--calendar-event-border`                                             | unset: tints of the event color, or the event color on solid bars         |
 | `--calendar-event-text`, `--calendar-focus-ring`                                          | unset: the text (the event color's contrast on solid bars) and the accent |

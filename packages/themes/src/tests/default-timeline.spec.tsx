@@ -80,7 +80,7 @@ const Timeline = () => {
   );
 };
 
-const accent = 'rgb(180, 68, 30)';
+const accent = 'rgb(24, 24, 27)';
 
 const render = (overrides: Parameters<typeof themesSetup_render>[1] = {}) =>
   themesSetup_render(<Timeline />, { views, view: 'timeline', resources, ...overrides });
@@ -117,8 +117,8 @@ it('keeps resource cells opaque and mutes unavailable ones', async () => {
 
   // the muted band is drawn over the opaque surface
   expect(ana && getComputedStyle(ana).backgroundColor).toBe('rgb(255, 255, 255)');
-  expect(ana && getComputedStyle(ana).backgroundImage).toContain('linear-gradient(rgb(245, 244, 241), rgb(245, 244, 241))');
-  expect(room && getComputedStyle(room).color).toBe('rgb(95, 92, 86)');
+  expect(ana && getComputedStyle(ana).backgroundImage).toContain('linear-gradient(rgb(244, 244, 245), rgb(244, 244, 245))');
+  expect(room && getComputedStyle(room).color).toBe('rgb(91, 91, 99)');
 });
 
 it('draws solid bars for all-day and multi-day events', async () => {

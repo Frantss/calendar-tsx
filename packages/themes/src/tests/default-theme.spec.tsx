@@ -375,8 +375,8 @@ it('keeps the overflow trigger below the visible bars', async () => {
 });
 
 it.each([
-  ['light', 'rgb(180, 68, 30)'],
-  ['dark', 'rgb(240, 138, 93)'],
+  ['light', 'rgb(24, 24, 27)'],
+  ['dark', 'rgb(241, 241, 243)'],
 ] as const)('marks today with the %s accent from color-scheme', async (colorScheme, accent) => {
   await themesSetup_render(<Month />, { view: 'month', colorScheme });
   const today = themesSetup_part('day-grid-day', '[data-today]')[0]?.querySelector('[data-part="day-grid-day-trigger"]');
@@ -426,7 +426,7 @@ it('restores the today marker with system colors in forced-colors mode', async (
 
 it.each([
   ['tints events from an event color set on an ancestor', 'events', 'light', 'color-mix(in oklab, rgb(0, 0, 255) 14%, #ffffff)'],
-  ['tints events more deeply on a dark surface', 'events', 'dark', 'color-mix(in oklab, rgb(0, 0, 255) 26%, #171615)'],
+  ['tints events more deeply on a dark surface', 'events', 'dark', 'color-mix(in oklab, rgb(0, 0, 255) 26%, #161618)'],
   ['keeps events apart from an accent set on an ancestor', 'accent', 'light', 'color-mix(in oklab, #2f63d6 14%, #ffffff)'],
   ['lets --calendar-event override the tint', 'events fill', 'light', 'rgb(1, 2, 3)'],
 ] as const)('%s', async (_, className, colorScheme, expected) => {
@@ -477,7 +477,7 @@ it('draws all-day and multi-day bars solid, and timed single-day bars tinted', a
     expect(getComputedStyle(bar(title)).color).toBe('rgb(255, 255, 255)');
   }
   expect(getComputedStyle(bar('Yoga')).backgroundColor).toBe(getComputedStyle(probe).color);
-  expect(getComputedStyle(bar('Yoga')).color).toBe('rgb(28, 27, 25)');
+  expect(getComputedStyle(bar('Yoga')).color).toBe('rgb(24, 24, 27)');
   probe.remove();
 });
 
@@ -489,7 +489,7 @@ it('drops the stripe where a bar continues from an earlier week', async () => {
   expect(second && getComputedStyle(second).borderInlineStartWidth).toBe('1px');
 });
 
-it('shades weekends and tints today apart from them', async () => {
+it("shades weekends and leaves today's column unshaded", async () => {
   await themesSetup_render(<TimeGrid />, { view: 'week' });
   const columns = themesSetup_part('time-grid-column');
   const probe = (color: string) => {
@@ -502,10 +502,10 @@ it('shades weekends and tints today apart from them', async () => {
   };
   const background = (index: number) => columns[index] && getComputedStyle(columns[index]).backgroundColor;
 
-  expect(background(0)).toBe(probe('color-mix(in oklab, #1c1b19 3%, transparent)'));
-  expect(background(6)).toBe(probe('color-mix(in oklab, #1c1b19 3%, transparent)'));
+  expect(background(0)).toBe(probe('color-mix(in oklab, #18181b 3%, transparent)'));
+  expect(background(6)).toBe(probe('color-mix(in oklab, #18181b 3%, transparent)'));
   expect(background(1)).toBe('rgba(0, 0, 0, 0)');
-  expect(background(3)).toBe(probe('color-mix(in oklab, #b4441e 6%, transparent)'));
+  expect(background(3)).toBe('rgba(0, 0, 0, 0)');
 });
 
 /** Measures the slot and hour line spacing the column resolves, as a child laid out from the same lengths. */
@@ -648,7 +648,7 @@ it('aligns a date rail beside all of its event rows', async () => {
   const [yoga, swim] = themesSetup_part('list-event').map(themesSetup_rect);
   const root = themesSetup_rect(themesSetup_part('list-root')[0]);
 
-  expect(header && getComputedStyle(header).backgroundColor).toBe('rgb(245, 244, 241)');
+  expect(header && getComputedStyle(header).backgroundColor).toBe('rgb(244, 244, 245)');
   expect(swim?.top).toBeGreaterThanOrEqual(yoga?.bottom ?? Infinity);
   expect(date.top).toBeCloseTo(yoga?.top ?? 0, 0);
   expect(date.bottom).toBeCloseTo(swim?.bottom ?? 0, 0);

@@ -14,10 +14,10 @@ Defaults from `default.css`, light then dark:
 
 | Token                                                                                     | Default                                                      |
 | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `--calendar-surface`, `--calendar-surface-muted`                                          | `#ffffff` `#f5f4f1`, `#171615` `#201f1d`                     |
-| `--calendar-text`, `--calendar-text-muted`                                                | `#1c1b19` `#5f5c56`, `#f2efe9` `#a9a49b`                     |
-| `--calendar-border`, `--calendar-border-strong`                                           | `#dedbd4` `#c4c0b7`, `#34322e` `#4a4742`                     |
-| `--calendar-accent`, `--calendar-accent-contrast`                                         | `#b4441e` `#ffffff`, `#f08a5d` `#1a0d07`                     |
+| `--calendar-surface`, `--calendar-surface-muted`                                          | `#ffffff` `#f4f4f5`, `#161618` `#1f1f22`                     |
+| `--calendar-text`, `--calendar-text-muted`                                                | `#18181b` `#5b5b63`, `#f1f1f3` `#a3a3ab`                     |
+| `--calendar-border`, `--calendar-border-strong`                                           | `#e2e2e5` `#bfbfc5`, `#323236` `#48484e`                     |
+| `--calendar-accent`, `--calendar-accent-contrast`                                         | `#18181b` `#ffffff`, `#f1f1f3` `#18181b`                     |
 | `--calendar-event-color`, `--calendar-event-color-contrast`                               | `#2f63d6` `#ffffff`, `#7ea6ff` `#0b1530`                     |
 | `--calendar-event`, `--calendar-event-border`                                             | unset: see [roles](#roles)                                   |
 | `--calendar-event-text`, `--calendar-focus-ring`                                          | unset: fall back to the text and the accent                  |
@@ -47,7 +47,7 @@ Each kind of thing on the calendar has its own color, so they read apart at a gl
 
 | Role               | Token                               | Drawn as                                                        |
 | ------------------ | ----------------------------------- | --------------------------------------------------------------- |
-| Today and focus    | `--calendar-accent`                 | today's marker, header and column tint; the focus ring          |
+| Today and focus    | `--calendar-accent`                 | today's marker and header; the focus ring                       |
 | Events             | `--calendar-event-color`            | a tint with a 3px stripe; solid for all-day and multi-day bars  |
 | Now                | `--calendar-now`                    | the now line and its dot                                        |
 | Background events  | `--calendar-background-event-color` | a translucent wash with a 2px top edge                          |
