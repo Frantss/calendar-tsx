@@ -1,7 +1,9 @@
 # Interaction foundation prototype
 
 Throwaway experiment on `codex/interaction-foundation-prototype`, based on `fd13cd8`.
-Production exports and adapters are unchanged. Context: [design proposal](../../../../docs/interaction-foundation.md).
+Production interaction exports are unchanged. Adapter context and feature API payload typing were corrected after
+this experiment.
+Context: [design proposal](../../../../docs/interaction-foundation.md).
 
 ## Run
 
@@ -15,7 +17,7 @@ pnpm run prototype:interactions
 - [React harness](http://127.0.0.1:5177/prototypes/interaction-foundation/)
 - [Solid harness](http://127.0.0.1:5178/prototypes/interaction-foundation/)
 
-`pnpm run prototype:interactions:types` checks the core sketch and both adapters.
+`pnpm run prototype:interactions:types` checks the core sketch and both adapters against source and built declarations.
 `pnpm run prototype:interactions:build` bundles both harnesses under each adapter's ignored `dist` directory.
 They consume built public adapter exports and alias core to its current source. Framework compilation is required
 for this extension. The original standalone logic demo remains available below.
@@ -50,18 +52,19 @@ Two details carry into the proposed design:
   snapshots are accepted. The controlled host echoes the requested snapshot object and calls `refresh`; direct
   external-state updates also require `refresh`. Arbitrary snapshot cloning is outside this prototype contract.
 
-The existing `Calendar_Api_FeatureMap` cannot carry event payload types into API return values. The
-[contextual map sketch](feature-types.ts) preserves inferred payloads by threading `TData` through that map. This
-remains a proposed D29 amendment; production declarations are unchanged.
+Production `Calendar_Api_FeatureMap<TData, TResourceData>` now carries consumer payload types into feature API return
+values. The [feature declarations](feature-types.ts) use that map directly, without the contextual-map workaround.
+Movement results preserve the event payload on both `before` and `after` through core, React and Solid instances.
 
 ## Verification
 
 [types.verify.ts](types.verify.ts) compiles with installed TypeScript 7.0.2 against the actual view factories, feature
 maps, options, API and state. It is compiler input only: do not execute its deliberately invalid expressions.
-Its 22 checked `@ts-expect-error` cases verify absent feature APIs/options/settings/state, missing and inactive
+Its 25 checked `@ts-expect-error` cases verify absent feature APIs/options/settings/state, missing and inactive
 prerequisites, event payload inference, selection discriminants and exclusive state ownership. Calendar-wide
 prerequisites and reverse registration order compile. Cycles are runtime checks; widened feature records retain
-D29's existing loss of precise static gating.
+D29's existing loss of precise static gating. [types.public.verify.ts](types.public.verify.ts) verifies movement
+payload inference against built core declarations. Omitting payload type arguments deliberately retains `unknown`.
 
 Chromium drove all 11 guided walkthroughs: selection, movement, shared overlap checks, an arriving booking, competing
 sessions/stale tokens, source replacement, inactive views, controlled writes, all-day bounds, DST targets and cleanup.
@@ -110,11 +113,14 @@ Fixtures cover UTC, New York spring/autumn DST and Lord Howe's half-hour transit
 in date-first column order, with overlaps, a two-minute event, midnight crossing and an inclusive all-day event.
 The inspector shows session state, selection, geometry, input, builds, listeners and subscriptions.
 
-Both public-export harnesses compile. Source compilation also exposed the
-[adapter context-erasure gap](../../../../reports/interaction-foundation.md#6-adapter-context-erasure-retains-required-feature-state).
-Each adapter's `types.verify.tsx` records the provider rejection as a known-gap compiler witness. Those two expected
-errors do not establish that display-only providers meet the desired opt-in contract. The 22 core assertions still
-compile. Production context types are unchanged.
+Source compilation exposed the
+[adapter context-erasure gap](../../../../reports/interaction-foundation.md#6-adapter-context-erasure-retains-required-feature-state),
+now resolved by erasing optional feature state and layout decorations at the provider boundary. Each adapter's
+`types.verify.tsx` positively checks display-only, movement-only and selection-enabled providers and `Calendar`
+wrappers against source and built declarations. Display views cover list, month, time-grid and timeline layouts.
+Nine negative assertions per adapter preserve absent selection state/APIs, selection-only movement exclusion,
+selector result types, view-key inference and movement payload types. The 25 core assertions and two public-core
+assertions also compile. Runtime behavior is unchanged.
 
 ### Extension verification
 

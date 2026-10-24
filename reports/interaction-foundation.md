@@ -58,3 +58,39 @@ Checked at `fd13cd8` while proposing the optional interaction foundation.
   `packages/solid/prototypes/interaction-foundation/types.verify.tsx:18`.
 - **Why it matters:** importing an optional feature's state declaration can make a calendar that omits that feature
   fail adapter typing. This limits the current D29 opt-in contract independently of interaction runtime behavior.
+
+## 7. Adapter opt-in typing verification after observation 6
+
+- **What:** React and Solid compiler fixtures now accept display-only, movement-only and selection-enabled instances
+  through both `CalendarProvider` and `Calendar`, with the selection augmentation imported. Source compilation also
+  accepts the generic wrappers. Absent selection state/APIs, absent movement in selection-only instances, precise
+  selection results and inferred view keys remain checked rejections.
+- **Where:** `packages/react/prototypes/interaction-foundation/types.verify.tsx:23`;
+  `packages/solid/prototypes/interaction-foundation/types.verify.tsx:23`;
+  `packages/react/prototypes/interaction-foundation/tsconfig.public.json:1`;
+  `packages/solid/prototypes/interaction-foundation/tsconfig.public.json:1`.
+- **Why it matters:** observation 6 no longer reproduces against either adapter's source or built declarations;
+  optional feature declarations no longer force selection onto unrelated calendars.
+
+## 8. Feature API payload verification after observation 5
+
+- **What:** feature API results preserve inferred event and resource data through `Calendar_Instance`. Movement
+  compiler fixtures retain the consumer's payload on both `before` and `after` through core, React and Solid,
+  including built declarations. Missing payload fields and incorrect value types remain rejected. API annotations
+  that omit payload types retain `unknown`; existing non-generic feature declarations still compile.
+- **Where:** `packages/core/src/calendar.types.ts:124`; `packages/core/src/calendar.types.ts:556`;
+  `packages/core/src/tests/calendar-features.spec.ts:145`;
+  `packages/core/prototypes/interaction-foundation/types.verify.ts:189`;
+  `packages/core/prototypes/interaction-foundation/types.public.verify.ts:18`;
+  `packages/react/prototypes/interaction-foundation/types.verify.tsx:72`;
+  `packages/solid/prototypes/interaction-foundation/types.verify.tsx:72`.
+- **Why it matters:** observation 5 no longer reproduces. Movement API results and callbacks expose the same event
+  payload type without a separate contextual API map.
+
+## 9. Published feature guide still reports the resolved provider limitation
+
+- **What:** the feature guide warns that every calendar must register every feature with merged state. Observation 7
+  verifies that omitted feature state is now accepted by both adapters.
+- **Where:** `apps/docs/content/shared/extending/features.mdx:99`.
+- **Why it matters:** the warning directs consumers to enable optional behavior unnecessarily and contradicts the
+  verified opt-in provider contract.

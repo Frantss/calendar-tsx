@@ -1,10 +1,11 @@
 # Interaction foundation
 
-Status: **proposal for discussion**, based on `fd13cd8`. Production runtime and public interfaces are unchanged.
+Status: **proposal for discussion**, based on `fd13cd8`. Production interaction runtime and interfaces are unchanged.
 A [selection/movement prototype](../packages/core/prototypes/interaction-foundation/readme.md) exercises the shared
 lifecycle and compiles its feature-type sketch. Examples below remain conceptual unless linked to that sketch.
-The extension uses real time-grid/timeline geometry and both adapters' public hooks and parts. It also exposes an
-[adapter context typing gap](../reports/interaction-foundation.md#6-adapter-context-erasure-retains-required-feature-state).
+The extension uses real time-grid/timeline geometry and both adapters' public hooks and parts. The
+[adapter context typing gap](../reports/interaction-foundation.md#6-adapter-context-erasure-retains-required-feature-state)
+is resolved: providers accept calendars without selection while instance types retain feature gating.
 
 Related decisions: [D2](design.md#d2--events-are-input-with-unique-ids-managed-event-state-is-an-opt-in-helper),
 [D29](design.md#d29--functionality-is-added-through-a-feature-map-views-declare-the-features-they-use),
@@ -101,9 +102,9 @@ interactions.store; // readonly session, candidate, validity and preview
 
 The prototype exposes operation entry points through their owning features (`selection.begin/evaluate` and
 `move.begin/evaluate`). Shared public controls expose update, commit, cancel and observation. An unrestricted public
-`begin(intent)` would otherwise admit movement through a selection-only calendar's interaction API. The contextual
-API-map sketch preserves event payload types; production `Calendar_Api_FeatureMap` has no data parameter and needs
-an amendment for those return types.
+`begin(intent)` would otherwise admit movement through a selection-only calendar's interaction API. Production
+`Calendar_Api_FeatureMap<TData, TResourceData>` now carries consumer payload types into feature APIs. The prototype
+uses that map directly; movement results retain event data through core, React and Solid instances.
 
 One calendar has at most one active draft session. A second begin returns a busy result instead of replacing the
 first session implicitly. Tokens make late pointer-up events, expired timers and callbacks from an older session
@@ -229,6 +230,7 @@ and actual event timestamps remain unchanged by a draft.
 Before implementation, agree the proposed DST target policy, overlay-only preview policy, clear-on-emission commit
 policy and transient-store ownership amendment. The prototype verifies the selection/movement feature types and
 shared lifecycle against TypeScript 7.0.2 and browser walkthroughs. The extension exercises real projection, DOM
-measurement, framework subscriptions/lifetimes and controlled selection wiring. Adapter typing retains the recorded
-context-erasure gap. Production construction/capability registration, third-party operation extensibility and bundle
+measurement, framework subscriptions/lifetimes and controlled selection wiring. Source and built-declaration checks
+verify display-only, movement-only and selection-enabled calendars in both adapters. Production
+construction/capability registration, third-party operation extensibility and bundle
 guarantees remain unproved. No production interaction feature is marked implemented.

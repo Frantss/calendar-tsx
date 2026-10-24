@@ -20,7 +20,8 @@ export interface Calendar_EventInput_FeatureMap<TData> extends Recurrence_EventI
 /** State slices a feature owns; each is uncontrolled, controlled through `state`, or external through `atoms`. */
 export interface Calendar_State_FeatureMap {}
 /** Actions a feature merges onto `api`. */
-export interface Calendar_Api_FeatureMap {}
+// oxlint-disable-next-line no-unused-vars -- merges must repeat the generics
+export interface Calendar_Api_FeatureMap<TData = unknown, TResourceData = unknown> {}
 /** Model fields a feature adds to the layouts of the views that list it. */
 export interface Calendar_DayGridDay_FeatureMap extends Background_DayGridDay_FeatureMap {}
 export interface Calendar_BarSegment_FeatureMap {}

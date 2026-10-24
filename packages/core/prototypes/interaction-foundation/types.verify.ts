@@ -1,4 +1,5 @@
 import { Temporal } from 'temporal-polyfill';
+import { createCalendar } from '../../src/calendar.ts';
 import { createCalendarViews, listView, timeGridView } from '../../src/calendar-views.ts';
 import type { Calendar_Api, Calendar_Options, Calendar_State } from '../../src/calendar.types.ts';
 import { createTypedRuntime, type PrototypeOptions, type ValidateDependencies } from './feature-types.ts';
@@ -171,17 +172,43 @@ const inferredResult = inferred.move.evaluate('a', target);
 if (inferredResult.status === 'valid') {
   const title: string = inferredResult.proposal.after.data.title;
   void title;
-  // @ts-expect-error the contextual API sketch preserves the inferred data type
+  // @ts-expect-error the feature API preserves the inferred data type
   const wrong: number = inferredResult.proposal.after.data.title;
   void wrong;
 }
 
-// The existing map cannot carry TData into feature API return values. Keep this loss explicit.
-const checkExistingMap = (existing: Calendar_Api<typeof both.views, typeof both.features>) => {
+const checkErasedApi = (existing: Calendar_Api<typeof both.views, typeof both.features>) => {
   const result = existing.move.evaluate('appointment', target);
   if (result.status === 'valid') {
-    // @ts-expect-error current Calendar_Api_FeatureMap has no event-data parameter
+    // @ts-expect-error omitting payload type arguments keeps unknown data
     void result.proposal.after.data.title;
   }
 };
-void checkExistingMap;
+void checkErasedApi;
+
+const calendar = createCalendar({
+  ...base,
+  events: [{ id: 'appointment', kind: 'allDay', start: date, data: { title: 'Appointment', bookingId: 42 } }],
+  onEventMove: proposal => {
+    const title: string = proposal.after.data.title;
+    void title;
+    // @ts-expect-error callback payloads stay precise alongside API results
+    const wrong: number = proposal.before.data.title;
+    void wrong;
+  },
+});
+const productionResult = calendar.api.move.evaluate('appointment', target);
+if (productionResult.status === 'valid') {
+  const before: string = productionResult.proposal.before.data.title;
+  const after: number = productionResult.proposal.after.data.bookingId;
+  void before;
+  void after;
+  // @ts-expect-error movement results must not widen event payloads to any
+  const wrong: number = productionResult.proposal.after.data.title;
+  void wrong;
+  // @ts-expect-error movement results expose only the consumer's payload fields
+  void productionResult.proposal.before.data.missing;
+}
+const typedApi: Calendar_Api<typeof both.views, typeof both.features, { title: string; bookingId: number }> =
+  calendar.api;
+void typedApi;

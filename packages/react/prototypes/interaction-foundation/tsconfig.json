@@ -3,7 +3,10 @@
   "compilerOptions": {
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "paths": { "@calendar-tsx/core": ["../../../core/export/index.ts"] }
+    "paths": {
+      "@calendar-tsx/core": ["../../../core/export/index.ts"],
+      "@calendar-tsx/react": ["../../export/index.ts"]
+    }
   },
   "include": ["*.tsx", "*.d.ts"],
   "exclude": ["vite.config.ts"]

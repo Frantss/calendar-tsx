@@ -29,10 +29,6 @@ type MoveApi<D = unknown> = {
   evaluate: (eventId: string, target: Target) => Evaluation<MoveProposal<D>>;
 };
 
-type ContextualApiMap<D> = Omit<Calendar_Api_FeatureMap, 'eventMoveFeature'> & {
-  eventMoveFeature: { move: MoveApi<D> };
-};
-
 declare module '../../src/calendar.types.ts' {
   interface Calendar_Options_FeatureMap<TData, TResourceData> {
     interactionFeature: { interactionOwnership?: Ownership };
@@ -48,12 +44,12 @@ declare module '../../src/calendar.types.ts' {
   interface Calendar_State_FeatureMap {
     dateSelectionFeature: { selectedRange: Selection | null };
   }
-  interface Calendar_Api_FeatureMap {
+  interface Calendar_Api_FeatureMap<TData, TResourceData> {
     interactionFeature: {
       interactions: Pick<Runtime, 'store' | 'update' | 'commit' | 'cancel' | 'refresh' | 'dispose'>;
     };
     dateSelectionFeature: { selection: SelectionApi };
-    eventMoveFeature: { move: MoveApi };
+    eventMoveFeature: { move: MoveApi<TData> };
   }
 }
 
@@ -106,5 +102,5 @@ export const createTypedRuntime = <D, R, const V extends Calendar_Views, const F
       begin: (eventId: string) => runtime.begin({ kind: 'move', eventId }),
       evaluate: (eventId: string, target: Target) => runtime.evaluate({ kind: 'move', eventId }, target),
     };
-  return api as Calendar_PickFeatures<ContextualApiMap<D>, F>;
+  return api as Calendar_PickFeatures<Calendar_Api_FeatureMap<D, R>, F>;
 };

@@ -181,7 +181,7 @@ export const createCalendar = <
     goTo: (date: Temporal.PlainDate) => navigate({ date }),
     setView: (view: keyof TViews & string, date?: Temporal.PlainDate) => navigate({ view, date }),
     navigate,
-  } as Calendar_Api<TViews, TFeatures>;
+  } as Calendar_Api<TViews, TFeatures, TData, TResourceData>;
 
   featureRuntime.constructApi(api);
 

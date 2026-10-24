@@ -1,3 +1,4 @@
+import type { Calendar_Resource } from '#calendar/calendar.types';
 import { calendarFeatures } from '#features/calendar-features';
 import type { Store } from '@tanstack/store';
 import { createStore } from '@tanstack/store';
@@ -7,7 +8,7 @@ import { expect, expectTypeOf, it, vi } from 'vitest';
 import { createCalendar } from '#calendar/calendar';
 import { fixedClock } from '#calendar/clock';
 import { listView, dayGridView, timeGridView, calendarViews } from '#views/views';
-import type { Calendar_Event } from '#events/event.types';
+import type { Calendar_Event, Calendar_EventInput } from '#events/event.types';
 import type { Calendar_TimeGridLayout } from '#layouts/time-grid/time-grid.types';
 import type { Calendar_ListLayout } from '#layouts/list/list.types';
 import type { Calendar_ConfiguredFeature } from '#features/feature.types';
@@ -21,6 +22,14 @@ declare module '#features/feature-maps.types' {
   }
   interface Calendar_Api_FeatureMap {
     highlightFeature: { highlight: (id: string | null) => void };
+  }
+  interface Calendar_Api_FeatureMap<TData, TResourceData> {
+    lookupFeature: {
+      lookup: {
+        event: (id: string) => Calendar_EventInput<TData> | undefined;
+        resource: (id: string) => Calendar_Resource<TResourceData> | undefined;
+      };
+    };
   }
   interface Calendar_TimeGridSegment_FeatureMap {
     highlightFeature: { isHighlighted: boolean };
@@ -138,6 +147,46 @@ const segments = (calendar: ReturnType<typeof setup>) => {
 
 it('collects the features the views use', () => {
   expect(Object.keys(viewsFeatures).toSorted()).toEqual(['highlightFeature']);
+});
+
+it('preserves event and resource payloads in feature API results', () => {
+  const lookupFeature = {
+    '~id': 'lookupFeature',
+    '~config': undefined,
+    constructApi: context => ({
+      lookup: {
+        event: (id: string) => context.options.events.find(event => event.id === id),
+        resource: (id: string) => context.options.resources?.find(resource => resource.id === id),
+      },
+    }),
+  } satisfies Calendar_ConfiguredFeature<'lookupFeature', undefined>;
+  const lookupFeatures = calendarFeatures({ lookup: lookupFeature });
+  const plain = calendarViews({ features: lookupFeatures, views: { list: listView({ days: 1 }) } });
+  const event = { id: 'appointment', kind: 'allDay', start: Temporal.PlainDate.from('2026-03-11'), data: { title: 'Review' } } as const;
+  const resource = { id: 'room', title: 'Room', availability: [], data: { capacity: 4 } };
+  const options = {
+    views: plain,
+    features: lookupFeatures,
+    timeZone: fixtures_timeZone,
+    view: 'list' as const,
+    date: event.start,
+    events: [event],
+    resources: [resource],
+    onNavigate: () => {},
+  };
+  const calendar = createCalendar(options);
+  const foundEvent = calendar.api.lookup.event(event.id);
+  const foundResource = calendar.api.lookup.resource(resource.id);
+
+  expectTypeOf(foundEvent).toEqualTypeOf<Calendar_EventInput<typeof event.data> | undefined>();
+  expectTypeOf(foundResource).toEqualTypeOf<Calendar_Resource<typeof resource.data> | undefined>();
+  expect(foundEvent).toBe(event);
+  expect(foundResource).toBe(resource);
+  expect(calendar.api.lookup.event('missing')).toBeUndefined();
+
+  const withoutLookup = createCalendar({ ...options, features: {}, views: calendarViews({ features: {}, views: { list: listView({ days: 1 }) } }) });
+  // @ts-expect-error payload-aware APIs remain absent without their feature
+  void withoutLookup.api.lookup;
 });
 
 it('adds feature state, actions and model fields', () => {

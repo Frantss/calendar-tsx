@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": { "@calendar-tsx/core": ["../../../core/export/index.ts"] }
+  },
+  "include": ["types.verify.tsx"]
+}

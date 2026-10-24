@@ -113,14 +113,14 @@ export type Calendar_NavigateTarget<TViews extends Calendar_Views> = {
 };
 
 /** Actions only emit `onNavigate`; they never write state (D5). */
-export type Calendar_Api<TViews extends Calendar_Views, TFeatures extends Calendar_Features = Calendar_Features> = {
+export type Calendar_Api<TViews extends Calendar_Views, TFeatures extends Calendar_Features = Calendar_Features, TData = unknown, TResourceData = unknown> = {
   next: () => void;
   prev: () => void;
   today: () => void;
   goTo: (date: Temporal.PlainDate) => void;
   setView: (view: keyof TViews & string, date?: Temporal.PlainDate) => void;
   navigate: (target: Calendar_NavigateTarget<TViews>) => void;
-} & Calendar_PickFeatures<Calendar_Api_FeatureMap, Calendar_FeatureTypes<TFeatures>>;
+} & Calendar_PickFeatures<Calendar_Api_FeatureMap<TData, TResourceData>, Calendar_FeatureTypes<TFeatures>>;
 
 export type Calendar_Instance<
   TData,
@@ -130,7 +130,7 @@ export type Calendar_Instance<
 > = {
   readonly options: Calendar_Options<TData, TResourceData, TViews, TFeatures>;
   store: ReadonlyStore<Calendar_State<TData, TResourceData, TViews, TFeatures>>;
-  api: Calendar_Api<TViews, TFeatures>;
+  api: Calendar_Api<TViews, TFeatures, TData, TResourceData>;
   /** Adapter lifecycle: starts the clock and returns its cleanup. */
   '~mount': () => () => void;
   /** Adapter sync: call with every render's options; writes only when a tracked input changed. */

@@ -717,7 +717,7 @@ interface Calendar_Options_FeatureMap<TData> {
 }
 interface Calendar_ViewSettings_FeatureMap { eventDragFeature: { drag?: Calendar_DragSettings } }
 interface Calendar_State_FeatureMap { eventDragFeature: { drag: Calendar_DragState | null } }
-interface Calendar_Api_FeatureMap { eventDragFeature: { drag: { start; move; nudge; drop; cancel } } }
+interface Calendar_Api_FeatureMap<TData, TResourceData> { eventDragFeature: { drag: { start; move; nudge; drop: () => Calendar_Drop<TData>; cancel } } }
 interface Calendar_Segment_FeatureMap { eventDragFeature: { isDragging: boolean; isPreview: boolean } }
 interface Calendar_Layout_FeatureMap<TData, TResourceData, TViewFeatures> {
   dayGridLayout: Calendar_DayGridLayout<TData, TViewFeatures>;
@@ -745,7 +745,8 @@ type Calendar_Layout<TData, TResourceData, TViews> = {
 // with compatible implementations, or it becomes a template-literal error type.
 type Calendar_Options<TData, TResourceData, TViews, TFeatures> = Calendar_CoreOptions<TData, TResourceData, TViews> &
   Calendar_PickFeatures<Calendar_Options_FeatureMap<TData>, TFeatures> & { features: ValidateFeatures<TViews, TFeatures> };
-type Calendar_Api<TViews, TFeatures> = Calendar_CoreApi<TViews> & Calendar_PickFeatures<Calendar_Api_FeatureMap, TFeatures>;
+type Calendar_Api<TViews, TFeatures, TData = unknown, TResourceData = unknown> = Calendar_CoreApi<TViews> &
+  Calendar_PickFeatures<Calendar_Api_FeatureMap<TData, TResourceData>, TFeatures>;
 ```
 
 **Runtime**
@@ -815,6 +816,11 @@ const store = createStore(() => {
 - forgetting `...views.features` is a template-literal error;
 - replacing an implementation under a declared key requires a compatible one.
 
+The adapters erase context instances to shared state and undecorated layout types, with empty feature maps at both
+levels. Importing another feature's declarations must not require its state on a calendar that omits it. Instance
+inference and selectors annotated with `Calendar_StateOf` retain the registered features. Source and public-export
+compiler fixtures verify this for React and Solid.
+
 **Not yet sketched:**
 
 - prerequisite checks between features;
@@ -828,6 +834,7 @@ const store = createStore(() => {
 - **Feature hooks receive a context, not the instance.** It holds `options`, the active `view`, `api`, `getState`, `setState`, and `settings(key, defaults)`, which applies the defaults → calendar → view layering. `constructApi` returns its actions instead of mutating `api`.
 - **Controlled slices report nothing by themselves.** `setState` writes an uncontrolled slice or an external atom and leaves a controlled one alone. A feature calls its own `onXChange` option, as the test feature does.
 - **`useCalendarSelector` is typed by annotating its selector** (`(state: Calendar_StateOf<typeof calendar>) => …`). An explicit `useCalendarSelector<typeof calendar>` would disable inference of the selected type, because TypeScript has no partial type-argument inference.
+- **Feature APIs receive payload types through `Calendar_Api_FeatureMap<TData, TResourceData>`.** Instances pass their event and resource types through `Calendar_Api<TViews, TFeatures, TData, TResourceData>`. The appended payload parameters default to `unknown`, preserving existing argument positions and declarations without type parameters. Feature-hook context remains erased. Movement compiler fixtures verify payload results through core, React and Solid.
 - **`features` and `atoms` are read once, at creation.** That is when state slices and actions are registered. A view that declares a feature the `features` object lacks still gets the view's own implementation at runtime, but the types reject it.
 - **`getCalendarNavigation` (the instance-free helper) uses each view's own layout feature**, not a replacement passed to a calendar.
 - **Model fields follow the active view's features.** Code that reads a field across views narrows with `'field' in model`. The React parts keep their core model types and accept the extended models structurally.

@@ -216,6 +216,11 @@ entries inherit defaults, and adding an override to one view does not change ano
 
 See [feature organization and exports](../../docs/core-features.md) for the module layout and public entry.
 
+`Calendar_Api_FeatureMap<TData, TResourceData>` receives the same event and resource payload types as the options
+map. Use them in an action's parameters or return type; `createCalendar` and the adapters infer them from the calendar
+input. Existing declarations without type parameters remain valid. Explicit API annotations use
+`Calendar_Api<TViews, TFeatures, TData, TResourceData>`; omitted payload parameters default to `unknown`.
+
 ## Background layers
 
 `backgroundFeature(layers)` shades time in the time-grid, day-grid and timeline views (design D33). Each layer passed to the
