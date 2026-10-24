@@ -100,5 +100,7 @@ Keys are stable within their parent. Render background events before bars. [Back
 
 Render each section's header and rows inside `DayGridViewSection`. Bars belong inside their row, alongside its day cells. The default theme arranges sections responsively; override `--calendar-section-min-width` or style the root's grid to choose another arrangement.
 
+For a year overview, use `groupBy: 'month'` with `fixedWeekCount: true`. Calendar-only multi-month grids emit `data-multi-month`; the supplied themes give them compact rows, centered headings and padded month panels. When section and weekday headers are present, CSS subgrid aligns neighboring months' header and week tracks. The root's `--cal-month-rows` is the largest section row count. Resource grids and single-month views keep their usual sizing.
+
 </section>
 </section>

@@ -35,6 +35,8 @@ import '@calendar-tsx/themes/compact.css';
 
 The default theme lays month sections out in a responsive grid. `--calendar-section-min-width` defaults to `20rem` and `--calendar-section-gap` to `1rem`; override them or the root grid to choose a different arrangement.
 
+Calendar-only multi-month grids use compact row and bar sizes, centered headings, inset padding, and wider spacing. Neighboring panels share header and week tracks through CSS subgrid. Use `fixedWeekCount: true` for six weeks in every month, as the year playground does. This treatment does not apply to resource grids or a single month. `--calendar-section-gap` also overrides the overview's spacing.
+
 Override any `--calendar-*` token on an ancestor of the calendar:
 
 ```css

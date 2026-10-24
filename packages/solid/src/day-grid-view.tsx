@@ -30,7 +30,21 @@ export const DayGridView = <TData, TResourceData>(props: DayGridViewProps<TData,
 
   return (
     <calendar.div
-      {...calendarProps_merge({ role: 'region', 'aria-label': 'Calendar', ...part('day-grid-root') }, rest)}
+      {...calendarProps_merge(
+        () => ({
+          role: 'region',
+          'aria-label': 'Calendar',
+          'data-multi-month': flag(
+            local.model.sections.length > 1 &&
+              local.model.sections.every(
+                section => section.month && !section.resource && section.columns.every(column => !column.resource),
+              ),
+          ),
+          style: vars({ 'month-rows': Math.max(0, ...local.model.sections.map(section => section.rows.length)) }),
+          ...part('day-grid-root'),
+        }),
+        rest,
+      )}
       state={local.model}
     />
   );

@@ -32,7 +32,7 @@ when true and absent otherwise.
 | ------------------------------- | ------------------------------- | ----------------------------------------------- |
 | `day-grid-section`              | `DayGridViewSection`            | `data-month`, `data-resource-id`                |
 | `day-grid-section-header`       | `DayGridViewSectionHeader`      |                                                 |
-| `day-grid-root`                 | `DayGridView`                   |                                                 |
+| `day-grid-root`                 | `DayGridView`                   | `data-multi-month`                              |
 | `day-grid-header`               | `DayGridViewHeader`             |                                                 |
 | `day-grid-header-cell`          | `DayGridViewHeaderCell`         | `data-weekday` (1–7), `data-resource-id`        |
 | `day-grid-row`                  | `DayGridViewRow`                |                                                 |
@@ -99,6 +99,8 @@ shorter than the view's `shortEventMinutes`.
 ## Geometry
 
 Parts emit their layout as unitless `--cal-*` custom properties on their own element, which `base.css` reads.
+
+`day-grid-root` emits `--cal-month-rows`, the largest section row count, for aligning month overview panels.
 
 `list-day` emits `--cal-events`, the number of event rows spanned by its date heading.
 

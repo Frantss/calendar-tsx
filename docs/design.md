@@ -1216,6 +1216,14 @@ The existing list model and parts stay unchanged. `ListViewDay` emits `--cal-eve
 
 Rejected: formatting dates in core or adding another list factory (presentation belongs to the consumer); a single long date string above each group (weak hierarchy and repeated horizontal bands).
 
+### D43 — Compact month panels for calendar-only multi-month grids
+
+**Serves:** C1, C9. Requested by the user, comparing the year-by-month playground with FullCalendar's year grid.
+
+The four factories and core models stay unchanged. React and Solid mark calendar-only grids containing multiple month sections with `data-multi-month` and emit `--cal-month-rows`, the maximum section row count. Resource grids are excluded. The default theme uses smaller day, bar and row sizes, centered month/weekday headings, panel padding and wider gutters. Section grids containing both headers use CSS subgrid to share tracks with neighboring months; all span the maximum week count so subsequent panel rows start together. The year playground sets `fixedWeekCount: true`, giving every month six weeks. Configured event-row caps and overflow remain in effect.
+
+Rejected: another year factory (month grouping already expresses the view); shrinking every day grid (changes ordinary months and resource grids); hiding events with CSS (would disagree with overflow counts).
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.

@@ -50,7 +50,7 @@ export const createPlaygroundViews = ({
 
   return createCalendarViews({
     month: dayGridView({ period: 'month', maxEventsPerDay, hiddenDays }),
-    year: dayGridView({ period: 'year', groupBy: 'month', maxEventsPerDay, hiddenDays }),
+    year: dayGridView({ period: 'year', groupBy: 'month', fixedWeekCount: true, maxEventsPerDay, hiddenDays }),
     grid_days: dayGridView({ days: 3, maxEventsPerDay, hiddenDays }),
     grid_rooms: dayGridView({ days: 1, groupBy: 'resource', maxEventsPerDay, hiddenDays }),
     month_rooms: dayGridView({ period: 'quarter', groupBy: ['month', 'resource'], maxEventsPerDay, hiddenDays }),

@@ -39,6 +39,9 @@ import {
   TimeGridView,
   useCalendarSelector,
   DayGridViewSection,
+  DayGridViewSectionHeader,
+  DayGridViewHeader,
+  DayGridViewHeaderCell,
 } from '@calendar-tsx/react';
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
 import '../../default.css';
@@ -105,6 +108,18 @@ const Month = () => {
     <DayGridView model={month}>
       {month.sections.map(section => (
         <DayGridViewSection key={section.key} section={section}>
+          {section.month && (
+            <>
+              <DayGridViewSectionHeader>{section.month.toLocaleString('en-US', { month: 'long', year: 'numeric' })}</DayGridViewSectionHeader>
+              <DayGridViewHeader>
+                {section.columns.map(column => (
+                  <DayGridViewHeaderCell key={column.key} column={column}>
+                    {column.date.toLocaleString('en-US', { weekday: 'short' })}
+                  </DayGridViewHeaderCell>
+                ))}
+              </DayGridViewHeader>
+            </>
+          )}
           {section.rows.map(week => (
             <DayGridViewRow key={week.key} row={week}>
               {week.days.map(day => (
@@ -265,6 +280,39 @@ it('uses the visible column count for N-day event and background geometry', asyn
   expect(cells[1]!.right - bar.right).toBeCloseTo(2, 0);
   expect(background.left).toBeCloseTo(cells[0]!.left, 0);
   expect(background.right).toBeCloseTo(cells[1]!.right, 0);
+});
+
+it('aligns compact month panels and their week rows in a responsive year grid', async () => {
+  await themesSetup_render(
+    <div style={{ inlineSize: 1000 }}>
+      <Month />
+    </div>,
+    {
+      views: { year: dayGridView({ period: 'year', groupBy: 'month', fixedWeekCount: true, maxEventsPerDay: 3 }) },
+      view: 'year',
+      events: ['One', 'Two', 'Three'].map(id => themesSetup_allDay(id, { start: '2026-01-06', end: '2026-01-07' })),
+    },
+  );
+  const root = themesSetup_part('day-grid-root')[0]!;
+  const sections = themesSetup_part('day-grid-section');
+  expect(root.hasAttribute('data-multi-month')).toBe(true);
+  expect(sections).toHaveLength(12);
+  const january = sections[0]!;
+  const february = sections[1]!;
+  expect(themesSetup_rect(january).top).toBeCloseTo(themesSetup_rect(february).top, 0);
+  expect(themesSetup_rect(february).left).toBeGreaterThan(themesSetup_rect(january).right);
+  const januaryRows = [...january.querySelectorAll('[data-part="day-grid-row"]')].map(themesSetup_rect);
+  const februaryRows = [...february.querySelectorAll('[data-part="day-grid-row"]')].map(themesSetup_rect);
+  expect(januaryRows).toHaveLength(6);
+  expect(februaryRows).toHaveLength(6);
+  januaryRows.forEach((row, index) => {
+    expect(row.top).toBeCloseTo(februaryRows[index]!.top, 0);
+    expect(row.bottom).toBeCloseTo(februaryRows[index]!.bottom, 0);
+  });
+  expect(januaryRows[2]!.height).toBeLessThan(96);
+  root.parentElement!.style.inlineSize = '320px';
+  expect(themesSetup_rect(february).top).toBeGreaterThan(themesSetup_rect(january).bottom);
+  expect(root.scrollWidth).toBeLessThanOrEqual(root.clientWidth);
 });
 
 it('keeps the overflow trigger below the visible bars', async () => {
