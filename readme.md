@@ -33,6 +33,8 @@ which `check:types` compiles.
 
 ## Development
 
+See [Releases](docs/releases.md) for npm trusted publishing setup and the release PR workflow.
+
 ```bash
 pnpm install
 pnpm run build

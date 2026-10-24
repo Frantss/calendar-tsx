@@ -1,9 +1,14 @@
 {
   "name": "@calendar-tsx/themes",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Stylesheets for @calendar-tsx parts: a positioning base, themes and density.",
   "license": "MIT",
   "author": "Frantss <frantss.bongiovanni@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Frantss/calendar-tsx.git",
+    "directory": "packages/themes"
+  },
   "files": [
     "base.css",
     "default.css",

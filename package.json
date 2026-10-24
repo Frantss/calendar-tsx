@@ -22,6 +22,7 @@
     "fix:all": "vp lint --fix --fix-suggestions && vp fmt --write",
     "version:add": "changeset add",
     "version:bump": "changeset version",
+    "version:release": "changeset version && pnpm install --lockfile-only && vp fmt --write .changeset packages/*/package.json packages/*/CHANGELOG.md pnpm-lock.yaml",
     "publish": "changeset publish",
     "prepublish": "vp run -w build && vp run -w check:all"
   },
