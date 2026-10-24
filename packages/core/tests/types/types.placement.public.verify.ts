@@ -2,7 +2,7 @@ import {
   createEventRelocationPolicy,
   eventMoveFeature,
   externalDropFeature,
-  crossCalendarFeature,
+  eventTransferFeature,
   createCalendar,
   calendarFeatures,
   calendarViews,
@@ -27,7 +27,7 @@ void [conversion, resource, minutes, enabled];
 
 eventMoveFeature({ relocationPolicy: eventRelocationPolicy, enabled: true });
 externalDropFeature({ relocationPolicy: eventRelocationPolicy });
-crossCalendarFeature({ relocationPolicy: eventRelocationPolicy });
+eventTransferFeature({ relocationPolicy: eventRelocationPolicy });
 
 const partial = createEventRelocationPolicy({ conversionDuration: 'preserve', resourceMode: 'replace-source' });
 const preserve: 'preserve' = partial.conversionDuration;

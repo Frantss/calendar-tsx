@@ -213,7 +213,7 @@ export function InteractionTools({
               </button>
             </>
           )}
-          {config.interactions.crossCalendar && config.interactions.movement && (
+          {config.interactions.transfer && config.interactions.movement && (
             <button type='button' onClick={() => onTransfer(selected)}>
               Send to other calendar
             </button>

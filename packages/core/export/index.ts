@@ -216,7 +216,7 @@ export type {
 export type { Calendar_TouchSettings } from '#features/touch/touch.types';
 export type { Calendar_AutoScrollSettings } from '#features/auto-scroll/auto-scroll.types';
 export { externalDropFeature } from '#features/external-drop/external-drop-feature';
-export { crossCalendarFeature } from '#features/cross-calendar/cross-calendar-feature';
+export { eventTransferFeature } from '#features/event-transfer/event-transfer-feature';
 export type {
   Calendar_CreateIntent,
   Calendar_CreateProposal,
@@ -227,9 +227,9 @@ export type {
   Calendar_TransferProposal,
   Calendar_TransferSource,
   Calendar_TransferIntent,
-  Calendar_CrossCalendarSettings,
+  Calendar_TransferSettings,
   Calendar_TransferApi,
-} from '#features/cross-calendar/cross-calendar.types';
+} from '#features/event-transfer/event-transfer.types';
 export type { Calendar_MovementSettings } from '#features/event-move/event-move.types';
 export type { Calendar_ResizeSettings } from '#features/event-resize/event-resize.types';
 export type { Calendar_ConstraintSettings } from '#features/constraints/constraints.types';

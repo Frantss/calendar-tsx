@@ -9,7 +9,7 @@ import {
   touchFeature,
   autoScrollFeature,
   externalDropFeature,
-  crossCalendarFeature,
+  eventTransferFeature,
   eventMoveFeature,
 } from '@calendar-tsx/core';
 import type { Calendar_EventInput, Calendar_DragScope } from '@calendar-tsx/core';
@@ -22,7 +22,7 @@ const features = {
   touchFeature: touchFeature(),
   autoScrollFeature: autoScrollFeature(),
   externalDropFeature: externalDropFeature(),
-  crossCalendarFeature: crossCalendarFeature(),
+  eventTransferFeature: eventTransferFeature(),
   eventMoveFeature: eventMoveFeature(),
 };
 const views = (() => {
@@ -41,7 +41,7 @@ const calendar = createCalendar({
   timeZone: 'UTC',
   view: 'month',
   events: [event],
-  crossCalendar: { id: 'a' },
+  id: 'a',
   onNavigate: () => {},
   onExternalDrop: proposal => {
     const title: string = proposal.after.data.title;
@@ -127,9 +127,10 @@ void creating.api.pointer;
 void creating.api.move;
 const receivingFeatures = calendarFeatures({
   interactions: interactionFeature(),
-  transfer: crossCalendarFeature({ id: 'receiver' }),
+  transfer: eventTransferFeature(),
 });
 const receiving = createCalendar({
+  id: 'receiver',
   features: receivingFeatures,
   views: calendarViews({ features: receivingFeatures, views: { day: timeGridView({ days: 1 }) } }),
   date,
@@ -154,3 +155,10 @@ void receiving.api.move;
 void receiving.api.pointer;
 // @ts-expect-error transfer preparation has one namespace
 void receiving.api.crossCalendar;
+
+// @ts-expect-error transfer factories configure permissions, not calendar identity
+eventTransferFeature({ id: 'receiver' });
+// @ts-expect-error live transfer settings do not contain calendar identity
+receiving['~update']({ ...receiving.options, transfer: { id: 'receiver' } });
+// @ts-expect-error calendar identities are strings
+receiving['~update']({ ...receiving.options, id: 42 });

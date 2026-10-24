@@ -8,7 +8,7 @@ import {
   interactionFeature,
   eventMoveFeature,
   externalDropFeature,
-  crossCalendarFeature,
+  eventTransferFeature,
 } from '../../../export/index';
 import type { Calendar_EventRelocationPolicy } from '../../../export/index';
 
@@ -75,18 +75,18 @@ it('uses receiver defaults and overrides for transfers without receiver movement
   const sourceFeatures = calendarFeatures({
     interactions: interactionFeature(),
     move: eventMoveFeature(),
-    transfer: crossCalendarFeature(),
+    transfer: eventTransferFeature(),
   });
   const source = createCalendar({
     ...base,
-    crossCalendar: { id: 'source' },
+    id: 'source',
     features: sourceFeatures,
     views: calendarViews({ features: sourceFeatures, views: { day: timeGridView({ days: 1 }) } }),
     eventRelocationPolicy: { allowConversion: false, allowResourceChange: false },
   });
   const features = calendarFeatures({
     interactions: interactionFeature(),
-    receive: crossCalendarFeature({ relocationPolicy: { allowResourceChange: true } }),
+    receive: eventTransferFeature({ relocationPolicy: { allowResourceChange: true } }),
   });
   const destination = createCalendar({
     ...base,
@@ -97,7 +97,8 @@ it('uses receiver defaults and overrides for transfers without receiver movement
       views: { day: timeGridView({ days: 1, features: { receive: { relocationPolicy: { resourceMode: 'replace-source' } } } }) },
     }),
     eventRelocationPolicy: globalPolicy,
-    crossCalendar: { id: 'destination', relocationPolicy: { defaultTimedMinutes: 90 } },
+    id: 'destination',
+    transfer: { relocationPolicy: { defaultTimedMinutes: 90 } },
   });
   const prepared = source.api.transfer.prepare('booking', 'a')!;
   try {
@@ -117,16 +118,16 @@ it.each(['move', 'create', 'transfer'] as const)('revalidates %s drafts and prev
     interactions: interactionFeature(),
     move: eventMoveFeature(),
     palette: externalDropFeature(),
-    transfer: crossCalendarFeature(),
+    transfer: eventTransferFeature(),
   });
   const views = calendarViews({ features, views: { day: timeGridView({ days: 1 }) } });
-  const source = createCalendar({ ...base, features, views, crossCalendar: { id: 'source' } });
+  const source = createCalendar({ ...base, features, views, id: 'source' });
   const calendar = createCalendar({
     ...base,
     features,
     views,
     events: operation === 'move' ? [event] : [],
-    crossCalendar: { id: 'destination' },
+    id: 'destination',
     eventRelocationPolicy: { allowConversion: true, defaultTimedMinutes: 60 },
   });
   const prepared = operation === 'transfer' ? source.api.transfer.prepare('booking', 'a')! : undefined;
@@ -145,7 +146,7 @@ it.each(['move', 'create', 'transfer'] as const)('revalidates %s drafts and prev
   if (candidate?.status !== 'valid' || !('after' in candidate.proposal) || candidate.proposal.after.kind !== 'timed') throw new Error('draft');
   expect(candidate.proposal.after.end.equals(at.add({ hours: 2 }))).toBe(true);
   expect(calendar.api.interactions.store.state.preview).not.toEqual(preview);
-  const key = operation === 'move' ? 'movement' : operation === 'create' ? 'externalDrop' : 'crossCalendar';
+  const key = operation === 'move' ? 'movement' : operation === 'create' ? 'externalDrop' : 'transfer';
   calendar['~update']({ ...calendar.options, [key]: { ...calendar.options[key], relocationPolicy: { allowConversion: false } } });
   expect(calendar.api.interactions.store.state.candidate).toMatchObject({ reason: 'conversion-unsupported' });
   expect(calendar.api.interactions.store.state.preview).toBeNull();

@@ -58,6 +58,8 @@ export type Calendar_Options<
   TViews extends Calendar_Views,
   TFeatures extends Calendar_Features = Calendar_ConfiguredFeatures,
 > = {
+  /** This calendar's identity. Transfers require distinct, nonempty IDs on both calendars. */
+  id?: string;
   timeZone: string;
   /** The map returned by `calendarViews`; tracked by reference. */
   views: TViews;

@@ -4,3 +4,11 @@ description: Create events from a palette and transfer events between calendars.
 ---
 
 <include>../../../shared/features/drops-and-transfers.mdx</include>
+
+## Bidirectional React setup
+
+The shared `features` register interaction, movement, transfer and pointer input. This hook owns both event arrays
+and one drag scope. Render each calendar with its own provider, root, surface and event source refs as described in
+[selection and editing](interactions).
+
+<include lang='tsx'>../../../../examples/react/transfers.tsx#setup</include>

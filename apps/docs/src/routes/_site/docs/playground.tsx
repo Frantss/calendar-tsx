@@ -450,7 +450,7 @@ function Playground() {
                       {option.label}
                     </label>
                   ))}
-                  {config.interactions.crossCalendar && !config.interactions.movement && (
+                  {config.interactions.transfer && !config.interactions.movement && (
                     <p className='text-[11px] text-fd-muted-foreground'>
                       Enable movement to drag events between calendars.
                     </p>

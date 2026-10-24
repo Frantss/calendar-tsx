@@ -14,10 +14,10 @@ import type {
   ExternalDrop_Api_FeatureMap,
 } from '#features/external-drop/external-drop.feature-maps';
 import type {
-  CrossCalendar_Options_FeatureMap,
-  CrossCalendar_ViewSettings_FeatureMap,
-  CrossCalendar_Api_FeatureMap,
-} from '#features/cross-calendar/cross-calendar.feature-maps';
+  EventTransfer_Options_FeatureMap,
+  EventTransfer_ViewSettings_FeatureMap,
+  EventTransfer_Api_FeatureMap,
+} from '#features/event-transfer/event-transfer.feature-maps';
 import type {
   Interaction_Options_FeatureMap,
   Interaction_Api_FeatureMap,
@@ -85,7 +85,7 @@ export interface Calendar_Options_FeatureMap<TData, TResourceData>
     Touch_Options_FeatureMap,
     AutoScroll_Options_FeatureMap,
     ExternalDrop_Options_FeatureMap<TData>,
-    CrossCalendar_Options_FeatureMap<TData>,
+    EventTransfer_Options_FeatureMap<TData>,
     Interaction_Options_FeatureMap,
     DateSelection_Options_FeatureMap,
     EventMove_Options_FeatureMap<TData>,
@@ -98,7 +98,7 @@ export interface Calendar_ViewSettings_FeatureMap
     Touch_ViewSettings_FeatureMap,
     AutoScroll_ViewSettings_FeatureMap,
     ExternalDrop_ViewSettings_FeatureMap,
-    CrossCalendar_ViewSettings_FeatureMap,
+    EventTransfer_ViewSettings_FeatureMap,
     DateSelection_ViewSettings_FeatureMap,
     EventMove_ViewSettings_FeatureMap,
     EventResize_ViewSettings_FeatureMap,
@@ -111,7 +111,7 @@ export interface Calendar_Api_FeatureMap<TData = unknown, TResourceData = unknow
   extends
     Pointer_Api_FeatureMap,
     ExternalDrop_Api_FeatureMap<TData>,
-    CrossCalendar_Api_FeatureMap<TData>,
+    EventTransfer_Api_FeatureMap<TData>,
     Interaction_Api_FeatureMap,
     DateSelection_Api_FeatureMap,
     EventMove_Api_FeatureMap<TData>,

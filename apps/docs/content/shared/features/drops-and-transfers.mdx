@@ -26,14 +26,19 @@ a date target, then commit. The application still inserts the emitted `after` ev
 
 ## Cross-calendar transfers
 
-Register `interactionFeature()`, `pointerFeature()` and `crossCalendarFeature()` on both calendars. Give each
-a unique `crossCalendar: { id }`. The source also needs `eventMoveFeature()`; the receiver can accept transfers
+Register `interactionFeature()`, `pointerFeature()` and `eventTransferFeature()` on both calendars. Give each
+a unique calendar-level `id`, such as `id: 'left'` and `id: 'right'`. Each ID identifies its own calendar.
+Transfer settings live under `transfer`, containing `enabled`, `accept` and `relocationPolicy`.
+The source also needs `eventMoveFeature()`; the receiver can accept transfers
 without movement or selection.
+
+For bidirectional dragging, register movement and transfer on both calendars and share one `dragScope`. Either
+calendar can be source or receiver on each gesture. Calendar construction needs no peer reference.
 
 Pass the same `{ dragScope }` to both calendars' binding hooks. Hosts without an explicit scope are isolated.
 Mount each calendar's bindings and register its event sources and surfaces. Dragging an event onto another
 calendar reserves the source movement session and validates the destination proposal. The receiver applies its
-own constraints and `eventRelocationPolicy` defaults and `crossCalendar.relocationPolicy` overrides. Duplicate IDs in the destination are rejected.
+own constraints and `eventRelocationPolicy` defaults and `transfer.relocationPolicy` overrides. Duplicate IDs in the destination are rejected.
 
 Commit calls `onEventTransfer` once on the **source**, with:
 
@@ -43,7 +48,11 @@ Commit calls `onEventTransfer` once on the **source**, with:
 
 Remove `before.id` from the source and add `after` to the destination in one application transaction.
 The library mutates neither array. Keep authoritative event state shared between the calendars so the UI cannot
-apply only half of a transfer. Use `crossCalendar.accept(sourceId)` on the destination to restrict senders.
+apply only half of a transfer. Use `transfer.accept(sourceId)` on the destination to restrict senders.
+
+Use the same transaction callback for both calendars; each proposal identifies which event arrays to update:
+
+<include lang='ts'>../../../examples/core/transfers.ts#transaction</include>
 
 ## Programmatic transfers
 

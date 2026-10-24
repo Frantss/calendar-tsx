@@ -11,6 +11,7 @@ the others, and view keys widen to `string`. Type `events` as `Calendar_EventInp
 
 | Option           | Type                                     | Default         | Tracked        |
 | ---------------- | ---------------------------------------- | --------------- | -------------- |
+| `id`             | `string`                                 | none            | No             |
 | `timeZone`       | `string` (IANA zone)                     | required        | Yes            |
 | `views`          | `calendarViews({ features, views })`     | required        | Yes            |
 | `features`       | `calendarFeatures({ … })`                | required        | Read once      |
@@ -39,6 +40,13 @@ keep the same reference otherwise, or every update re-derives.
 
 The IANA zone every timed event is converted to and laid out in, for example `'Europe/Paris'`. It also sets which day
 counts as today.
+
+## `id`
+
+Identifies this calendar. It is optional for ordinary calendars; event transfers need distinct, nonempty IDs on
+both sides. It does not identify a peer, register a feature or join a drag scope. Set `transfer` separately to
+configure acceptance and relocation overrides. Changing an ID invalidates prepared sources for that calendar
+and revalidates its active receiving draft.
 
 ## `views`, `view` and `date`
 
@@ -95,7 +103,7 @@ These fields are available when their corresponding features are registered:
 | `constraintsFeature`                                  | `constraints`                                   | Custom validation through `constraints.allow`                               |
 | `pointerFeature`, `touchFeature`, `autoScrollFeature` | `pointer`, `touch`, `autoScroll`                | None                                                                        |
 | `externalDropFeature`                                 | `externalDrop`                                  | `onExternalDrop({ after, metadata })`                                       |
-| `crossCalendarFeature`                                | `crossCalendar`                                 | `onEventTransfer({ sourceId, destinationId, before, after })` on the source |
+| `eventTransferFeature`                                | `transfer`                                      | `onEventTransfer({ sourceId, destinationId, before, after })` on the source |
 | `interactionFeature`                                  | `interactionOwnership`, `eventRelocationPolicy` | Controlled ownership uses its `onChange`                                    |
 
 Callbacks and proposal results preserve the event input's data type. Apply accepted event proposals to your input

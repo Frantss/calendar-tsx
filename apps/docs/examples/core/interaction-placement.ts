@@ -7,7 +7,7 @@ import {
   interactionFeature,
   eventMoveFeature,
   externalDropFeature,
-  crossCalendarFeature,
+  eventTransferFeature,
 } from '@calendar-tsx/core';
 import { initialDate, initialEvents } from './interactions';
 
@@ -24,7 +24,7 @@ export const features = calendarFeatures({
   interactions: interactionFeature(),
   movement: eventMoveFeature(),
   creation: externalDropFeature({ relocationPolicy: { allowConversion: false } }),
-  transfers: crossCalendarFeature({ relocationPolicy: { resourceMode: 'replace-source' } }),
+  transfers: eventTransferFeature({ relocationPolicy: { resourceMode: 'replace-source' } }),
 });
 
 export const calendar = createCalendar({
@@ -35,7 +35,7 @@ export const calendar = createCalendar({
   timeZone: 'UTC',
   events: initialEvents,
   eventRelocationPolicy,
-  crossCalendar: { id: 'bookings' },
+  id: 'bookings',
   onNavigate: (next): void => calendar['~update']({ ...calendar.options, view: next.view, date: next.date }),
 });
 // #endregion placement

@@ -415,7 +415,9 @@ cleanup. Receivers register `externalDropFeature`; `onExternalDrop` receives `{ 
 `externalDrop.accept` can reject sources, and `externalDrop.relocationPolicy` overrides calendar conversion/resource defaults independently
 of movement. Duplicate destination IDs are rejected. Events retain their consumer payload type.
 
-Register `crossCalendarFeature` and a unique `crossCalendar.id` on both hosts; the source also needs movement.
+Register `eventTransferFeature` and give both calendars distinct calendar-level `id` values; the source also needs movement.
+For bidirectional dragging, enable movement on both and share a `dragScope`. Each ID identifies its own calendar;
+neither calendar's configuration references its peer. `transfer` contains `enabled`, `accept` and `relocationPolicy`.
 `onEventTransfer` fires once on the source with `{ kind: 'transfer', sourceId, destinationId, before, after }`.
 Apply both sides in your application transaction. The library changes neither input array. Receivers validate their
 own constraints. Programmatic coordination uses `transfer.prepare(eventId, resourceId?)`, then the receiver's
@@ -428,7 +430,7 @@ The DOM adapter stays in `@calendar-tsx/core`. `createCalendarDragScope()` creat
 Pass the same `{ dragScope }` to participating hosts or framework binding hooks and external draggables. Omitted host
 scopes are isolated. External draggables own their `pointer` and optional `touch` activation settings; receiving
 calendars provide their own scrolling policy. Programmatic creation and transfer require no pointer feature.
-Transfer receiving uses its calendar's `eventRelocationPolicy` and `crossCalendar.relocationPolicy` overrides,
+Transfer receiving uses its calendar's `eventRelocationPolicy` and `transfer.relocationPolicy` overrides,
 independently of the source calendar and movement settings.
 
 `createCalendarDomHost` accepts only pointer settings and interaction controls. It binds custom operations without

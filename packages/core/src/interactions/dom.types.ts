@@ -10,7 +10,7 @@ import type { Calendar_ResizeApi } from '#features/event-resize/event-resize.typ
 import type { Calendar_SelectionApi } from '#features/date-selection/date-selection.types';
 import type { Calendar_PointerApi } from '#features/pointer/pointer.types';
 import type { Calendar_LayoutPoint } from '#layouts/interaction.types';
-import type { Calendar_TransferApi } from '#features/cross-calendar/cross-calendar.types';
+import type { Calendar_TransferApi } from '#features/event-transfer/event-transfer.types';
 import type { Calendar_ExternalDropApi } from '#features/external-drop/external-drop.types';
 
 export type Calendar_EventDomCalendar<D = unknown> = Calendar_DomCalendar & {

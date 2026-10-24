@@ -12,7 +12,7 @@ import { pointerFeature } from '#features/pointer/pointer-feature';
 import { touchFeature } from '#features/touch/touch-feature';
 import { autoScrollFeature } from '#features/auto-scroll/auto-scroll-feature';
 import { externalDropFeature } from '#features/external-drop/external-drop-feature';
-import { crossCalendarFeature } from '#features/cross-calendar/cross-calendar-feature';
+import { eventTransferFeature } from '#features/event-transfer/event-transfer-feature';
 import type { Calendar_DateTarget } from '#features/interaction/date-target.types';
 
 const date = Temporal.PlainDate.from('2026-10-23');
@@ -26,7 +26,7 @@ const features = {
   dateSelectionFeature: dateSelectionFeature(),
   constraintsFeature: constraintsFeature(),
   externalDropFeature: externalDropFeature(),
-  crossCalendarFeature: crossCalendarFeature(),
+  eventTransferFeature: eventTransferFeature(),
 };
 const views = interactionTestViews({
   grid: timeGridView({ days: 1, features }),
@@ -138,8 +138,8 @@ it('creates from external input without movement or selection and rechecks accep
 
 it('emits one atomic transfer from the source and keeps both input arrays unchanged', () => {
   const onEventTransfer = vi.fn();
-  const source = createCalendar({ ...base, crossCalendar: { id: 'source' }, onEventTransfer });
-  const destination = createCalendar({ ...base, events: [] as typeof base.events, crossCalendar: { id: 'destination' } });
+  const source = createCalendar({ ...base, id: 'source', onEventTransfer });
+  const destination = createCalendar({ ...base, events: [] as typeof base.events, id: 'destination' });
   const transfer = source.api.transfer.prepare('a', 'a')!;
   expect(source.api.move.begin('a').status).toBe('busy');
   const session = destination.api.transfer.begin(transfer);
@@ -215,14 +215,14 @@ it('activates optional input settings per view and validates prerequisites', () 
 });
 
 it('receives transfers without registering movement on the destination', () => {
-  const source = createCalendar({ ...base, crossCalendar: { id: 'source' } });
+  const source = createCalendar({ ...base, id: 'source' });
   const registered = interactionTestViews({
     grid: timeGridView({
       days: 1,
-      features: { interactionFeature: interactionFeature(), pointerFeature: pointerFeature(), crossCalendarFeature: crossCalendarFeature() },
+      features: { interactionFeature: interactionFeature(), pointerFeature: pointerFeature(), eventTransferFeature: eventTransferFeature() },
     }),
   });
-  const destination = createCalendar({ ...base, ...registered, events: [] as typeof base.events, crossCalendar: { id: 'destination' } });
+  const destination = createCalendar({ ...base, ...registered, events: [] as typeof base.events, id: 'destination' });
   expect('move' in destination.api).toBe(false);
   const transfer = source.api.transfer.prepare('a')!;
   const result = destination.api.transfer.evaluate(transfer, target(11));

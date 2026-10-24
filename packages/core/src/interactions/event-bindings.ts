@@ -8,7 +8,7 @@ import type {
   Calendar_DomOperation,
   Calendar_DomGesture,
 } from '#interactions/dom.types';
-import type { Calendar_TransferSource } from '#features/cross-calendar/cross-calendar.types';
+import type { Calendar_TransferSource } from '#features/event-transfer/event-transfer.types';
 import type { DomBinding, DomStart } from '#interactions/dom.internal';
 import { domStart, resolveDomOperation } from '#interactions/dom-operation';
 

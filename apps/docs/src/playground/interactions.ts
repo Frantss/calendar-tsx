@@ -9,7 +9,7 @@ import {
   touchFeature,
   autoScrollFeature,
   externalDropFeature,
-  crossCalendarFeature,
+  eventTransferFeature,
 } from '@calendar-tsx/core';
 import type { Calendar_EventInput } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
@@ -22,7 +22,7 @@ export const defaultInteractions = {
   touch: false,
   autoScroll: false,
   externalDrop: false,
-  crossCalendar: false,
+  transfer: false,
   preventOverlap: false,
   businessHours: false,
   resourceAvailability: false,
@@ -38,7 +38,7 @@ export const interactionOptions: { key: keyof PlaygroundInteractions; label: str
   { key: 'touch', label: 'Touch long press' },
   { key: 'autoScroll', label: 'Scroll while dragging' },
   { key: 'externalDrop', label: 'Drop new events' },
-  { key: 'crossCalendar', label: 'Transfer between calendars' },
+  { key: 'transfer', label: 'Transfer between calendars' },
   { key: 'preventOverlap', label: 'Prevent overlap' },
   { key: 'businessHours', label: 'Weekdays, 09:00–17:00' },
   { key: 'resourceAvailability', label: 'Respect room availability' },
@@ -66,7 +66,7 @@ export const createPlaygroundFeatures = (settings: PlaygroundInteractions) =>
     ...(settings.touch ? { touchFeature: touchFeature() } : {}),
     ...(settings.autoScroll ? { autoScrollFeature: autoScrollFeature() } : {}),
     ...(settings.externalDrop ? { externalDropFeature: externalDropFeature() } : {}),
-    ...(settings.crossCalendar ? { crossCalendarFeature: crossCalendarFeature() } : {}),
+    ...(settings.transfer ? { eventTransferFeature: eventTransferFeature() } : {}),
     ...(settings.preventOverlap || settings.businessHours || settings.resourceAvailability
       ? { constraintsFeature: constraintsFeature() }
       : {}),

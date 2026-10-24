@@ -1,40 +1,35 @@
+import type { Calendar_InteractionInput } from '#features/interaction/interaction.types';
 import { calendarFeatures_active } from '#features/calendar-features';
 import type { Calendar_EventInput } from '#events/event.types';
 import type { Calendar_ConfiguredFeature } from '#features/feature.types';
 import type { Calendar_DateTarget } from '#features/interaction/date-target.types';
 import { isDateTarget, calendarDateTarget_equal } from '#features/interaction/date-target';
-import type { Calendar_InteractionInput } from '#features/interaction/interaction.types';
 import {
   calendarPlacement_place,
   calendarRelocation_mergeSettings,
   calendarRelocation_resolve,
 } from '#features/interaction/placement';
 import { createInteractionOperation } from '#features/interaction/interaction-runtime';
-import type {
-  Calendar_TransferSource,
-  Calendar_CrossCalendarSettings,
-} from '#features/cross-calendar/cross-calendar.types';
+import type { Calendar_TransferSource, Calendar_TransferSettings } from '#features/event-transfer/event-transfer.types';
 
 const relocationPolicy = (input: Calendar_InteractionInput) =>
   calendarRelocation_resolve(
     input,
-    input.crossCalendar?.relocationPolicy,
-    input.views[input.view].crossCalendar?.relocationPolicy,
+    input.transfer?.relocationPolicy,
+    input.views[input.view].transfer?.relocationPolicy,
   );
 
 const transferOperation = createInteractionOperation({
   kind: 'transfer',
-  enabled: input =>
-    !!input.crossCalendar?.id &&
-    (input.views[input.view].crossCalendar?.enabled ?? input.crossCalendar?.enabled) !== false,
+  enabled: input => !!input.id && (input.views[input.view].transfer?.enabled ?? input.transfer?.enabled) !== false,
   source: intent => intent.source.read(),
   acceptsTarget: isDateTarget,
   sameTarget: calendarDateTarget_equal,
   create(intent, target, input) {
     const before = intent.source.read();
     if (!before) return { status: 'unavailable', reason: 'source-changed' };
-    const settings = { ...input.crossCalendar, ...input.views[input.view].crossCalendar };
-    if (!settings.id || settings.id === intent.source.id) return { status: 'rejected', reason: 'same-calendar' };
+    const settings = { ...input.transfer, ...input.views[input.view].transfer };
+    if (!input.id || input.id === intent.source.id) return { status: 'rejected', reason: 'same-calendar' };
     if (settings.accept?.(intent.source.id) === false) return { status: 'rejected', reason: 'calendar-rejected' };
     if (input.events.some(event => event.id === before.id)) return { status: 'rejected', reason: 'duplicate-event-id' };
     const after = calendarPlacement_place(before, target, relocationPolicy(input), intent.source.sourceResourceId);
@@ -42,7 +37,7 @@ const transferOperation = createInteractionOperation({
       ? { status: 'unavailable', reason: after }
       : {
           status: 'valid',
-          proposal: { kind: 'transfer', before, after, sourceId: intent.source.id, destinationId: settings.id },
+          proposal: { kind: 'transfer', before, after, sourceId: intent.source.id, destinationId: input.id },
         };
   },
   scheduling: proposal => ({ kind: 'event', event: proposal.after }),
@@ -50,10 +45,11 @@ const transferOperation = createInteractionOperation({
     transfer: {
       prepare(eventId: string, sourceResourceId?: string): Calendar_TransferSource | undefined {
         const isActive = () =>
-          calendarFeatures_active(context.features, context.view).some(([key]) => key === 'crossCalendarFeature');
+          calendarFeatures_active(context.features, context.view).some(([key]) => key === 'eventTransferFeature');
         if (!isActive()) return;
-        const settings = context.settings<Partial<Calendar_CrossCalendarSettings>>('crossCalendar', {});
-        if (!settings.id || settings.enabled === false) return;
+        const id = context.options.id;
+        const settings = context.settings<Calendar_TransferSettings>('transfer', {});
+        if (!id || settings.enabled === false) return;
         const before = context.options.events.find(event => event.id === eventId);
         if (!before || before['~source']) return;
         if (
@@ -69,12 +65,12 @@ const transferOperation = createInteractionOperation({
           context.api.interactions.refresh();
           if (
             released ||
-            context.settings<Partial<Calendar_CrossCalendarSettings>>('crossCalendar', {}).id !== settings.id ||
+            context.options.id !== id ||
             !isActive() ||
             context
               .settings<import('#features/event-move/event-move.types').Calendar_MovementSettings>('movement', {})
               .canMove?.(before) === false ||
-            context.settings<Partial<Calendar_CrossCalendarSettings>>('crossCalendar', {}).enabled === false ||
+            context.settings<Calendar_TransferSettings>('transfer', {}).enabled === false ||
             !session.session.isActive()
           )
             return;
@@ -87,7 +83,7 @@ const transferOperation = createInteractionOperation({
         };
         return {
           session: session.session,
-          id: settings.id,
+          id,
           sourceResourceId,
           read,
           release,
@@ -107,22 +103,21 @@ const transferOperation = createInteractionOperation({
   emit: (proposal, _context, intent) => intent.source.complete(proposal),
 });
 
-export const crossCalendarFeature = (config: Partial<Calendar_CrossCalendarSettings> = {}) =>
+export const eventTransferFeature = (config: Calendar_TransferSettings = {}) =>
   ({
-    '~id': 'crossCalendarFeature',
+    '~id': 'eventTransferFeature',
     '~config': config,
     requires: ['interactionFeature'],
     interaction: {
-      settings: 'crossCalendar',
+      settings: 'transfer',
       mergeSettings: calendarRelocation_mergeSettings,
       operation: transferOperation,
       deps: input => [
-        input.crossCalendar?.enabled,
-        input.crossCalendar?.id,
-        input.crossCalendar?.accept,
-        input.views[input.view].crossCalendar?.enabled,
-        input.views[input.view].crossCalendar?.id,
-        input.views[input.view].crossCalendar?.accept,
+        input.transfer?.enabled,
+        input.id,
+        input.transfer?.accept,
+        input.views[input.view].transfer?.enabled,
+        input.views[input.view].transfer?.accept,
         ...Object.values(relocationPolicy(input)),
       ],
     },

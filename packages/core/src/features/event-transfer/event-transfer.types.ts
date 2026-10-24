@@ -24,8 +24,7 @@ export type Calendar_TransferSource<D = unknown> = {
 
 export type Calendar_TransferIntent = { kind: 'transfer'; source: Calendar_TransferSource };
 
-export type Calendar_CrossCalendarSettings = {
-  id: string;
+export type Calendar_TransferSettings = {
   enabled?: boolean;
   accept?: (sourceId: string) => boolean;
   relocationPolicy?: import('#features/interaction/scheduling.types').Calendar_EventRelocationPolicy;

@@ -43,18 +43,18 @@ not a prerequisite for the behavioral design.
 
 ## Opt-in features
 
-| Proposed feature       | Contribution                                                          | Required features                               |
-| ---------------------- | --------------------------------------------------------------------- | ----------------------------------------------- |
-| `interactionFeature`   | Shared runtime and transient store                                    | None                                            |
-| `constraintsFeature`   | Scheduling-policy checks                                              | Interaction                                     |
-| `dateSelectionFeature` | Range proposal, selected-range state and selection notifications      | Interaction                                     |
-| `eventMoveFeature`     | Event movement proposals and move notifications                       | Interaction                                     |
-| `eventResizeFeature`   | Start/end resize proposals and resize notifications                   | Interaction                                     |
-| `pointerFeature`       | Pointer gesture transport and activation                              | Interaction                                     |
-| `touchFeature`         | Touch activation/scroll arbitration for pointer transport             | Pointer                                         |
-| `autoScrollFeature`    | Edge scrolling during an active pointer session                       | Pointer                                         |
-| `externalDropFeature`  | External source metadata, creation proposals and receiving behavior   | Interaction and pointer                         |
-| `crossCalendarFeature` | Coordination between registered calendar hosts and transfer proposals | Interaction and pointer; movement on the source |
+| Proposed feature       | Contribution                                                        | Required features                   |
+| ---------------------- | ------------------------------------------------------------------- | ----------------------------------- |
+| `interactionFeature`   | Shared runtime and transient store                                  | None                                |
+| `constraintsFeature`   | Scheduling-policy checks                                            | Interaction                         |
+| `dateSelectionFeature` | Range proposal, selected-range state and selection notifications    | Interaction                         |
+| `eventMoveFeature`     | Event movement proposals and move notifications                     | Interaction                         |
+| `eventResizeFeature`   | Start/end resize proposals and resize notifications                 | Interaction                         |
+| `pointerFeature`       | Pointer gesture transport and activation                            | Interaction                         |
+| `touchFeature`         | Touch activation/scroll arbitration for pointer transport           | Pointer                             |
+| `autoScrollFeature`    | Edge scrolling during an active pointer session                     | Pointer                             |
+| `externalDropFeature`  | External source metadata, creation proposals and receiving behavior | Interaction and pointer             |
+| `eventTransferFeature` | Transfer proposals using calendar IDs and shared DOM drag scopes    | Interaction; movement on the source |
 
 The foundation always enforces structural validity: valid dates, positive ranges, an existing source event and an
 enabled operation. Scheduling restrictions are contributed by `constraintsFeature`. Resource reassignment and

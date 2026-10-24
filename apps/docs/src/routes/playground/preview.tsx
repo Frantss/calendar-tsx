@@ -177,8 +177,8 @@ function Preview() {
       <link rel='stylesheet' href={printCss} />
       {overrides && <style>{overrides}</style>}
       {/* a new clock needs a new instance: the clock is read at creation and on mount */}
-      <div className='preview-calendars' data-transfer={config.interactions.crossCalendar || undefined}>
-        {(['primary', ...(config.interactions.crossCalendar ? ['secondary' as const] : [])] as const).map(id => (
+      <div className='preview-calendars' data-transfer={config.interactions.transfer || undefined}>
+        {(['primary', ...(config.interactions.transfer ? ['secondary' as const] : [])] as const).map(id => (
           <PreviewCalendar
             key={`${id}|${config.now}|${config.timeZone}|${JSON.stringify(config.interactions)}`}
             id={id}
@@ -283,7 +283,7 @@ function PreviewCalendar({
           }
         : {}),
     },
-    crossCalendar: { id },
+    id,
     onSelectionChange: range => {
       setSelection(range);
       setMessage(
@@ -338,7 +338,7 @@ function PreviewCalendar({
 
   return (
     <section data-calendar-id={id} aria-label={id === 'primary' ? 'Main calendar' : 'Transfer calendar'}>
-      {config.interactions.crossCalendar && <h2>{id === 'primary' ? 'Main calendar' : 'Transfer calendar'}</h2>}
+      {config.interactions.transfer && <h2>{id === 'primary' ? 'Main calendar' : 'Transfer calendar'}</h2>}
       <CalendarProvider value={calendar} locale={config.locale}>
         <div ref={bindings.root} data-movement={config.interactions.movement || undefined}>
           <PreviewLayout

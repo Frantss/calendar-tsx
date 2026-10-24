@@ -16,9 +16,10 @@ import { pointerFeature } from '#features/pointer/pointer-feature';
 import { touchFeature } from '#features/touch/touch-feature';
 import { autoScrollFeature } from '#features/auto-scroll/auto-scroll-feature';
 import { externalDropFeature } from '#features/external-drop/external-drop-feature';
-import { crossCalendarFeature } from '#features/cross-calendar/cross-calendar-feature';
+import { eventTransferFeature } from '#features/event-transfer/event-transfer-feature';
 import { createCalendarDomHost, createCalendarInteractionHost, createExternalDraggable, timeGridSurface, timelineSurface } from '#interactions/dom';
 import type { Calendar_InteractionSnapshot } from '#features/interaction/interaction.types';
+import type { Calendar_TransferProposal } from '#features/event-transfer/event-transfer.types';
 
 const date = Temporal.PlainDate.from('2026-10-23');
 const at = (hour: number) => date.toZonedDateTime({ timeZone: 'UTC', plainTime: `${String(hour).padStart(2, '0')}:00` });
@@ -236,7 +237,7 @@ it('coordinates controlled hosts and emits only the source transfer proposal', a
     interactionFeature: interactionFeature(),
     pointerFeature: pointerFeature(),
     eventMoveFeature: eventMoveFeature(),
-    crossCalendarFeature: crossCalendarFeature(),
+    eventTransferFeature: eventTransferFeature(),
     constraintsFeature: constraintsFeature(),
   };
   const views = interactionTestViews({ day: timeGridView({ days: 1, features }) });
@@ -244,7 +245,7 @@ it('coordinates controlled hosts and emits only the source transfer proposal', a
     ...base,
     ...views,
     interactionOwnership: ownership(),
-    crossCalendar: { id: 'source' },
+    id: 'source',
     onEventTransfer,
     onEventMove,
     constraints: { preventOverlap: false },
@@ -254,7 +255,7 @@ it('coordinates controlled hosts and emits only the source transfer proposal', a
     ...views,
     events: [] as typeof base.events,
     interactionOwnership: ownership(),
-    crossCalendar: { id: 'destination' },
+    id: 'destination',
     constraints: { preventOverlap: false },
   });
   const sourceHost = setup(sourceCalendar, surface()),
@@ -272,6 +273,48 @@ it('coordinates controlled hosts and emits only the source transfer proposal', a
   expect(onEventMove).not.toHaveBeenCalled();
   expect(sourceCalendar.api.interactions.store.state.session).toBeNull();
   expect(destinationCalendar.api.interactions.store.state.session).toBeNull();
+});
+
+it('drags an event between two calendars and back through one shared drag scope', async () => {
+  const onLeft = vi.fn<(proposal: Calendar_TransferProposal<{ title: string }>) => void>();
+  const onRight = vi.fn<(proposal: Calendar_TransferProposal<{ title: string }>) => void>();
+  const onEventMove = vi.fn();
+  const features = {
+    interactionFeature: interactionFeature(),
+    pointerFeature: pointerFeature(),
+    eventMoveFeature: eventMoveFeature(),
+    eventTransferFeature: eventTransferFeature(),
+  };
+  const views = interactionTestViews({ day: timeGridView({ days: 1, features }) });
+  const left = createCalendar({ ...base, ...views, id: 'left', onEventTransfer: onLeft, onEventMove });
+  const right = createCalendar({ ...base, ...views, id: 'right', events: [] as typeof base.events, onEventTransfer: onRight, onEventMove });
+  const leftHost = setup(left, surface());
+  const rightHost = setup(right, surface(300));
+  const leftEvent = child(leftHost.root);
+  const unbindLeft = leftHost.host.source(leftEvent, { eventId: 'a' });
+
+  await userEvent.dragAndDrop(leftEvent, rightHost.root, { sourcePosition: { x: 20, y: 0 }, targetPosition: { x: 20, y: 240 } });
+  await vi.waitFor(() => expect(onLeft).toHaveBeenCalledOnce());
+  expect(onRight).not.toHaveBeenCalled();
+  const outbound = onLeft.mock.calls[0]![0];
+  expect(outbound).toMatchObject({ sourceId: 'left', destinationId: 'right' });
+  left['~update']({ ...left.options, events: [] });
+  right['~update']({ ...right.options, events: [outbound.after] });
+  unbindLeft();
+  leftEvent.remove();
+
+  const rightEvent = child(rightHost.root, 240);
+  rightHost.host.source(rightEvent, { eventId: 'a' });
+  await userEvent.dragAndDrop(rightEvent, leftHost.root, { sourcePosition: { x: 20, y: 0 }, targetPosition: { x: 20, y: 280 } });
+  await vi.waitFor(() => expect(onRight).toHaveBeenCalledOnce());
+  const inbound = onRight.mock.calls[0]![0];
+  expect(inbound).toMatchObject({ sourceId: 'right', destinationId: 'left', before: outbound.after });
+  right['~update']({ ...right.options, events: [] });
+  left['~update']({ ...left.options, events: [inbound.after] });
+  expect(onLeft).toHaveBeenCalledOnce();
+  expect(onEventMove).not.toHaveBeenCalled();
+  expect(left.api.interactions.store.state.session).toBeNull();
+  expect(right.api.interactions.store.state.session).toBeNull();
 });
 
 it('receives an external source in a timeline without installing movement', () => {

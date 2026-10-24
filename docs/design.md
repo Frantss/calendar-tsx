@@ -1706,7 +1706,7 @@ compiler fixtures verify the DOM export and independent feature prerequisites.
 **Decision:** keep the DOM adapter in the existing core package and single entry. Semantic creation and transfer
 require only `interactionFeature`. Pointer, touch and scrolling remain independent settings features; browser
 listeners are installed only by a mounted adapter. Source transfer preparation retains movement permissions and a
-movement lease. Receiver policy overrides belong to `crossCalendar.relocationPolicy`; shared relocation logic belongs to
+movement lease. Receiver policy overrides belong to `transfer.relocationPolicy`; shared relocation logic belongs to
 `features/interaction/placement.ts`.
 
 `createEventRelocationPolicy` types reusable conversion and resource settings, preserving their literal types.
@@ -1728,6 +1728,12 @@ registry dispatch erasure is internal.
 
 `api.transfer` owns preparation and receiving commands. The unused `onEventReceive` option is removed. Transfer
 still emits one source callback and leaves both event arrays under application ownership.
+
+Calendar identity is the root `id` option. It is optional for display and local editing; transfers require distinct,
+nonempty source and receiver IDs. `eventTransferFeature` owns `transfer` settings (`enabled`, `accept`,
+`relocationPolicy`) and lives in `features/event-transfer/`. Calendars share a drag scope for DOM discovery without
+peer references at construction. With movement and transfer registered on both, source and receiver roles reverse
+on each gesture. Source identity changes invalidate prepared sources; receiver identity changes revalidate drafts.
 
 The DOM engine owns measurement, activation, capture, scrolling and cancellation. Built-in event bindings own
 operation choice, source interpretation and movement grab offsets. They share pure DST candidate resolution with

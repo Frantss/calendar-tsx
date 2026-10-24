@@ -1,5 +1,5 @@
 import type { ExternalDrop_OperationMap } from '#features/external-drop/external-drop.feature-maps';
-import type { CrossCalendar_OperationMap } from '#features/cross-calendar/cross-calendar.feature-maps';
+import type { EventTransfer_OperationMap } from '#features/event-transfer/event-transfer.feature-maps';
 import type { DateSelection_OperationMap } from '#features/date-selection/date-selection.feature-maps';
 import type { EventMove_OperationMap } from '#features/event-move/event-move.feature-maps';
 import type { EventResize_OperationMap } from '#features/event-resize/event-resize.feature-maps';
@@ -23,7 +23,7 @@ import type { Calendar_ViewSettings_FeatureMap } from '#features/feature-maps.ty
 export interface Calendar_OperationMap<TData = unknown>
   extends
     ExternalDrop_OperationMap<TData>,
-    CrossCalendar_OperationMap<TData>,
+    EventTransfer_OperationMap<TData>,
     DateSelection_OperationMap,
     EventMove_OperationMap<TData>,
     EventResize_OperationMap<TData> {}

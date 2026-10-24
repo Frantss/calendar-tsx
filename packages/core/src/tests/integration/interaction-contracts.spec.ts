@@ -7,7 +7,7 @@ import { interactionFeature } from '#features/interaction/interaction-feature';
 import { createInteractionOperation } from '#features/interaction/interaction-runtime';
 import { constraintsFeature } from '#features/constraints/constraints-feature';
 import { eventMoveFeature } from '#features/event-move/event-move-feature';
-import { crossCalendarFeature } from '#features/cross-calendar/cross-calendar-feature';
+import { eventTransferFeature } from '#features/event-transfer/event-transfer-feature';
 import type { Calendar_ConfiguredFeature } from '#features/feature.types';
 import type { Calendar_Selection } from '#features/date-selection/date-selection.types';
 import type { Calendar_InteractionStart } from '#features/interaction/interaction.types';
@@ -80,15 +80,16 @@ it('transfers without pointer and uses receiver placement independently of movem
   const sourceFeatures = calendarFeatures({
     interactions: interactionFeature(),
     move: eventMoveFeature(),
-    transfer: crossCalendarFeature({ id: 'source' }),
+    transfer: eventTransferFeature(),
   });
   const destinationFeatures = calendarFeatures({
     interactions: interactionFeature(),
-    transfer: crossCalendarFeature({ id: 'destination', relocationPolicy: { allowConversion: true } }),
+    transfer: eventTransferFeature({ relocationPolicy: { allowConversion: true } }),
   });
   const event = { id: 'a', kind: 'timed' as const, start: at(10), end: at(11), data: { bookingId: 42 } };
   const onEventTransfer = vi.fn();
   const source = createCalendar({
+    id: 'source',
     features: sourceFeatures,
     views: calendarViews({ features: sourceFeatures, views: { day: timeGridView({ days: 1 }) } }),
     date,
@@ -99,6 +100,7 @@ it('transfers without pointer and uses receiver placement independently of movem
     onEventTransfer,
   });
   const destination = createCalendar({
+    id: 'destination',
     features: destinationFeatures,
     views: calendarViews({ features: destinationFeatures, views: { day: timeGridView({ days: 1 }) } }),
     date,

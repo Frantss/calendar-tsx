@@ -4,3 +4,10 @@ description: Create events from a palette and transfer events between calendars.
 ---
 
 <include>../../../shared/features/drops-and-transfers.mdx</include>
+
+## Bidirectional core setup
+
+Both calendars use the same transaction callback. Programmatic transfers can run in either direction after
+construction. For DOM dragging, mount each calendar's interaction bindings with the same `dragScope`.
+
+<include lang='ts'>../../../../examples/core/transfers.ts#setup</include>

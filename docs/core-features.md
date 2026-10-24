@@ -129,7 +129,7 @@ types and contributions to the shared extension maps.
 
 Interaction factories follow the same ownership rule. `features/interaction/` owns the shared runtime, operation
 contracts and date-target helpers. `date-selection/`, `event-move/`, `event-resize/`, `constraints/`, `pointer/`,
-`touch/`, `auto-scroll/`, `external-drop/` and `cross-calendar/` each own their factory, types and feature-map
+`touch/`, `auto-scroll/`, `external-drop/` and `event-transfer/` each own their factory, types and feature-map
 contributions. Shared maps compose these interfaces through type-only imports. The operation map remains open to
 third-party augmentation.
 

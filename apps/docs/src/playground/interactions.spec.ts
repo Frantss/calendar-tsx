@@ -12,7 +12,7 @@ const event = { id: 'a', kind: 'timed' as const, start, end: start.add({ hours: 
 it('round-trips interaction settings and edits without losing offsets, durations or rooms', () => {
   const config = {
     ...defaultPlaygroundConfig(date),
-    interactions: { ...defaultInteractions, resizing: true, crossCalendar: true },
+    interactions: { ...defaultInteractions, resizing: true, transfer: true },
     changes: [storeEvent({ ...event, end: start.add({ days: 3, nanoseconds: 7 }) }, 'secondary')],
   };
   const restored = parsePlaygroundConfig(serializePlaygroundConfig(config), date);
