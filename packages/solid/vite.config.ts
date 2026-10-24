@@ -3,12 +3,12 @@ import type { BrowserCommand } from 'vite-plus/test/node';
 import solid from 'vite-plugin-solid';
 import { base } from '../../vite.config';
 
-/** Renders `src/tests/ssr.server.tsx` through Vite's SSR pipeline, so it runs the server-compiled parts in Node (D32). */
+/** Renders `src/tests/integration/ssr/server.tsx` through Vite's SSR pipeline, so it runs the server-compiled parts in Node (D32). */
 const calendarSolid_renderToString: BrowserCommand<[props: Record<string, string | undefined>]> = async (
   context,
   props,
 ) => {
-  const server = await context.project.vite.ssrLoadModule('/src/tests/ssr.server.tsx');
+  const server = await context.project.vite.ssrLoadModule('/src/tests/integration/ssr/server.tsx');
 
   return server['ssrServer_render'](props);
 };

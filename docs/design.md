@@ -1524,6 +1524,34 @@ changing its responsibility.
 bodies and run the existing core, adapter, recurrence and documentation checks, including built-package declaration
 merging, aliases, configuration inheritance and structural model compatibility.
 
+### D57 — React and Solid mirror module ownership
+
+**Status:** implemented. The full tree is in [React and Solid package structure](./bindings-structure.md).
+
+**Serves:** D21, D25, D53, D56.
+
+**Decision:** use matching `calendar/`, `events/`, `rendering/` and `views/` folders in both adapters.
+Calendar lifecycle, context, selectors, providers and the wrapper stay together in `calendar/calendar.tsx`;
+the erased instance contract lives beside them. The managed event-store hook belongs to `events/`.
+Each view owns its parts and prop types. Rendering contracts live beside the element factory;
+shared part geometry, labels and navigation contracts live in `views/shared/parts.ts`.
+
+**Tests:** focused calendar, rendering and view tests live with their modules. API, background, recurrence,
+RRule and SSR tests live in `tests/integration/`. Reusable setup and fixtures live in `tests/support/`.
+Solid's SSR app and server fixture live beside the hydration test, and its Vite loader targets the moved server.
+
+**Interface:** each adapter retains one public code entry through `export/index.ts`, with the same exported names.
+Private imports address module owners directly. React retains element cloning, forwarded refs and its build's
+`'use client'` banner. Solid retains accessors, its render-function contract and its SSR/hydration pipeline.
+
+**Alternatives considered:** a shared adapter package would couple framework-specific rendering semantics.
+Generic `components/`, `hooks/` and `types/` folders would spread one view across several directories.
+One file per part would fragment the existing cohesive view implementations. Internal barrels would add
+forwarding layers without owning behavior.
+
+**Verification:** compare moved implementation and test bodies, extracted type declarations, and public exports
+before and after the restructure. Run the existing workspace build, checks and tests, including SSR and hydration.
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.

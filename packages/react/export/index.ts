@@ -3,7 +3,7 @@ export type {
   Calendar_PolymorphicProps,
   Calendar_RenderFn,
   Calendar_RenderProps,
-} from '#calendar-factory';
+} from '#rendering/rendering.types';
 export {
   ListViewDay,
   ListViewDayHeader,
@@ -12,7 +12,7 @@ export {
   ListView,
   ListViewSection,
   ListViewSectionHeader,
-} from '#list-view';
+} from '#views/list/list-view';
 export {
   DayGridViewSection,
   DayGridViewSectionHeader,
@@ -26,7 +26,7 @@ export {
   DayGridViewRow,
   DayGridViewRowBackgroundEvent,
   DayGridViewRowEvent,
-} from '#day-grid-view';
+} from '#views/day-grid/day-grid-view';
 export {
   TimeGridViewAllDay,
   TimeGridViewAllDayBackgroundEvent,
@@ -44,7 +44,7 @@ export {
   TimeGridViewNowIndicator,
   TimeGridView,
   TimeGridViewUnavailable,
-} from '#time-grid-view';
+} from '#views/time-grid/time-grid-view';
 export {
   TimelineViewBackground,
   TimelineViewBackgroundEvent,
@@ -60,6 +60,6 @@ export {
   TimelineViewSlotLabel,
   TimelineView,
   TimelineViewUnavailable,
-} from '#timeline-view';
-export { Calendar, CalendarProvider, useCalendar, useCalendarContext, useCalendarSelector } from '#use-calendar';
-export { useCalendarEventStore } from '#use-calendar-event-store';
+} from '#views/timeline/timeline-view';
+export { Calendar, CalendarProvider, useCalendar, useCalendarContext, useCalendarSelector } from '#calendar/calendar';
+export { useCalendarEventStore } from '#events/use-calendar-event-store';

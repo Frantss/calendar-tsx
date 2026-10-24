@@ -7,6 +7,8 @@ Solid bindings for [`@calendar-tsx/core`](../core): `useCalendar`, `CalendarProv
 day-grid (`DayGridView*`), time-grid (`TimeGridView*`), list (`ListView*`) and timeline (`TimelineView*`) layouts. Part names, props, data
 attributes and `--cal-*` variables match [`@calendar-tsx/react`](../react).
 
+See [the bindings structure](../../docs/bindings-structure.md) for source ownership and test locations.
+
 ## Quick example
 
 ```tsx

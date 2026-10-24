@@ -6,6 +6,8 @@
 React bindings for [`@calendar-tsx/core`](../core): `useCalendar`, `CalendarProvider`, and unstyled parts for the
 day-grid (`DayGridView*`), time-grid (`TimeGridView*`), list (`ListView*`) and timeline (`TimelineView*`) layouts.
 
+See [the bindings structure](../../docs/bindings-structure.md) for source ownership and test locations.
+
 ## Quick example
 
 ```tsx

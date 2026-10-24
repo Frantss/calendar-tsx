@@ -18,13 +18,13 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "imports": {
-    "#calendar-factory": "./src/calendar-factory.tsx",
-    "#list-view": "./src/list-view.tsx",
-    "#day-grid-view": "./src/day-grid-view.tsx",
-    "#time-grid-view": "./src/time-grid-view.tsx",
-    "#timeline-view": "./src/timeline-view.tsx",
-    "#use-calendar": "./src/use-calendar.tsx",
-    "#tests/calendar-react.setup": "./src/tests/calendar-react.setup.tsx",
+    "#rendering/factory": "./src/rendering/factory.tsx",
+    "#views/list/list-view": "./src/views/list/list-view.tsx",
+    "#views/day-grid/day-grid-view": "./src/views/day-grid/day-grid-view.tsx",
+    "#views/time-grid/time-grid-view": "./src/views/time-grid/time-grid-view.tsx",
+    "#views/timeline/timeline-view": "./src/views/timeline/timeline-view.tsx",
+    "#calendar/calendar": "./src/calendar/calendar.tsx",
+    "#tests/support/calendar.setup": "./src/tests/support/calendar.setup.tsx",
     "#*": "./src/*.ts"
   },
   "exports": {
