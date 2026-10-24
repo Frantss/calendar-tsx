@@ -4,14 +4,14 @@ import {
   ListViewDayHeader,
   ListViewEmpty,
   ListViewEvent,
-  MonthView,
-  MonthViewDay,
-  MonthViewDayTrigger,
-  MonthViewHeader,
-  MonthViewHeaderCell,
-  MonthViewOverflow,
-  MonthViewWeek,
-  MonthViewWeekEvent,
+  DayGridView,
+  DayGridViewDay,
+  DayGridViewDayTrigger,
+  DayGridViewHeader,
+  DayGridViewHeaderCell,
+  DayGridViewOverflow,
+  DayGridViewWeek,
+  DayGridViewWeekEvent,
   TimeGridView,
   TimeGridViewAllDay,
   TimeGridViewAllDayEvent,
@@ -49,36 +49,36 @@ export const PreviewLayout = ({ onSelect }: { onSelect: (event: Calendar_Event<B
   const layout = useCalendarSelector((state: PlaygroundState) => state.layout);
   const { instance, locale } = useCalendarContext();
 
-  if (layout.kind === 'month') {
+  if (layout.kind === 'dayGrid') {
     return (
-      <MonthView model={layout}>
-        <MonthViewHeader>
+      <DayGridView model={layout}>
+        <DayGridViewHeader>
           {layout.weekdays.map(weekday => (
-            <MonthViewHeaderCell key={weekday.toString()} weekday={weekday}>
+            <DayGridViewHeaderCell key={weekday.toString()} weekday={weekday}>
               {weekday.toLocaleString(locale, { weekday: 'short' })}
-            </MonthViewHeaderCell>
+            </DayGridViewHeaderCell>
           ))}
-        </MonthViewHeader>
+        </DayGridViewHeader>
         {layout.weeks.map(week => (
-          <MonthViewWeek key={week.key} week={week}>
+          <DayGridViewWeek key={week.key} week={week}>
             {week.days.map(day => (
-              <MonthViewDay key={day.key} day={day}>
-                <MonthViewDayTrigger day={day} view='day'>
+              <DayGridViewDay key={day.key} day={day}>
+                <DayGridViewDayTrigger day={day} view='day'>
                   {day.date.day}
-                </MonthViewDayTrigger>
-                <MonthViewOverflow day={day} onClick={() => instance.api.navigate({ view: 'day', date: day.date })}>
+                </DayGridViewDayTrigger>
+                <DayGridViewOverflow day={day} onClick={() => instance.api.navigate({ view: 'day', date: day.date })}>
                   {day.hiddenCount} more
-                </MonthViewOverflow>
-              </MonthViewDay>
+                </DayGridViewOverflow>
+              </DayGridViewDay>
             ))}
             {week.segments.map(segment => (
-              <MonthViewWeekEvent key={segment.key} segment={segment} onClick={() => onSelect(segment.event)}>
+              <DayGridViewWeekEvent key={segment.key} segment={segment} onClick={() => onSelect(segment.event)}>
                 {segment.event.data.title}
-              </MonthViewWeekEvent>
+              </DayGridViewWeekEvent>
             ))}
-          </MonthViewWeek>
+          </DayGridViewWeek>
         ))}
-      </MonthView>
+      </DayGridView>
     );
   }
 

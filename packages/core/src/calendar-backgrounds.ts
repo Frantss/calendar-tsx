@@ -6,7 +6,7 @@ import type {
   Calendar_BackgroundSegment,
   Calendar_DayBackground,
   Calendar_Feature,
-  Calendar_MonthLayout,
+  Calendar_DayGridLayout,
   Calendar_Range,
   Calendar_TimeGridLayout,
   Calendar_TimelineLayout,
@@ -118,13 +118,13 @@ const timeGrid_decorate = (
  * nothing in the layer touches (a business-hours layer shades the closed days). Month days have no resource, so
  * layers limited to resources are skipped.
  */
-const month_decorate = (month: Calendar_MonthLayout<unknown>, layers: Calendar_BackgroundLayer[], timeZone: string) => {
-  const range = month.coordinates.dates.length ? month.coordinates.inputRange : undefined;
+const dayGrid_decorate = (grid: Calendar_DayGridLayout<unknown>, layers: Calendar_BackgroundLayer[], timeZone: string) => {
+  const range = grid.coordinates.dates.length ? grid.coordinates.inputRange : undefined;
   const resolved = range ? layers_resolve(layers, range, timeZone).filter(({ layer }) => !layer.resourceIds) : [];
 
   return {
-    ...month,
-    weeks: month.weeks.map(week => ({
+    ...grid,
+    weeks: grid.weeks.map(week => ({
       ...week,
       days: week.days.map(day => {
         const interval = layoutIntervals_day(day.date, timeZone);
@@ -219,7 +219,7 @@ export const backgroundFeature = {
 
       if (layout.kind === 'timeGrid')
         return timeGrid_decorate(layout as Calendar_TimeGridLayout<unknown, unknown>, layers, timeZone);
-      if (layout.kind === 'month') return month_decorate(layout as Calendar_MonthLayout<unknown>, layers, timeZone);
+      if (layout.kind === 'dayGrid') return dayGrid_decorate(layout as Calendar_DayGridLayout<unknown>, layers, timeZone);
       if (layout.kind === 'timeline')
         return timeline_decorate(layout as Calendar_TimelineLayout<unknown, unknown>, layers, timeZone);
 

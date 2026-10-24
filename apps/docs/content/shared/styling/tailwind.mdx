@@ -15,7 +15,7 @@ utilities:
 
 - It beats preflight, whose button reset (`background-color: transparent`, `border-radius: 0`) would otherwise strip
   every event, trigger and overflow, since parts render native buttons.
-- Utilities beat it: `bg-sky-600 text-white` on a `MonthViewWeekEvent` overrides the theme.
+- Utilities beat it: `bg-sky-600 text-white` on a `DayGridViewWeekEvent` overrides the theme.
 
 Imported without `layer(components)`, the theme's layers come after `utilities` and override every utility class on a
 part.

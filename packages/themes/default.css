@@ -45,7 +45,7 @@
     line-height: 1.4;
   }
 
-  :where([data-scope='calendar'][data-part='month-root']) {
+  :where([data-scope='calendar'][data-part='day-grid-root']) {
     overflow: hidden;
   }
 
@@ -80,7 +80,7 @@
    */
   :where(
     [data-scope='calendar']:is(
-      [data-part='month-week-event'],
+      [data-part='day-grid-week-event'],
       [data-part='time-grid-all-day-event'],
       [data-part='time-grid-event'],
       [data-part='timeline-event']
@@ -96,7 +96,7 @@
   /* Background events: a light accent wash, translucent so day numbers and slot lines show through */
   :where(
     [data-scope='calendar']:is(
-      [data-part='month-week-background-event'],
+      [data-part='day-grid-week-background-event'],
       [data-part='time-grid-all-day-background-event'],
       [data-part='time-grid-background-event'],
       [data-part='timeline-background-event']
@@ -105,11 +105,11 @@
     background: var(--calendar-background-event, color-mix(in oklab, var(--calendar-accent) 10%, transparent));
   }
 
-  /* Event bars: month rows, the time grid's all-day row and timeline rows */
+  /* Event bars: day-grid rows, the time grid's all-day row and timeline rows */
 
   :where(
     [data-scope='calendar']:is(
-      [data-part='month-week-event'],
+      [data-part='day-grid-week-event'],
       [data-part='time-grid-all-day-event'],
       [data-part='timeline-event']
     )
@@ -142,30 +142,30 @@
 
   /* Month */
 
-  :where([data-scope='calendar'][data-part='month-header']) {
+  :where([data-scope='calendar'][data-part='day-grid-header']) {
     border-block-end: 1px solid var(--calendar-border);
   }
 
-  :where([data-scope='calendar'][data-part='month-header-cell']) {
+  :where([data-scope='calendar'][data-part='day-grid-header-cell']) {
     padding: 0.375rem 0.5rem;
     color: var(--calendar-text-muted);
     font-size: var(--calendar-font-size-sm);
     font-weight: 600;
   }
 
-  :where([data-scope='calendar'][data-part='month-week'] + [data-part='month-week']) {
+  :where([data-scope='calendar'][data-part='day-grid-week'] + [data-part='day-grid-week']) {
     border-block-start: 1px solid var(--calendar-border);
   }
 
-  :where([data-scope='calendar'][data-part='month-day']) {
+  :where([data-scope='calendar'][data-part='day-grid-day']) {
     padding: 0.25rem;
   }
 
-  :where([data-scope='calendar'][data-part='month-day'] + [data-part='month-day']) {
+  :where([data-scope='calendar'][data-part='day-grid-day'] + [data-part='day-grid-day']) {
     border-inline-start: 1px solid var(--calendar-border);
   }
 
-  :where([data-scope='calendar'][data-part='month-day'][data-outside]) {
+  :where([data-scope='calendar'][data-part='day-grid-day'][data-outside]) {
     background: var(--calendar-surface-muted);
     color: var(--calendar-text-muted);
   }
@@ -174,7 +174,7 @@
    * Day numbers: a circle so today's accent reads as a marker, not a filled cell. It is 0.5rem shorter than the day
    * header: 0.25rem for the cell's padding above it and 0.25rem of gap above the first bar.
    */
-  :where([data-scope='calendar']:is([data-part='month-day-trigger'], [data-part='time-grid-column-trigger'])) {
+  :where([data-scope='calendar']:is([data-part='day-grid-day-trigger'], [data-part='time-grid-column-trigger'])) {
     display: inline-grid;
     place-items: center;
     min-inline-size: calc(var(--calendar-day-header-height) - 0.5rem);
@@ -184,25 +184,25 @@
     font-variant-numeric: tabular-nums;
   }
 
-  :where([data-scope='calendar']:is([data-part='month-day-trigger'], [data-part='time-grid-column-trigger'])):hover {
+  :where([data-scope='calendar']:is([data-part='day-grid-day-trigger'], [data-part='time-grid-column-trigger'])):hover {
     background: var(--calendar-surface-muted);
   }
 
   :where([data-scope='calendar'][data-today])
-    :where([data-scope='calendar']:is([data-part='month-day-trigger'], [data-part='time-grid-column-trigger'])) {
+    :where([data-scope='calendar']:is([data-part='day-grid-day-trigger'], [data-part='time-grid-column-trigger'])) {
     background: var(--calendar-accent);
     color: var(--calendar-accent-contrast);
     font-weight: 600;
   }
 
-  :where([data-scope='calendar'][data-part='month-overflow']) {
+  :where([data-scope='calendar'][data-part='day-grid-overflow']) {
     padding: 0.125rem 0.25rem;
     border-radius: var(--calendar-bar-radius);
     color: var(--calendar-text-muted);
     font-size: var(--calendar-font-size-sm);
   }
 
-  :where([data-scope='calendar'][data-part='month-overflow']):hover {
+  :where([data-scope='calendar'][data-part='day-grid-overflow']):hover {
     color: var(--calendar-text);
     text-decoration: underline;
   }
@@ -283,7 +283,7 @@
   :where(
     [data-scope='calendar']:is(
       [data-part='time-grid-background'],
-      [data-part='month-day-background'],
+      [data-part='day-grid-day-background'],
       [data-part='timeline-background']
     )
   ) {
@@ -483,13 +483,13 @@
    */
   @media (forced-colors: active) {
     :where([data-scope='calendar'][data-today])
-      :where([data-scope='calendar']:is([data-part='month-day-trigger'], [data-part='time-grid-column-trigger'])) {
+      :where([data-scope='calendar']:is([data-part='day-grid-day-trigger'], [data-part='time-grid-column-trigger'])) {
       forced-color-adjust: none;
       background: Highlight;
       color: HighlightText;
     }
 
-    :where([data-scope='calendar'][data-outside]) :where([data-scope='calendar'][data-part='month-day-trigger']) {
+    :where([data-scope='calendar'][data-outside]) :where([data-scope='calendar'][data-part='day-grid-day-trigger']) {
       forced-color-adjust: none;
       color: GrayText;
     }
@@ -503,7 +503,7 @@
     :where(
       [data-scope='calendar']:is(
         [data-part='time-grid-background'],
-        [data-part='month-day-background'],
+        [data-part='day-grid-day-background'],
         [data-part='timeline-background']
       )
     ) {
@@ -514,7 +514,7 @@
     /* Background events: hatched like layers, in the highlight color so the two stay apart */
     :where(
       [data-scope='calendar']:is(
-        [data-part='month-week-background-event'],
+        [data-part='day-grid-week-background-event'],
         [data-part='time-grid-all-day-background-event'],
         [data-part='time-grid-background-event'],
         [data-part='timeline-background-event']

@@ -1,10 +1,10 @@
 import { expect, it } from 'vitest';
-import { monthView, timeGridView, timelineView } from '@calendar-tsx/core';
+import { dayGridView, timeGridView, timelineView } from '@calendar-tsx/core';
 import {
-  MonthView,
-  MonthViewDay,
-  MonthViewWeek,
-  MonthViewWeekEvent,
+  DayGridView,
+  DayGridViewDay,
+  DayGridViewWeek,
+  DayGridViewWeekEvent,
   TimeGridView,
   TimeGridViewAxis,
   TimeGridViewAxisLabel,
@@ -26,24 +26,24 @@ import { themesSetup_allDay, themesSetup_part, themesSetup_rect, themesSetup_ren
 
 const Calendar = () => {
   const model = useCalendarSelector(state => state.layout);
-  if (model.kind === 'month')
+  if (model.kind === 'dayGrid')
     return (
-      <MonthView model={model}>
+      <DayGridView model={model}>
         {model.weeks.map(week => (
-          <MonthViewWeek key={week.key} week={week}>
+          <DayGridViewWeek key={week.key} week={week}>
             {week.days.map(day => (
-              <MonthViewDay key={day.key} day={day}>
+              <DayGridViewDay key={day.key} day={day}>
                 {day.date.day}
-              </MonthViewDay>
+              </DayGridViewDay>
             ))}
             {week.segments.map(segment => (
-              <MonthViewWeekEvent key={segment.key} segment={segment}>
+              <DayGridViewWeekEvent key={segment.key} segment={segment}>
                 {segment.event.id}
-              </MonthViewWeekEvent>
+              </DayGridViewWeekEvent>
             ))}
-          </MonthViewWeek>
+          </DayGridViewWeek>
         ))}
-      </MonthView>
+      </DayGridView>
     );
   if (model.kind === 'timeGrid')
     return (
@@ -98,7 +98,7 @@ const Calendar = () => {
 it('aligns month bars with five visible day cells', async () => {
   await themesSetup_render(<Calendar />, {
     view: 'month',
-    views: { month: monthView({ maxEventsPerDay: 3, hiddenDays: [6, 7] }) },
+    views: { month: dayGridView({ period: 'month', maxEventsPerDay: 3, hiddenDays: [6, 7] }) },
     events: [themesSetup_allDay('span', { start: '2026-03-06', end: '2026-03-09' })],
   });
   const week = themesSetup_rect(themesSetup_part('month-week')[0]);

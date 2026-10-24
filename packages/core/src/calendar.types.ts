@@ -87,7 +87,7 @@ export type Calendar_WeeklyRule = {
 /** A shaded span, as fractions of a time-grid column or timeline track. */
 export type Calendar_BackgroundSegment = { key: string; layer: string; kind: string; start: number; span: number };
 
-/** A layer that shades a whole month day. */
+/** A layer that shades a whole day-grid cell. */
 export type Calendar_DayBackground = { key: string; layer: string; kind: string };
 
 type UnionToIntersection<U> = (U extends unknown ? (union: U) => void : never) extends (intersection: infer I) => void
@@ -127,7 +127,7 @@ export interface Calendar_State_FeatureMap {}
 /** Actions a feature merges onto `api`. */
 export interface Calendar_Api_FeatureMap {}
 /** Model fields a feature adds to the layouts of the views that list it. */
-export interface Calendar_MonthDay_FeatureMap {
+export interface Calendar_DayGridDay_FeatureMap {
   backgroundFeature: { backgrounds: Calendar_DayBackground[] };
 }
 export interface Calendar_BarSegment_FeatureMap {}
@@ -151,19 +151,13 @@ export type Calendar_TimeViewSettings = Calendar_DateViewSettings & {
   timeWindow?: { startMinutes: number; endMinutes: number };
 };
 
-export type Calendar_MonthViewSettings = Calendar_DateViewSettings & {
-  maxEventsPerDay: number;
-  dayOverflow?: (date: Temporal.PlainDate) => boolean;
-  /** Always show six weeks (D35). */
-  fixedWeekCount?: boolean;
-};
-
-/** Whole weeks from the week containing the date; built as a month model (D35). */
 export type Calendar_DayGridViewSettings = Calendar_DateViewSettings & {
-  weeks: number;
   maxEventsPerDay: number;
   dayOverflow?: (date: Temporal.PlainDate) => boolean;
-};
+} & (
+  | { period: 'month'; weeks?: never; fixedWeekCount?: boolean }
+  | { weeks: number; period?: never; fixedWeekCount?: never }
+);
 
 /** How overlapping timed events share a column (D38). */
 export type Calendar_TimeGridOverlap = 'side-by-side' | 'cascade';
@@ -194,7 +188,7 @@ export type Calendar_TimelineViewSettings = Calendar_TimeViewSettings & {
   minSlotWidth?: string;
 };
 
-export type Calendar_MonthDay<TData, TFeatures = {}> = {
+export type Calendar_DayGridDay<TData, TFeatures = {}> = {
   key: string;
   date: Temporal.PlainDate;
   isOutside: boolean;
@@ -203,7 +197,7 @@ export type Calendar_MonthDay<TData, TFeatures = {}> = {
   hiddenCount: number;
   hasMore: boolean;
   events: Calendar_Event<TData>[];
-} & Calendar_PickFeatures<Calendar_MonthDay_FeatureMap, TFeatures>;
+} & Calendar_PickFeatures<Calendar_DayGridDay_FeatureMap, TFeatures>;
 
 export type Calendar_BarSegment<TData, TFeatures = {}> = {
   key: string;
@@ -225,20 +219,20 @@ export type Calendar_BackgroundEventSpan<TData> = {
   continuesAfter: boolean;
 };
 
-export type Calendar_MonthWeek<TData, TFeatures = {}> = {
+export type Calendar_DayGridWeek<TData, TFeatures = {}> = {
   key: string;
-  days: Calendar_MonthDay<TData, TFeatures>[];
+  days: Calendar_DayGridDay<TData, TFeatures>[];
   segments: Calendar_BarSegment<TData, TFeatures>[];
   /** All-day background events only; timed ones shade time-grid columns (D37). */
   backgroundEvents: Calendar_BackgroundEventSpan<TData>[];
   rows: number;
 };
 
-export type Calendar_MonthLayout<TData, TFeatures = {}> = {
-  kind: 'month';
+export type Calendar_DayGridLayout<TData, TFeatures = {}> = {
+  kind: 'dayGrid';
   coordinates: LayoutCoordinates_DateAxis;
   weekdays: Temporal.PlainDate[];
-  weeks: Calendar_MonthWeek<TData, TFeatures>[];
+  weeks: Calendar_DayGridWeek<TData, TFeatures>[];
 };
 
 export type Calendar_TimeGridSegment<TData, TFeatures = {}> = {
@@ -382,8 +376,7 @@ export type Calendar_TimelineLayout<TData, TResourceData, TFeatures = {}> = {
 
 /** Layout key → layout, given the features of the view it renders. Layout features extend it by declaration merging. */
 export interface Calendar_Layout_FeatureMap<TData, TResourceData, TFeatures> {
-  monthLayout: Calendar_MonthLayout<TData, TFeatures>;
-  dayGridLayout: Calendar_MonthLayout<TData, TFeatures>;
+  dayGridLayout: Calendar_DayGridLayout<TData, TFeatures>;
   timeGridLayout: Calendar_TimeGridLayout<TData, TResourceData, TFeatures>;
   listLayout: Calendar_ListLayout<TData, TFeatures>;
   timelineLayout: Calendar_TimelineLayout<TData, TResourceData, TFeatures>;
@@ -459,7 +452,7 @@ export type Calendar_LayoutFeature<TKind extends string = string, TSettings = an
 
 export type Calendar_Features = Record<string, Calendar_Feature>;
 
-/** A view: its settings plus the layout and features it uses. Create views with the `*View` factories (`monthView`, …). */
+/** A view: its settings plus the layout and features it uses. Create views with the `*View` factories (`dayGridView`, …). */
 export type Calendar_View<
   TLayout extends Calendar_LayoutKey = Calendar_LayoutKey,
   TKind extends string = string,

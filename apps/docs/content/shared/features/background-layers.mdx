@@ -52,8 +52,8 @@ A range is timed, `{ start, end }` as `Temporal.ZonedDateTime`s, or all-day, `{ 
 
 - In the time grid, an all-day range shades the whole column. Overlapping ranges within a layer merge; layers stack in
   input order.
-- In the month view, a day takes a layer when one of the layer's all-day ranges covers it. Timed ranges don't shade
-  month days, except through inverse layers: an inverse layer marks the days none of its ranges touch, so business
+- In the day grid, a day takes a layer when one of the layer's all-day ranges covers it. Timed ranges don't shade
+  day-grid cells, except through inverse layers: an inverse layer marks the days none of its ranges touch, so business
   hours mark the weekends.
 - In timelines, all-day ranges cover anchor windows, including overnight portions. Timed ranges use exact source
   coverage, preserving DST gaps and combining repeated hours. Coverage merges before inverse gaps are computed.
@@ -70,7 +70,7 @@ A range is timed, `{ start, end }` as `Temporal.ZonedDateTime`s, or all-day, `{ 
 | Part                     | Model prop   | Where                                             |
 | ------------------------ | ------------ | ------------------------------------------------- |
 | `TimeGridViewBackground` | `background` | In `TimeGridViewColumn`, before the events.       |
-| `MonthViewDayBackground` | `background` | In `MonthViewDay`, before its content.            |
+| `DayGridViewDayBackground` | `background` | In `DayGridViewDay`, before its content.            |
 | `TimelineViewBackground` | `background` | In `TimelineViewLane`, beneath foreground events. |
 
 Each renders an `aria-hidden` `div` with `data-layer` and `data-kind`. A label such as "Closed" is your own text.

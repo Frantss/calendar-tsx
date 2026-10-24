@@ -17,16 +17,16 @@ import '@calendar-tsx/themes/compact.css';
 
 ## Files
 
-| File                | Contents                                                                                         |
-| ------------------- | ------------------------------------------------------------------------------------------------ |
-| `base.css`          | Positioning only: month bars, time-grid columns and lanes, the now line. Every theme imports it. |
-| `default.css`       | `base.css` plus the default look.                                                                |
-| `high-contrast.css` | Black on white and white on black, with outlined events.                                         |
-| `shadcn.css`        | The default look with its tokens read from shadcn/ui's variables.                                |
-| `material-ui.css`   | The default look with its tokens read from Material UI's CSS theme variables.                    |
-| `revenuecat.css`    | The default look in RevenueCat's brand colors.                                                   |
-| `stripe.css`        | The default look in Stripe's colors.                                                             |
-| `compact.css`       | Density only: smaller slots, bars and text. Import it after any theme.                           |
+| File                | Contents                                                                                            |
+| ------------------- | --------------------------------------------------------------------------------------------------- |
+| `base.css`          | Positioning only: day-grid bars, time-grid columns and lanes, the now line. Every theme imports it. |
+| `default.css`       | `base.css` plus the default look.                                                                   |
+| `high-contrast.css` | Black on white and white on black, with outlined events.                                            |
+| `shadcn.css`        | The default look with its tokens read from shadcn/ui's variables.                                   |
+| `material-ui.css`   | The default look with its tokens read from Material UI's CSS theme variables.                       |
+| `revenuecat.css`    | The default look in RevenueCat's brand colors.                                                      |
+| `stripe.css`        | The default look in Stripe's colors.                                                                |
+| `compact.css`       | Density only: smaller slots, bars and text. Import it after any theme.                              |
 
 Import `base.css` alone to write
 [your own look](custom-themes) on top of working layout.
@@ -47,9 +47,9 @@ when those layers come after the calendar's. See [overriding rules](customizing#
 
 ## Expected composition
 
-`base.css` expects the parts nested as the [view pages](../views/month-view) show them:
+`base.css` expects the parts nested as the [view pages](../views/day-grid-view) show them:
 
-- `MonthViewWeek` holds its `MonthViewDay` cells and `MonthViewWeekEvent` bars.
+- `DayGridViewWeek` holds its `DayGridViewDay` cells and `DayGridViewWeekEvent` bars.
 - `TimeGridView` holds `TimeGridViewHeader`, an optional `TimeGridViewAllDay` and `TimeGridViewBody`.
 - `TimeGridViewBody` holds an optional `TimeGridViewAxis` and the `TimeGridViewColumn`s.
 

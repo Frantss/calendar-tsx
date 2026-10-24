@@ -4,16 +4,16 @@
 > **Experimental.** `@calendar-tsx/react` is an experiment. Its API can change or be removed in any release, without notice.
 
 React bindings for [`@calendar-tsx/core`](../core): `useCalendar`, `CalendarProvider`, and unstyled parts for the
-month (`MonthView*`), time-grid (`TimeGridView*`), list (`ListView*`) and timeline (`TimelineView*`) layouts.
+day-grid (`DayGridView*`), time-grid (`TimeGridView*`), list (`ListView*`) and timeline (`TimelineView*`) layouts.
 
 ## Quick example
 
 ```tsx
 import {
-  MonthViewDay,
-  MonthView,
-  MonthViewWeek,
-  MonthViewWeekEvent,
+  DayGridViewDay,
+  DayGridView,
+  DayGridViewWeek,
+  DayGridViewWeekEvent,
   CalendarProvider,
   useCalendar,
   useCalendarSelector,
@@ -22,25 +22,25 @@ import {
 const Month = () => {
   const layout = useCalendarSelector(state => state.layout);
 
-  if (layout.kind !== 'month') return null;
+  if (layout.kind !== 'dayGrid') return null;
 
   return (
-    <MonthView model={layout}>
+    <DayGridView model={layout}>
       {layout.weeks.map(week => (
-        <MonthViewWeek key={week.key} week={week}>
+        <DayGridViewWeek key={week.key} week={week}>
           {week.days.map(day => (
-            <MonthViewDay key={day.key} day={day}>
+            <DayGridViewDay key={day.key} day={day}>
               {day.date.day}
-            </MonthViewDay>
+            </DayGridViewDay>
           ))}
           {week.segments.map(segment => (
-            <MonthViewWeekEvent key={segment.key} segment={segment}>
+            <DayGridViewWeekEvent key={segment.key} segment={segment}>
               {segment.event.id}
-            </MonthViewWeekEvent>
+            </DayGridViewWeekEvent>
           ))}
-        </MonthViewWeek>
+        </DayGridViewWeek>
       ))}
-    </MonthView>
+    </DayGridView>
   );
 };
 

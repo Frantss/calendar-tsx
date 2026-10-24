@@ -1,15 +1,15 @@
 import { Temporal } from 'temporal-polyfill';
 import { expect, it } from 'vitest';
 
-import { monthView } from '#calendar-views';
-import type { Calendar_MonthLayout } from '#calendar.types';
+import { dayGridView } from '#calendar-views';
+import type { Calendar_DayGridLayout } from '#calendar.types';
 import { fixtures_allDay, fixtures_background, fixtures_timed } from '#tests/calendar.fixtures';
 import type { CalendarSetup_Overrides } from '#tests/calendar.setup';
 import { calendarSetup_create, calendarSetup_defaults } from '#tests/calendar.setup';
 
 const setup = async (overrides: CalendarSetup_Overrides = {}) => {
   const utils = await calendarSetup_create({ view: 'month', ...overrides });
-  const layout = utils.state().layout as Calendar_MonthLayout<unknown>;
+  const layout = utils.state().layout as Calendar_DayGridLayout<unknown>;
   const days = layout.weeks.flatMap(week => week.days);
 
   return {
@@ -72,7 +72,7 @@ it('counts a hidden bar on every day it crosses', async () => {
 it('raises hasMore from the dayOverflow hint without changing the local count', async () => {
   const views = {
     ...calendarSetup_defaults.views,
-    month: monthView({ maxEventsPerDay: 4, dayOverflow: date => date.day === 25 }),
+    month: dayGridView({ period: 'month', maxEventsPerDay: 4, dayOverflow: date => date.day === 25 }),
   };
   const utils = await setup({ views, events: busyDay(2) });
 
@@ -95,7 +95,7 @@ it('marks padding days and today', async () => {
 });
 
 it('shows six weeks with fixedWeekCount and pads them as outside days', async () => {
-  const views = { ...calendarSetup_defaults.views, fixed: monthView({ maxEventsPerDay: 4, fixedWeekCount: true }) };
+  const views = { ...calendarSetup_defaults.views, fixed: dayGridView({ period: 'month', maxEventsPerDay: 4, fixedWeekCount: true }) };
   const february = Temporal.PlainDate.from('2026-02-11');
   const variable = await setup({ date: february });
   const fixed = await setup({ view: 'fixed', views, date: february });

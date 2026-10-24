@@ -4,7 +4,7 @@
 > **Experimental.** `@calendar-tsx/solid` is an experiment. Its API can change or be removed in any release, without notice.
 
 Solid bindings for [`@calendar-tsx/core`](../core): `useCalendar`, `CalendarProvider`, and unstyled parts for the
-month (`MonthView*`), time-grid (`TimeGridView*`), list (`ListView*`) and timeline (`TimelineView*`) layouts. Part names, props, data
+day-grid (`DayGridView*`), time-grid (`TimeGridView*`), list (`ListView*`) and timeline (`TimelineView*`) layouts. Part names, props, data
 attributes and `--cal-*` variables match [`@calendar-tsx/react`](../react).
 
 ## Quick example
@@ -12,10 +12,10 @@ attributes and `--cal-*` variables match [`@calendar-tsx/react`](../react).
 ```tsx
 import { For, Show } from 'solid-js';
 import {
-  MonthViewDay,
-  MonthView,
-  MonthViewWeek,
-  MonthViewWeekEvent,
+  DayGridViewDay,
+  DayGridView,
+  DayGridViewWeek,
+  DayGridViewWeekEvent,
   CalendarProvider,
   useCalendar,
   useCalendarSelector,
@@ -26,24 +26,24 @@ const Month = () => {
   const month = () => {
     const current = layout();
 
-    return current.kind === 'month' ? current : undefined;
+    return current.kind === 'dayGrid' ? current : undefined;
   };
 
   return (
     <Show when={month()}>
       {month => (
-        <MonthView model={month()}>
+        <DayGridView model={month()}>
           <For each={month().weeks}>
             {week => (
-              <MonthViewWeek week={week}>
-                <For each={week.days}>{day => <MonthViewDay day={day}>{day.date.day}</MonthViewDay>}</For>
+              <DayGridViewWeek week={week}>
+                <For each={week.days}>{day => <DayGridViewDay day={day}>{day.date.day}</DayGridViewDay>}</For>
                 <For each={week.segments}>
-                  {segment => <MonthViewWeekEvent segment={segment}>{segment.event.id}</MonthViewWeekEvent>}
+                  {segment => <DayGridViewWeekEvent segment={segment}>{segment.event.id}</DayGridViewWeekEvent>}
                 </For>
-              </MonthViewWeek>
+              </DayGridViewWeek>
             )}
           </For>
-        </MonthView>
+        </DayGridView>
       )}
     </Show>
   );

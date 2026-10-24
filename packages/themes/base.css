@@ -10,19 +10,19 @@
     box-sizing: border-box;
   }
 
-  /* Month: bars are absolutely positioned so a week with no bars needs no grid rows */
+  /* Day grid: bars are absolutely positioned so a week with no bars needs no grid rows */
 
-  :where([data-scope='calendar'][data-part='month-root']) {
+  :where([data-scope='calendar'][data-part='day-grid-root']) {
     display: grid;
   }
 
-  :where([data-scope='calendar'][data-part='month-header']),
-  :where([data-scope='calendar'][data-part='month-week']) {
+  :where([data-scope='calendar'][data-part='day-grid-header']),
+  :where([data-scope='calendar'][data-part='day-grid-week']) {
     display: grid;
     grid-template-columns: repeat(var(--cal-columns, 7), minmax(0, 1fr));
   }
 
-  :where([data-scope='calendar'][data-part='month-week']) {
+  :where([data-scope='calendar'][data-part='day-grid-week']) {
     position: relative;
     min-block-size: max(
       var(--calendar-week-min-height, 6rem),
@@ -35,7 +35,7 @@
   }
 
   /* Positioned and isolated so a day background fills the cell beneath its content */
-  :where([data-scope='calendar'][data-part='month-day']) {
+  :where([data-scope='calendar'][data-part='day-grid-day']) {
     position: relative;
     isolation: isolate;
     display: flex;
@@ -44,18 +44,18 @@
     min-inline-size: 0;
   }
 
-  :where([data-scope='calendar'][data-part='month-day-background']) {
+  :where([data-scope='calendar'][data-part='day-grid-day-background']) {
     position: absolute;
     inset: 0;
     z-index: -1;
     pointer-events: none;
   }
 
-  :where([data-scope='calendar'][data-part='month-overflow']) {
+  :where([data-scope='calendar'][data-part='day-grid-overflow']) {
     margin-block-start: auto;
   }
 
-  :where([data-scope='calendar'][data-part='month-week-event']) {
+  :where([data-scope='calendar'][data-part='day-grid-week-event']) {
     position: absolute;
     inset-block-start: calc(
       var(--calendar-day-header-height, 2rem) + var(--cal-row) *
@@ -67,7 +67,7 @@
   }
 
   /* Positioned above the in-flow day cells, so it must let clicks through to their triggers; later bars paint over it */
-  :where([data-scope='calendar'][data-part='month-week-background-event']) {
+  :where([data-scope='calendar'][data-part='day-grid-week-background-event']) {
     position: absolute;
     inset-block: 0;
     inset-inline-start: calc(var(--cal-col-start) / var(--cal-columns, 7) * 100%);

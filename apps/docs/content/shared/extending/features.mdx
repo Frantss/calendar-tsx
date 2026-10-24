@@ -2,7 +2,7 @@
 
 Everything beyond navigation, the event pipeline and the clock comes from features. A feature is a constant object:
 it takes no arguments, and its configuration lives in calendar options and view settings. Layouts are features too:
-`monthLayout`, `dayGridLayout`, `timeGridLayout`, `listLayout` and `timelineLayout` are added by the view factories.
+`dayGridLayout`, `timeGridLayout`, `listLayout` and `timelineLayout` are added by the view factories.
 
 </section>
 
@@ -82,7 +82,7 @@ view sees an entry only when it registers that key.
 | `Calendar_ViewSettings_FeatureMap`    | Settings on views that list the feature            |
 | `Calendar_State_FeatureMap`           | State slices, also accepted by `state` and `atoms` |
 | `Calendar_Api_FeatureMap`             | Actions on `api`                                   |
-| `Calendar_MonthDay_FeatureMap`        | Fields on month days                               |
+| `Calendar_DayGridDay_FeatureMap`      | Fields on day-grid days                            |
 | `Calendar_BarSegment_FeatureMap`      | Fields on bar segments                             |
 | `Calendar_TimeGridColumn_FeatureMap`  | Fields on time-grid columns                        |
 | `Calendar_TimeGridSegment_FeatureMap` | Fields on time-grid segments                       |

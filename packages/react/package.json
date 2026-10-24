@@ -20,7 +20,7 @@
   "imports": {
     "#calendar-factory": "./src/calendar-factory.tsx",
     "#list-view": "./src/list-view.tsx",
-    "#month-view": "./src/month-view.tsx",
+    "#day-grid-view": "./src/day-grid-view.tsx",
     "#time-grid-view": "./src/time-grid-view.tsx",
     "#timeline-view": "./src/timeline-view.tsx",
     "#use-calendar": "./src/use-calendar.tsx",

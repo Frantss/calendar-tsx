@@ -6,17 +6,17 @@ export type {
 } from '#calendar-factory';
 export { ListViewDay, ListViewDayHeader, ListViewEmpty, ListViewEvent, ListView } from '#list-view';
 export {
-  MonthViewDay,
-  MonthViewDayBackground,
-  MonthViewDayTrigger,
-  MonthViewHeader,
-  MonthViewHeaderCell,
-  MonthViewOverflow,
-  MonthView,
-  MonthViewWeek,
-  MonthViewWeekBackgroundEvent,
-  MonthViewWeekEvent,
-} from '#month-view';
+  DayGridViewDay,
+  DayGridViewDayBackground,
+  DayGridViewDayTrigger,
+  DayGridViewHeader,
+  DayGridViewHeaderCell,
+  DayGridViewOverflow,
+  DayGridView,
+  DayGridViewWeek,
+  DayGridViewWeekBackgroundEvent,
+  DayGridViewWeekEvent,
+} from '#day-grid-view';
 export {
   TimeGridViewAllDay,
   TimeGridViewAllDayBackgroundEvent,

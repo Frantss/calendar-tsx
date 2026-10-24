@@ -1,6 +1,11 @@
 ---
 title: Day grid view
-description: Any number of whole weeks, as a month model.
+description: Calendar months or whole weeks with spanning event bars.
 ---
 
 <include>../../../shared/views/day-grid.mdx#setup</include>
+
+<include>../../../shared/views/day-grid.mdx#model</include>
+
+Read the model from `calendar.store.state.layout` after checking `layout.kind`. The
+[quick start](/docs/core/getting-started/quick-start) renders a month from it.

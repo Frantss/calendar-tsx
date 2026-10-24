@@ -1,13 +1,13 @@
 // #region app
-import type { Calendar_MonthLayout } from '@calendar-tsx/core';
-import { createCalendar, createCalendarViews, monthView, timeGridView } from '@calendar-tsx/core';
+import type { Calendar_DayGridLayout } from '@calendar-tsx/core';
+import { createCalendar, createCalendarViews, dayGridView, timeGridView } from '@calendar-tsx/core';
 import '@calendar-tsx/themes/default.css';
 import { Temporal } from 'temporal-polyfill';
 
 type Booking = { title: string };
 
 const views = createCalendarViews({
-  month: monthView({ maxEventsPerDay: 3 }),
+  month: dayGridView({ period: 'month', maxEventsPerDay: 3 }),
   week: timeGridView({ days: 7 }),
 });
 
@@ -33,15 +33,15 @@ const part = (tag: string, name: string, attributes: Record<string, string> = {}
   return element;
 };
 
-const renderMonth = (layout: Calendar_MonthLayout<Booking>) => {
-  const root = part('div', 'month-root', { role: 'grid' });
+const renderDayGrid = (layout: Calendar_DayGridLayout<Booking>) => {
+  const root = part('div', 'day-grid-root', { role: 'grid' });
 
   for (const week of layout.weeks) {
-    const row = part('div', 'month-week', { role: 'row' });
+    const row = part('div', 'day-grid-week', { role: 'row' });
 
     row.style.setProperty('--cal-rows', String(week.rows));
     for (const day of week.days) {
-      const cell = part('div', 'month-day', { role: 'gridcell' });
+      const cell = part('div', 'day-grid-day', { role: 'gridcell' });
 
       if (day.isToday) cell.dataset['today'] = '';
       if (day.isOutside) cell.dataset['outside'] = '';
@@ -49,7 +49,7 @@ const renderMonth = (layout: Calendar_MonthLayout<Booking>) => {
       row.append(cell);
     }
     for (const segment of week.segments) {
-      const bar = part('button', 'month-week-event', { type: 'button' });
+      const bar = part('button', 'day-grid-week-event', { type: 'button' });
 
       bar.style.setProperty('--cal-col-start', String(segment.colStart));
       bar.style.setProperty('--cal-col-span', String(segment.colSpan));
@@ -68,7 +68,7 @@ const container = document.querySelector('#calendar')!;
 const render = () => {
   const { layout } = calendar.store.state;
 
-  if (layout.kind === 'month') container.replaceChildren(renderMonth(layout));
+  if (layout.kind === 'dayGrid') container.replaceChildren(renderDayGrid(layout));
 };
 
 calendar['~mount'](); // starts the clock

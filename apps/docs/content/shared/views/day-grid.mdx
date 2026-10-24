@@ -1,29 +1,88 @@
 <section id='setup'>
 
-A grid of whole weeks that doesn't follow the month: one week, two weeks, or any number of them.
+A grid of whole weeks, covering a calendar month or a configurable number of weeks. Multi-day events span the days they cover.
+
+<CalendarPreview view='month' />
 
 ```ts
 import { dayGridView } from '@calendar-tsx/core';
 
-dayGridView({ weeks: 1, maxEventsPerDay: Infinity }); // one tall week
-dayGridView({ weeks: 2, maxEventsPerDay: 3 });
+dayGridView({ period: 'month', maxEventsPerDay: 3 });
+dayGridView({ period: 'month', fixedWeekCount: true, maxEventsPerDay: 3 });
+dayGridView({ weeks: 1, maxEventsPerDay: Infinity });
+dayGridView({ weeks: 4, maxEventsPerDay: 3 });
 ```
 
 ## Settings
 
-| Setting           | Type                                    | Description                                                            |
-| ----------------- | --------------------------------------- | ---------------------------------------------------------------------- |
-| `weeks`           | `number`                                | Weeks shown, from the week containing `date`.                          |
-| `maxEventsPerDay` | `number`                                | Bar rows shown per week. `Infinity` removes the cap.                   |
-| `dayOverflow`     | `(date: Temporal.PlainDate) => boolean` | Marks a day as having more events, as in the [month view](month-view). |
-| `hiddenDays`      | `readonly Calendar_DayOfWeek[]`         | Hidden ISO weekdays; defaults to none.                                 |
+Pass either `period: 'month'` or `weeks`. `fixedWeekCount` is available only with `period: 'month'`. `hiddenDays` omits ISO weekdays without changing calendar week boundaries.
 
-The grid starts on `firstDayOfWeek`. `next()` and `prev()` move by `weeks` weeks. No day is outside the period, so no
-day has `isOutside`.
+| Setting           | Type                                    | Description                                                                               |
+| ----------------- | --------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `period`          | `'month'`                               | The calendar month containing `date`, padded to whole weeks.                              |
+| `weeks`           | `number`                                | Weeks shown, starting with the week containing `date`.                                    |
+| `fixedWeekCount`  | `boolean`                               | With `period: 'month'`, always show six weeks. Defaults to `false`.                       |
+| `maxEventsPerDay` | `number`                                | Bar rows shown per week. Further rows are hidden and counted. `Infinity` removes the cap. |
+| `dayOverflow`     | `(date: Temporal.PlainDate) => boolean` | Marks a day as having more events, such as events you have not loaded yet.                |
 
-A day grid builds the month model, `{ kind: 'month', coordinates, weekdays, weeks }`, so render it with the
-[month view](month-view)'s parts and styles. The view's own kind is `'dayGrid'`: check `context.kind` in
-[`eventOrder`](../features/events#order) to order it apart from the month.
+Both forms start weeks on `firstDayOfWeek` (Sunday by default):
+
+- **Month:** `period` covers the calendar month; `range` includes padding days. `next()` and `prev()` move one month and land on its first day. Padding days have `isOutside: true`.
+- **Weeks:** `period` and `range` cover the same whole weeks. `next()` and `prev()` move by `weeks` weeks, preserving the weekday. No day has `isOutside: true`.
+
+Both the view context and layout model have `kind: 'dayGrid'`. Use your registered view key when you need to distinguish month and week configurations. See [overflow](../features/overflow) for hidden rows.
+
+</section>
+
+<section id='reference'>
+
+<section id='model'>
+
+## Model
+
+`layout` is `{ kind: 'dayGrid', weekdays, weeks }`. `weekdays` holds the first week's seven dates, for column headers.
+
+Each week holds `days`, its bar `segments`, its `backgroundEvents` and `rows`, the number of bar rows shown (at most
+`maxEventsPerDay`). See [background events](../features/background-events).
+
+| Day field     | Description                                                       |
+| ------------- | ----------------------------------------------------------------- |
+| `date`        | The day.                                                          |
+| `isOutside`   | The day pads the grid and lies outside the calendar month.        |
+| `isToday`     | The day is today in `timeZone`.                                   |
+| `hiddenCount` | Hidden bar segments crossing this day.                            |
+| `hasMore`     | `hiddenCount > 0`, or `dayOverflow` returned `true` for this day. |
+| `events`      | Every event on this day, including hidden ones, in order.         |
+
+| Bar segment field                   | Description                                                     |
+| ----------------------------------- | --------------------------------------------------------------- |
+| `event`                             | The event, in the calendar's time zone.                         |
+| `colStart`, `colSpan`               | First column (zero-based) and the number of columns it covers.  |
+| `row`                               | Zero-based row; each bar takes the lowest row free on its days. |
+| `continuesBefore`, `continuesAfter` | The event extends past the week's first or last day.            |
+
+</section>
+
+## Parts
+
+<section id='parts-table'>
+
+| Part                             | Model prop                      | Element  | Notes                                                                                          |
+| -------------------------------- | ------------------------------- | -------- | ---------------------------------------------------------------------------------------------- |
+| `DayGridView`                    | `model`: day-grid layout        | `div`    | `role='grid'`.                                                                                 |
+| `DayGridViewHeader`              | none                            | `div`    | `role='row'`.                                                                                  |
+| `DayGridViewHeaderCell`          | `weekday`: `Temporal.PlainDate` | `div`    | `role='columnheader'`, `data-weekday`.                                                         |
+| `DayGridViewWeek`                | `week`                          | `div`    | `role='row'`. Holds the days and the week's bars.                                              |
+| `DayGridViewDay`                 | `day`                           | `div`    | `role='gridcell'`, `data-today`, `data-outside`.                                               |
+| `DayGridViewDayTrigger`          | `day`, `view`                   | `button` | Navigates to `view` on the day. See [day triggers](../features/day-triggers).                  |
+| `DayGridViewWeekEvent`           | `segment`                       | `button` | Positioned across the week's columns.                                                          |
+| `DayGridViewWeekBackgroundEvent` | `segment`                       | `div`    | `aria-hidden`. A [background event](../features/background-events); render it before the bars. |
+| `DayGridViewDayBackground`       | `background`                    | `div`    | `aria-hidden`. A [background layer](../features/background-layers)'s shading.                  |
+| `DayGridViewOverflow`            | `day`                           | `button` | Renders only when `day.hasMore`.                                                               |
+
+Bars are children of the week, not of a day, because one bar can span several days.
+
+</section>
 
 `hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`).
 Calendar week rows keep their boundaries and keys. Hidden dates take no cells, bar rows or overflow counts.

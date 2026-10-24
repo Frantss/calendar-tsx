@@ -1,13 +1,13 @@
 import { expect, it } from 'vitest';
 
-import type { Calendar_MonthLayout, Calendar_TimeGridLayout, Calendar_TimelineLayout, Calendar_Views } from '@calendar-tsx/core';
+import type { Calendar_DayGridLayout, Calendar_TimeGridLayout, Calendar_TimelineLayout, Calendar_Views } from '@calendar-tsx/core';
 import { timelineView } from '@calendar-tsx/core';
 import {
-  MonthView,
-  MonthViewDay,
-  MonthViewDayTrigger,
-  MonthViewWeek,
-  MonthViewWeekEvent,
+  DayGridView,
+  DayGridViewDay,
+  DayGridViewDayTrigger,
+  DayGridViewWeek,
+  DayGridViewWeekEvent,
   TimeGridView,
   TimeGridViewBody,
   TimeGridViewColumn,
@@ -45,27 +45,27 @@ const TimeGrid = () => {
 };
 
 const Month = () => {
-  const month = useCalendarSelector(state => state.layout) as Calendar_MonthLayout<ThemesSetup_EventData>;
+  const month = useCalendarSelector(state => state.layout) as Calendar_DayGridLayout<ThemesSetup_EventData>;
 
   return (
-    <MonthView model={month}>
+    <DayGridView model={month}>
       {month.weeks.map(week => (
-        <MonthViewWeek key={week.key} week={week}>
+        <DayGridViewWeek key={week.key} week={week}>
           {week.days.map(day => (
-            <MonthViewDay key={day.key} day={day}>
-              <MonthViewDayTrigger day={day} view='month'>
+            <DayGridViewDay key={day.key} day={day}>
+              <DayGridViewDayTrigger day={day} view='month'>
                 {day.date.day}
-              </MonthViewDayTrigger>
-            </MonthViewDay>
+              </DayGridViewDayTrigger>
+            </DayGridViewDay>
           ))}
           {week.segments.map(segment => (
-            <MonthViewWeekEvent key={segment.key} segment={segment}>
+            <DayGridViewWeekEvent key={segment.key} segment={segment}>
               {segment.event.data.title}
-            </MonthViewWeekEvent>
+            </DayGridViewWeekEvent>
           ))}
-        </MonthViewWeek>
+        </DayGridViewWeek>
       ))}
-    </MonthView>
+    </DayGridView>
   );
 };
 
@@ -103,14 +103,14 @@ it.each([
   expect([yoga.backgroundColor, yoga.borderTopColor, yoga.borderTopWidth, yoga.color]).toEqual([surface, text, '2px', text]);
 
   await themesSetup_render(<Month />, { view: 'month', colorScheme });
-  const today = themesSetup_part('month-day', '[data-today]').at(-1)?.querySelector('[data-part="month-day-trigger"]');
+  const today = themesSetup_part('day-grid-day', '[data-today]').at(-1)?.querySelector('[data-part="day-grid-day-trigger"]');
 
   expect(today && getComputedStyle(today).backgroundColor).toBe(accent);
 });
 
 it('dashes the edge where a bar continues into the next week', async () => {
   await themesSetup_render(<Month />, { view: 'month', events: [themesSetup_allDay('Fair', { start: '2026-03-14', end: '2026-03-16' })] });
-  const [before, after] = themesSetup_part('month-week-event').map(bar => getComputedStyle(bar));
+  const [before, after] = themesSetup_part('day-grid-week-event').map(bar => getComputedStyle(bar));
 
   expect([before?.borderRightStyle, before?.borderLeftStyle]).toEqual(['dashed', 'solid']);
   expect([after?.borderLeftStyle, after?.borderRightStyle]).toEqual(['dashed', 'solid']);

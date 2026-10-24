@@ -1,18 +1,18 @@
-import type { Calendar_MonthDay } from '@calendar-tsx/core';
-import { MonthViewOverflow } from '@calendar-tsx/react';
+import type { Calendar_DayGridDay } from '@calendar-tsx/core';
+import { DayGridViewOverflow } from '@calendar-tsx/react';
 import { useState } from 'react';
 
 import type { Booking } from '../core/setup';
 
 // #region overflow
-export const DayOverflow = ({ day }: { day: Calendar_MonthDay<Booking> }) => {
+export const DayOverflow = ({ day }: { day: Calendar_DayGridDay<Booking> }) => {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <MonthViewOverflow day={day} onClick={() => setOpen(true)}>
+      <DayGridViewOverflow day={day} onClick={() => setOpen(true)}>
         {day.hiddenCount > 0 ? `${day.hiddenCount} more` : 'More'}
-      </MonthViewOverflow>
+      </DayGridViewOverflow>
       {open && (
         <dialog open onClose={() => setOpen(false)}>
           <h3>{day.date.toLocaleString('en-US', { dateStyle: 'full' })}</h3>

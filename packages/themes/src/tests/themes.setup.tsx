@@ -11,7 +11,7 @@ import type {
   Calendar_TimedEventInput,
   Calendar_Views,
 } from '@calendar-tsx/core';
-import { fixedClock, monthView, timeGridView, createCalendarViews } from '@calendar-tsx/core';
+import { fixedClock, dayGridView, timeGridView, createCalendarViews } from '@calendar-tsx/core';
 import { CalendarProvider, useCalendar } from '@calendar-tsx/react';
 
 export type ThemesSetup_EventData = { title: string };
@@ -24,7 +24,7 @@ const themesSetup_timeZone = 'America/New_York';
 
 const themesSetup_defaults = iife(() => ({
   views: {
-    month: monthView({ maxEventsPerDay: 3 }),
+    month: dayGridView({ period: 'month', maxEventsPerDay: 3 }),
     week: timeGridView({ days: 7 }),
     day: timeGridView({ days: 1 }),
   } as Calendar_Views,

@@ -14,14 +14,14 @@ import type {
   Calendar_Resource,
   Calendar_Views,
 } from '@calendar-tsx/core';
-import { fixedClock, listView, monthView, timeGridView, createCalendarViews } from '@calendar-tsx/core';
+import { fixedClock, listView, dayGridView, timeGridView, createCalendarViews } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_timeZone } from '#tests/calendar.fixtures';
 import { CalendarProvider, useCalendar } from '#use-calendar';
 
 const calendarReactSetup_defaults = iife(() => ({
   views: {
-    month: monthView({ maxEventsPerDay: 2 }),
+    month: dayGridView({ period: 'month', maxEventsPerDay: 2 }),
     week: timeGridView({ days: 7 }),
     day: timeGridView({ days: 1 }),
     resources: timeGridView({ days: 1, groupBy: 'resource', allDay: false }),

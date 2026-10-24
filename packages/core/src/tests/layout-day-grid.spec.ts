@@ -2,7 +2,7 @@ import { Temporal } from 'temporal-polyfill';
 import { expect, it } from 'vitest';
 
 import { dayGridView } from '#calendar-views';
-import type { Calendar_MonthLayout } from '#calendar.types';
+import type { Calendar_DayGridLayout } from '#calendar.types';
 import { fixtures_allDay, fixtures_timed } from '#tests/calendar.fixtures';
 import type { CalendarSetup_Overrides } from '#tests/calendar.setup';
 import { calendarSetup_create, calendarSetup_defaults } from '#tests/calendar.setup';
@@ -15,7 +15,7 @@ const views = {
 
 const setup = async (overrides: CalendarSetup_Overrides = {}) => {
   const utils = await calendarSetup_create({ view: 'day_grid_week', views, ...overrides });
-  const layout = utils.state().layout as Calendar_MonthLayout<unknown>;
+  const layout = utils.state().layout as Calendar_DayGridLayout<unknown>;
 
   return { ...utils, layout, days: layout.weeks.flatMap(week => week.days) };
 };
@@ -51,7 +51,7 @@ it('shows four weeks from the week of the date', async () => {
   expect(utils.days.some(day => day.isOutside)).toBe(false);
 });
 
-it('lays events out as month bars and applies the row cap', async () => {
+it('lays events out as day-grid bars and applies the row cap', async () => {
   const events = [
     fixtures_allDay('fair', { start: '2026-03-10', end: '2026-03-12' }),
     ...['a', 'b', 'c'].map(id => fixtures_timed(id, { date: '2026-03-11', start: '09:00', end: '10:00' })),
@@ -64,9 +64,23 @@ it('lays events out as month bars and applies the row cap', async () => {
   expect(capped.days.find(day => day.key === '2026-03-11')).toMatchObject({ hiddenCount: 2, hasMore: true });
 });
 
-it("reports the view's own kind while building the month model", async () => {
-  const utils = await setup();
+it.each(['month', 'day_grid_week', 'day_grid_four_weeks'])('reports dayGrid for the view and layout kinds in %s', async view => {
+  const utils = await setup({ view });
 
   expect(utils.state().context.kind).toBe('dayGrid');
-  expect(utils.layout.kind).toBe('month');
+  expect(utils.layout.kind).toBe('dayGrid');
+});
+
+it('takes either a month period or weeks, with fixedWeekCount only for months', () => {
+  // @ts-expect-error -- a day grid needs a period or a week count (D40)
+  dayGridView({ maxEventsPerDay: 4 });
+
+  // @ts-expect-error -- period and weeks are exclusive (D40)
+  dayGridView({ period: 'month', weeks: 4, maxEventsPerDay: 4 });
+
+  // @ts-expect-error -- fixedWeekCount applies only to calendar months (D40)
+  dayGridView({ weeks: 4, fixedWeekCount: true, maxEventsPerDay: 4 });
+
+  // @ts-expect-error -- even false is not a setting on the weeks form (D40)
+  dayGridView({ weeks: 4, fixedWeekCount: false, maxEventsPerDay: 4 });
 });

@@ -1,5 +1,5 @@
-import type { Calendar_Event, Calendar_MonthDay, Calendar_TimeGridSegment } from '@calendar-tsx/core';
-import { ListViewEvent, MonthViewDay, TimeGridViewEvent } from '@calendar-tsx/react';
+import type { Calendar_Event, Calendar_DayGridDay, Calendar_TimeGridSegment } from '@calendar-tsx/core';
+import { ListViewEvent, DayGridViewDay, TimeGridViewEvent } from '@calendar-tsx/react';
 
 import type { Booking } from '../core/setup';
 
@@ -20,7 +20,7 @@ export const LinkedEvent = ({ event }: { event: Calendar_Event<Booking> }) => (
 // #endregion element
 
 // #region function
-export const TitledDay = ({ day }: { day: Calendar_MonthDay<Booking> }) => (
-  <MonthViewDay day={day} render={(props, state) => <div {...props} title={state.isToday ? 'Today' : undefined} />} />
+export const TitledDay = ({ day }: { day: Calendar_DayGridDay<Booking> }) => (
+  <DayGridViewDay day={day} render={(props, state) => <div {...props} title={state.isToday ? 'Today' : undefined} />} />
 );
 // #endregion function

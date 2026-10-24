@@ -1,59 +1,62 @@
-import { For } from 'solid-js';
 import { expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 
-import type { Calendar_MonthLayout, Calendar_Views } from '@calendar-tsx/core';
-import { dayGridView, monthView, timeGridView } from '@calendar-tsx/core';
+import type { Calendar_DayGridLayout, Calendar_Views } from '@calendar-tsx/core';
+import { dayGridView, timeGridView } from '@calendar-tsx/core';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { fixtures_allDay, fixtures_background, fixtures_timed } from '#tests/calendar.fixtures';
 import {
-  MonthViewDay,
-  MonthViewDayTrigger,
-  MonthViewHeader,
-  MonthViewHeaderCell,
-  MonthViewOverflow,
-  MonthView,
-  MonthViewWeek,
-  MonthViewWeekBackgroundEvent,
-  MonthViewWeekEvent,
-} from '#month-view';
+  DayGridViewDay,
+  DayGridViewDayTrigger,
+  DayGridViewHeader,
+  DayGridViewHeaderCell,
+  DayGridViewOverflow,
+  DayGridView,
+  DayGridViewWeek,
+  DayGridViewWeekBackgroundEvent,
+  DayGridViewWeekEvent,
+} from '#day-grid-view';
 import { useCalendarSelector } from '#use-calendar';
-import type { CalendarSolidSetup_Overrides } from '#tests/calendar-solid.setup';
-import { calendarSolidSetup_render } from '#tests/calendar-solid.setup';
+import type { CalendarReactSetup_Overrides } from '#tests/calendar-react.setup';
+import { calendarReactSetup_render } from '#tests/calendar-react.setup';
 
-const MonthBody = (props: { onTriggerClick?: (event: MouseEvent) => void }) => {
-  const month = useCalendarSelector(state => state.layout as Calendar_MonthLayout<Fixtures_EventData>);
+const MonthBody = ({ onTriggerClick }: { onTriggerClick?: (event: React.MouseEvent) => void }) => {
+  const month = useCalendarSelector(state => state.layout) as Calendar_DayGridLayout<Fixtures_EventData>;
 
   return (
-    <MonthView model={month()}>
-      <MonthViewHeader>
-        <For each={month().weekdays}>{weekday => <MonthViewHeaderCell weekday={weekday} />}</For>
-      </MonthViewHeader>
-      <For each={month().weeks}>
-        {week => (
-          <MonthViewWeek week={week}>
-            <For each={week.days}>
-              {day => (
-                <MonthViewDay day={day}>
-                  <MonthViewDayTrigger day={day} view='day' onClick={event => props.onTriggerClick?.(event)}>
-                    {day.date.day}
-                  </MonthViewDayTrigger>
-                  <MonthViewOverflow day={day}>see all</MonthViewOverflow>
-                </MonthViewDay>
-              )}
-            </For>
-            <For each={week.backgroundEvents}>{segment => <MonthViewWeekBackgroundEvent segment={segment} />}</For>
-            <For each={week.segments}>{segment => <MonthViewWeekEvent segment={segment}>{segment.event.data.title}</MonthViewWeekEvent>}</For>
-          </MonthViewWeek>
-        )}
-      </For>
-    </MonthView>
+    <DayGridView model={month}>
+      <DayGridViewHeader>
+        {month.weekdays.map(weekday => (
+          <DayGridViewHeaderCell key={weekday.dayOfWeek} weekday={weekday} />
+        ))}
+      </DayGridViewHeader>
+      {month.weeks.map(week => (
+        <DayGridViewWeek key={week.key} week={week}>
+          {week.days.map(day => (
+            <DayGridViewDay key={day.key} day={day}>
+              <DayGridViewDayTrigger day={day} view='day' onClick={onTriggerClick}>
+                {day.date.day}
+              </DayGridViewDayTrigger>
+              <DayGridViewOverflow day={day}>see all</DayGridViewOverflow>
+            </DayGridViewDay>
+          ))}
+          {week.backgroundEvents.map(segment => (
+            <DayGridViewWeekBackgroundEvent key={segment.key} segment={segment} />
+          ))}
+          {week.segments.map(segment => (
+            <DayGridViewWeekEvent key={segment.key} segment={segment}>
+              {segment.event.data.title}
+            </DayGridViewWeekEvent>
+          ))}
+        </DayGridViewWeek>
+      ))}
+    </DayGridView>
   );
 };
 
-const setup = (overrides: CalendarSolidSetup_Overrides & { onTriggerClick?: (event: MouseEvent) => void } = {}) => {
+const setup = async (overrides: CalendarReactSetup_Overrides & { onTriggerClick?: (event: React.MouseEvent) => void } = {}) => {
   const { onTriggerClick, ...calendarOverrides } = overrides;
-  const utils = calendarSolidSetup_render(() => <MonthBody onTriggerClick={onTriggerClick} />, {
+  const utils = await calendarReactSetup_render(<MonthBody onTriggerClick={onTriggerClick} />, {
     view: 'month',
     ...calendarOverrides,
   });
@@ -71,17 +74,17 @@ const setup = (overrides: CalendarSolidSetup_Overrides & { onTriggerClick?: (eve
 };
 
 it('exposes grid semantics and part attributes', async () => {
-  const { ui } = setup();
+  const { ui } = await setup();
 
   await expect.element(ui.grid).toHaveAttribute('data-scope', 'calendar');
-  await expect.element(ui.grid).toHaveAttribute('data-part', 'month-root');
+  await expect.element(ui.grid).toHaveAttribute('data-part', 'day-grid-root');
   // header row + 5 weeks for March 2026
   expect(ui.rows.elements()).toHaveLength(6);
   expect(ui.cells.elements()).toHaveLength(35);
 });
 
 it('flags today and padding days', async () => {
-  const { ui } = setup();
+  const { ui } = await setup();
   const cells = ui.cells.elements();
   const cell = (date: string) => cells.find(element => element.getAttribute('data-date') === date);
 
@@ -91,7 +94,7 @@ it('flags today and padding days', async () => {
 });
 
 it('positions bars with custom properties and marks continuations', async () => {
-  const { ui } = setup({ events: [fixtures_allDay('Book Fair', { start: '2026-03-06', end: '2026-03-09' })] });
+  const { ui } = await setup({ events: [fixtures_allDay('Book Fair', { start: '2026-03-06', end: '2026-03-09' })] });
   const [first, second] = ui.event('Book Fair').elements();
 
   expect(first?.getAttribute('style')).toBe('--cal-col-start: 5; --cal-col-span: 2; --cal-row: 0;');
@@ -103,14 +106,14 @@ it('renders the overflow trigger only for days with more, with the hidden count'
   const events = ['09:00', '10:00', '11:00'].map((start, index) =>
     fixtures_timed(`Session ${index}`, { date: '2026-03-25', start, end: start.replace(':00', ':30') }),
   );
-  const { ui } = setup({ events });
+  const { ui } = await setup({ events });
 
   expect(ui.overflow.elements()).toHaveLength(1);
   await expect.element(ui.overflow).toHaveAttribute('data-hidden-count', '1');
 });
 
 it('navigates to the day view from a day trigger with a default accessible label', async () => {
-  const { ui, mocks } = setup();
+  const { ui, mocks } = await setup();
 
   await ui.dayTrigger('Go to Saturday, March 14, 2026').click();
 
@@ -120,8 +123,8 @@ it('navigates to the day view from a day trigger with a default accessible label
 });
 
 it('skips the built-in navigation when the consumer prevents default', async () => {
-  const onTriggerClick = vi.fn((event: MouseEvent) => event.preventDefault());
-  const { ui, mocks } = setup({ onTriggerClick });
+  const onTriggerClick = vi.fn((event: React.MouseEvent) => event.preventDefault());
+  const { ui, mocks } = await setup({ onTriggerClick });
 
   await ui.dayTrigger('Go to Saturday, March 14, 2026').click();
 
@@ -131,7 +134,7 @@ it('skips the built-in navigation when the consumer prevents default', async () 
 
 // cspell:ignore sábado marzo
 it('labels triggers in the configured locale', async () => {
-  const { ui } = setup({ locale: 'es-ES' });
+  const { ui } = await setup({ locale: 'es-ES' });
 
   await expect.element(ui.dayTrigger('Go to sábado, 14 de marzo de 2026')).toBeInTheDocument();
 });
@@ -140,17 +143,17 @@ const dayGridViews: Calendar_Views = {
   day: timeGridView({ days: 1 }),
   day_grid_week: dayGridView({ weeks: 1, maxEventsPerDay: 2 }),
   day_grid_four_weeks: dayGridView({ weeks: 4, maxEventsPerDay: 2 }),
-  fixed_month: monthView({ maxEventsPerDay: 2, fixedWeekCount: true }),
+  fixed_month: dayGridView({ period: 'month', maxEventsPerDay: 2, fixedWeekCount: true }),
 };
 
-it('renders a one-week day grid with the month parts', async () => {
-  const { ui } = setup({
+it('renders a one-week day grid with the day-grid parts', async () => {
+  const { ui } = await setup({
     views: dayGridViews,
     view: 'day_grid_week',
     events: [fixtures_allDay('Fair', { start: '2026-03-10', end: '2026-03-12' })],
   });
 
-  await expect.element(ui.grid).toHaveAttribute('data-part', 'month-root');
+  await expect.element(ui.grid).toHaveAttribute('data-part', 'day-grid-root');
   // header row + 1 week
   expect(ui.rows.elements()).toHaveLength(2);
   expect(ui.cells.elements()).toHaveLength(7);
@@ -159,13 +162,13 @@ it('renders a one-week day grid with the month parts', async () => {
 });
 
 it('renders a rolling four-week day grid and a fixed six-week month', async () => {
-  const fourWeeks = setup({ views: dayGridViews, view: 'day_grid_four_weeks' });
+  const fourWeeks = await setup({ views: dayGridViews, view: 'day_grid_four_weeks' });
 
   await expect.element(fourWeeks.ui.grid).toBeInTheDocument();
   expect(fourWeeks.ui.rows.elements()).toHaveLength(5);
-  fourWeeks.screen.unmount();
+  await fourWeeks.screen.unmount();
 
-  const fixed = setup({ views: dayGridViews, view: 'fixed_month' });
+  const fixed = await setup({ views: dayGridViews, view: 'fixed_month' });
 
   await expect.element(fixed.ui.grid).toBeInTheDocument();
   expect(fixed.ui.rows.elements()).toHaveLength(7);
@@ -174,7 +177,7 @@ it('renders a rolling four-week day grid and a fixed six-week month', async () =
 
 it('positions all-day background events across the week row', async () => {
   await setup({ events: [fixtures_background(fixtures_allDay('Break', { start: '2026-03-06', end: '2026-03-09' }))] });
-  const [first, second] = document.querySelectorAll('[data-part="month-week-background-event"]');
+  const [first, second] = document.querySelectorAll('[data-part="day-grid-week-background-event"]');
 
   expect(first?.getAttribute('style')).toBe('--cal-col-start: 5; --cal-col-span: 2;');
   expect(first?.getAttribute('aria-hidden')).toBe('true');

@@ -2,7 +2,7 @@
 
 <section id='model'>
 
-A month day fits `maxEventsPerDay` rows of bars. Bars in further rows are hidden, and each day they cross counts them:
+A day-grid cell fits `maxEventsPerDay` rows of bars. Bars in further rows are hidden, and each day they cross counts them:
 
 | Day field     | Description                                                     |
 | ------------- | --------------------------------------------------------------- |
@@ -12,7 +12,7 @@ A month day fits `maxEventsPerDay` rows of bars. Bars in further rows are hidden
 
 </section>
 
-`MonthViewOverflow` renders a button only when `hasMore` is true. It does nothing by itself: open a popover, a drawer
+`DayGridViewOverflow` renders a button only when `hasMore` is true. It does nothing by itself: open a popover, a drawer
 or the day view from its click. The calendar has no built-in popover.
 
 </section>

@@ -138,12 +138,12 @@ it('keeps background events out of eventOrder, the list and day event lists', as
 
   const list = (await calendarSetup_create({ view: 'list_week', events, eventOrder })).state().layout;
   const month = (await calendarSetup_create({ view: 'month', events })).state().layout;
-  const days = month.kind === 'month' ? month.weeks.flatMap(week => week.days) : [];
+  const days = month.kind === 'dayGrid' ? month.weeks.flatMap(week => week.days) : [];
 
   expect(eventOrder.mock.calls.flatMap(([a, b]) => ids([a, b] as { id: string }[]))).not.toContain('closed');
   expect(list.kind === 'list' ? list.days.map(day => ids(day.events)) : []).toEqual([['a', 'b']]);
   expect(ids(days.find(day => day.key === '2026-03-12')?.events)).toEqual([]);
-  expect(month.kind === 'month' ? month.weeks.flatMap(week => ids(week.backgroundEvents.map(span => span.event))) : []).toEqual(['holiday']);
+  expect(month.kind === 'dayGrid' ? month.weeks.flatMap(week => ids(week.backgroundEvents.map(span => span.event))) : []).toEqual(['holiday']);
 });
 
 it('lays timed events out in the calendar time zone, whatever their input zone', async () => {

@@ -15,7 +15,7 @@ import '@calendar-tsx/themes/default.css';
 
 | File                | Contents                                                                                                        |
 | ------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `base.css`          | Positioning only: month bars, time-grid columns and lanes, timeline rows, the now line. Every theme uses it.    |
+| `base.css`          | Positioning only: day-grid bars, time-grid columns and lanes, timeline rows, the now line. Every theme uses it. |
 | `default.css`       | `base.css` plus the default look.                                                                               |
 | `high-contrast.css` | Black on white and white on black at WCAG AAA, with outlined events. See [High contrast](#high-contrast-theme). |
 | `shadcn.css`        | The default look with its tokens read from shadcn/ui's variables. See [shadcn/ui](#shadcnui).                   |
@@ -169,7 +169,7 @@ utilities:
 
 - It beats preflight, whose button reset (`background-color: transparent`, `border-radius: 0`) would otherwise strip
   every event, trigger and overflow, since parts render native buttons.
-- Utilities beat it: `<MonthViewWeekEvent className='bg-sky-600 text-white'>` overrides the theme.
+- Utilities beat it: `<DayGridViewWeekEvent className='bg-sky-600 text-white'>` overrides the theme.
 
 Imported without `layer(components)`, the theme's layers come after `utilities` and override every utility class on
 a part.
@@ -197,26 +197,26 @@ attributes as variants. Boolean attributes (`data-today`, `data-outside`, `data-
 ```
 
 ```tsx
-<MonthViewDay day={day} className='p-1 data-outside:bg-zinc-50 data-outside:text-zinc-500'>
-  <MonthViewDayTrigger
+<DayGridViewDay day={day} className='p-1 data-outside:bg-zinc-50 data-outside:text-zinc-500'>
+  <DayGridViewDayTrigger
     day={day}
     view='day'
     className='size-7 rounded-full in-data-today:bg-indigo-600 in-data-today:text-white'
   >
     {day.date.day}
-  </MonthViewDayTrigger>
-</MonthViewDay>
+  </DayGridViewDayTrigger>
+</DayGridViewDay>
 ```
 
 ## Expected composition
 
-The layout assumes the part nesting shown in the [React readme](../react/readme.md): `MonthViewWeek` holds its
-`MonthViewDay` cells and `MonthViewWeekEvent` bars; `TimeGridView` holds `TimeGridViewHeader`, an optional
+The layout assumes the part nesting shown in the [React readme](../react/readme.md): `DayGridViewWeek` holds its
+`DayGridViewDay` cells and `DayGridViewWeekEvent` bars; `TimeGridView` holds `TimeGridViewHeader`, an optional
 `TimeGridViewAllDay` and `TimeGridViewBody`, and the body holds an optional `TimeGridViewAxis` and the
 `TimeGridViewColumn`s.
 
 ## Known limits
 
-- Month and all-day bars default to 22px tall, below a 44px touch target; raise `--calendar-bar-height` for touch
+- Day-grid and all-day bars default to 22px tall, below a 44px touch target; raise `--calendar-bar-height` for touch
   interfaces.
 - The all-day row scrolls with the time grid instead of staying under the sticky header.

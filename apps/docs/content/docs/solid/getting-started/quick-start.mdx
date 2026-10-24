@@ -14,7 +14,7 @@ description: A month calendar with navigation, in one component.
    it changes. The buttons call `calendar.api`, which reports the next view and date to `onNavigate`; setting the
    signals moves the calendar.
 3. `CalendarProvider` makes the calendar available to the parts.
-4. `Month` selects the layout, an accessor, narrows it to the month kind and renders the parts inside `<Show>` and
+4. `Month` selects the layout, an accessor, narrows it to the day-grid kind and renders the parts inside `<Show>` and
    `<For>`. The selector's state type is annotated, because the context does not carry the calendar's types.
 
 <Callout type='warn' title='Let the types infer'>

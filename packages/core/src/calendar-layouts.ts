@@ -5,14 +5,13 @@ import type {
   Calendar_DayGridViewSettings,
   Calendar_LayoutFeature,
   Calendar_ListViewSettings,
-  Calendar_MonthViewSettings,
   Calendar_Range,
   Calendar_TimeViewSettings,
   Calendar_TimeGridViewSettings,
   Calendar_TimelineViewSettings,
 } from '#calendar.types';
 import { layoutList_build } from '#layout/layout-list';
-import { layoutMonth_build } from '#layout/layout-month';
+import { layoutDayGrid_build } from '#layout/layout-day-grid';
 import { layoutTimeGrid_build } from '#layout/layout-time-grid';
 import { layoutTimeline_build } from '#layout/layout-timeline';
 import { layoutCoordinates_dates } from '#layout/layout-coordinates';
@@ -27,11 +26,19 @@ const days_period = (date: Temporal.PlainDate, days: number, firstDayOfWeek: num
   return { start, end: start.add({ days: days - 1 }) };
 };
 
-export const monthLayout: Calendar_LayoutFeature<'month', Calendar_MonthViewSettings> = {
-  kind: 'month',
+export const dayGridLayout: Calendar_LayoutFeature<'dayGrid', Calendar_DayGridViewSettings> = {
+  kind: 'dayGrid',
   inputRange,
-  period: date => ({ start: date.with({ day: 1 }), end: date.with({ day: date.daysInMonth }) }),
+  period: (date, settings, { firstDayOfWeek }) => {
+    if (settings.period === 'month') return { start: date.with({ day: 1 }), end: date.with({ day: date.daysInMonth }) };
+
+    const start = calendarNavigation_startOfWeek(date, firstDayOfWeek);
+
+    return { start, end: start.add({ days: settings.weeks * 7 - 1 }) };
+  },
   range: (period, settings, { firstDayOfWeek }) => {
+    if (settings.period !== 'month') return period;
+
     const start = calendarNavigation_startOfWeek(period.start, firstDayOfWeek);
 
     return {
@@ -41,32 +48,12 @@ export const monthLayout: Calendar_LayoutFeature<'month', Calendar_MonthViewSett
         : calendarNavigation_startOfWeek(period.end, firstDayOfWeek).add({ days: 6 }),
     };
   },
-  step: (date, _settings, direction) => date.with({ day: 1 }).add({ months: direction }),
+  step: (date, settings, direction) =>
+    settings.period === 'month'
+      ? date.with({ day: 1 }).add({ months: direction })
+      : date.add({ weeks: settings.weeks * direction }),
   build: (input, settings) =>
-    layoutMonth_build({
-      definition: settings,
-      range: input.range,
-      period: input.period,
-      events: input.events,
-      backgroundEvents: input.backgroundEvents,
-      today: input.now.toPlainDate(),
-      firstDayOfWeek: input.firstDayOfWeek,
-    }),
-};
-
-/** Whole weeks from the week containing the date, built as a month model (D35). */
-export const dayGridLayout: Calendar_LayoutFeature<'dayGrid', Calendar_DayGridViewSettings> = {
-  kind: 'dayGrid',
-  inputRange,
-  period: (date, settings, { firstDayOfWeek }) => {
-    const start = calendarNavigation_startOfWeek(date, firstDayOfWeek);
-
-    return { start, end: start.add({ days: settings.weeks * 7 - 1 }) };
-  },
-  range: period => period,
-  step: (date, settings, direction) => date.add({ weeks: settings.weeks * direction }),
-  build: (input, settings) =>
-    layoutMonth_build({
+    layoutDayGrid_build({
       definition: settings,
       range: input.range,
       period: input.period,

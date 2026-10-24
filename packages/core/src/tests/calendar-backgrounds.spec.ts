@@ -4,12 +4,12 @@ import { expect, it, vi } from 'vitest';
 import { createCalendar } from '#calendar';
 import { backgroundFeature, createBackgroundLayer, createWeeklyRanges } from '#calendar-backgrounds';
 import { fixedClock } from '#calendar-clock';
-import { monthView, timeGridView, createCalendarViews } from '#calendar-views';
+import { dayGridView, timeGridView, createCalendarViews } from '#calendar-views';
 import type {
   Calendar_BackgroundLayer,
   Calendar_BackgroundSegment,
   Calendar_DayBackground,
-  Calendar_MonthLayout,
+  Calendar_DayGridLayout,
   Calendar_TimeGridLayout,
 } from '#calendar.types';
 import { fixtures_at, fixtures_resource, fixtures_timeZone } from '#tests/calendar.fixtures';
@@ -17,7 +17,7 @@ import { fixtures_at, fixtures_resource, fixtures_timeZone } from '#tests/calend
 const views = createCalendarViews({
   week: timeGridView({ days: 7, features: { backgroundFeature } }),
   resources: timeGridView({ days: 1, groupBy: 'resource', features: { backgroundFeature } }),
-  month: monthView({ maxEventsPerDay: 3, features: { backgroundFeature } }),
+  month: dayGridView({ period: 'month', maxEventsPerDay: 3, features: { backgroundFeature } }),
   plain: timeGridView({ days: 1 }),
 });
 
@@ -66,7 +66,7 @@ const columns = (calendar: ReturnType<typeof setup>) => {
 };
 
 const days = (calendar: ReturnType<typeof setup>) => {
-  const layout = calendar.store.state.layout as Calendar_MonthLayout<unknown>;
+  const layout = calendar.store.state.layout as Calendar_DayGridLayout<unknown>;
 
   return Object.fromEntries(
     layout.weeks.flatMap(week =>

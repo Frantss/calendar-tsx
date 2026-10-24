@@ -26,7 +26,7 @@ A headless calendar library that satisfies `docs/calendar-spec.md` (R1–R11): a
 
 Library-level capabilities, each traced to the app spec. Draft; confirmed when the scope area closes.
 
-- **C1 — Views:** month grid, week-based day grid (D35), day/week time grid with all-day row, list day/week/month/year (D36), resource time grid, resource timeline (D34). _(app R1.1–R1.4)_
+- **C1 — Views:** day grid for calendar months or whole weeks (D35, D40), day/week time grid with all-day row, list day/week/month/year (D36), resource time grid, resource timeline (D34). _(app R1.1–R1.4)_
 - **C2 — Navigation:** current view and date, prev/next/today, go to date, change view; visible range and period derivable synchronously after any change. _(R2.3–R2.5, R3.2–R3.5, R8.1, R11.1)_
 - **C3 — Change notification:** a single subscription that reports view/date changes, so the app can sync the URL. _(R2.1–R2.2)_
 - **C4 — Time-grid layout:** overlapping timed events laid out side by side; rows do not stretch; slot labels formattable. _(R1.2, R1.7, R1.8)_
@@ -50,7 +50,7 @@ High-level shape after D1–D9; part lists per view are settled in the details p
 const calendar = calendar_create<Calendar_EventData>({
   timeZone: provider.timezone,
   views: {
-    month: monthView({ maxEventsPerDay: 4 }),
+    month: dayGridView({ period: 'month', maxEventsPerDay: 4 }),
     week: timeGridView({ days: 7 }),
     day: timeGridView({ days: 1 }),
     list_week: listView({ days: 7 }),
@@ -95,24 +95,24 @@ const CalendarBody = () => {
   const layout = useCalendarSelector(state => state.layout); // discriminated by kind (D10)
 
   return match(layout) // open union: prefer .otherwise() (D1)
-    .with({ kind: 'month' }, month => (
-      <MonthView_Root model={month}>
+    .with({ kind: 'dayGrid' }, month => (
+      <DayGridView_Root model={month}>
         {month.weeks.map(week => (
-          <MonthView_Week key={week.key} week={week}>
+          <DayGridView_Week key={week.key} week={week}>
             {week.days.map(day => (
-              <MonthView_Day key={day.key} day={day}>
-                <MonthView_DayTrigger day={day} />
-                <MonthView_Overflow day={day}>see all</MonthView_Overflow>
-              </MonthView_Day>
+              <DayGridView_Day key={day.key} day={day}>
+                <DayGridView_DayTrigger day={day} />
+                <DayGridView_Overflow day={day}>see all</DayGridView_Overflow>
+              </DayGridView_Day>
             ))}
             {week.segments.map(segment => (
-              <MonthView_WeekEvent key={segment.key} segment={segment}>
+              <DayGridView_WeekEvent key={segment.key} segment={segment}>
                 {segment.event.data.program.name}
-              </MonthView_WeekEvent>
+              </DayGridView_WeekEvent>
             ))}
-          </MonthView_Week>
+          </DayGridView_Week>
         ))}
-      </MonthView_Root>
+      </DayGridView_Root>
     ))
     .with({ kind: 'timeGrid' }, grid => <TimeGridView_Root model={grid}>…</TimeGridView_Root>)
     .with({ kind: 'list' }, list => <ListView_Root model={list}>…</ListView_Root>)
@@ -132,18 +132,18 @@ Every part renders `data-scope="calendar"` and its `data-part`, accepts a `rende
 | ----------------------------------------- | ----------------------------------------------------------------------------------------------------- | ---- |
 | `Calendar_Root` / `Calendar_RootProvider` | Provides the instance; `Root` creates it from props, `RootProvider` takes one from `useCalendar` (D6) | —    |
 
-**Month** (`kind: 'month'`)
+**Day grid** (`kind: 'dayGrid'`)
 
-| Part                                        | Role                                                                                                                                                       | Owns |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| `MonthView_Root`                            | Receives the month model; `role="grid"`                                                                                                                    | —    |
-| `MonthView_Header` / `MonthView_HeaderCell` | Weekday header row                                                                                                                                         | —    |
-| `MonthView_Week`                            | One week row; `role="row"`; sets `--cal-rows`                                                                                                              | —    |
-| `MonthView_Day`                             | One day cell; `role="gridcell"`, `data-today`, `data-outside`                                                                                              | —    |
-| `MonthView_DayTrigger`                      | Button to go to the day (app R8.1)                                                                                                                         | —    |
-| `MonthView_WeekBackgroundEvent`             | An all-day background event across the week row, under the bars; `--cal-col-start`, `--cal-col-span`, `data-continues-before/after`; `aria-hidden` (D37)   | —    |
-| `MonthView_WeekEvent`                       | A bar in the week row; `--cal-col-start`, `--cal-col-span`, `--cal-row`, `data-continues-before/after`; button (D17)                                       | —    |
-| `MonthView_Overflow`                        | "See all" button inside a day; renders when `day.hasMore` (local hidden rows or the `dayOverflow` hint); `data-hidden-count` is the local count (D14, D17) | —    |
+| Part                                            | Role                                                                                                                                                       | Owns |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| `DayGridView_Root`                              | Receives the day-grid model; `role="grid"`                                                                                                                 | —    |
+| `DayGridView_Header` / `DayGridView_HeaderCell` | Weekday header row                                                                                                                                         | —    |
+| `DayGridView_Week`                              | One week row; `role="row"`; sets `--cal-rows`                                                                                                              | —    |
+| `DayGridView_Day`                               | One day cell; `role="gridcell"`, `data-today`, `data-outside`                                                                                              | —    |
+| `DayGridView_DayTrigger`                        | Button to go to the day (app R8.1)                                                                                                                         | —    |
+| `DayGridView_WeekBackgroundEvent`               | An all-day background event across the week row, under the bars; `--cal-col-start`, `--cal-col-span`, `data-continues-before/after`; `aria-hidden` (D37)   | —    |
+| `DayGridView_WeekEvent`                         | A bar in the week row; `--cal-col-start`, `--cal-col-span`, `--cal-row`, `data-continues-before/after`; button (D17)                                       | —    |
+| `DayGridView_Overflow`                          | "See all" button inside a day; renders when `day.hasMore` (local hidden rows or the `dayOverflow` hint); `data-hidden-count` is the local count (D14, D17) | —    |
 
 **Time grid** (`kind: 'timeGrid'`; days and resource columns, D4)
 
@@ -217,7 +217,7 @@ type Calendar_Navigation<TViews> = {
 
 type Calendar_State<TData, TResourceData, TViews> = {
   context: Calendar_ViewContext<TViews>; // { view, kind, date, range, period }
-  layout: Calendar_MonthLayout<TData> | Calendar_TimeGridLayout<TData, TResourceData> | Calendar_ListLayout<TData>; // D10
+  layout: Calendar_DayGridLayout<TData> | Calendar_TimeGridLayout<TData, TResourceData> | Calendar_ListLayout<TData>; // D10
   now: Temporal.ZonedDateTime;
 };
 
@@ -258,8 +258,7 @@ stateDiagram-v2
 
 Variation is expressed through view definitions (D4), never booleans on parts:
 
-- `monthView({ maxEventsPerDay, dayOverflow?, fixedWeekCount? })`: row cap per day, plus an optional per-day overflow hint for API-truncated data (D17); `fixedWeekCount` always shows six weeks (D35).
-- `dayGridView({ weeks, maxEventsPerDay, dayOverflow? })`: a day grid of whole weeks, such as a one-week or rolling four-week grid (D35).
+- `dayGridView({ period: 'month', maxEventsPerDay, dayOverflow?, fixedWeekCount? })` or `dayGridView({ weeks, maxEventsPerDay, dayOverflow? })`: a calendar month padded to whole weeks, or whole weeks from the week containing `date` (D35, D40). Only the month form accepts `fixedWeekCount`.
 - `timeGridView({ days, groupBy?: 'resource', groupOrder?: 'resource-first' | 'date-first', allDay?, slotDuration?, minColumnWidth?, overlap?: 'side-by-side' | 'cascade', minEventMinutes?, shortEventMinutes? })`: day, week and resource views (D4, D19, D38, D39). `minColumnWidth` is emitted as `--cal-min-column-width` for the consumer's CSS (C11, D9).
 - `listView({ days })` or `listView({ period: 'month' | 'year' })`: list day and list week, or a calendar month or year (D18, D36).
 - `timelineView({ days, groupBy?: 'resource', slotMinutes?, minSlotWidth? })`: day, week and resource timelines (D34). `minSlotWidth` is emitted as `--cal-min-slot-width`.
@@ -267,10 +266,10 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 ## Props boundary
 
 - **`calendar_create` / `useCalendar` / `Calendar_Root`:** the options above. Everything else is derived.
-- **View roots** (`MonthView_Root`, `TimeGridView_Root`, `ListView_Root`): `model`, the narrowed layout from the switch (D10).
+- **View roots** (`DayGridView_Root`, `TimeGridView_Root`, `ListView_Root`): `model`, the narrowed layout from the switch (D10).
 - **Model parts** (`*_Week`, `*_Day`, `*_Column`, `*_Event`, `*_WeekEvent`, `*_AllDayEvent`, `*_Unavailable`, `*_AxisLabel`, `*_DayHeader`): one model prop (`week`, `day`, `column`, `segment`, `slot`) plus native element props and `render` (D25). They emit geometry and state attributes (D9) and no text unless children provide it (D20).
-- **Triggers** (`MonthView_DayTrigger`, `TimeGridView_ColumnTrigger`): `day`/`column` plus a typed `view` (D22).
-- **`MonthView_Overflow`:** `day`; renders when `day.hasMore` (D14, D17).
+- **Triggers** (`DayGridView_DayTrigger`, `TimeGridView_ColumnTrigger`): `day`/`column` plus a typed `view` (D22).
+- **`DayGridView_Overflow`:** `day`; renders when `day.hasMore` (D14, D17).
 - **Managed events:** `eventStore_create<TData>()` / `useEventStore<TData>()` → `{ store, add, remove, update, reset }` (D2).
 
 ## Edge states & interactions
@@ -305,15 +304,15 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 
 **Verified:** not verified — cheap to reverse or additive later
 
-**Why:** A month cell (cap plus overflow), a time-grid column (slots, lanes, shading) and a list row have different anatomies. One generic part set would need mode switches inside its parts. Separate families (`MonthView_*`, `TimeGridView_*`, `ListView_*`) under a common `Calendar_Root` keep each anatomy explicit, and consumers loop over core data inside the parts, Ark style. The cost is more exports, about 6–8 per view.
+**Why:** A month cell (cap plus overflow), a time-grid column (slots, lanes, shading) and a list row have different anatomies. One generic part set would need mode switches inside its parts. Separate families (`DayGridView_*`, `TimeGridView_*`, `ListView_*`) under a common `Calendar_Root` keep each anatomy explicit, and consumers loop over core data inside the parts, Ark style. The cost is more exports, about 6–8 per view.
 
-### D4 — Views are composable definitions over three layout kinds
+### D4 — Views are composable definitions over layout kinds
 
 **Serves:** C1, C7, C11; app R1.1–R1.4, R2.1
 
 **Verified:** not verified — cheap to reverse or additive later
 
-**Why:** There are only three layouts: month, time grid and list. Duration and grouping are settings on them, not new views. Consumers register named views (`week: timeGridView({ days: 7 })`, `resources: timeGridView({ days: 1, groupBy: 'resource' })`), so the app's own keys (`list_week`) map one to one onto the URL `view_type`, and a weekly resource view (app Q4) needs no library change. Revisit if a fourth layout appears (for example, a timeline) that does not fit `days` plus `groupBy`. **Amended by D34:** the timeline is that fourth layout. **Amended by D35:** the month builder also serves week-based day grids, through a second layout feature.
+**Why:** The original layouts were month, time grid and list. Duration and grouping are settings on them, not new views. Consumers register named views (`week: timeGridView({ days: 7 })`, `resources: timeGridView({ days: 1, groupBy: 'resource' })`), so the app's own keys (`list_week`) map one to one onto the URL `view_type`, and a weekly resource view (app Q4) needs no library change. Revisit if a fourth layout appears (for example, a timeline) that does not fit `days` plus `groupBy`. **Amended by D34:** the timeline is that fourth layout. **Amended by D35:** the month builder also serves week-based day grids. **Amended by D40:** one day-grid factory and layout cover calendar months and whole weeks.
 
 ### D5 — View and date are controlled only; navigation is one call per intent
 
@@ -363,7 +362,7 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 
 **Verified:** not verified — cheap to reverse or additive later
 
-**Why:** The active view is explicit in consumer code: `useCalendarSelector(s => s.layout)` returns a union discriminated by `kind`, the consumer matches on it, and passes the narrowed model to `MonthView_Root model={…}` / `TimeGridView_Root` / `ListView_Root`. Parts below a root read the model from that root's context. There are no render-function `*_Context` parts and no self-gating roots, so what renders is visible at the call site and type narrowing happens where the switch is written. The cost is that every consumer writes the switch, which is a few lines with `ts-pattern`. Revisit if many consumers end up with an identical switch.
+**Why:** The active view is explicit in consumer code: `useCalendarSelector(s => s.layout)` returns a union discriminated by `kind`, the consumer matches on it, and passes the narrowed model to `DayGridView_Root model={…}` / `TimeGridView_Root` / `ListView_Root`. Parts below a root read the model from that root's context. There are no render-function `*_Context` parts and no self-gating roots, so what renders is visible at the call site and type narrowing happens where the switch is written. The cost is that every consumer writes the switch, which is a few lines with `ts-pattern`. Revisit if many consumers end up with an identical switch.
 
 ### D11 — "Now" comes from an injectable clock
 
@@ -395,7 +394,7 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 
 **Verified:** not verified — cheap to reverse or additive later
 
-**Why:** `MonthView_Overflow` is a button carrying `data-hidden-count` that can be composed with the design system's `PopoverTrigger` through `render` (D25). The day model exposes both `visible` and `events`, so the popover renders `day.events`. Lazy fill needs no library support under D2: the app fetches on open, merges into the `events` input, `day.events` grows, and the open popover re-renders. A library popover would duplicate positioning and focus handling the design system already has.
+**Why:** `DayGridView_Overflow` is a button carrying `data-hidden-count` that can be composed with the design system's `PopoverTrigger` through `render` (D25). The day model exposes both `visible` and `events`, so the popover renders `day.events`. Lazy fill needs no library support under D2: the app fetches on open, merges into the `events` input, `day.events` grows, and the open popover re-renders. A library popover would duplicate positioning and focus handling the design system already has.
 
 ### D15 — v1 accessibility is semantic without roving focus
 
@@ -419,7 +418,7 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 
 **Verified:** not verified — rewritten after a `reject`; re-run the panel
 
-**Why:** In the month view and the time grid's all-day row, an event spanning days is one bar across the day columns, placed by row packing, clipped at week boundaries and marked `data-continues-before`/`data-continues-after`. Bars belong to the week row (`MonthView_WeekEvent` with `--cal-col-start`, `--cal-col-span`, `--cal-row`). The cap counts rows: rows beyond `maxEventsPerDay` are hidden, and each day's local `hiddenCount` counts the hidden segments that cross it. A bar counts toward every day it crosses. The core cannot know about entries the API truncated (app R4.2 sends at most 5 per day), so the month view takes an optional `dayOverflow(date) => boolean` hint. When the hint is true, the day reports `hasMore: true` and renders `MonthView_Overflow` even when nothing is hidden locally; `hiddenCount` stays the local count and is not the true total. In time-grid columns a timed overnight event splits at midnight; in a single-day view this is the same as clipping. Known cost: a bar packed into a hidden row can hide an event on a day that still has free rows (recorded risk). The verification found no multi-day events in today's data, only overnight ones, so bars mainly pay off for future data.
+**Why:** In the month view and the time grid's all-day row, an event spanning days is one bar across the day columns, placed by row packing, clipped at week boundaries and marked `data-continues-before`/`data-continues-after`. Bars belong to the week row (`DayGridView_WeekEvent` with `--cal-col-start`, `--cal-col-span`, `--cal-row`). The cap counts rows: rows beyond `maxEventsPerDay` are hidden, and each day's local `hiddenCount` counts the hidden segments that cross it. A bar counts toward every day it crosses. The core cannot know about entries the API truncated (app R4.2 sends at most 5 per day), so the month view takes an optional `dayOverflow(date) => boolean` hint. When the hint is true, the day reports `hasMore: true` and renders `DayGridView_Overflow` even when nothing is hidden locally; `hiddenCount` stays the local count and is not the true total. In time-grid columns a timed overnight event splits at midnight; in a single-day view this is the same as clipping. Known cost: a bar packed into a hidden row can hide an event on a day that still has free rows (recorded risk). The verification found no multi-day events in today's data, only overnight ones, so bars mainly pay off for future data.
 
 ### D18 — The list view shows only days with events, plus an explicit empty part
 
@@ -459,7 +458,7 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 
 **Verified:** not verified — cheap to reverse or additive later
 
-**Why:** Navigating is a trigger's whole job, and Ark's triggers act on their own too. `MonthView_DayTrigger` and `TimeGridView_ColumnTrigger` take `view`, typed to the keys of the registered `views`, and on click call `api.setView(view, date)`, which emits `onNavigate` (D5). A consumer `onClick` runs first, and `event.preventDefault()` skips the built-in action. A renamed view breaks at compile time. Events and the overflow trigger stay action-free, because what they do is app logic (D14, app R8.2).
+**Why:** Navigating is a trigger's whole job, and Ark's triggers act on their own too. `DayGridView_DayTrigger` and `TimeGridView_ColumnTrigger` take `view`, typed to the keys of the registered `views`, and on click call `api.setView(view, date)`, which emits `onNavigate` (D5). A consumer `onClick` runs first, and `event.preventDefault()` skips the built-in action. A renamed view breaks at compile time. Events and the overflow trigger stay action-free, because what they do is app logic (D14, app R8.2).
 
 ### D23 — The library has no loading concept; empty is data
 
@@ -491,7 +490,7 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 
 **Verified:** not verified — cheap to reverse; the package is additive and experimental
 
-**Why:** Parts already expose everything a stylesheet needs: `data-scope`/`data-part`, state attributes and `--cal-*` geometry (D9). So a theme needs no JavaScript and no adapter, and any future adapter that emits the same attributes gets it for free. `base.css` turns the geometry into layout (absolutely positioned month bars, time-grid lanes, the now line, and a subgrid that shares one set of columns across the header, all-day row and body). It is theme-independent, so every theme imports it, and a consumer styling the calendar themselves can import it alone. This replaces D9's plan of a reference stylesheet in Storybook docs. `default.css` adds the visual layer. Both live in cascade layers (`calendar.base`, `calendar.theme`) and select through `:where()`, so unlayered consumer styles win without specificity fights. Layered frameworks place the theme by layer: Tailwind v4 imports it with `layer(components)`, between its preflight (which would otherwise reset the parts' buttons) and its utilities, which then override it. Tailwind v3 is unsupported, because its preflight is unlayered and beats the theme. Theme values are `--calendar-*` tokens: a separate prefix, because the parts own `--cal-*` geometry inline. The default theme declares them on `:root`, so overriding one on any ancestor re-themes everything below it. Colours use `light-dark()` and follow the inherited `color-scheme`: the theme never sets it, so an app opts in to dark mode with `color-scheme: light dark` and forces a mode with `light` or `dark` on any ancestor. The package ships the CSS sources with no build step. Rejected: CSS inside `@calendar-tsx/react` (it would make themes React-only and grow the adapter with each theme); CSS-in-JS (needs a build step or runtime, at odds with a headless library); a Tailwind preset (ties themes to Tailwind, though one could map onto the same tokens later); a single file per theme with no base (each theme would repeat the positioning). Known limits: the base assumes the composition the readmes show (a header, an optional all-day row and a body inside the time-grid root); the all-day row scrolls with the body rather than sticking under the header; and month bars default to 22px, below a 44px touch target (`--calendar-bar-height` raises it).
+**Why:** Parts already expose everything a stylesheet needs: `data-scope`/`data-part`, state attributes and `--cal-*` geometry (D9). So a theme needs no JavaScript and no adapter, and any future adapter that emits the same attributes gets it for free. `base.css` turns the geometry into layout (absolutely positioned day-grid bars, time-grid lanes, the now line, and a subgrid that shares one set of columns across the header, all-day row and body). It is theme-independent, so every theme imports it, and a consumer styling the calendar themselves can import it alone. This replaces D9's plan of a reference stylesheet in Storybook docs. `default.css` adds the visual layer. Both live in cascade layers (`calendar.base`, `calendar.theme`) and select through `:where()`, so unlayered consumer styles win without specificity fights. Layered frameworks place the theme by layer: Tailwind v4 imports it with `layer(components)`, between its preflight (which would otherwise reset the parts' buttons) and its utilities, which then override it. Tailwind v3 is unsupported, because its preflight is unlayered and beats the theme. Theme values are `--calendar-*` tokens: a separate prefix, because the parts own `--cal-*` geometry inline. The default theme declares them on `:root`, so overriding one on any ancestor re-themes everything below it. Colours use `light-dark()` and follow the inherited `color-scheme`: the theme never sets it, so an app opts in to dark mode with `color-scheme: light dark` and forces a mode with `light` or `dark` on any ancestor. The package ships the CSS sources with no build step. Rejected: CSS inside `@calendar-tsx/react` (it would make themes React-only and grow the adapter with each theme); CSS-in-JS (needs a build step or runtime, at odds with a headless library); a Tailwind preset (ties themes to Tailwind, though one could map onto the same tokens later); a single file per theme with no base (each theme would repeat the positioning). Known limits: the base assumes the composition the readmes show (a header, an optional all-day row and a body inside the time-grid root); the all-day row scrolls with the body rather than sticking under the header; and day-grid bars default to 22px, below a 44px touch target (`--calendar-bar-height` raises it).
 
 Themes vary along two axes that combine. A look (`default.css`, `shadcn.css`) sets colours and shapes in `calendar.theme`; a density (`compact.css`) sets only size tokens in a third layer, `calendar.density`, so it applies on top of any look. `shadcn.css` is an adopting theme: it adds no rules and points the tokens at shadcn/ui's variables. Its events come from the default theme's accent tint rather than `--secondary`: in shadcn's neutral palette `--secondary`, `--muted` and `--accent` all sit at 1.09:1 against the light background. It declares that mapping on `:root` and on `.dark`, because a custom property resolves its `var()` where it is declared and would otherwise miss a `.dark` below the root. For the same reason, a token whose default is another token (`--calendar-event`, `--calendar-event-border`, `--calendar-event-text`, `--calendar-focus-ring`) is never declared by the default theme and falls back at the point of use. Events default to the accent tinted 16% (fill) and 24% (border) into the surface, so `--calendar-accent` alone recolors the calendar, as FullCalendar's palette `primary` does, without a palette file per colour; the percentages keep the old neutral fill's separation from the surface (1.26:1) and text above 12:1 in both modes. `revenuecat.css` is a brand look in RevenueCat's press-kit colors; it keeps the exact brand red, which is 3.39:1 on white, to fills and lines, and overrides the one default rule that sets small text in the accent. `stripe.css` takes its colours from the public `--hds-color-*` tokens on stripe.com and leaves events to the accent tint; Stripe's Marks Usage Terms cover design elements and trade dress, so shipping it under Stripe's name is a decision to revisit before publishing. `material-ui.css` is the same kind of adopting theme over the variables Material UI emits with `cssVariables: true` (`--mui-palette-*`, `--mui-shape-borderRadius`); it repeats its mapping on each of MUI's built-in color-scheme selectors (`.light`/`.dark`, `[data-light]`/`[data-dark]`, `[data-mui-color-scheme]`) for the same reason, maps `--calendar-surface-muted` to MUI's translucent `action.hover`, which always sits on the opaque surface, and leaves events to the accent tint. `high-contrast.css` is an opt-in look at WCAG AAA: outlined events, 2px event borders, 3px focus rings, and dashed edges for continuation instead of a flattened corner. It is separate from forced colours, where the browser picks the colours. Under `forced-colors: active` the browser drops fills, so the default theme restores the state that only a fill carried (today's marker, the now line, slot lines, unavailable time, outside-month dates) with system colours. It opts out of forced colours only on leaf elements, because `forced-color-adjust` inherits and would otherwise reach the events.
 
@@ -534,7 +533,7 @@ Types are where this gets hard. `build` must be generic in `TData` and `TResourc
 ```ts
 /** Kind → layout. Third-party kinds extend it by declaration merging. */
 interface Calendar_LayoutMap<TData, TResourceData> {
-  month: Calendar_MonthLayout<TData>;
+  month: Calendar_DayGridLayout<TData>;
   timeGrid: Calendar_TimeGridLayout<TData, TResourceData>;
   list: Calendar_ListLayout<TData>;
 }
@@ -579,27 +578,27 @@ type Calendar_State<TData, TResourceData, TViews extends Calendar_Views> = {
 
 // The settings stay readable on the definition; `build` closes over them.
 const calendarView_month = (
-  settings: Calendar_MonthViewSettings,
-): Calendar_ViewDefinition<'month'> & Calendar_MonthViewSettings => ({
-  kind: 'month',
+  settings: Calendar_DayGridViewSettings,
+): Calendar_ViewDefinition<'month'> & Calendar_DayGridViewSettings => ({
+  kind: 'dayGrid',
   ...settings,
   period: monthNavigation_period,
   range: monthNavigation_range,
   step: monthNavigation_step,
-  build: input => layoutMonth_build({ settings, ...input, today: input.now.toPlainDate() }),
+  build: input => layoutDayGrid_build({ settings, ...input, today: input.now.toPlainDate() }),
 });
 ```
 
 With `views: { list_day: calendarView_list({ days: 1 }), list_week: calendarView_list({ days: 7 }) }`, `state.layout` is `Calendar_ListLayout<TData>`. The D10 switch then needs no other branches, and `.otherwise()` is still the documented default.
 
-Builders stay `layoutMonth_build` and the others, imported only by their own `calendarView_*` factory. A consumer that never calls `calendarView_month` therefore does not bundle the month layout. That also depends on the core entry being side-effect free, and on the export map. Neither is verified.
+Builders stay `layoutDayGrid_build` and the others, imported only by their own `calendarView_*` factory. A consumer that never calls `calendarView_month` therefore does not bundle the month layout. That also depends on the core entry being side-effect free, and on the export map. Neither is verified.
 
 A third-party kind is a new factory plus one declaration merge into `Calendar_LayoutMap`. The merge is global, but it is keyed by kind and filtered by `TViews`. So the new layout only shows up in the types of calendars that register it, which matches v9 behaviour. The React view roots keep their concrete `model` types. A third-party kind brings its own parts (D3).
 
 Consequences:
 
 - View definitions hold functions and are no longer plain data. D24 already compares `views` by reference and requires it memoised, so the sync rule does not change.
-- A hand-written definition literal (`{ kind: 'month', maxEventsPerDay: 4 }`) stops type-checking. The factories become the only supported way to create a definition.
+- A hand-written definition literal (`{ kind: 'dayGrid', maxEventsPerDay: 4 }`) stops type-checking. The factories become the only supported way to create a definition.
 - Week alignment moves out of the core into the `timeGrid` and `list` navigation functions. Today the core aligns a `days: 7` view to `firstDayOfWeek`.
 - `useCalendarSelector` defaults `TViews` to `Calendar_Views`, which keeps the full union. Narrowing reaches consumers only when they pass `TViews` or read from a typed instance.
 
@@ -632,7 +631,7 @@ Rejected:
   - API;
   - an event-pipeline stage;
   - fields on the layout model.
-- **Layout feature:** a feature that also supplies a view kind. It provides `kind`, `period`, `range`, `step` and `build`, plus optional capabilities such as `locate` (layout position → slot). Built in: `monthLayout`, `timeGridLayout`, `listLayout`.
+- **Layout feature:** a feature that also supplies a view kind. It provides `kind`, `period`, `range`, `step` and `build`, plus optional capabilities such as `locate` (layout position → slot). Built in: `dayGridLayout`, `timeGridLayout`, `listLayout`.
 - **Core features:** navigation, the event pipeline (normalise → clip → sort) and the clock. They are always on and never listed.
 - **View:** plain settings plus `'~features'`, the features the view uses. Its factory adds the view's layout feature. A feature runs in a view only if that view lists it. A feature listed only in the calendar's `features` runs in every view.
 - **`createCalendarViews(views)`:** returns `{ views, features }`, where `features` is the merge of every view's `'~features'`.
@@ -705,7 +704,7 @@ interface Calendar_State_FeatureMap { eventDragFeature: { drag: Calendar_DragSta
 interface Calendar_Api_FeatureMap { eventDragFeature: { drag: { start; move; nudge; drop; cancel } } }
 interface Calendar_Segment_FeatureMap { eventDragFeature: { isDragging: boolean; isPreview: boolean } }
 interface Calendar_Layout_FeatureMap<TData, TResourceData, TViewFeatures> {
-  monthLayout: Calendar_MonthLayout<TData, TViewFeatures>;
+  dayGridLayout: Calendar_DayGridLayout<TData, TViewFeatures>;
   timeGridLayout: Calendar_TimeGridLayout<TData, TResourceData, TViewFeatures>;
   listLayout: Calendar_ListLayout<TData, TViewFeatures>;
 }
@@ -823,36 +822,36 @@ const store = createStore(() => {
 
 **Verified:** not verified — a rename; cheap to reverse while the packages are experimental
 
-**Why:** The scope-prefix names (`calendar_create`, `calendarView_month`, `MonthView_Root`) came from guildara-frontend's naming rule. This repository does not enforce that rule. Under D29 the names also became feature-map keys, because features are passed with shorthand properties, so `calendarLayout_month` turned into a long key. The exports now follow the conventions of the libraries the API is modelled on:
+**Why:** The scope-prefix names (`calendar_create`, `calendarView_month`, `DayGridView_Root`) came from guildara-frontend's naming rule. This repository does not enforce that rule. Under D29 the names also became feature-map keys, because features are passed with shorthand properties, so `calendarLayout_month` turned into a long key. The exports now follow the conventions of the libraries the API is modelled on:
 
 - **TanStack-style functions and constants in core.** Instances come from `create*`, a pure query is `get*`, a factory is named after what it returns, and a feature constant ends in `Feature`, like v9's `rowSortingFeature`.
 - **shadcn-style components in React.** A root part takes the component's name, subparts concatenate onto it (shadcn's `Card`, `CardHeader`), and the provider is `CalendarProvider` (shadcn's `SidebarProvider`).
 
-| Before                                         | After                                                                       |
-| ---------------------------------------------- | --------------------------------------------------------------------------- |
-| `calendar_create`                              | `createCalendar`                                                            |
-| `calendarViews_create`                         | `createCalendarViews`                                                       |
-| `calendarView_month` / `_timeGrid` / `_list`   | `monthView` / `timeGridView` / `listView`                                   |
-| `calendarLayout_month` / `_timeGrid` / `_list` | `monthLayout` / `timeGridLayout` / `listLayout` (also the feature-map keys) |
-| `calendarFeature_<x>`                          | `<x>Feature`                                                                |
-| `calendar_navigation`                          | `getCalendarNavigation`                                                     |
-| `calendarClock_fixed` / `_interval`            | `fixedClock` / `intervalClock`                                              |
-| `calendarEventStore_create`                    | `createEventStore`                                                          |
-| `Calendar_Root` / `Calendar_RootProvider`      | `Calendar` / `CalendarProvider`                                             |
-| `MonthView_Root`, `MonthView_Week`, …          | `MonthView`, `MonthViewWeek`, … (same for `TimeGridView*`, `ListView*`)     |
+| Before                                         | After                                                                         |
+| ---------------------------------------------- | ----------------------------------------------------------------------------- |
+| `calendar_create`                              | `createCalendar`                                                              |
+| `calendarViews_create`                         | `createCalendarViews`                                                         |
+| `calendarView_month` / `_timeGrid` / `_list`   | `dayGridView` / `timeGridView` / `listView`                                   |
+| `calendarLayout_month` / `_timeGrid` / `_list` | `dayGridLayout` / `timeGridLayout` / `listLayout` (also the feature-map keys) |
+| `calendarFeature_<x>`                          | `<x>Feature`                                                                  |
+| `calendar_navigation`                          | `getCalendarNavigation`                                                       |
+| `calendarClock_fixed` / `_interval`            | `fixedClock` / `intervalClock`                                                |
+| `calendarEventStore_create`                    | `createEventStore`                                                            |
+| `Calendar_Root` / `Calendar_RootProvider`      | `Calendar` / `CalendarProvider`                                               |
+| `DayGridView_Root`, `DayGridView_Week`, …      | `DayGridView`, `DayGridViewWeek`, … (same for `TimeGridView*`, `ListView*`)   |
 
 What stays:
 
 - **Types:** they keep the `Calendar_*` prefix, including the feature maps and `Calendar_HTMLProps`.
 - **React hooks:** they were already verb-first.
-- **Internal helpers:** `calendarNavigation_days`, `layoutMonth_build` and `calendarProps_merge` are not exported, so they are unchanged.
+- **Internal helpers:** `calendarNavigation_days`, `layoutDayGrid_build` and `calendarProps_merge` are not exported, so they are unchanged.
 - **Rendering:** `data-scope`/`data-part` are untouched. shadcn's `data-slot` attributes were not adopted.
 
 Decisions before D29 keep the names they were written with.
 
 Rejected:
 
-- **`createMonthView`:** too wordy for something written once per view.
+- **`createDayGridView`:** too wordy for something written once per view.
 - **`createViews`:** too generic for auto-import.
 - **Renaming the types in the same pass:** about 60 renames with no gain at runtime. That is still open.
 
@@ -862,7 +861,7 @@ Rejected:
 
 **Verified:** not verified — additive; the core is unchanged
 
-**Why:** A second adapter is the test of the core's framework independence, so `@calendar-tsx/solid` reuses the React adapter's part names (D30), props, data attributes and `--cal-*` variables, and its D29 typing (`TFeatures` with `Calendar_ValidateFeatures`, an erased instance in context, a selector typed by annotating its state with `Calendar_StateOf`), and differs only where Solid requires it. `useCalendar` takes an accessor, as TanStack's Solid adapters do: it creates the instance once from `untrack(options)`, starts the clock in `onMount` with `onCleanup`, and pushes `options()` through `'~update'` in a `createRenderEffect`, which re-runs whenever a signal read inside the accessor changes. D24's reference comparison still decides whether the store re-derives. `Calendar` passes its props through the same accessor. `useCalendarSelector` is `@tanstack/solid-store`'s `useSelector` and returns an accessor. Parts port Ark v6's Solid `withRender` (`@ark-ui/solid@6.0.0-next.0`): `render(props, state)` is a function only, where `props(userProps?)` returns the part's props merged with the consumer's and `state` is an accessor. Solid has no virtual elements to clone, so the element form of D25 does not exist. Unlike Ark, the part's `ref` stays in `props()` and chains with a `ref` passed to it, so a ref reaches the node with and without `render`. A local `calendarProps_merge` replaces `@zag-js/solid`'s `mergeProps` with the D25 contract (`class` instead of `className`, `ref` chained like handlers); every key is a getter and a source may be a function, so merged props stay reactive. Conditional parts (`MonthViewOverflow`, `TimeGridViewNowIndicator`, `ListViewEmpty`) use `<Show>`. The package builds with `vite-plugin-solid` as the pack plugin; the same build serves server rendering (D32).
+**Why:** A second adapter is the test of the core's framework independence, so `@calendar-tsx/solid` reuses the React adapter's part names (D30), props, data attributes and `--cal-*` variables, and its D29 typing (`TFeatures` with `Calendar_ValidateFeatures`, an erased instance in context, a selector typed by annotating its state with `Calendar_StateOf`), and differs only where Solid requires it. `useCalendar` takes an accessor, as TanStack's Solid adapters do: it creates the instance once from `untrack(options)`, starts the clock in `onMount` with `onCleanup`, and pushes `options()` through `'~update'` in a `createRenderEffect`, which re-runs whenever a signal read inside the accessor changes. D24's reference comparison still decides whether the store re-derives. `Calendar` passes its props through the same accessor. `useCalendarSelector` is `@tanstack/solid-store`'s `useSelector` and returns an accessor. Parts port Ark v6's Solid `withRender` (`@ark-ui/solid@6.0.0-next.0`): `render(props, state)` is a function only, where `props(userProps?)` returns the part's props merged with the consumer's and `state` is an accessor. Solid has no virtual elements to clone, so the element form of D25 does not exist. Unlike Ark, the part's `ref` stays in `props()` and chains with a `ref` passed to it, so a ref reaches the node with and without `render`. A local `calendarProps_merge` replaces `@zag-js/solid`'s `mergeProps` with the D25 contract (`class` instead of `className`, `ref` chained like handlers); every key is a getter and a source may be a function, so merged props stay reactive. Conditional parts (`DayGridViewOverflow`, `TimeGridViewNowIndicator`, `ListViewEmpty`) use `<Show>`. The package builds with `vite-plugin-solid` as the pack plugin; the same build serves server rendering (D32).
 
 ### D32 — Solid server rendering: one build for both runtimes, hydration through `initialNow`
 
@@ -918,17 +917,17 @@ createCalendar({ …, features: { backgroundFeature, ...views.features }, backgr
 
 **Output.** `backgroundFeature` adds fields in `decorate`, for the views that list it, through the existing column and day feature maps:
 
-| Layout    | Field                                                     | Part                                                                                    |
-| --------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Time grid | `column.backgrounds: { key, layer, kind, start, span }[]` | `TimeGridViewBackground`: `aria-hidden`, `--cal-start`, `--cal-span`, `data-kind`       |
-| Month     | `day.backgrounds: { key, layer, kind }[]`                 | `MonthViewDayBackground`: `aria-hidden`, `data-kind`, fills the day beneath its content |
-| List      | none                                                      | —                                                                                       |
+| Layout    | Field                                                     | Part                                                                                      |
+| --------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Time grid | `column.backgrounds: { key, layer, kind, start, span }[]` | `TimeGridViewBackground`: `aria-hidden`, `--cal-start`, `--cal-span`, `data-kind`         |
+| Day grid  | `day.backgrounds: { key, layer, kind }[]`                 | `DayGridViewDayBackground`: `aria-hidden`, `data-kind`, fills the day beneath its content |
+| List      | none                                                      | —                                                                                         |
 
-Time-grid fractions use the fixed 24-hour clock axis (D40), as `unavailable` does (D12). Overlapping ranges within a layer are merged after projection so nothing is shaded twice; layers stack in input order. Inverse layers reuse the complement that D12's `unavailable` already computes, now shared in `layout/layout-intervals.ts`. Both parts carry `data-layer` as well as `data-kind`. Any meaning beyond shading (a "Closed" label) is the consumer's text (D20). `base.css` positions the time-grid part as it positions `time-grid-unavailable`, and makes `month-day` a positioned, isolated box so the day part sits beneath the day's content. `default.css` fills both parts from `--calendar-background` (unset by default: a 6% wash of the text color) and hatches them under forced colors, at the opposite angle from unavailable time.
+Time-grid fractions use the fixed 24-hour clock axis (D40), as `unavailable` does (D12). Overlapping ranges within a layer are merged after projection so nothing is shaded twice; layers stack in input order. Inverse layers reuse the complement that D12's `unavailable` already computes, now shared in `layout/layout-intervals.ts`. Both parts carry `data-layer` as well as `data-kind`. Any meaning beyond shading (a "Closed" label) is the consumer's text (D20). `base.css` positions the time-grid part as it positions `time-grid-unavailable`, and makes `day-grid-day` a positioned, isolated box so the day part sits beneath the day's content. `default.css` fills both parts from `--calendar-background` (unset by default: a 6% wash of the text color) and hatches them under forced colors, at the opposite angle from unavailable time.
 
 **Considered and rejected:**
 
-- **A `display: 'background'` flag on events, as FullCalendar does.** Background entries would then pass through `eventOrder`, lane assignment, month bars, `hiddenCount`, the list view and the event store, each of which would have to filter them out, and `data: TData` would type two unrelated things. D37 later adopts the flag for individual dated events, which need ids and payloads; layers stay the mechanism for rules.
+- **A `display: 'background'` flag on events, as FullCalendar does.** Background entries would then pass through `eventOrder`, lane assignment, day-grid bars, `hiddenCount`, the list view and the event store, each of which would have to filter them out, and `data: TData` would type two unrelated things. D37 later adopts the flag for individual dated events, which need ids and payloads; layers stay the mechanism for rules.
 - **A dedicated `businessHoursFeature` with weekly rules in the core.** Narrower: it shades business hours only, leaves background events missing, and puts recurrence in the core against D12.
 - **A weekly-rules helper plus a calendar-wide `availability` option only.** Smallest, but the consumer recomputes on every navigation, month view gets nothing, and background events stay missing.
 - **Replacing D12 now.** `availability` would become a `kind: 'unavailable'` inverse layer per resource, and `Calendar_Resource.availability` would stop being required. Deferred until background layers are proven: it is a breaking change to the time-grid model.
@@ -972,21 +971,19 @@ Time-grid fractions use the fixed 24-hour clock axis (D40), as `unavailable` doe
 
 Rejected: a horizontal orientation on `timeGridView` (above); a separate all-day row per resource (more model and parts for no current need); a `/timeline` subpath (no size benefit under `sideEffects: false`).
 
-### D35 — Day grids are week-based navigation over the month builder
+### D35 — Day grids add week-based navigation and fixed month heights
 
 **Serves:** C1; D4, D29
 
-**Status:** accepted. Amends D4.
+**Status:** accepted; the separate month and week factories, layout features and month model names are superseded by D40.
 
-**Verified:** not verified — additive; the month model and its parts are unchanged
+**Why:** The day-grid builder lays out any range of whole weeks and marks days outside `period`. Week durations therefore reuse its row packing, overflow, backgrounds and parts. Calendar months have padding; week durations do not.
 
-**Why:** FullCalendar's day-grid views (`dayGridWeek`, a custom `{ weeks: 4 }` duration, `fixedWeekCount`) differ from the month view only in which days they show. `layoutMonth_build` already lays out any range of whole weeks and marks days outside `period`, so the month layout's model, its `MonthView*` parts and the theme CSS fit them as they are; only `monthLayout`'s `period`, `range` and `step` assume a calendar month. So:
+- **Weeks:** `dayGridView({ weeks, maxEventsPerDay, dayOverflow? })` covers `weeks × 7` days from the `firstDayOfWeek` of the week containing `date`. A step moves that many weeks, preserving the weekday. `maxEventsPerDay: Infinity` removes the cap.
+- **Month:** `dayGridView({ period: 'month', fixedWeekCount: true, maxEventsPerDay })` shows six weeks, including outside days. `fixedWeekCount` defaults to `false`.
+- **Not covered:** grids of fewer than seven columns and year grids. The model and base CSS still assume seven columns.
 
-- **`dayGridView({ weeks, maxEventsPerDay, dayOverflow? })`** registers `dayGridLayout`, a second layout feature over the same builder. Its period and range are `weeks × 7` days from the `firstDayOfWeek` of the week containing `date`, so no day is outside, and a step moves `weeks × 7` days. It builds the month model (`kind: 'month'`), so consumers render it with the month parts; the view's own kind is `'dayGrid'`, so `context.kind` and `eventOrder` can tell it apart. `maxEventsPerDay: Infinity` removes the cap for a tall single-week row.
-- **`monthView({ fixedWeekCount: true })`** always shows six weeks: 42 days from the start of the week containing the 1st, the extra days flagged `isOutside` like other padding days. It defaults to `false`, today's behaviour; FullCalendar defaults to `true`.
-- **Not covered:** grids of fewer than seven columns (`dayGridDay`, N-day grids) need a column count in the month model and in `base.css`, which hard-codes seven; that is an additive `dayGridView({ days })` later. `dayGridYear` waits for month- and year-length periods, which the list view also lacks. Whether FullCalendar aligns a custom week duration to the week of `date` is unverified; its docs say only that a default alignment is generated from the duration.
-
-Rejected: `weeks` on `monthView` (a one-week "month" view, and a settings bag where `weeks` and `fixedWeekCount` cannot combine); renaming the month layout, model and parts to a day grid (cleanest naming, but it touches core, both adapters, every theme and the D30 names for no behaviour change; still possible later).
+The original implementation kept separate factories and month-named models and parts to limit migration scope. D40 accepts that migration and unifies their names.
 
 ### D36 — List views can cover a calendar month or year
 
@@ -1002,7 +999,7 @@ Rejected: `weeks` on `monthView` (a one-week "month" view, and a settings bag wh
 - **`listView({ period: 'year' })`:** the calendar year containing `date`; a step moves one year and lands on 1 January.
 - Range equals period, as for the `days` form, so a list never shows padding days. The settings type is a union, so `days` and `period` cannot be combined.
 
-Rejected: `listView({ months })` (a count cannot express a calendar year, since `months: 12` would start at the month of `date`); separate `listMonthView`/`listYearView` factories (four names for one layout). The same month and year periods are what `dayGridYear` needs later (D35).
+Rejected: `listView({ months })` (a count cannot express a calendar year, since `months: 12` would start at the month of `date`); separate `listDayGridView`/`listYearView` factories (four names for one layout). The same month and year periods are what `dayGridYear` needs later (D35).
 
 ### D37 — Background events are events with `display: 'background'`, laid out under the others
 
@@ -1025,7 +1022,7 @@ Layout:
 - **Resources:** a background event without `resourceIds` covers every resource column, unlike an event, which appears only in the columns it names. A closure usually applies to everyone, so this matches FullCalendar.
 - **Overflow:** background events take no row, so they never count toward `maxEventsPerDay` or `hiddenCount` (D17).
 
-Parts: `MonthView_WeekBackgroundEvent`, `TimeGridView_AllDayBackgroundEvent` and `TimeGridView_BackgroundEvent` render `aria-hidden` divs with `--cal-*` geometry and `data-continues-before`/`data-continues-after`; they are not interactive, because the time and date they cover already belong to the day cells and columns (D13, D15). `base.css` sets `pointer-events: none` on them and places them under the events. The month spans are positioned above the in-flow day cells, so the day triggers must stay clickable through them. In the all-day row the consumer renders them before the bars, because grid items paint in DOM order. `default.css` fills them with a 10% accent wash (`--calendar-background-event`), translucent so day numbers and slot lines show through, and hatches them in `Highlight` under forced colours.
+Parts: `DayGridView_WeekBackgroundEvent`, `TimeGridView_AllDayBackgroundEvent` and `TimeGridView_BackgroundEvent` render `aria-hidden` divs with `--cal-*` geometry and `data-continues-before`/`data-continues-after`; they are not interactive, because the time and date they cover already belong to the day cells and columns (D13, D15). `base.css` sets `pointer-events: none` on them and places them under the events. The month spans are positioned above the in-flow day cells, so the day triggers must stay clickable through them. In the all-day row the consumer renders them before the bars, because grid items paint in DOM order. `default.css` fills them with a 10% accent wash (`--calendar-background-event`), translucent so day numbers and slot lines show through, and hatches them in `Highlight` under forced colours.
 
 **Rejected:**
 
@@ -1048,7 +1045,7 @@ Parts: `MonthView_WeekBackgroundEvent`, `TimeGridView_AllDayBackgroundEvent` and
 - **Expansion, in both modes:** an event spans from its lane up to the first later lane holding an event it overlaps, or to the column's edge. An event with nothing to its right fills the rest of the column.
 - **`timeGridView({ overlap })`:** `'side-by-side'` (the default) uses that span. `'cascade'` doubles it, capped at the column's edge, so the next lane covers at most half of the event, as FullCalendar promises. The default keeps today's look for existing grids except where expansion widens an event; FullCalendar's default is the overlapping layout.
 - **Paint order:** later lanes paint over earlier ones. `base.css` sets `z-index: calc(1 + var(--cal-lane))` on events and isolates each column, so lane z-indexes cannot rise above the sticky header. The column carries `lanes` (the most lanes any cluster in it uses) as `--cal-column-lanes`, which keeps the now line above every lane; `default.css` adds it to the focus ring's z-index. Side by side, nothing overlaps, so the order has no visible effect.
-- **Gap:** the geometry is exact fractions, so lanes meet edge to edge. `base.css` takes `--calendar-event-gap` (4px) off each event's width and height, so neighbouring lanes, back-to-back events and the column's edge stay apart; it is a theme concern, like `--calendar-bar-inset` for month bars (D26), not part of the model.
+- **Gap:** the geometry is exact fractions, so lanes meet edge to edge. `base.css` takes `--calendar-event-gap` (4px) off each event's width and height, so neighbouring lanes, back-to-back events and the column's edge stay apart; it is a theme concern, like `--calendar-bar-inset` for day-grid bars (D26), not part of the model.
 
 **Rejected:**
 
@@ -1176,6 +1173,20 @@ Implementation details are recorded in [the coordinate model](coordinate-model.m
 **Rejected:** enclosing timed background events like foreground bars, which fills real gaps in projected coverage;
 counting shading in stack depth, which changes event geometry; separate timeline background input options, which
 duplicate the established event and layer contracts.
+### D40 — Month and week grids share one day-grid API
+
+**Serves:** C1; D3, D4, D29, D35. Accepted by the user for core, React, Solid, themes and docs.
+
+**Why:** Month and week grids share their geometry and rendering anatomy. Their different periods and navigation steps are settings of one layout. Consolidating the API removes a second layout feature and the mismatch between a week grid and month-named models and parts.
+
+- **Factory:** `dayGridView({ period: 'month', maxEventsPerDay, dayOverflow?, fixedWeekCount? })` or `dayGridView({ weeks, maxEventsPerDay, dayOverflow? })`. The settings union rejects missing periods, combined `period` and `weeks`, and `fixedWeekCount` on the weeks form.
+- **Navigation:** month periods and padded ranges are unchanged; month steps land on the first day of the next or previous month. Week periods equal their ranges, start on `firstDayOfWeek`, and step by the configured weeks while preserving the weekday. `fixedWeekCount` still defaults to `false`.
+- **Core:** one `dayGridLayout` feature and one builder. Both `context.kind` and `layout.kind` are `'dayGrid'`. Models are `Calendar_DayGridLayout`, `Calendar_DayGridWeek` and `Calendar_DayGridDay`; the day feature map is `Calendar_DayGridDay_FeatureMap`.
+- **Bindings and themes:** both adapters export `DayGridView*` parts from `day-grid-view.tsx`. Parts emit `data-part='day-grid-*'`; all themes and examples use those selectors. Geometry variables and event packing are unchanged.
+- **Migration:** replace `monthView(settings)` with `dayGridView({ period: 'month', ...settings })`; replace `dayGridLayout`, `Calendar_DayGrid*`, `DayGridView*`, the `'month'` layout discriminator and `month-*` part selectors with their day-grid names. Old exports and selector aliases are removed. Consumer view keys such as `month` remain consumer-owned and can stay unchanged. Code that distinguished the two forms through `context.kind` must use its registered view key instead.
+- **Documentation:** one day-grid view page covers both forms and their shared model and parts.
+
+Rejected: retaining separate month and week factories (two names for one layout); keeping month-named aliases (preserves the naming mismatch); a generic factory for every layout (time grids, lists and timelines retain different models and parts).
 
 ## Test cases
 
@@ -1213,7 +1224,7 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - An event without `kind` is a type error, and `event.kind` narrows the union (type test). _(D7)_
 - An event with `display: 'background'` reaches neither `eventOrder`, list days nor `day.events`, and appears only as background spans and segments. _(C13, D37)_
 
-### Month layout
+### Day-grid month layout
 
 - A day with 6 single-day events shows 4 rows and reports `hiddenCount: 2`, `hasMore: true`. _(C6, D17, app R6.1)_
 - A 3-day event becomes one bar with `colSpan: 3` in its week row. _(D17)_
@@ -1245,8 +1256,8 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 
 - `dayGridView({ weeks: 1 })` on Wednesday 11 March 2026 with `firstDayOfWeek: 7` shows 8–14 March as one week with no outside days; `api.next()` goes to the 18th. _(D35)_
 - `dayGridView({ weeks: 4 })` shows four weeks from the week of `date` and steps 28 days. _(D35)_
-- `monthView({ fixedWeekCount: true })` shows six weeks for February 2026, with 1–14 March outside; without it, February 2026 has four. _(D35)_
-- `context.kind` is `'dayGrid'` while the layout model is `kind: 'month'`. _(D35)_
+- `dayGridView({ period: 'month', fixedWeekCount: true })` shows six weeks for February 2026, with 1–14 March outside; without it, February 2026 has four. _(D35)_
+- Both month and week day grids have `context.kind` and `layout.kind` equal to `'dayGrid'`. _(D40)_
 
 ### Timeline layout
 
@@ -1283,10 +1294,10 @@ Plain assertions grouped by area, each tagged with the capability (`C`), decisio
 - `props_merge` calls handlers in source order, joins `className`, shallow-merges `style`, and lets later values win. _(D25)_
 - Re-rendering `useCalendar` with referentially equal tracked options does not re-derive the store; changing `events` does. _(D24)_
 - `TimeGridView_Event` sets `--cal-start`, `--cal-span`, `--cal-lane`, `--cal-lanes`, `--cal-inline-start`, `--cal-inline-size` from its segment, and `TimeGridView_Column` sets `--cal-column-lanes`; a short segment's event carries `data-short`. _(D9, D38, D39, app R1.8)_
-- `MonthView_WeekEvent` sets `--cal-col-start`, `--cal-col-span`, `--cal-row`. _(D9, D17)_
-- `MonthView_Overflow` renders only when `day.hasMore`, with `data-hidden-count`. _(D14, D17, app R6.1)_
-- `MonthView_WeekBackgroundEvent`, `TimeGridView_AllDayBackgroundEvent` and `TimeGridView_BackgroundEvent` set their `--cal-*` geometry and continuation flags and are `aria-hidden`. _(C13, D37)_
-- `MonthView_DayTrigger view="day"` (C10) calls `api.navigate({ view: 'day', date })` on click; a consumer `onClick` calling `preventDefault()` skips it. _(D22, app R8.1)_
+- `DayGridView_WeekEvent` sets `--cal-col-start`, `--cal-col-span`, `--cal-row`. _(D9, D17)_
+- `DayGridView_Overflow` renders only when `day.hasMore`, with `data-hidden-count`. _(D14, D17, app R6.1)_
+- `DayGridView_WeekBackgroundEvent`, `TimeGridView_AllDayBackgroundEvent` and `TimeGridView_BackgroundEvent` set their `--cal-*` geometry and continuation flags and are `aria-hidden`. _(C13, D37)_
+- `DayGridView_DayTrigger view="day"` (C10) calls `api.navigate({ view: 'day', date })` on click; a consumer `onClick` calling `preventDefault()` skips it. _(D22, app R8.1)_
 - `TimeGridView_ColumnHeader` for an unavailable resource carries `data-unavailable`. _(C7, app R7.2)_
 - `Calendar_Root` and `useCalendar` + `Calendar_RootProvider` produce the same context. _(D6)_
 - `useCalendarSelector` re-renders only when its slice changes. _(D10)_
@@ -1330,7 +1341,7 @@ lib/calendar/
     index.ts                 public entry; the only import path for react/
     calendar.ts              calendar_create, calendar_navigation
     calendar.types.ts        options, state, api, model types
-    views.ts                 monthView, timeGridView, listView
+    views.ts                 dayGridView, timeGridView, listView
     clock.ts                 clock_interval, clock_fixed
     event-store.ts           eventStore_create
     layout/
@@ -1342,7 +1353,7 @@ lib/calendar/
     use-calendar.ts          useCalendar, useCalendarContext, useCalendarSelector
     use-event-store.ts
     calendar-root.tsx        Calendar_Root, Calendar_RootProvider
-    month-view.tsx           MonthView_*
+    day-grid-view.tsx           DayGridView_*
     time-grid-view.tsx       TimeGridView_*
     list-view.tsx            ListView_*
 ```
@@ -1387,7 +1398,7 @@ export type Calendar_Clock = {
   subscribe: (onTick: () => void) => () => void;
 };
 
-export type Calendar_MonthDay = {
+export type Calendar_DayGridDay = {
   key: string;
   date: Temporal.PlainDate;
   isOutside: boolean;
@@ -1397,7 +1408,7 @@ export type Calendar_MonthDay = {
   events: Calendar_Event<unknown>[]; // every event touching the day, for the consumer's popover (D14)
 };
 
-export type Calendar_MonthSegment<TData> = {
+export type Calendar_DayGridSegment<TData> = {
   key: string;
   event: Calendar_Event<TData>;
   colStart: number;
@@ -1407,10 +1418,10 @@ export type Calendar_MonthSegment<TData> = {
   continuesAfter: boolean;
 };
 
-export type Calendar_MonthLayout<TData> = {
-  kind: 'month';
+export type Calendar_DayGridLayout<TData> = {
+  kind: 'dayGrid';
   weekdays: Temporal.PlainDate[];
-  weeks: { key: string; days: Calendar_MonthDay[]; segments: Calendar_MonthSegment<TData>[]; rows: number }[];
+  weeks: { key: string; days: Calendar_DayGridDay[]; segments: Calendar_DayGridSegment<TData>[]; rows: number }[];
 };
 
 export type Calendar_TimeGridSegment<TData> = {
@@ -1439,7 +1450,7 @@ export type Calendar_TimeGridLayout<TData, TResourceData> = {
   kind: 'timeGrid';
   slots: { key: string; time: Temporal.PlainTime }[];
   columns: Calendar_TimeGridColumn<TData, TResourceData>[];
-  allDay?: { segments: Calendar_MonthSegment<TData>[]; rows: number };
+  allDay?: { segments: Calendar_DayGridSegment<TData>[]; rows: number };
   minColumnWidth?: string;
 };
 
@@ -1482,10 +1493,7 @@ export const calendar_navigation = <TViews>(
 };
 
 // core/views.ts
-export const monthView = (options: {
-  maxEventsPerDay: number;
-  dayOverflow?: (date: Temporal.PlainDate) => boolean;
-}) => ({ kind: 'month' as const, ...options });
+export const dayGridView = (options: Calendar_DayGridViewSettings) => ({ kind: 'dayGrid' as const, ...options });
 export const timeGridView = (options: {
   days: number;
   groupBy?: 'resource';
@@ -1550,35 +1558,38 @@ export const Calendar_RootProvider = ({
   // provider only (D6)
 };
 
-// react/month-view.tsx: each part renders its default element or `render` (D25) with data-scope/data-part (D3, D9)
-export const MonthView_Root = ({ model, ...props }: { model: Calendar_MonthLayout<unknown> } & PartProps<'div'>) => {
+// react/day-grid-view.tsx: each part renders its default element or `render` (D25) with data-scope/data-part (D3, D9)
+export const DayGridView_Root = ({
+  model,
+  ...props
+}: { model: Calendar_DayGridLayout<unknown> } & PartProps<'div'>) => {
   // role="grid"; provides the model to its parts
 };
-export const MonthView_Header = (props: PartProps<'div'>) => {};
-export const MonthView_HeaderCell = ({ weekday, ...props }: { weekday: Temporal.PlainDate } & PartProps<'div'>) => {};
-export const MonthView_Week = ({
+export const DayGridView_Header = (props: PartProps<'div'>) => {};
+export const DayGridView_HeaderCell = ({ weekday, ...props }: { weekday: Temporal.PlainDate } & PartProps<'div'>) => {};
+export const DayGridView_Week = ({
   week,
   ...props
-}: { week: Calendar_MonthLayout<unknown>['weeks'][number] } & PartProps<'div'>) => {
+}: { week: Calendar_DayGridLayout<unknown>['weeks'][number] } & PartProps<'div'>) => {
   // role="row"; --cal-rows
 };
-export const MonthView_Day = ({ day, ...props }: { day: Calendar_MonthDay } & PartProps<'div'>) => {
+export const DayGridView_Day = ({ day, ...props }: { day: Calendar_DayGridDay } & PartProps<'div'>) => {
   // role="gridcell"; data-today, data-outside
 };
-export const MonthView_DayTrigger = ({
+export const DayGridView_DayTrigger = ({
   day,
   view,
   ...props
-}: { day: Calendar_MonthDay; view: string } & PartProps<'button'>) => {
+}: { day: Calendar_DayGridDay; view: string } & PartProps<'button'>) => {
   // click → api.navigate({ view, date: day.date }) unless defaultPrevented (D22)
 };
-export const MonthView_WeekEvent = ({
+export const DayGridView_WeekEvent = ({
   segment,
   ...props
-}: { segment: Calendar_MonthSegment<unknown> } & PartProps<'button'>) => {
+}: { segment: Calendar_DayGridSegment<unknown> } & PartProps<'button'>) => {
   // --cal-col-start, --cal-col-span, --cal-row; data-continues-before/after (D17)
 };
-export const MonthView_Overflow = ({ day, ...props }: { day: Calendar_MonthDay } & PartProps<'button'>) => {
+export const DayGridView_Overflow = ({ day, ...props }: { day: Calendar_DayGridDay } & PartProps<'button'>) => {
   // renders only when day.hasMore; data-hidden-count (D14)
 };
 
@@ -1607,7 +1618,7 @@ export const TimeGridView_AllDayCell = ({
 export const TimeGridView_AllDayEvent = ({
   segment,
   ...props
-}: { segment: Calendar_MonthSegment<unknown> } & PartProps<'button'>) => {};
+}: { segment: Calendar_DayGridSegment<unknown> } & PartProps<'button'>) => {};
 export const TimeGridView_Body = (props: PartProps<'div'>) => {
   // --cal-slots
 };
@@ -1675,7 +1686,7 @@ Generic parameters are shown as `unknown` on the parts for brevity; the real par
 
 **From implementing the core (`lib/calendar/core`):**
 
-- Exports follow the repo's scope-prefix rule, so the skeleton's names changed: `monthView`/`timeGridView`/`listView` → `calendarView_month`/`calendarView_timeGrid`/`calendarView_list`; `clock_interval`/`clock_fixed` → `calendarClock_interval`/`calendarClock_fixed`; `eventStore_create` → `calendarEventStore_create`. `calendar_create` and `calendar_navigation` are unchanged.
+- Exports follow the repo's scope-prefix rule, so the skeleton's names changed: `dayGridView`/`timeGridView`/`listView` → `calendarView_month`/`calendarView_timeGrid`/`calendarView_list`; `clock_interval`/`clock_fixed` → `calendarClock_interval`/`calendarClock_fixed`; `eventStore_create` → `calendarEventStore_create`. `calendar_create` and `calendar_navigation` are unchanged.
 - The event store's `update` takes an updater (`update(id, event => next)`) instead of a partial patch, because a `Partial` of the timed/all-day union type-checks invalid mixes.
 - Duplicate event ids are reported with `console.error` (the lint config bans `console.warn`; React reports keys the same way).
 - The D21 lint boundary is implemented in `eslint.config.mjs`: `lib/calendar/core/**` (excluding `tests/`) cannot import React, `@tanstack/react-*`, `~/…` or the React adapter.

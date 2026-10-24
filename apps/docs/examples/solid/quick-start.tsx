@@ -1,12 +1,12 @@
 // #region app
 import type { Calendar_EventInput, Calendar_State } from '@calendar-tsx/core';
-import { createCalendarViews, monthView, timeGridView } from '@calendar-tsx/core';
+import { createCalendarViews, dayGridView, timeGridView } from '@calendar-tsx/core';
 import {
   CalendarProvider,
-  MonthView,
-  MonthViewDay,
-  MonthViewWeek,
-  MonthViewWeekEvent,
+  DayGridView,
+  DayGridViewDay,
+  DayGridViewWeek,
+  DayGridViewWeekEvent,
   useCalendar,
   useCalendarSelector,
 } from '@calendar-tsx/solid';
@@ -18,7 +18,7 @@ type Booking = { title: string };
 
 // module scope: views and features are compared by reference
 const views = createCalendarViews({
-  month: monthView({ maxEventsPerDay: 3 }),
+  month: dayGridView({ period: 'month', maxEventsPerDay: 3 }),
   week: timeGridView({ days: 7 }),
 });
 
@@ -58,24 +58,24 @@ const Month = () => {
   const month = () => {
     const current = layout();
 
-    return current.kind === 'month' ? current : undefined;
+    return current.kind === 'dayGrid' ? current : undefined;
   };
 
   return (
     <Show when={month()}>
       {month => (
-        <MonthView model={month()}>
+        <DayGridView model={month()}>
           <For each={month().weeks}>
             {week => (
-              <MonthViewWeek week={week}>
-                <For each={week.days}>{day => <MonthViewDay day={day}>{day.date.day}</MonthViewDay>}</For>
+              <DayGridViewWeek week={week}>
+                <For each={week.days}>{day => <DayGridViewDay day={day}>{day.date.day}</DayGridViewDay>}</For>
                 <For each={week.segments}>
-                  {segment => <MonthViewWeekEvent segment={segment}>{segment.event.data.title}</MonthViewWeekEvent>}
+                  {segment => <DayGridViewWeekEvent segment={segment}>{segment.event.data.title}</DayGridViewWeekEvent>}
                 </For>
-              </MonthViewWeek>
+              </DayGridViewWeek>
             )}
           </For>
-        </MonthView>
+        </DayGridView>
       )}
     </Show>
   );

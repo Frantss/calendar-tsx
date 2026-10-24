@@ -1,18 +1,18 @@
-import type { Calendar_MonthDay } from '@calendar-tsx/core';
-import { MonthViewDay, MonthViewDayTrigger } from '@calendar-tsx/solid';
+import type { Calendar_DayGridDay } from '@calendar-tsx/core';
+import { DayGridViewDay, DayGridViewDayTrigger } from '@calendar-tsx/solid';
 
 import type { Booking } from '../core/setup';
 
 // #region utilities
-export const Day = (props: { day: Calendar_MonthDay<Booking> }) => (
-  <MonthViewDay day={props.day} class='p-1 data-outside:bg-zinc-50 data-outside:text-zinc-500'>
-    <MonthViewDayTrigger
+export const Day = (props: { day: Calendar_DayGridDay<Booking> }) => (
+  <DayGridViewDay day={props.day} class='p-1 data-outside:bg-zinc-50 data-outside:text-zinc-500'>
+    <DayGridViewDayTrigger
       day={props.day}
       view='day'
       class='size-7 rounded-full in-data-today:bg-indigo-600 in-data-today:text-white'
     >
       {props.day.date.day}
-    </MonthViewDayTrigger>
-  </MonthViewDay>
+    </DayGridViewDayTrigger>
+  </DayGridViewDay>
 );
 // #endregion utilities

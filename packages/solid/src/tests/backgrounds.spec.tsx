@@ -2,9 +2,9 @@ import { For } from 'solid-js';
 import { Temporal } from 'temporal-polyfill';
 import { expect, it } from 'vitest';
 
-import type { Calendar_MonthLayout, Calendar_TimeGridLayout } from '@calendar-tsx/core';
-import { backgroundFeature, createBackgroundLayer, monthView, timeGridView } from '@calendar-tsx/core';
-import { MonthView, MonthViewDay, MonthViewDayBackground, MonthViewWeek } from '#month-view';
+import type { Calendar_DayGridLayout, Calendar_TimeGridLayout } from '@calendar-tsx/core';
+import { backgroundFeature, createBackgroundLayer, dayGridView, timeGridView } from '@calendar-tsx/core';
+import { DayGridView, DayGridViewDay, DayGridViewDayBackground, DayGridViewWeek } from '#day-grid-view';
 import type { Fixtures_EventData } from '#tests/calendar.fixtures';
 import { calendarSolidSetup_render } from '#tests/calendar-solid.setup';
 import { TimeGridView, TimeGridViewBackground, TimeGridViewBody, TimeGridViewColumn } from '#time-grid-view';
@@ -14,7 +14,7 @@ type Features = { backgroundFeature: typeof backgroundFeature };
 
 const views = {
   day: timeGridView({ days: 1, features: { backgroundFeature } }),
-  month: monthView({ maxEventsPerDay: 2, features: { backgroundFeature } }),
+  month: dayGridView({ period: 'month', maxEventsPerDay: 2, features: { backgroundFeature } }),
 };
 
 const holiday = createBackgroundLayer({
@@ -53,24 +53,24 @@ const TimeGridBody = () => {
 };
 
 const MonthBody = () => {
-  const month = useCalendarSelector(state => state.layout as Calendar_MonthLayout<Fixtures_EventData, Features>);
+  const month = useCalendarSelector(state => state.layout as Calendar_DayGridLayout<Fixtures_EventData, Features>);
 
   return (
-    <MonthView model={month()}>
+    <DayGridView model={month()}>
       <For each={month().weeks}>
         {week => (
-          <MonthViewWeek week={week}>
+          <DayGridViewWeek week={week}>
             <For each={week.days}>
               {day => (
-                <MonthViewDay day={day}>
-                  <For each={day.backgrounds}>{background => <MonthViewDayBackground background={background} />}</For>
-                </MonthViewDay>
+                <DayGridViewDay day={day}>
+                  <For each={day.backgrounds}>{background => <DayGridViewDayBackground background={background} />}</For>
+                </DayGridViewDay>
               )}
             </For>
-          </MonthViewWeek>
+          </DayGridViewWeek>
         )}
       </For>
-    </MonthView>
+    </DayGridView>
   );
 };
 
@@ -89,9 +89,9 @@ it('renders a time-grid background with its kind and geometry', () => {
 
 it('renders a day background inside its month day', () => {
   calendarSolidSetup_render(() => <MonthBody />, { views, view: 'month', backgrounds: [holiday] });
-  const backgrounds = part('month-day-background');
+  const backgrounds = part('day-grid-day-background');
 
   expect(backgrounds).toHaveLength(1);
   expect(backgrounds[0]?.dataset).toMatchObject({ kind: 'holiday', layer: 'holiday' });
-  expect(backgrounds[0]?.closest('[data-part="month-day"]')?.getAttribute('data-date')).toBe('2026-03-11');
+  expect(backgrounds[0]?.closest('[data-part="day-grid-day"]')?.getAttribute('data-date')).toBe('2026-03-11');
 });

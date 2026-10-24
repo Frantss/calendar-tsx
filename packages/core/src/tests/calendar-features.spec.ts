@@ -6,7 +6,7 @@ import { expect, it, vi } from 'vitest';
 import { createCalendar } from '#calendar';
 import { fixedClock } from '#calendar-clock';
 import { listLayout } from '#calendar-layouts';
-import { listView, monthView, timeGridView, createCalendarViews } from '#calendar-views';
+import { listView, dayGridView, timeGridView, createCalendarViews } from '#calendar-views';
 import type { Calendar_Event, Calendar_Feature, Calendar_TimeGridLayout } from '#calendar.types';
 import { fixtures_timeZone, fixtures_timed } from '#tests/calendar.fixtures';
 
@@ -213,7 +213,7 @@ it('replaces an implementation by key everywhere', () => {
 
 it('navigates through the active view layout', () => {
   const onNavigate = vi.fn();
-  const month = createCalendarViews({ month: monthView({ maxEventsPerDay: 3 }) });
+  const month = createCalendarViews({ month: dayGridView({ period: 'month', maxEventsPerDay: 3 }) });
   const calendar = createCalendar({
     timeZone: fixtures_timeZone,
     views: month.views,
@@ -227,15 +227,15 @@ it('navigates through the active view layout', () => {
   calendar.api.next();
 
   expect(onNavigate.mock.lastCall?.[0].date.toString()).toBe('2026-04-01');
-  expect(calendar.store.state.layout.kind).toBe('month');
+  expect(calendar.store.state.layout.kind).toBe('dayGrid');
 });
 
 it('types features from the views and options', () => {
   const calendar = setup();
   const layout = calendar.store.state.layout;
 
-  // @ts-expect-error no view registers a month layout
-  if (layout.kind === 'month') return;
+  // @ts-expect-error no view registers a day-grid layout
+  if (layout.kind === 'dayGrid') return;
 
   // @ts-expect-error the setting exists only on views that list the feature
   listView({ days: 1, highlight: {} });

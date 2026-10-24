@@ -1,4 +1,4 @@
-`base.css` positions everything: month bars, time-grid columns, lanes and the now line. A custom theme imports it and
+`base.css` positions everything: day-grid bars, time-grid columns, lanes and the now line. A custom theme imports it and
 adds only the look.
 
 To try token values before writing a theme, open the [playground](/docs/playground). Its token editor overrides the
@@ -26,20 +26,20 @@ The size tokens (`--calendar-slot-height`, `--calendar-bar-height`, `--calendar-
 Every part renders `data-scope='calendar'` and one `data-part`. Boolean state attributes are present (`data-x=""`)
 when true and absent otherwise.
 
-### Month
+### Day grid
 
-| `data-part`                   | Component                      | Attributes                                      |
-| ----------------------------- | ------------------------------ | ----------------------------------------------- |
-| `month-root`                  | `MonthView`                    |                                                 |
-| `month-header`                | `MonthViewHeader`              |                                                 |
-| `month-header-cell`           | `MonthViewHeaderCell`          | `data-weekday` (1–7, Monday–Sunday)             |
-| `month-week`                  | `MonthViewWeek`                |                                                 |
-| `month-day`                   | `MonthViewDay`                 | `data-today`, `data-outside`, `data-date`       |
-| `month-day-trigger`           | `MonthViewDayTrigger`          |                                                 |
-| `month-week-event`            | `MonthViewWeekEvent`           | `data-continues-before`, `data-continues-after` |
-| `month-week-background-event` | `MonthViewWeekBackgroundEvent` | `data-continues-before`, `data-continues-after` |
-| `month-day-background`        | `MonthViewDayBackground`       | `data-layer`, `data-kind`                       |
-| `month-overflow`              | `MonthViewOverflow`            | `data-hidden-count`                             |
+| `data-part`                      | Component                        | Attributes                                      |
+| -------------------------------- | -------------------------------- | ----------------------------------------------- |
+| `day-grid-root`                  | `DayGridView`                    |                                                 |
+| `day-grid-header`                | `DayGridViewHeader`              |                                                 |
+| `day-grid-header-cell`           | `DayGridViewHeaderCell`          | `data-weekday` (1–7, Monday–Sunday)             |
+| `day-grid-week`                  | `DayGridViewWeek`                |                                                 |
+| `day-grid-day`                   | `DayGridViewDay`                 | `data-today`, `data-outside`, `data-date`       |
+| `day-grid-day-trigger`           | `DayGridViewDayTrigger`          |                                                 |
+| `day-grid-week-event`            | `DayGridViewWeekEvent`           | `data-continues-before`, `data-continues-after` |
+| `day-grid-week-background-event` | `DayGridViewWeekBackgroundEvent` | `data-continues-before`, `data-continues-after` |
+| `day-grid-day-background`        | `DayGridViewDayBackground`       | `data-layer`, `data-kind`                       |
+| `day-grid-overflow`              | `DayGridViewOverflow`            | `data-hidden-count`                             |
 
 ### Time grid
 
@@ -100,9 +100,9 @@ Parts emit their layout as unitless `--cal-*` custom properties on their own ele
 
 | Part                                                                          | Variables                                                                                                                                           |
 | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `month-week`                                                                  | `--cal-rows`: bar rows shown                                                                                                                        |
-| `month-week-event`, `time-grid-all-day-event`                                 | `--cal-col-start`, `--cal-col-span`, `--cal-row` (zero-based)                                                                                       |
-| `month-week-background-event`, `time-grid-all-day-background-event`           | `--cal-col-start`, `--cal-col-span`                                                                                                                 |
+| `day-grid-week`                                                                  | `--cal-rows`: bar rows shown                                                                                                                        |
+| `day-grid-week-event`, `time-grid-all-day-event`                                 | `--cal-col-start`, `--cal-col-span`, `--cal-row` (zero-based)                                                                                       |
+| `day-grid-week-background-event`, `time-grid-all-day-background-event`           | `--cal-col-start`, `--cal-col-span`                                                                                                                 |
 | `time-grid-root`                                                              | `--cal-columns`, `--cal-slots`, `--cal-all-day-rows`, `--cal-min-column-width`                                                                      |
 | `time-grid-body`                                                              | `--cal-slots`                                                                                                                                       |
 | `time-grid-column`                                                            | `--cal-column-lanes`: the most lanes in the column                                                                                                  |

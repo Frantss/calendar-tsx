@@ -1,5 +1,5 @@
 import type { Calendar_DayOfWeek, Calendar_State } from '@calendar-tsx/core';
-import { createCalendarViews, listView, monthView, timeGridView } from '@calendar-tsx/core';
+import { createCalendarViews, listView, dayGridView, timeGridView } from '@calendar-tsx/core';
 
 import type { Booking, Room } from './sample-data';
 
@@ -49,7 +49,7 @@ export const createPlaygroundViews = ({
   };
 
   return createCalendarViews({
-    month: monthView({ maxEventsPerDay, hiddenDays }),
+    month: dayGridView({ period: 'month', maxEventsPerDay, hiddenDays }),
     week: timeGridView({ days: 7, ...timed }),
     day: timeGridView({ days: 1, ...timed }),
     rooms: timeGridView({ days: 1, groupBy: 'resource', ...timed }),

@@ -3,7 +3,7 @@ import {
   backgroundFeature,
   createCalendarViews,
   listView,
-  monthView,
+  dayGridView,
   timeGridView,
   timelineView,
 } from '@calendar-tsx/core';
@@ -15,7 +15,7 @@ export type Room = { capacity: number };
 // #region views
 // module scope: views and features are compared by reference
 export const views = createCalendarViews({
-  month: monthView({ maxEventsPerDay: 3 }),
+  month: dayGridView({ period: 'month', maxEventsPerDay: 3 }),
   week: timeGridView({ days: 7 }),
   day: timeGridView({ days: 1 }),
   rooms: timeGridView({ days: 1, groupBy: 'resource' }),

@@ -1,34 +1,34 @@
 import { afterEach, beforeEach, expect, it } from 'vitest';
 
-import type { Calendar_MonthLayout } from '@calendar-tsx/core';
-import { MonthViewDay, MonthViewDayTrigger, MonthView, MonthViewWeek, MonthViewWeekEvent, useCalendarSelector } from '@calendar-tsx/react';
+import type { Calendar_DayGridLayout } from '@calendar-tsx/core';
+import { DayGridViewDay, DayGridViewDayTrigger, DayGridView, DayGridViewWeek, DayGridViewWeekEvent, useCalendarSelector } from '@calendar-tsx/react';
 import type { ThemesSetup_EventData } from '#tests/themes.setup';
 import '../../material-ui.css';
 
 import { themesSetup_allDay, themesSetup_part, themesSetup_render } from '#tests/themes.setup';
 
 const Month = () => {
-  const month = useCalendarSelector(state => state.layout) as Calendar_MonthLayout<ThemesSetup_EventData>;
+  const month = useCalendarSelector(state => state.layout) as Calendar_DayGridLayout<ThemesSetup_EventData>;
 
   return (
-    <MonthView model={month}>
+    <DayGridView model={month}>
       {month.weeks.map(week => (
-        <MonthViewWeek key={week.key} week={week}>
+        <DayGridViewWeek key={week.key} week={week}>
           {week.days.map(day => (
-            <MonthViewDay key={day.key} day={day}>
-              <MonthViewDayTrigger day={day} view='month'>
+            <DayGridViewDay key={day.key} day={day}>
+              <DayGridViewDayTrigger day={day} view='month'>
                 {day.date.day}
-              </MonthViewDayTrigger>
-            </MonthViewDay>
+              </DayGridViewDayTrigger>
+            </DayGridViewDay>
           ))}
           {week.segments.map(segment => (
-            <MonthViewWeekEvent key={segment.key} segment={segment}>
+            <DayGridViewWeekEvent key={segment.key} segment={segment}>
               {segment.event.data.title}
-            </MonthViewWeekEvent>
+            </DayGridViewWeekEvent>
           ))}
-        </MonthViewWeek>
+        </DayGridViewWeek>
       ))}
-    </MonthView>
+    </DayGridView>
   );
 };
 
@@ -69,8 +69,8 @@ const tint = (primary: string, paper: string) => {
   return color;
 };
 
-const today = () => themesSetup_part('month-day', '[data-today]')[0]?.querySelector('[data-part="month-day-trigger"]');
-const bar = () => themesSetup_part('month-week-event')[0];
+const today = () => themesSetup_part('day-grid-day', '[data-today]')[0]?.querySelector('[data-part="day-grid-day-trigger"]');
+const bar = () => themesSetup_part('day-grid-week-event')[0];
 const events = [themesSetup_allDay('Fair', { start: '2026-03-11', end: '2026-03-11' })];
 
 it('takes the accent, event fill and radius from the MUI variables', async () => {
@@ -92,7 +92,7 @@ it('follows the dark scheme class on the root element', async () => {
 
 it.each(['dark', 'data-dark', 'data-mui-color-scheme'])('follows a dark scheme set by %s on an element inside the page', async selector => {
   await themesSetup_render(<Month />, { view: 'month', events, className: selector === 'dark' ? 'dark' : undefined });
-  const root = themesSetup_part('month-root')[0]!.parentElement!;
+  const root = themesSetup_part('day-grid-root')[0]!.parentElement!;
   if (selector !== 'dark') root.setAttribute(selector, 'dark');
 
   expect(today() && getComputedStyle(today()!).backgroundColor).toBe('rgb(144, 202, 249)');

@@ -7,7 +7,7 @@ import { iife } from '#tests/utils/iife';
 
 import { createCalendar } from '#calendar';
 import { fixedClock } from '#calendar-clock';
-import { listView, monthView, timeGridView, createCalendarViews } from '#calendar-views';
+import { listView, dayGridView, timeGridView, createCalendarViews } from '#calendar-views';
 import type {
   Calendar_Clock,
   Calendar_EventInput,
@@ -20,7 +20,7 @@ import { fixtures_timeZone } from '#tests/calendar.fixtures';
 
 export const calendarSetup_defaults = iife(() => {
   const views = {
-    month: monthView({ maxEventsPerDay: 4 }),
+    month: dayGridView({ period: 'month', maxEventsPerDay: 4 }),
     week: timeGridView({ days: 7 }),
     day: timeGridView({ days: 1 }),
     resources: timeGridView({ days: 1, groupBy: 'resource', allDay: false }),

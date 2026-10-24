@@ -6,7 +6,7 @@ import { backgroundFeature, createWeeklyRanges } from '#calendar-backgrounds';
 import { fixedClock } from '#calendar-clock';
 import { getCalendarNavigation } from '#calendar-navigation';
 import { timeGridLayout } from '#calendar-layouts';
-import { createCalendarViews, dayGridView, listView, monthView, timeGridView, timelineView } from '#calendar-views';
+import { createCalendarViews, dayGridView, listView, timeGridView, timelineView } from '#calendar-views';
 import type { Calendar_BackgroundLayer, Calendar_EventInput, Calendar_Range, Calendar_Resource } from '#calendar.types';
 
 const date = (value: string) => Temporal.PlainDate.from(value);
@@ -34,7 +34,7 @@ const views = createCalendarViews({
   night_timeline: timelineView(night),
   grid: timeGridView(daytime),
   timeline: timelineView(daytime),
-  month: monthView({ maxEventsPerDay: 1, fixedWeekCount: true, ...weekdays }),
+  month: dayGridView({ period: 'month', maxEventsPerDay: 1, fixedWeekCount: true, ...weekdays }),
   days: dayGridView({ weeks: 2, maxEventsPerDay: 2, ...weekdays }),
   list: listView({ days: 7, ...weekdays }),
   partial: timeGridView(partial),

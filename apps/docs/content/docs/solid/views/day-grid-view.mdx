@@ -1,6 +1,16 @@
 ---
 title: Day grid view
-description: Any number of whole weeks, rendered with the month parts.
+description: Calendar months or whole weeks with spanning event bars.
 ---
 
 <include>../../../shared/views/day-grid.mdx#setup</include>
+
+## Example
+
+`useLayout` narrows the layout for `<Show>`; see [narrowing the layout](/docs/solid/reference/primitives#narrowing-the-layout).
+
+<include lang='tsx' meta='title="day-grid-view.tsx"'>
+  ../../../../examples/solid/day-grid-view.tsx#view
+</include>
+
+<include>../../../shared/views/day-grid.mdx#reference</include>

@@ -3,18 +3,18 @@
 > [!WARNING]
 > **Experimental.** `@calendar-tsx/core` is an experiment. Its API can change or be removed in any release, without notice.
 
-Framework-agnostic calendar engine that powers [`@calendar-tsx/react`](../react). It derives month, time-grid,
+Framework-agnostic calendar engine that powers [`@calendar-tsx/react`](../react). It derives day-grid, time-grid,
 list and timeline layouts from controlled view/date options and event input, in a single time zone.
 
 ## Quick example
 
 ```ts
-import { monthView, timeGridView, createCalendarViews, createCalendar } from '@calendar-tsx/core';
+import { dayGridView, timeGridView, createCalendarViews, createCalendar } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
 
 // module scope: views and features are compared by reference
 const views = createCalendarViews({
-  month: monthView({ maxEventsPerDay: 4 }),
+  month: dayGridView({ period: 'month', maxEventsPerDay: 4 }),
   week: timeGridView({ days: 7 }),
 });
 
@@ -30,7 +30,7 @@ const calendar = createCalendar({
   },
 });
 
-calendar.store.state.layout; // month | timeGrid: the layouts the views register
+calendar.store.state.layout; // dayGrid | timeGrid: the layouts the views register
 calendar.api.next(); // emits onNavigate; never writes state
 ```
 
@@ -114,7 +114,7 @@ createCalendar({
 
 - Time grid: `column.backgroundEvents` segments (all-day ones cover the whole column) and `allDay.backgroundEvents`
   spans.
-- Month: `week.backgroundEvents` spans, for all-day background events only.
+- Day grid: `week.backgroundEvents` spans, for all-day background events only.
 - List: left out.
 - Without `resourceIds`, a background event shades every resource column.
 
@@ -141,12 +141,12 @@ createCalendar({ ...options, views: views.views, features: { ...views.features }
 - **Types:** features extend the `Calendar_*_FeatureMap` interfaces by declaration merging, keyed by their export name.
   Options, view settings, state, API and model fields then exist only where the feature is registered.
 - **Replacing an implementation:** `{ ...views.features, listLayout: myList }` replaces it in every view.
-- **Layouts are features too:** `monthLayout`, `dayGridLayout`, `timeGridLayout`, `listLayout` and `timelineLayout` supply
+- **Layouts are features too:** `dayGridLayout`, `timeGridLayout`, `listLayout` and `timelineLayout` supply
   navigation and `build`; a new view kind is a layout feature plus a `Calendar_Layout_FeatureMap` entry.
 
 ## Background layers
 
-`backgroundFeature` shades time in the time-grid and month views that list it (design D33). Each layer in the
+`backgroundFeature` shades time in the time-grid and day-grid views that list it (design D33). Each layer in the
 `backgrounds` option is one kind of shading: fixed ranges, a function of the visible range, or the gaps they leave
 (`inverse`), optionally limited to some resources.
 
@@ -176,12 +176,12 @@ const backgrounds = [
 
 const views = createCalendarViews({
   week: timeGridView({ days: 7, features: { backgroundFeature } }),
-  month: monthView({ maxEventsPerDay: 4, features: { backgroundFeature } }),
+  month: dayGridView({ period: 'month', maxEventsPerDay: 4, features: { backgroundFeature } }),
 });
 
 createCalendar({ ...options, views: views.views, features: { ...views.features }, backgrounds });
 ```
 
-Time-grid columns get `backgrounds: { key, layer, kind, start, span }[]`, as fractions of the day. Month days get
+Time-grid columns get `backgrounds: { key, layer, kind, start, span }[]`, as fractions of the day. Day-grid days get
 `backgrounds: { key, layer, kind }[]` from all-day ranges, and from inverse layers on the days none of their ranges
-touch. Render them with `TimeGridViewBackground` and `MonthViewDayBackground`.
+touch. Render them with `TimeGridViewBackground` and `DayGridViewDayBackground`.

@@ -1,11 +1,11 @@
-import type { Calendar_MonthDay } from '@calendar-tsx/core';
-import { MonthViewDayTrigger } from '@calendar-tsx/react';
+import type { Calendar_DayGridDay } from '@calendar-tsx/core';
+import { DayGridViewDayTrigger } from '@calendar-tsx/react';
 
 import type { Booking } from '../core/setup';
 
 // #region trigger
-export const DayNumber = ({ day, locked }: { day: Calendar_MonthDay<Booking>; locked: boolean }) => (
-  <MonthViewDayTrigger
+export const DayNumber = ({ day, locked }: { day: Calendar_DayGridDay<Booking>; locked: boolean }) => (
+  <DayGridViewDayTrigger
     day={day}
     view='day'
     onClick={event => {
@@ -14,6 +14,6 @@ export const DayNumber = ({ day, locked }: { day: Calendar_MonthDay<Booking>; lo
     }}
   >
     {day.date.day}
-  </MonthViewDayTrigger>
+  </DayGridViewDayTrigger>
 );
 // #endregion trigger

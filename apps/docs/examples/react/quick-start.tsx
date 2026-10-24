@@ -1,12 +1,12 @@
 // #region app
 import type { Calendar_EventInput, Calendar_State } from '@calendar-tsx/core';
-import { createCalendarViews, monthView, timeGridView } from '@calendar-tsx/core';
+import { createCalendarViews, dayGridView, timeGridView } from '@calendar-tsx/core';
 import {
   CalendarProvider,
-  MonthView,
-  MonthViewDay,
-  MonthViewWeek,
-  MonthViewWeekEvent,
+  DayGridView,
+  DayGridViewDay,
+  DayGridViewWeek,
+  DayGridViewWeekEvent,
   useCalendar,
   useCalendarSelector,
 } from '@calendar-tsx/react';
@@ -18,7 +18,7 @@ type Booking = { title: string };
 
 // module scope: views and features are compared by reference
 const views = createCalendarViews({
-  month: monthView({ maxEventsPerDay: 3 }),
+  month: dayGridView({ period: 'month', maxEventsPerDay: 3 }),
   week: timeGridView({ days: 7 }),
 });
 
@@ -55,25 +55,25 @@ type State = Calendar_State<Booking, unknown, typeof views.views>;
 const Month = () => {
   const layout = useCalendarSelector((state: State) => state.layout);
 
-  if (layout.kind !== 'month') return null;
+  if (layout.kind !== 'dayGrid') return null;
 
   return (
-    <MonthView model={layout}>
+    <DayGridView model={layout}>
       {layout.weeks.map(week => (
-        <MonthViewWeek key={week.key} week={week}>
+        <DayGridViewWeek key={week.key} week={week}>
           {week.days.map(day => (
-            <MonthViewDay key={day.key} day={day}>
+            <DayGridViewDay key={day.key} day={day}>
               {day.date.day}
-            </MonthViewDay>
+            </DayGridViewDay>
           ))}
           {week.segments.map(segment => (
-            <MonthViewWeekEvent key={segment.key} segment={segment}>
+            <DayGridViewWeekEvent key={segment.key} segment={segment}>
               {segment.event.data.title}
-            </MonthViewWeekEvent>
+            </DayGridViewWeekEvent>
           ))}
-        </MonthViewWeek>
+        </DayGridViewWeek>
       ))}
-    </MonthView>
+    </DayGridView>
   );
 };
 // #endregion app

@@ -5,7 +5,7 @@ import {
   createCalendar,
   createCalendarViews,
   createWeeklyRanges,
-  monthView,
+  dayGridView,
   timeGridView,
   timelineView,
 } from '@calendar-tsx/core';
@@ -40,7 +40,7 @@ export const backgrounds = [
 // #region views
 export const views = createCalendarViews({
   week: timeGridView({ days: 7, features: { backgroundFeature } }),
-  month: monthView({ maxEventsPerDay: 3, features: { backgroundFeature } }),
+  month: dayGridView({ period: 'month', maxEventsPerDay: 3, features: { backgroundFeature } }),
   timeline: timelineView({ days: 7, groupBy: 'resource', features: { backgroundFeature } }),
 });
 
