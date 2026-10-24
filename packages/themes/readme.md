@@ -96,6 +96,10 @@ layered, so see [Tailwind](#tailwind).
 **Scrolling.** `TimeGridView` scrolls, with a sticky header. Give it a height (`max-block-size: 40rem`) to
 scroll inside the page. A view's `timeWindow` limits the clock range before rendering.
 
+**Brief time-grid events.** The core lays a brief timed event out half a slot long. When a time-grid event's content box
+is still shorter than one line, the default theme covers its content with the event's fill, so the bar and stripe show
+without a clipped slice of text.
+
 **Timeline event widths.** The core gives brief timed events a half-slot minimum display duration and stacks using those enlarged spans. Set `timelineView({ minEventMinutes })` to change the minimum, or `0` for exact time widths. The themes clip labels and draw side borders inside the calculated display width. Custom themes should keep inline padding and borders off the event box so they cannot expand it over adjacent events. Increase `minSlotWidth` when the time axis needs more space.
 
 **List dates.** Day headings sit beside their event rows. Inside the header, render a `<time>` with a `<strong>` day number and a `<span>` containing the weekday and month/year. `--calendar-list-date-width` caps the date column at `10rem` by default; it narrows with the list, and labels wrap. Keep the header and event parts as direct children of `ListViewDay`.

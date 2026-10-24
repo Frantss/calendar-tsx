@@ -36,7 +36,6 @@ import {
 } from '#layout/layout-columns';
 
 const DEFAULT_SLOT_MINUTES = 30;
-const DEFAULT_MIN_EVENT_MINUTES = 15;
 const DEFAULT_SHORT_EVENT_MINUTES = 30;
 const MS_PER_MINUTE = 60_000;
 
@@ -233,6 +232,7 @@ export const layoutTimeGrid_build = <TData, TResourceData>({
       ? dates.flatMap(date => groups.map(resource => ({ date, resource })))
       : groups.flatMap(resource => dates.map(date => ({ date, resource })));
 
+  const slotMinutes = definition.slotMinutes ?? DEFAULT_SLOT_MINUTES;
   const columns = pairs.map(({ date, resource }) =>
     buildColumn({
       dateIndex: plan.dates.indexByDate.get(date.toString()) as number,
@@ -243,11 +243,10 @@ export const layoutTimeGrid_build = <TData, TResourceData>({
       plan,
       now,
       overlap: definition.overlap ?? 'side-by-side',
-      minEventMs: (definition.minEventMinutes ?? DEFAULT_MIN_EVENT_MINUTES) * MS_PER_MINUTE,
+      minEventMs: (definition.minEventMinutes ?? slotMinutes / 2) * MS_PER_MINUTE,
       shortEventMs: (definition.shortEventMinutes ?? DEFAULT_SHORT_EVENT_MINUTES) * MS_PER_MINUTE,
     }),
   );
-  const slotMinutes = definition.slotMinutes ?? DEFAULT_SLOT_MINUTES;
 
   return {
     kind: 'timeGrid',

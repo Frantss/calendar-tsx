@@ -457,6 +457,25 @@
     white-space: nowrap;
   }
 
+  /*
+   * An event too short for one line of its content shows the bar alone rather than a clipped slice of text (D39). The
+   * event is its own size container, and its ::after covers the content in the event's fill; geometry is unchanged.
+   */
+  :where([data-scope='calendar'][data-part='time-grid-event']) {
+    container: calendar-event / size;
+  }
+
+  @container calendar-event (height < 1em) {
+    :where([data-scope='calendar'][data-part='time-grid-event'])::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: inherit;
+      pointer-events: none;
+    }
+  }
+
   :where([data-scope='calendar'][data-part='time-grid-event'][data-overlap]) {
     box-shadow: 0 0 0 1px var(--calendar-surface);
   }

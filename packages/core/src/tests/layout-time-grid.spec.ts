@@ -88,6 +88,25 @@ it('lays a brief event out at the minimum length, in its own lane, and flags it 
   expect(String(segment('call')?.event.end)).toContain('T09:05:00');
 });
 
+it.each([
+  [15, 7.5],
+  [60, 30],
+])('defaults the minimum length to half of %i-minute slots', async (slotMinutes, minimum) => {
+  const views = { ...calendarSetup_defaults.views, day: timeGridView({ days: 1, slotMinutes }) };
+  const utils = await setup({ views, events: brief });
+  const segment = utils.column('all:2026-03-11')?.segments.find(item => item.event.id === 'call');
+
+  expect(segment?.span).toBeCloseTo(minimum / (24 * 60));
+});
+
+it('keeps an explicit minEventMinutes over the half-slot default', async () => {
+  const views = { ...calendarSetup_defaults.views, day: timeGridView({ days: 1, slotMinutes: 60, minEventMinutes: 10 }) };
+  const utils = await setup({ views, events: brief });
+  const segment = utils.column('all:2026-03-11')?.segments.find(item => item.event.id === 'call');
+
+  expect(segment?.span).toBeCloseTo(10 / (24 * 60));
+});
+
 it('lays events out at their exact length with minEventMinutes 0 and flags short by shortEventMinutes', async () => {
   const views = { ...calendarSetup_defaults.views, day: timeGridView({ days: 1, minEventMinutes: 0, shortEventMinutes: 10 }) };
   const utils = await setup({ views, events: brief });

@@ -225,7 +225,7 @@ export type Calendar_TimeGridViewSettings = Calendar_DurationSettings &
     minColumnWidth?: string;
     /** Defaults to `'side-by-side'`; `'cascade'` lets later lanes cover up to half of an event (D38). */
     overlap?: Calendar_TimeGridOverlap;
-    /** Shorter timed events are laid out this long, on screen and for lanes; defaults to 15, `0` turns it off (D39). */
+    /** Shorter timed events are laid out this long, on screen and for lanes; defaults to half of `slotMinutes`, `0` turns it off (D39). */
     minEventMinutes?: number;
     /** Segments laid out shorter than this are flagged `isShort`; defaults to 30 (D39). */
     shortEventMinutes?: number;

@@ -124,6 +124,12 @@ createCalendar({
 - List: left out.
 - Without `resourceIds`, a background event shades every resource column.
 
+## Brief event sizes
+
+`timeGridView` lays out timed events shorter than half a slot as half a slot long, with their own lane if they would
+otherwise cover the next event. The event's actual start and end are unchanged. Set `minEventMinutes` to override the
+minimum, or `0` to use exact durations.
+
 ## Timeline event sizes
 
 `timelineView` lays out short timed events with a minimum display duration of half a slot. Stacking uses that enlarged span, so neighboring brief events stay separate. The event's actual start and end are unchanged. Set `minEventMinutes` to override the minimum, or `0` to use exact durations. Bars clip at the visible range's end; all-day events keep their date spans.

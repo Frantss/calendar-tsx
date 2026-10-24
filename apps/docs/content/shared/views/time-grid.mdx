@@ -26,16 +26,16 @@ Choose exactly one of `days`, `weeks`, `months`, or `period`. Counts must be pos
 
 `next()` and `prev()` advance the configured duration. Month-based steps land on the first day. `hiddenDays` omits ISO weekdays (`1` Monday to `7` Sunday) without changing the nominal period or its inclusive fetch range; at least one weekday must remain visible.
 
-| Setting             | Type                               | Default            | Description                                                          |
-| ------------------- | ---------------------------------- | ------------------ | -------------------------------------------------------------------- |
-| `allDay`            | `boolean`                          | `true`             | `false` drops the all-day row from the layout.                       |
-| `slotMinutes`       | `number`                           | `30`               | Positive integer slot length; the final slot may be shorter.         |
-| `minColumnWidth`    | `string`                           | none               | Passed through for horizontal scrolling, for example `'8rem'`.       |
-| `groupBy`           | `'resource'` or `['resource']`     | none               | One column per resource and day. See [resource view](resource-view). |
-| `groupOrder`        | `'resource-first' \| 'date-first'` | `'resource-first'` | Column order when grouped.                                           |
-| `overlap`           | `'side-by-side' \| 'cascade'`      | `'side-by-side'`   | How overlapping events share a column. See [overlap](#overlap).      |
-| `minEventMinutes`   | `number`                           | `15`               | Shorter events are laid out this long. `0` turns it off.             |
-| `shortEventMinutes` | `number`                           | `30`               | Events laid out shorter than this are flagged `isShort`.             |
+| Setting             | Type                               | Default               | Description                                                          |
+| ------------------- | ---------------------------------- | --------------------- | -------------------------------------------------------------------- |
+| `allDay`            | `boolean`                          | `true`                | `false` drops the all-day row from the layout.                       |
+| `slotMinutes`       | `number`                           | `30`                  | Positive integer slot length; the final slot may be shorter.         |
+| `minColumnWidth`    | `string`                           | none                  | Passed through for horizontal scrolling, for example `'8rem'`.       |
+| `groupBy`           | `'resource'` or `['resource']`     | none                  | One column per resource and day. See [resource view](resource-view). |
+| `groupOrder`        | `'resource-first' \| 'date-first'` | `'resource-first'`    | Column order when grouped.                                           |
+| `overlap`           | `'side-by-side' \| 'cascade'`      | `'side-by-side'`      | How overlapping events share a column. See [overlap](#overlap).      |
+| `minEventMinutes`   | `number`                           | half of `slotMinutes` | Shorter events are laid out this long. `0` turns it off.             |
+| `shortEventMinutes` | `number`                           | `30`                  | Events laid out shorter than this are flagged `isShort`.             |
 
 ## Overlap
 
@@ -48,13 +48,14 @@ the next lane holding an event it overlaps, or to the column's edge.
 
 ## Brief events
 
-A 5-minute event at its true length is a few pixels tall. So the core lays out any event shorter than `minEventMinutes`
-as that long, and gives it its own lane if it would now cover the next event. The event itself keeps its real `end`,
+A 5-minute event at its true length is a few pixels tall. So the core lays out any event shorter than `minEventMinutes`,
+half a slot by default, as that long, and gives it its own lane if it would now cover the next event. The event itself keeps its real `end`,
 so label it from `segment.event`.
 
 An event laid out shorter than `shortEventMinutes` is flagged `isShort`, emitted as `data-short`. The default theme puts
-a short event's content on one line. Both settings are minutes, not pixels: with the default `3rem` slots, 15 minutes is
-24px. Lower them if you make the slots taller.
+a short event's content on one line, and covers the content of an event too short for one line, so it shows the bar
+without a clipped slice of text. Both settings are minutes, not pixels. Half a slot is always half the slot height: 24px
+with the default `3rem` slots, 16px with `compact.css`, before the gap between events.
 
 `hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`).
 

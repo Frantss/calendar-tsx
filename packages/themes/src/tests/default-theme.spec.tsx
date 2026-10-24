@@ -237,6 +237,31 @@ it('draws a brief event at the minimum length with its content on one line', asy
   expect(call && getComputedStyle(call).flexDirection).toBe('row');
 });
 
+it('covers the label of an event too short for a line, and keeps it on one that fits', async () => {
+  const style = document.head.appendChild(document.createElement('style'));
+  style.textContent = '.dense { --calendar-slot-height: 2rem; }';
+
+  await themesSetup_render(<TimeGrid />, {
+    className: 'dense',
+    views: { day: timeGridView({ days: 1, slotMinutes: 60 }) },
+    events: [
+      themesSetup_timed('Call', { date: '2026-03-11', start: '09:00', end: '09:05' }),
+      themesSetup_timed('Yoga', { date: '2026-03-11', start: '11:00', end: '12:00' }),
+    ],
+  });
+  const cover = (title: string) => {
+    const element = event(title);
+    return element && getComputedStyle(element, '::after');
+  };
+
+  // half of a 2rem hour, less --calendar-event-gap
+  expect(themesSetup_rect(event('Call')).height).toBeCloseTo(12, 0);
+  expect(cover('Call')?.content).not.toBe('none');
+  expect(cover('Call')?.backgroundColor).toBe(event('Call') && getComputedStyle(event('Call')!).backgroundColor);
+  expect(cover('Yoga')?.content).toBe('none');
+  style.remove();
+});
+
 it('lines column headers up with their columns', async () => {
   await themesSetup_render(<TimeGrid />, { view: 'week' });
   const headers = themesSetup_part('time-grid-column-header').map(header => themesSetup_rect(header).left);
