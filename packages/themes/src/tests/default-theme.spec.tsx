@@ -262,6 +262,17 @@ it('covers the label of an event too short for a line, and keeps it on one that 
   style.remove();
 });
 
+it('keeps the axis track when the grid has no columns', async () => {
+  // grouped by resource with no resources
+  await themesSetup_render(<TimeGrid />, { views: { day: timeGridView({ days: 1, groupBy: 'resource' }) }, resources: [] });
+  const root = themesSetup_part('time-grid-root')[0];
+  const tracks = root ? getComputedStyle(root).gridTemplateColumns.split(' ') : [];
+
+  expect(themesSetup_part('time-grid-column')).toHaveLength(0);
+  expect(tracks).toHaveLength(2);
+  expect(tracks[0]).toBe('64px');
+});
+
 it('lines column headers up with their columns', async () => {
   await themesSetup_render(<TimeGrid />, { view: 'week' });
   const headers = themesSetup_part('time-grid-column-header').map(header => themesSetup_rect(header).left);

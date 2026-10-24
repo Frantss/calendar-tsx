@@ -82,11 +82,12 @@
 
   /* Time grid: header, all-day row and body share the root's columns through subgrid */
 
+  /* At least one track: a range whose dates are all hidden has no columns, and `repeat(0, …)` would drop the template */
   :where([data-scope='calendar'][data-part='time-grid-root']) {
     display: grid;
     grid-template-columns:
       var(--calendar-axis-width, 4rem)
-      repeat(var(--cal-columns), minmax(var(--cal-min-column-width, 0px), 1fr));
+      repeat(max(1, var(--cal-columns)), minmax(var(--cal-min-column-width, 0px), 1fr));
     overflow: auto;
   }
 
