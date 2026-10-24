@@ -18,6 +18,7 @@ import {
 
 import type { Calendar_Event } from '@calendar-tsx/core';
 import type { Booking, State } from '../core/setup';
+import { formatEvent } from '../core/format-event';
 
 // #region view
 export const Timeline = ({
@@ -38,11 +39,12 @@ export const Timeline = ({
             </TimelineViewDayTrigger>
           </TimelineViewDayHeader>
         ))}
-        {timeline.slots.map(slot => (
-          <TimelineViewSlotLabel key={slot.key} slot={slot}>
-            {slot.time.toLocaleString(locale, { hour: 'numeric' })}
-          </TimelineViewSlotLabel>
-        ))}
+        {timeline.days.some(day => day.colSpan > 1) &&
+          timeline.slots.map(slot => (
+            <TimelineViewSlotLabel key={slot.key} slot={slot}>
+              {slot.time.toLocaleString(locale, { hour: 'numeric', minute: '2-digit' })}
+            </TimelineViewSlotLabel>
+          ))}
       </TimelineViewHeader>
       <TimelineViewBody>
         {timeline.rows.map(row => (
@@ -59,7 +61,13 @@ export const Timeline = ({
                 <TimelineViewUnavailable key={segment.key} segment={segment} />
               ))}
               {row.segments.map(segment => (
-                <TimelineViewEvent key={segment.key} segment={segment} onClick={() => onSelect?.(segment.event)}>
+                <TimelineViewEvent
+                  key={segment.key}
+                  segment={segment}
+                  title={formatEvent(segment.event, locale)}
+                  aria-label={formatEvent(segment.event, locale)}
+                  onClick={() => onSelect?.(segment.event)}
+                >
                   {segment.event.data.title}
                 </TimelineViewEvent>
               ))}

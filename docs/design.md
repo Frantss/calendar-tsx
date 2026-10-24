@@ -1256,6 +1256,8 @@ D45 fixed accidental expansion from CSS decorations but left brief events too na
 
 The core extends each timed event's projected end to that minimum before assigning stack rows. Both geometry and collisions use the same display interval. The real `event.start` and `event.end`, continuation flags, and all-day spans stay unchanged. Display spans clip at the visible range's end; minutes count on the compressed visible elapsed-time axis, including hidden weekdays and DST. `minEventMinutes: 0` restores exact durations, and D45 keeps those narrow boxes within their spans. React and Solid continue to render the same core geometry without new models or factories.
 
+The React and Solid examples omit slot labels for daily columns, include minutes for subday slots, and expose full titles and actual date/time ranges through `title` and `aria-label`. This removes repeated midnight labels and makes ellipsized bar content available without changing the event data.
+
 Rejected: CSS-only minimum widths (stacking cannot see the enlarged bars); fixed pixel widths with measured browser layout (adds resize-dependent layout and adapter behavior to a headless engine); opt-in minima only in the playground (leaves the default library behavior unusable for short events).
 
 ## Test cases

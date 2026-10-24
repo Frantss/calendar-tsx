@@ -17,6 +17,7 @@ import {
 import { For, Show } from 'solid-js';
 
 import { useLayout } from './layouts';
+import { formatEvent } from '../core/format-event';
 
 // #region view
 export const Timeline = () => {
@@ -36,13 +37,15 @@ export const Timeline = () => {
                 </TimelineViewDayHeader>
               )}
             </For>
-            <For each={timeline().slots}>
-              {slot => (
-                <TimelineViewSlotLabel slot={slot}>
-                  {slot.time.toLocaleString('en-US', { hour: 'numeric' })}
-                </TimelineViewSlotLabel>
-              )}
-            </For>
+            <Show when={timeline().days.some(day => day.colSpan > 1)}>
+              <For each={timeline().slots}>
+                {slot => (
+                  <TimelineViewSlotLabel slot={slot}>
+                    {slot.time.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                  </TimelineViewSlotLabel>
+                )}
+              </For>
+            </Show>
           </TimelineViewHeader>
           <TimelineViewBody>
             <For each={timeline().rows}>
@@ -56,7 +59,15 @@ export const Timeline = () => {
                     </For>
                     <For each={row.unavailable}>{segment => <TimelineViewUnavailable segment={segment} />}</For>
                     <For each={row.segments}>
-                      {segment => <TimelineViewEvent segment={segment}>{segment.event.data.title}</TimelineViewEvent>}
+                      {segment => (
+                        <TimelineViewEvent
+                          segment={segment}
+                          title={formatEvent(segment.event)}
+                          aria-label={formatEvent(segment.event)}
+                        >
+                          {segment.event.data.title}
+                        </TimelineViewEvent>
+                      )}
                     </For>
                   </TimelineViewLane>
                 </TimelineViewRow>
