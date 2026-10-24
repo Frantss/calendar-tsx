@@ -1,9 +1,14 @@
 {
   "name": "@calendar-tsx/react",
-  "version": "0.0.1-experimental.0",
+  "version": "0.0.1",
   "description": "React bindings for @calendar-tsx/core: unstyled, composable calendar parts.",
   "license": "MIT",
   "author": "Frantss <frantss.bongiovanni@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Frantss/calendar-tsx.git",
+    "directory": "packages/react"
+  },
   "files": [
     "dist"
   ],

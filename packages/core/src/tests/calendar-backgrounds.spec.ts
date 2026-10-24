@@ -109,14 +109,14 @@ it('stacks layers in input order', () => {
   ]);
 });
 
-it('measures fractions against the real length of a DST day', () => {
+it('aligns background fractions with the fixed clock axis on a DST day', () => {
   const layer: Calendar_BackgroundLayer = {
     id: 'yoga',
     kind: 'busy',
     ranges: [{ start: fixtures_at('2026-03-08', '09:00'), end: fixtures_at('2026-03-08', '10:00') }],
   };
 
-  expect(columns(setup('week', [layer]))['all:2026-03-08']).toEqual([`busy ${fraction(8, 23)}+${fraction(1, 23)}`]);
+  expect(columns(setup('week', [layer]))['all:2026-03-08']).toEqual([`busy ${fraction(9)}+${fraction(1)}`]);
 });
 
 it('limits a layer to the resources it names', () => {

@@ -12,6 +12,7 @@ import type {
   Calendar_WeeklyRule,
 } from '#calendar.types';
 import type { LayoutIntervals_Interval } from '#layout/layout-intervals';
+import { layoutAxis_coverage, layoutAxis_create, layoutAxis_date } from '#layout/layout-axis';
 import {
   layoutIntervals_clip,
   layoutIntervals_complement,
@@ -19,7 +20,10 @@ import {
   layoutIntervals_merge,
 } from '#layout/layout-intervals';
 
-type Resolved = { layer: Calendar_BackgroundLayer; intervals: (LayoutIntervals_Interval & { allDay: boolean })[] };
+type Resolved = {
+  layer: Calendar_BackgroundLayer;
+  intervals: (LayoutIntervals_Interval & { allDay: boolean; clock?: LayoutIntervals_Interval })[];
+};
 
 /** Returns `layer` unchanged; it types the layer where it is written and keeps `kind` a literal (D33). */
 export const createBackgroundLayer = <const TKind extends string>(
@@ -60,12 +64,16 @@ const range_of = (dates: Temporal.PlainDate[]): Calendar_Range | undefined => {
   return start && end ? { start, end } : undefined;
 };
 
-const range_interval = (range: Calendar_BackgroundRange, timeZone: string) =>
+const range_interval = (range: Calendar_BackgroundRange, timeZone: string): Resolved['intervals'][number] =>
   'allDay' in range
     ? {
         startMs: layoutIntervals_day(range.start, timeZone).startMs,
         endMs: layoutIntervals_day(range.end ?? range.start, timeZone).endMs,
         allDay: true,
+        clock: {
+          startMs: layoutAxis_date(range.start),
+          endMs: layoutAxis_date((range.end ?? range.start).add({ days: 1 })),
+        },
       }
     : { startMs: range.start.epochMilliseconds, endMs: range.end.epochMilliseconds, allDay: false };
 
@@ -91,19 +99,30 @@ const timeGrid_decorate = (
   return {
     ...grid,
     columns: grid.columns.map(column => {
-      const day = layoutIntervals_day(column.date, timeZone);
-      const length = day.endMs - day.startMs;
+      const axis = layoutAxis_create({ start: column.date, end: column.date }, timeZone);
+      const length = axis.endMs - axis.startMs;
 
       const backgrounds = resolved.flatMap(({ layer, intervals }): Calendar_BackgroundSegment[] => {
         if (!appliesTo(layer, column.resource?.id)) return [];
 
-        const covered = layoutIntervals_merge(layoutIntervals_clip(intervals, day));
+        const covered = layoutIntervals_merge(
+          layoutIntervals_clip(
+            [
+              ...intervals.flatMap(interval => (interval.clock ? [interval.clock] : [])),
+              ...layoutAxis_coverage(
+                axis,
+                intervals.filter(interval => !interval.clock),
+              ),
+            ],
+            axis,
+          ),
+        );
 
-        return (layer.inverse ? layoutIntervals_complement(covered, day) : covered).map(interval => ({
+        return (layer.inverse ? layoutIntervals_complement(covered, axis) : covered).map(interval => ({
           key: `${column.key}:${layer.id}:${interval.startMs}`,
           layer: layer.id,
           kind: layer.kind,
-          start: (interval.startMs - day.startMs) / length,
+          start: axis.fraction(interval.startMs),
           span: (interval.endMs - interval.startMs) / length,
         }));
       });

@@ -15,7 +15,9 @@ import type {
   Calendar_TimeGridViewSettings,
 } from '#calendar.types';
 import { layoutBars_background, layoutBars_build, layoutBars_rows } from '#layout/layout-bars';
-import { layoutIntervals_clip, layoutIntervals_complement, layoutIntervals_day } from '#layout/layout-intervals';
+import { layoutAxis_coverage, layoutAxis_create } from '#layout/layout-axis';
+import type { LayoutAxis } from '#layout/layout-axis';
+import { layoutIntervals_complement } from '#layout/layout-intervals';
 import { layoutLanes_assign } from '#layout/layout-lanes';
 
 const DEFAULT_SLOT_MINUTES = 30;
@@ -40,7 +42,7 @@ const buildColumn = <TData, TResourceData>({
   resource,
   events,
   backgroundEvents,
-  timeZone,
+  axis,
   now,
   overlap,
   minEventMs,
@@ -50,16 +52,15 @@ const buildColumn = <TData, TResourceData>({
   resource?: Calendar_Resource<TResourceData>;
   events: Calendar_Event<TData>[];
   backgroundEvents: Calendar_Event<TData>[];
-  timeZone: string;
+  axis: LayoutAxis;
   now: Temporal.ZonedDateTime;
   overlap: Calendar_TimeGridOverlap;
   minEventMs: number;
   shortEventMs: number;
 }): Calendar_TimeGridColumn<TData, TResourceData> => {
-  // Real wall-clock day length in `timeZone`, so DST days are 23 or 25 hours long.
-  const day = layoutIntervals_day(date, timeZone);
-  const length = day.endMs - day.startMs;
-  const fraction = (ms: number) => (ms - day.startMs) / length;
+  const day = axis.range;
+  const length = axis.endMs - axis.startMs;
+  const fraction = axis.fraction;
   const key = `${resource?.id ?? 'all'}:${date}`;
 
   const timed = events.flatMap(event => {
@@ -70,14 +71,14 @@ const buildColumn = <TData, TResourceData>({
 
     if (endMs <= day.startMs || startMs >= day.endMs) return [];
 
-    const clippedStart = Math.max(startMs, day.startMs);
+    const projected = axis.project({ startMs: Math.max(startMs, day.startMs), endMs: Math.min(endMs, day.endMs) });
 
     // Laid out at least `minEventMs` long, so a brief event stays visible and gets its own lane (D39)
     return [
       {
         event,
-        startMs: clippedStart,
-        endMs: Math.min(Math.max(endMs, clippedStart + minEventMs), day.endMs),
+        startMs: projected.startMs,
+        endMs: Math.min(Math.max(projected.endMs, projected.startMs + minEventMs), axis.endMs),
         continuesBefore: startMs < day.startMs,
         continuesAfter: endMs > day.endMs,
       },
@@ -109,14 +110,14 @@ const buildColumn = <TData, TResourceData>({
 
     if (endMs <= day.startMs || startMs >= day.endMs) return [];
 
-    const clippedStart = Math.max(startMs, day.startMs);
+    const projected = axis.project({ startMs: Math.max(startMs, day.startMs), endMs: Math.min(endMs, day.endMs) });
 
     return [
       {
         key: `${key}:background:${event.id}`,
         event,
-        start: fraction(clippedStart),
-        span: (Math.min(endMs, day.endMs) - clippedStart) / length,
+        start: fraction(projected.startMs),
+        span: (projected.endMs - projected.startMs) / length,
         continuesBefore: startMs < day.startMs,
         continuesAfter: endMs > day.endMs,
       },
@@ -124,12 +125,12 @@ const buildColumn = <TData, TResourceData>({
   });
 
   // Its gaps are the unavailable segments; a resource with none is unavailable all day (D12).
-  const availability = layoutIntervals_clip(
+  const availability = layoutAxis_coverage(
+    axis,
     (resource?.availability ?? []).map(period => ({
       startMs: period.start.epochMilliseconds,
       endMs: period.end.epochMilliseconds,
     })),
-    day,
   );
 
   const isToday = date.equals(now.toPlainDate());
@@ -157,13 +158,13 @@ const buildColumn = <TData, TResourceData>({
     })),
     backgroundEvents: backgroundSegments,
     unavailable: resource
-      ? layoutIntervals_complement(availability, day).map(gap => ({
+      ? layoutIntervals_complement(availability, axis).map(gap => ({
           key: `${key}:unavailable:${gap.startMs}`,
           start: fraction(gap.startMs),
           span: (gap.endMs - gap.startMs) / length,
         }))
       : [],
-    now: isToday ? fraction(now.epochMilliseconds) : undefined,
+    now: isToday ? fraction(axis.point(now.epochMilliseconds)) : undefined,
   };
 };
 
@@ -245,6 +246,7 @@ export const layoutTimeGrid_build = <TData, TResourceData>({
   now: Temporal.ZonedDateTime;
 }): Calendar_TimeGridLayout<TData, TResourceData> => {
   const dates = calendarNavigation_days(range);
+  const axes = new Map(dates.map(date => [date, layoutAxis_create({ start: date, end: date }, timeZone)]));
   const groups: (Calendar_Resource<TResourceData> | undefined)[] =
     definition.groupBy === 'resource' ? resources : [undefined];
 
@@ -259,7 +261,7 @@ export const layoutTimeGrid_build = <TData, TResourceData>({
       resource,
       events,
       backgroundEvents,
-      timeZone,
+      axis: axes.get(date) as LayoutAxis,
       now,
       overlap: definition.overlap ?? 'side-by-side',
       minEventMs: (definition.minEventMinutes ?? DEFAULT_MIN_EVENT_MINUTES) * MS_PER_MINUTE,

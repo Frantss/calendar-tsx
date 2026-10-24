@@ -28,9 +28,10 @@ const setup = async (overrides: CalendarSetup_Overrides = {}) => {
   };
 };
 
-/** Elapsed-time fraction of `[from, to)` at `at`, so expectations hold across DST. */
+/** Clock-time fraction of the displayed range, independent of DST offsets. */
 const fractionOf = (at: Temporal.ZonedDateTime, from: Temporal.ZonedDateTime, to: Temporal.ZonedDateTime) =>
-  (at.epochMilliseconds - from.epochMilliseconds) / (to.epochMilliseconds - from.epochMilliseconds);
+  from.toPlainDateTime().until(at.toPlainDateTime()).total({ unit: 'hours' }) /
+  from.toPlainDateTime().until(to.toPlainDateTime()).total({ unit: 'hours' });
 
 it('has 24 hourly slots under one day header in a 1-day timeline', async () => {
   const utils = await setup();
