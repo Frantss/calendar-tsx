@@ -4,7 +4,7 @@ import type {
   Calendar_EventDomCalendar,
   Calendar_EventInput,
   Calendar_InteractionStart,
-  Calendar_InteractionScope,
+  Calendar_DragScope,
   Calendar_LayoutProjection,
 } from '@calendar-tsx/core';
 import type { useCalendarInteractionBindings } from '@calendar-tsx/react';
@@ -87,7 +87,7 @@ const reasons: Record<string, string> = {
 export const interactionReason = (reason: string) => reasons[reason] ?? reason.replaceAll('-', ' ');
 
 export function InteractionTools({
-  scope,
+  dragScope,
   calendar,
   config,
   selected,
@@ -95,7 +95,7 @@ export function InteractionTools({
   onMessage,
   onTransfer,
 }: {
-  scope: Calendar_InteractionScope;
+  dragScope: Calendar_DragScope;
   calendar: Calendar_EventDomCalendar<Booking>;
   config: PlaygroundConfig;
   selected?: Calendar_EventInput<Booking>;
@@ -128,8 +128,8 @@ export function InteractionTools({
   }, [config.date, timeZone]);
   useEffect(() => {
     if (!external.current || !config.interactions.externalDrop) return;
-    return createExternalDraggable(external.current, () => ({ event: newEvent() }), { scope, pointer: {} });
-  }, [config.interactions.externalDrop, newEvent, scope]);
+    return createExternalDraggable(external.current, () => ({ event: newEvent() }), { dragScope, pointer: {} });
+  }, [config.interactions.externalDrop, newEvent, dragScope]);
   const complete = (start: Calendar_InteractionStart | undefined, target: Calendar_DateTarget) => {
     if (!start || start.status !== 'active') {
       onMessage('Enable this operation before editing.');

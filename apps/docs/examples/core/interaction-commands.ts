@@ -1,7 +1,7 @@
 import type {
   Calendar_MoveApi,
   Calendar_TransferApi,
-  Calendar_InteractionScope,
+  Calendar_DragScope,
   Calendar_DateTarget,
   Calendar_EventInput,
 } from '@calendar-tsx/core';
@@ -28,7 +28,7 @@ export function moveEvent(
 export function attachPalette(
   element: HTMLElement,
   makeEvent: () => Calendar_EventInput<Booking>,
-  scope: Calendar_InteractionScope,
+  dragScope: Calendar_DragScope,
 ) {
   return createExternalDraggable(
     element,
@@ -36,7 +36,7 @@ export function attachPalette(
       event: makeEvent(),
       metadata: { source: 'booking-palette' },
     }),
-    { scope, pointer: {} },
+    { dragScope, pointer: {} },
   );
 }
 // #endregion external

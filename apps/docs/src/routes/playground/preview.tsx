@@ -12,12 +12,12 @@ import shadcnCss from '@calendar-tsx/themes/shadcn.css?url';
 import stripeCss from '@calendar-tsx/themes/stripe.css?url';
 import type {
   Calendar_EventInput,
-  Calendar_InteractionScope,
+  Calendar_DragScope,
   Calendar_EventDomCalendar,
   Calendar_Selection,
   Calendar_WeeklyRule,
 } from '@calendar-tsx/core';
-import { fixedClock, createCalendarInteractionScope } from '@calendar-tsx/core';
+import { fixedClock, createCalendarDragScope } from '@calendar-tsx/core';
 import { CalendarProvider, useCalendar, useCalendarInteractionBindings } from '@calendar-tsx/react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -109,7 +109,7 @@ function Preview() {
     };
   }, []);
 
-  const [scope] = useState(createCalendarInteractionScope);
+  const [dragScope] = useState(createCalendarDragScope);
   const scheme = useEffectiveScheme(config?.scheme);
   const overrides = config ? tokenOverridesCss(config.tokens) : '';
   const loaded = config !== null;
@@ -182,7 +182,7 @@ function Preview() {
           <PreviewCalendar
             key={`${id}|${config.now}|${config.timeZone}|${JSON.stringify(config.interactions)}`}
             id={id}
-            scope={scope}
+            dragScope={dragScope}
             config={config}
             onEdit={onEdit}
             onApi={value => {
@@ -199,7 +199,7 @@ function Preview() {
 }
 
 function PreviewCalendar({
-  scope,
+  dragScope,
   config,
   onApi,
   onNavigate,
@@ -207,7 +207,7 @@ function PreviewCalendar({
   onEdit,
   otherCalendar,
 }: {
-  scope: Calendar_InteractionScope;
+  dragScope: Calendar_DragScope;
   config: PlaygroundConfig;
   onApi: (calendar: Calendar_EventDomCalendar<Booking> & { api: Api }) => void;
   onNavigate: (view: PlaygroundConfig['view'], date: string) => void;
@@ -312,7 +312,7 @@ function PreviewCalendar({
       setMessage(`Transferred ${proposal.after.data.title} to the other calendar.`);
     },
   });
-  const bindings = useCalendarInteractionBindings(calendar, { scope });
+  const bindings = useCalendarInteractionBindings(calendar, { dragScope });
   function changed(event: Calendar_EventInput<Booking>, action: string) {
     onEdit(storeEvent(event, id));
     setSelectedId(event.id);
@@ -377,7 +377,7 @@ function PreviewCalendar({
         <InteractionTools
           key={config.date}
           calendar={calendar}
-          scope={scope}
+          dragScope={dragScope}
           config={config}
           selected={events.find(event => event.id === selectedId)}
           message={message}

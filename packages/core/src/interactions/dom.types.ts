@@ -51,10 +51,10 @@ export type Calendar_DomOperationSpec<K extends Calendar_OperationKind> = {
 export type Calendar_DomCalendar = {
   api: { pointer: Calendar_PointerApi; interactions: Calendar_InteractionControls };
 };
-export type Calendar_InteractionScope = { readonly '~interactionScope': true };
-export type Calendar_DomOptions = { scope?: Calendar_InteractionScope; selection?: Calendar_DomOperation };
+export type Calendar_DragScope = { readonly '~dragScope': true };
+export type Calendar_DomOptions = { dragScope?: Calendar_DragScope; selection?: Calendar_DomOperation };
 export type Calendar_ExternalDragOptions = import('#features/pointer/pointer.types').Calendar_InputSettings & {
-  scope: Calendar_InteractionScope;
+  dragScope: Calendar_DragScope;
 };
 
 export type Calendar_DomHost = {

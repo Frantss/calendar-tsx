@@ -8,10 +8,10 @@ export const useCalendarInteractionBindings = <D>(
   calendar: Calendar_EventDomCalendar<D>,
   options: Calendar_DomOptions = {},
 ): Calendar_DomBindings & { preview: Calendar_LayoutProjection | null } => {
-  const { scope, selection } = options;
+  const { dragScope, selection } = options;
   const bindings = useMemo(
-    () => createCalendarInteractionBindings(calendar, { scope, selection }),
-    [calendar, scope, selection],
+    () => createCalendarInteractionBindings(calendar, { dragScope, selection }),
+    [calendar, dragScope, selection],
   );
   useMountedEffect(bindings.mount, [bindings]);
   const preview = useSelector(calendar.api.interactions.store, state => state.preview);

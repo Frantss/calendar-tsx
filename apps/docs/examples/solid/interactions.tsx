@@ -1,5 +1,5 @@
 /* oxlint-disable react/refs -- Interaction bindings expose callback refs, not mutable ref objects. */
-import type { Calendar_EventInput, Calendar_Selection } from '@calendar-tsx/core';
+import type { Calendar_EventInput, Calendar_Selection, Calendar_DragScope } from '@calendar-tsx/core';
 import { timeGridSurface } from '@calendar-tsx/core';
 import {
   CalendarProvider,
@@ -18,7 +18,7 @@ import type { Booking, EditingState } from '../core/interactions';
 import { features, views, initialDate, initialEvents } from '../core/interactions';
 
 // #region setup
-export function EditableCalendar() {
+export function EditableCalendar({ dragScope }: { dragScope?: Calendar_DragScope }) {
   const [date, setDate] = createSignal(initialDate);
   const [events, setEvents] = createSignal(initialEvents);
   const [selection, setSelection] = createSignal<Calendar_Selection | null>(null);
@@ -37,7 +37,7 @@ export function EditableCalendar() {
     onEventMove: ({ after }) => replaceEvent(after),
     onEventResize: ({ after }) => replaceEvent(after),
   }));
-  const bindings = useCalendarInteractionBindings(calendar);
+  const bindings = useCalendarInteractionBindings(calendar, { dragScope });
 
   return (
     <CalendarProvider value={calendar}>

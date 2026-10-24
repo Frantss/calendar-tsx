@@ -1,4 +1,4 @@
-import { calendarFeatures, calendarViews } from '@calendar-tsx/core';
+import { calendarFeatures, calendarViews, createCalendarDragScope } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
 import {
   createCalendar,
@@ -12,7 +12,7 @@ import {
   crossCalendarFeature,
   eventMoveFeature,
 } from '@calendar-tsx/core';
-import type { Calendar_EventInput } from '@calendar-tsx/core';
+import type { Calendar_EventInput, Calendar_DragScope } from '@calendar-tsx/core';
 import { createCalendarInteractionHost, dayGridSurface, timeGridSurface } from '@calendar-tsx/core';
 const date = Temporal.PlainDate.from('2026-10-23');
 const event: Calendar_EventInput<{ title: string }> = { id: 'a', kind: 'allDay', start: date, data: { title: 'A' } };
@@ -54,7 +54,8 @@ const calendar = createCalendar({
     void title;
   },
 });
-const host = createCalendarInteractionHost(calendar);
+const dragScope: Calendar_DragScope = createCalendarDragScope();
+const host = createCalendarInteractionHost(calendar, { dragScope });
 const created = calendar.api.externalDrop.evaluate(event, { kind: 'allDay', at: date });
 if (created.status === 'valid') {
   const title: string = created.proposal.after.data.title;

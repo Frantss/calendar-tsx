@@ -11,8 +11,8 @@ Attach a palette item after its element mounts:
 
 <include lang='ts'>../../../examples/core/interaction-commands.ts#external</include>
 
-Create a `scope` with `createCalendarInteractionScope()` and pass it to the receiving hook as
-`useCalendarInteractionBindings(calendar, { scope })`. The palette uses that same scope and its own pointer/touch
+Create a `dragScope` with `createCalendarDragScope()` and pass it to the receiving hook as
+`useCalendarInteractionBindings(calendar, { dragScope })`. The palette uses that same scope and its own pointer/touch
 activation settings. Call the returned cleanup on unmount. `makeEvent` runs when a gesture begins; give each new event a unique ID.
 The payload preserves your event data type. Metadata is optional and arrives on the proposal.
 
@@ -29,7 +29,7 @@ Register `interactionFeature()`, `pointerFeature()` and `crossCalendarFeature()`
 a unique `crossCalendar: { id }`. The source also needs `eventMoveFeature()`; the receiver can accept transfers
 without movement or selection.
 
-Pass the same `{ scope }` to both calendars' binding hooks. Hosts without an explicit scope are isolated.
+Pass the same `{ dragScope }` to both calendars' binding hooks. Hosts without an explicit scope are isolated.
 Mount each calendar's bindings and register its event sources and surfaces. Dragging an event onto another
 calendar reserves the source movement session and validates the destination proposal. The receiver applies its
 own constraints and `crossCalendar.placement` settings. Duplicate IDs in the destination are rejected.

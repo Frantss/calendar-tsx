@@ -10,7 +10,7 @@ import type {
   Calendar_DomOptions,
   Calendar_ExternalDragOptions,
 } from '#interactions/dom.types';
-import { createDomHost, createDomDraggable, createCalendarInteractionScope } from '#interactions/dom-host';
+import { createDomHost, createDomDraggable, createCalendarDragScope } from '#interactions/dom-host';
 import { eventBinding, receiveEvent } from '#interactions/event-bindings';
 
 export const timeGridSurface = (key?: string): Calendar_DomSurface => ({
@@ -55,7 +55,7 @@ export const createCalendarInteractionHost = <D>(
 ): Calendar_DomHost => {
   const host = createDomHost(
     calendar,
-    options.scope ?? createCalendarInteractionScope(),
+    options.dragScope ?? createCalendarDragScope(),
     () => (options.selection ? eventBinding(calendar, options.selection) : eventBinding(calendar)),
     data => receiveEvent(calendar, data),
   );
@@ -71,7 +71,7 @@ export const createCalendarInteractionHost = <D>(
 export const createCalendarDomHost = (calendar: Calendar_DomCalendar, options: Calendar_DomOptions = {}) => {
   const host = createDomHost(
     calendar,
-    options.scope ?? createCalendarInteractionScope(),
+    options.dragScope ?? createCalendarDragScope(),
     () => (options.selection ? resolveDomOperation(options.selection) : undefined),
     () => undefined,
   );

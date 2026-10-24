@@ -1,4 +1,4 @@
-import { createCalendarInteractionScope } from '#interactions/dom-host';
+import { createCalendarDragScope } from '#interactions/dom-host';
 import { createCalendarDomOperation } from '#interactions/dom-operation';
 import { interactionTestViews } from '#tests/support/interaction.setup';
 import { Temporal } from 'temporal-polyfill';
@@ -24,7 +24,7 @@ const date = Temporal.PlainDate.from('2026-10-23');
 const at = (hour: number) => date.toZonedDateTime({ timeZone: 'UTC', plainTime: `${String(hour).padStart(2, '0')}:00` });
 const event = { id: 'a', kind: 'timed' as const, start: at(9), end: at(10), data: { title: 'A' } };
 const base = { date, timeZone: 'UTC', view: 'day' as const, events: [event], onNavigate: () => {} };
-const scope = createCalendarInteractionScope();
+const dragScope = createCalendarDragScope();
 const cleanups: (() => void)[] = [];
 afterEach(() => {
   cleanups
@@ -54,7 +54,7 @@ const pointer = (element: Element, type: string, x: number, y: number, pointerTy
     }),
   );
 const setup = (calendar: Parameters<typeof createCalendarInteractionHost<any>>[0], root = surface()) => {
-  const host = createCalendarInteractionHost(calendar, { scope });
+  const host = createCalendarInteractionHost(calendar, { dragScope });
   host.surface(root, timeGridSurface(`all:${date.toString()}`));
   cleanups.push(host.mount(root));
   return { host, root };
@@ -201,7 +201,7 @@ it('scrolls a nested viewport and updates the target while the pointer stays sti
   const track = document.createElement('div');
   track.style.height = '480px';
   root.append(track);
-  const host = createCalendarInteractionHost(calendar, { scope });
+  const host = createCalendarInteractionHost(calendar, { dragScope });
   host.surface(track, timeGridSurface(`all:${date.toString()}`));
   cleanups.push(host.mount(root));
   pointer(track, 'pointerdown', 150, 80);
@@ -285,12 +285,12 @@ it('receives an external source in a timeline without installing movement', () =
   const calendar = createCalendar({ ...base, ...views, events: [], onExternalDrop });
   const root = surface(300);
   root.style.width = '480px';
-  const host = createCalendarInteractionHost(calendar, { scope });
+  const host = createCalendarInteractionHost(calendar, { dragScope });
   host.surface(root, timelineSurface('all'));
   cleanups.push(host.mount(root));
   const palette = surface();
   const source = child(palette, 0);
-  cleanups.push(createExternalDraggable(source, () => ({ event, metadata: { palette: true } }), { scope, pointer: {} }));
+  cleanups.push(createExternalDraggable(source, () => ({ event, metadata: { palette: true } }), { dragScope, pointer: {} }));
   pointer(source, 'pointerdown', 20, 10);
   pointer(root, 'pointermove', 540, 20);
   pointer(root, 'pointerup', 540, 20);
@@ -385,7 +385,7 @@ it('stops autoscroll at release while a controlled selection awaits acknowledgme
   const track = document.createElement('div');
   track.style.height = '480px';
   root.append(track);
-  const host = createCalendarInteractionHost(calendar, { scope });
+  const host = createCalendarInteractionHost(calendar, { dragScope });
   host.surface(track, timeGridSurface(`all:${date.toString()}`));
   cleanups.push(host.mount(root));
   pointer(track, 'pointerdown', 150, 80);
@@ -399,8 +399,8 @@ it('stops autoscroll at release while a controlled selection awaits acknowledgme
 });
 
 it('isolates drag scopes and uses the external source activation settings', () => {
-  const firstScope = createCalendarInteractionScope();
-  const secondScope = createCalendarInteractionScope();
+  const firstScope = createCalendarDragScope();
+  const secondScope = createCalendarDragScope();
   const onFirst = vi.fn(),
     onSecond = vi.fn();
   const views = interactionTestViews({
@@ -417,17 +417,17 @@ it('isolates drag scopes and uses the external source activation settings', () =
   const second = createCalendar({ ...base, ...views, events: [], onExternalDrop: onSecond });
   const firstRoot = surface(),
     secondRoot = surface(300);
-  for (const [calendar, root, scope] of [
+  for (const [calendar, root, dragScope] of [
     [first, firstRoot, firstScope],
     [second, secondRoot, secondScope],
   ] as const) {
-    const host = createCalendarInteractionHost(calendar, { scope });
+    const host = createCalendarInteractionHost(calendar, { dragScope });
     host.surface(root, timeGridSurface(`all:${date.toString()}`));
     cleanups.push(host.mount(root));
   }
   const palette = surface(600),
     source = child(palette, 0);
-  cleanups.push(createExternalDraggable(source, () => ({ event }), { scope: secondScope, pointer: { distance: 50 } }));
+  cleanups.push(createExternalDraggable(source, () => ({ event }), { dragScope: secondScope, pointer: { distance: 50 } }));
   pointer(source, 'pointerdown', 610, 10);
   pointer(firstRoot, 'pointermove', 10, 240);
   pointer(firstRoot, 'pointerup', 10, 240);

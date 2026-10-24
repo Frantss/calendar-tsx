@@ -140,6 +140,6 @@ The docs include a [Solid interaction setup and rendering guide](../../apps/docs
 [editing policies](../../apps/docs/content/docs/solid/features/editing-policies.mdx), and
 [external drops and transfers](../../apps/docs/content/docs/solid/features/drops-and-transfers.mdx).
 
-Pass `{ scope: createCalendarInteractionScope() }` to group hosts for transfers or external sources; reuse that scope
+Pass `{ dragScope: createCalendarDragScope() }` to group hosts for transfers or external sources; reuse that scope
 across the participating calendars. The binding hook owns mounting. Programmatic interaction previews can use the
 existing store selector without installing pointer input.

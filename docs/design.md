@@ -1723,7 +1723,8 @@ The DOM engine owns measurement, activation, capture, scrolling and cancellation
 operation choice, source interpretation and movement grab offsets. They share pure DST candidate resolution with
 layout hit testing. Third-party bindings use `createCalendarDomOperation` with a target guard and typed begin/target
 mapping. The generic host needs only interaction controls and pointer settings; the event host adds built-in
-convenience bindings. Explicit scopes group calendars and external sources. Default host scopes are isolated;
+convenience bindings. `createCalendarDragScope()` creates a `Calendar_DragScope`; the `dragScope` binding option
+groups calendars and external sources. Default host drag scopes are isolated;
 external sources own activation settings independently of host registration order.
 
 React/Solid expose `useCalendarInteractionBindings`. They manage refs, subscriptions and lifecycle, and do not

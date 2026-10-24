@@ -254,13 +254,13 @@ export type {
 
 export type { Calendar_SchedulingEffect, Calendar_PlacementSettings } from '#features/interaction/scheduling.types';
 
-export { createCalendarInteractionScope } from '#interactions/dom-host';
+export { createCalendarDragScope } from '#interactions/dom-host';
 export { createCalendarDomOperation } from '#interactions/dom-operation';
 export { createCalendarDomHost } from '#interactions/dom';
 export type {
   Calendar_DomOperationSpec,
   Calendar_EventDomCalendar,
-  Calendar_InteractionScope,
+  Calendar_DragScope,
   Calendar_DomOptions,
   Calendar_DomBindings,
   Calendar_ExternalDragOptions,

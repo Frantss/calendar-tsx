@@ -402,7 +402,7 @@ axis labels and gutters. Coordinates account for RTL and clipping; previews rema
 Mouse activation uses `pointer.distance`, default four pixels. Touch movement before activation yields to scrolling.
 Each driver reads active per-view settings. Without a mounted host, feature registration adds no browser listeners.
 
-External palettes attach `createExternalDraggable(element, () => ({ event, metadata }), { scope, pointer: {} })` and release its returned
+External palettes attach `createExternalDraggable(element, () => ({ event, metadata }), { dragScope, pointer: {} })` and release its returned
 cleanup. Receivers register `externalDropFeature`; `onExternalDrop` receives `{ kind: 'create', after, metadata }`.
 `externalDrop.accept` can reject sources, and `externalDrop.placement` configures conversion/resources independently
 of movement. Duplicate destination IDs are rejected. Events retain their consumer payload type.
@@ -416,8 +416,8 @@ own constraints. Programmatic coordination uses `transfer.prepare(eventId, resou
 Third-party operations bind `createCalendarDomOperation({ acceptsTarget, begin, target? })` through `host.source`; they need no event/date shape. Custom surface
 resolvers return their own `Calendar_LayoutPoint` variant. Missing layout capabilities remain unavailable.
 
-The DOM adapter stays in `@calendar-tsx/core`. `createCalendarInteractionScope()` creates an explicit drag group.
-Pass the same `{ scope }` to participating hosts or framework binding hooks and external draggables. Omitted host
+The DOM adapter stays in `@calendar-tsx/core`. `createCalendarDragScope()` creates an explicit drag group.
+Pass the same `{ dragScope }` to participating hosts or framework binding hooks and external draggables. Omitted host
 scopes are isolated. External draggables own their `pointer` and optional `touch` activation settings; receiving
 calendars provide their own scrolling policy. Programmatic creation and transfer require no pointer feature.
 Receiver placement uses `crossCalendar.placement`, independently of movement settings.

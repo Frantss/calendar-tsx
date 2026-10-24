@@ -2,21 +2,21 @@ import type {
   Calendar_DomCalendar,
   Calendar_DomGesture,
   Calendar_DomSurface,
-  Calendar_InteractionScope,
+  Calendar_DragScope,
   Calendar_ExternalDragOptions,
 } from '#interactions/dom.types';
 import type { Calendar_InputSettings } from '#features/pointer/pointer.types';
 import type { DomHost as Host, DomBinding, DomSession, DomTransfer } from '#interactions/dom.internal';
 
-const scopes = new WeakMap<Calendar_InteractionScope, Set<Host>>();
-export const createCalendarInteractionScope = (): Calendar_InteractionScope => {
-  const scope = Object.freeze({ '~interactionScope': true as const });
-  scopes.set(scope, new Set());
-  return scope;
+const scopes = new WeakMap<Calendar_DragScope, Set<Host>>();
+export const createCalendarDragScope = (): Calendar_DragScope => {
+  const dragScope = Object.freeze({ '~dragScope': true as const });
+  scopes.set(dragScope, new Set());
+  return dragScope;
 };
-const scopeHosts = (scope: Calendar_InteractionScope) => {
-  const hosts = scopes.get(scope);
-  if (!hosts) throw new Error('[calendar] use createCalendarInteractionScope to create a drag scope');
+const scopeHosts = (dragScope: Calendar_DragScope) => {
+  const hosts = scopes.get(dragScope);
+  if (!hosts) throw new Error('[calendar] use createCalendarDragScope to create a drag scope');
   return hosts;
 };
 const cancellations = new Map<Host, Set<() => void>>();
@@ -37,11 +37,11 @@ const hitAt = (hosts: Set<Host>, event: PointerEvent, gesture: Calendar_DomGestu
 
 export const createDomHost = (
   calendar: Calendar_DomCalendar,
-  scope: Calendar_InteractionScope,
+  dragScope: Calendar_DragScope,
   blank: () => DomBinding | undefined,
   receive: Host['receive'],
 ): Host => {
-  const hosts = scopeHosts(scope);
+  const hosts = scopeHosts(dragScope);
   const surfaces = new Map<HTMLElement, Calendar_DomSurface>();
   const sources = new Map<HTMLElement, () => DomBinding | undefined>();
   let root: HTMLElement | undefined;
@@ -412,7 +412,7 @@ export const createDomDraggable = (
   getSource: () => { data: unknown; gesture?: Calendar_DomGesture },
   options: Calendar_ExternalDragOptions,
 ) => {
-  const hosts = scopeHosts(options.scope);
+  const hosts = scopeHosts(options.dragScope);
   let cancel: (() => void) | undefined;
   const down = (event: PointerEvent) => {
     if (event.button !== 0 || !event.isPrimary || cancel || options.pointer.enabled === false) return;

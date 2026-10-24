@@ -130,6 +130,6 @@ The docs include a [React interaction setup and rendering guide](../../apps/docs
 [editing policies](../../apps/docs/content/docs/react/features/editing-policies.mdx), and
 [external drops and transfers](../../apps/docs/content/docs/react/features/drops-and-transfers.mdx).
 
-Pass `{ scope: createCalendarInteractionScope() }` to group hosts for transfers or external sources; reuse that scope
+Pass `{ dragScope: createCalendarDragScope() }` to group hosts for transfers or external sources; reuse that scope
 across the participating calendars. The binding hook owns mounting. Programmatic interaction previews can use the
 existing store selector without installing pointer input.
