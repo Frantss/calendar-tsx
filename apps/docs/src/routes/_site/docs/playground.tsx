@@ -41,7 +41,7 @@ import type { PlaygroundToPreview, PreviewToPlayground } from '@/playground/mess
 import { postPlaygroundMessage, readPlaygroundMessage } from '@/playground/messages';
 import { TokenEditor } from '@/playground/token-editor';
 import type { PlaygroundView } from '@/playground/views';
-import { playgroundViews } from '@/playground/views';
+import { createPlaygroundViews } from '@/playground/views';
 
 export const Route = createFileRoute('/_site/docs/playground')({
   head: () => ({ meta: [{ title: 'Playground · calendar-tsx' }] }),
@@ -94,9 +94,14 @@ const toUtcDate = (date: Temporal.PlainDate) => new Date(Date.UTC(date.year, dat
 
 /** The toolbar title: the month, the day, or the span of days the view shows. */
 const periodTitle = (config: PlaygroundConfig) => {
-  const { period } = getCalendarNavigation(playgroundViews.views, config.view, Temporal.PlainDate.from(config.date), {
-    firstDayOfWeek: config.firstDayOfWeek,
-  });
+  const { period } = getCalendarNavigation(
+    createPlaygroundViews(config).views,
+    config.view,
+    Temporal.PlainDate.from(config.date),
+    {
+      firstDayOfWeek: config.firstDayOfWeek,
+    },
+  );
 
   if (config.view === 'month') return period.start.toLocaleString(config.locale, { month: 'long', year: 'numeric' });
 
@@ -311,6 +316,72 @@ function Playground() {
                     value={config.slotMinutes}
                     onChange={slotMinutes => update({ slotMinutes })}
                   />
+                  <Field label='Min column (px)' hint='Time grids only. Zero lets columns fit the preview.'>
+                    <input
+                      type='number'
+                      min={0}
+                      step={1}
+                      required
+                      value={config.minColumnWidth}
+                      onChange={event => {
+                        const width = event.target.valueAsNumber;
+                        if (Number.isSafeInteger(width) && width >= 0) update({ minColumnWidth: width });
+                      }}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Field label='Visible from' hint='Time grids only, in the calendar’s time zone.'>
+                    <input
+                      type='time'
+                      step={60}
+                      required
+                      value={config.visibleStart}
+                      onChange={event => event.target.value && update({ visibleStart: event.target.value })}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Field
+                    label='Visible until'
+                    hint='An end at or before the start is on the next day. Equal times show 24 hours.'
+                  >
+                    <input
+                      type='time'
+                      step={60}
+                      required
+                      value={config.visibleEnd}
+                      onChange={event => event.target.value && update({ visibleEnd: event.target.value })}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <fieldset aria-describedby='hidden-weekdays-hint' className='min-w-0'>
+                    <legend className='text-[13px] text-fd-muted-foreground'>Hidden weekdays</legend>
+                    <div className='grid grid-cols-2 gap-x-2'>
+                      {weekdays.map(day => (
+                        <label
+                          key={day.value}
+                          className='flex h-8 cursor-pointer items-center gap-2 text-[13px] has-[:disabled]:cursor-default pointer-coarse:h-11'
+                        >
+                          <input
+                            type='checkbox'
+                            checked={config.hiddenDays.includes(day.value)}
+                            disabled={!config.hiddenDays.includes(day.value) && config.hiddenDays.length === 6}
+                            onChange={event =>
+                              update({
+                                hiddenDays: event.target.checked
+                                  ? [...config.hiddenDays, day.value].sort((a, b) => a - b)
+                                  : config.hiddenDays.filter(value => value !== day.value),
+                              })
+                            }
+                            className='size-4 accent-fd-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-fd-ring'
+                          />
+                          {day.label}
+                        </label>
+                      ))}
+                    </div>
+                    <p id='hidden-weekdays-hint' className='text-[11px] leading-snug text-fd-muted-foreground'>
+                      Keep at least one weekday visible. Overnight hours belong to their starting date.
+                    </p>
+                  </fieldset>
                   <Checkbox label='All-day row' checked={config.allDay} onChange={allDay => update({ allDay })} />
                   <Segmented
                     label='Clock'

@@ -2,8 +2,8 @@ import { Temporal } from 'temporal-polyfill';
 
 import type { TokenOverrides } from './tokens';
 import { emptyTokenOverrides, hasTokenOverrides, sanitizeTokenOverrides } from './tokens';
-import type { PlaygroundView } from './views';
-import { playgroundViews } from './views';
+import type { PlaygroundView, PlaygroundViewSettings } from './views';
+import { defaultPlaygroundViewSettings, playgroundViews } from './views';
 
 export const playgroundThemes = [
   { id: 'default', label: 'Default' },
@@ -53,7 +53,7 @@ export type PlaygroundEvent = {
   room: PlaygroundRoom | '';
 };
 
-export type PlaygroundConfig = {
+export type PlaygroundConfig = PlaygroundViewSettings & {
   view: PlaygroundView;
   /** ISO date, `YYYY-MM-DD`. */
   date: string;
@@ -64,9 +64,7 @@ export type PlaygroundConfig = {
   timeZone: string;
   firstDayOfWeek: PlaygroundFirstDayOfWeek;
   locale: PlaygroundLocale;
-  maxEventsPerDay: number;
   slotMinutes: PlaygroundSlotMinutes;
-  allDay: boolean;
   /** `YYYY-MM-DDTHH:MM` in the calendar's zone to freeze the clock there; empty for the live clock. */
   now: string;
   data: PlaygroundDataSet;
@@ -83,9 +81,8 @@ export const defaultPlaygroundConfig = (today: string): PlaygroundConfig => ({
   timeZone: '',
   firstDayOfWeek: 7,
   locale: 'en-US',
-  maxEventsPerDay: 3,
+  ...defaultPlaygroundViewSettings,
   slotMinutes: 30,
-  allDay: true,
   now: '',
   data: 'sample',
   events: [],
@@ -108,6 +105,12 @@ const isSlotMinutes = oneOf<PlaygroundSlotMinutes>([15, 30, 60]);
 const isFirstDayOfWeek = oneOf<PlaygroundFirstDayOfWeek>([1, 2, 3, 4, 5, 6, 7]);
 const isTime = (value: unknown): value is string =>
   typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+
+const parseHiddenDays = (value: string | null): PlaygroundViewSettings['hiddenDays'] => {
+  if (!value) return [];
+  const days = [...new Set(value.split(',').map(Number))].sort((a, b) => a - b);
+  return days.length < 7 && days.every(isFirstDayOfWeek) ? days : [];
+};
 
 const isDate = (value: unknown): value is string => {
   if (typeof value !== 'string') return false;
@@ -192,6 +195,9 @@ export const parsePlaygroundConfig = (hash: string, today: string): PlaygroundCo
   const locale = params.get('locale');
   const maxEventsPerDay = Number(params.get('max'));
   const slotMinutes = Number(params.get('slot'));
+  const minColumnWidth = Number(params.get('minWidth'));
+  const visibleStart = params.get('from');
+  const visibleEnd = params.get('until');
   const now = params.get('now');
   const data = params.get('data');
 
@@ -209,6 +215,11 @@ export const parsePlaygroundConfig = (hash: string, today: string): PlaygroundCo
         ? maxEventsPerDay
         : fallback.maxEventsPerDay,
     slotMinutes: isSlotMinutes(slotMinutes) ? slotMinutes : fallback.slotMinutes,
+    minColumnWidth:
+      Number.isSafeInteger(minColumnWidth) && minColumnWidth >= 0 ? minColumnWidth : fallback.minColumnWidth,
+    hiddenDays: parseHiddenDays(params.get('hidden')),
+    visibleStart: isTime(visibleStart) ? visibleStart : fallback.visibleStart,
+    visibleEnd: isTime(visibleEnd) ? visibleEnd : fallback.visibleEnd,
     allDay: params.get('allday') !== 'off',
     now: isDateTime(now) ? now : fallback.now,
     data: isDataSet(data) ? data : fallback.data,
@@ -233,6 +244,10 @@ export const serializePlaygroundConfig = (config: PlaygroundConfig) => {
   add('locale', config.locale, fallback.locale);
   add('max', config.maxEventsPerDay, fallback.maxEventsPerDay);
   add('slot', config.slotMinutes, fallback.slotMinutes);
+  add('minWidth', config.minColumnWidth, fallback.minColumnWidth);
+  if (config.hiddenDays.length) params.set('hidden', config.hiddenDays.join(','));
+  add('from', config.visibleStart, fallback.visibleStart);
+  add('until', config.visibleEnd, fallback.visibleEnd);
   if (!config.allDay) params.set('allday', 'off');
   add('now', config.now, fallback.now);
   add('data', config.data, fallback.data);

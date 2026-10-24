@@ -174,10 +174,19 @@ function PreviewCalendar({
   const [selected, setSelected] = useState<Calendar_Event<Booking> | null>(null);
   const date = Temporal.PlainDate.from(config.date);
   const month = date.with({ day: 1 }).toString();
-  const { maxEventsPerDay, slotMinutes, allDay } = config;
+  const { maxEventsPerDay, slotMinutes, allDay, minColumnWidth, hiddenDays, visibleStart, visibleEnd } = config;
   const views = useMemo(
-    () => createPlaygroundViews({ maxEventsPerDay, slotMinutes, allDay }),
-    [maxEventsPerDay, slotMinutes, allDay],
+    () =>
+      createPlaygroundViews({
+        maxEventsPerDay,
+        slotMinutes,
+        allDay,
+        minColumnWidth,
+        hiddenDays,
+        visibleStart,
+        visibleEnd,
+      }),
+    [maxEventsPerDay, slotMinutes, allDay, minColumnWidth, hiddenDays, visibleStart, visibleEnd],
   );
   // regenerated per month only, so the arrays keep their identity while the week or day changes
   const generated = useMemo(
@@ -205,13 +214,16 @@ function PreviewCalendar({
     onApi(calendar.api);
   }, [onApi, calendar]);
 
-  // open the time grid at 7 AM, where the sample events start; it waits until the theme makes the grid scrollable
+  // Full-day previews open near the sample events; custom windows open at their starting hour.
   useEffect(() => {
     const root = document.querySelector<HTMLElement>("[data-part='time-grid-root']");
     const body = root?.querySelector<HTMLElement>("[data-part='time-grid-body']");
     const header = root?.querySelector<HTMLElement>("[data-part='time-grid-header']");
 
     if (!root || !body) return;
+
+    root.scrollTop = 0;
+    if (visibleStart !== '00:00' || visibleEnd !== '00:00') return;
 
     const observer = new ResizeObserver(() => {
       if (root.scrollHeight <= root.clientHeight) return;
@@ -227,7 +239,7 @@ function PreviewCalendar({
     observer.observe(body);
 
     return () => observer.disconnect();
-  }, [config.view]);
+  }, [config.view, visibleStart, visibleEnd]);
 
   return (
     <CalendarProvider value={calendar} locale={config.locale}>

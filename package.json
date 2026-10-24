@@ -10,7 +10,7 @@
     "build": "vp run -r build",
     "build:dev": "vp run -r build --watch",
     "postbuild": "vp fmt --write",
-    "test": "vp run @calendar-tsx/core#test && vp run @calendar-tsx/react#test && vp run @calendar-tsx/solid#test && vp run @calendar-tsx/themes#test",
+    "test": "vp run @calendar-tsx/core#test && vp run @calendar-tsx/react#test && vp run @calendar-tsx/solid#test && vp run @calendar-tsx/themes#test && vp run @calendar-tsx/docs#test",
     "check:package": "vp run @calendar-tsx/core#check:package && vp run @calendar-tsx/react#check:package && vp run @calendar-tsx/solid#check:package && vp run @calendar-tsx/themes#check:package",
     "check:types": "vp run -r check:types",
     "check:rules": "vp lint --type-aware",
