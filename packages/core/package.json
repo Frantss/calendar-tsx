@@ -31,12 +31,15 @@
     "check:package": "publint --strict && attw --pack --no-emoji"
   },
   "dependencies": {
-    "@tanstack/store": "^0.11.2",
-    "temporal-polyfill": "^1.0.6"
+    "@tanstack/store": "^0.11.2"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
     "publint": "^0.3.25",
+    "temporal-polyfill": "^1.0.6",
     "typescript": "^7.0.2"
+  },
+  "peerDependencies": {
+    "temporal-polyfill": "^1.0.6"
   }
 }

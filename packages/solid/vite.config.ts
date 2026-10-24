@@ -51,6 +51,7 @@ export default defineConfig({
     plugins: [solid()],
     deps: {
       alwaysBundle: [/#.*/],
+      neverBundle: ['temporal-polyfill'],
     },
   },
 });

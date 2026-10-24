@@ -33,6 +33,7 @@ export default defineConfig({
     banner: { js: "'use client';" },
     deps: {
       alwaysBundle: [/#.*/],
+      neverBundle: ['temporal-polyfill'],
     },
   },
 });

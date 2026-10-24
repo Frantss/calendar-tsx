@@ -15,6 +15,7 @@ export default defineConfig({
     clean: true,
     deps: {
       alwaysBundle: [/#.*/],
+      neverBundle: ['temporal-polyfill'],
     },
   },
 });
