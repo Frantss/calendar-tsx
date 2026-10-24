@@ -279,7 +279,7 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 - **Overflow:** trigger plus data; the popover and async fill are the app's (D14).
 - **Empty:** the month grid always renders its weeks; an empty resource grid has `columns.length === 0` and an empty list has `days.length === 0`, rendered by the consumer or `ListView_Empty` (D18, D23).
 - **Loading:** app-owned (D23).
-- **Time zone and DST:** layout runs in `timeZone` (D7). How a 23- or 25-hour day maps to slot fractions is open (see open questions).
+- **Time zone and DST:** layout runs in `timeZone` (D7). D40 keeps a fixed 24-hour clock axis on DST days.
 
 ## Decision log
 
@@ -337,7 +337,7 @@ Variation is expressed through view definitions (D4), never booleans on parts:
 
 **Verified:** not verified — rewritten after a `reject`; re-run the panel
 
-**Why:** The input types make the timed/all-day split explicit. Timed events are `ZonedDateTime`. All-day events are a separate `PlainDate` shape, so no all-day event can be faked as a timed one; today `build-apc-event.ts` encodes all-day availability as `date + 1 minute`, while `build-apc-events-from-availability.ts` emits all-day events with real start times. The controlled `date` is a `PlainDate`. Time zone rules: the core converts every timed input with `withTimeZone(timeZone)` before layout; "now" and "today" resolve in `timeZone`; every time in the view model is in `timeZone`; the host zone is never read. String parsing stays at the app edge, in one mapper from API values. The rationale is the explicit shape plus a single conversion point, not a claim that strict input reduces bugs by itself. How 23- and 25-hour DST days map to slot fractions is still open.
+**Why:** The input types make the timed/all-day split explicit. Timed events are `ZonedDateTime`. All-day events are a separate `PlainDate` shape, so no all-day event can be faked as a timed one; today `build-apc-event.ts` encodes all-day availability as `date + 1 minute`, while `build-apc-events-from-availability.ts` emits all-day events with real start times. The controlled `date` is a `PlainDate`. Time zone rules: the core converts every timed input with `withTimeZone(timeZone)` before layout; "now" and "today" resolve in `timeZone`; every time in the view model is in `timeZone`; the host zone is never read. String parsing stays at the app edge, in one mapper from API values. The rationale is the explicit shape plus a single conversion point, not a claim that strict input reduces bugs by itself. D40 settles the DST axis as fixed 24-hour clock time.
 
 **Amended:** both shapes carry an explicit discriminant, `kind: 'timed'` or `kind: 'allDay'`, so `event.kind` narrows the union. Before, only all-day events had a field (`allDay: true`) and narrowing needed `'allDay' in event`. A string `kind` was chosen over a required `allDay: boolean` because it reads as a tag rather than a flag, matches the layout models' `kind`, and leaves room for another shape without a second boolean. Values are camelCase like the layout kinds (`'timeGrid'`).
 
@@ -924,7 +924,7 @@ createCalendar({ …, features: { backgroundFeature, ...views.features }, backgr
 | Month     | `day.backgrounds: { key, layer, kind }[]`                 | `MonthViewDayBackground`: `aria-hidden`, `data-kind`, fills the day beneath its content |
 | List      | none                                                      | —                                                                                       |
 
-Time-grid fractions use the real wall-clock day length, as `unavailable` does (D12; the DST open question applies). Overlapping ranges within a layer are merged so nothing is shaded twice; layers stack in input order. Inverse layers reuse the complement that D12's `unavailable` already computes, now shared in `layout/layout-intervals.ts`. Both parts carry `data-layer` as well as `data-kind`. Any meaning beyond shading (a "Closed" label) is the consumer's text (D20). `base.css` positions the time-grid part as it positions `time-grid-unavailable`, and makes `month-day` a positioned, isolated box so the day part sits beneath the day's content. `default.css` fills both parts from `--calendar-background` (unset by default: a 6% wash of the text color) and hatches them under forced colors, at the opposite angle from unavailable time.
+Time-grid fractions use the fixed 24-hour clock axis (D40), as `unavailable` does (D12). Overlapping ranges within a layer are merged after projection so nothing is shaded twice; layers stack in input order. Inverse layers reuse the complement that D12's `unavailable` already computes, now shared in `layout/layout-intervals.ts`. Both parts carry `data-layer` as well as `data-kind`. Any meaning beyond shading (a "Closed" label) is the consumer's text (D20). `base.css` positions the time-grid part as it positions `time-grid-unavailable`, and makes `month-day` a positioned, isolated box so the day part sits beneath the day's content. `default.css` fills both parts from `--calendar-background` (unset by default: a 6% wash of the text color) and hatches them under forced colors, at the opposite angle from unavailable time.
 
 **Considered and rejected:**
 
@@ -961,7 +961,7 @@ Time-grid fractions use the real wall-clock day length, as `unavailable` does (D
 **Why:** A timeline puts resources on rows and time on the horizontal axis. The time-grid model does not fit it. Time-grid lanes divide a column's width (`lane`/`lanes`) and events split at every day column, while a timeline stacks overlapping events into rows whose count differs per resource, and a week timeline draws an event crossing midnight as one bar. Bending the time grid with an orientation setting would need a mode switch inside its parts, which D3 rules out. So the timeline gets its own layout feature (`timelineLayout`, the `timelineLayout` key in `Calendar_Layout_FeatureMap`), view factory and part family, built only on the D29 layout-feature API. Leaving it to consumers as a userland layout feature was rejected because the library is meant to ship it; it remains possible for other layouts.
 
 - **Settings:** `timelineView({ days, groupBy?: 'resource', slotMinutes?: 60, minSlotWidth? })`. Navigation is the time grid's: a 7-day period starts on `firstDayOfWeek`, and a step moves `days` days. Without `groupBy` the layout has one row with no resource.
-- **Positions:** every `start`/`span` is a fraction of the whole range in elapsed time, as time-grid fractions are of the day. Days and slots are integer column indices instead (`colStart`, `colSpan`; `col`), so the header lays out as a CSS grid of `days × 1440 / slotMinutes` slot columns and sizes to its content. Slots divide each day evenly, so on a 23- or 25-hour day slot labels and event positions disagree, the time grid's open DST question.
+- **Positions (amended by D40):** every `start`/`span` is a fraction of the whole range in clock time, with 24 hours per date. Days and slots are integer column indices instead (`colStart`, `colSpan`; `col`), so the header lays out as a CSS grid of `days × 1440 / slotMinutes` slot columns and sizes to its content. Day widths stay equal across DST, and all-day spans follow those day boundaries.
 - **Stacking:** within a row, each event takes the lowest stack row where it overlaps nothing, in core order (`eventOrder`). Touching intervals do not overlap, as in the time grid. Each row reports `rows`, its stack depth, so rows grow to fit. A cap with overflow (FullCalendar's `eventMaxStack`) is a later, additive setting.
 - **Spans:** a timed event is one segment clipped only at the range edges, with `continuesBefore`/`continuesAfter`. An all-day event is a block from the start of its first day to the start of the day after its last, in the same stack; there is no separate all-day row, and the segment carries `isAllDay`.
 - **Resources and availability:** an event appears in every row it references. Availability is clipped to the range and shaded as its complement (D12), with the same helper as the time grid. A resource with no availability in the range is `isUnavailable` and shaded throughout.
@@ -1076,6 +1076,43 @@ Parts: `MonthView_WeekBackgroundEvent`, `TimeGridView_AllDayBackgroundEvent` and
 - **Pixels in CSS only** (`min-block-size`, a container query for the short style): it follows the slot height, but lanes would not know about the stretched length, so back-to-back brief events would cover each other.
 - **A pixel option the core converts with the slot height:** the core would need the theme's slot height as an input, which breaks D9's split between geometry and styling.
 - **Stretching the event's `end` in the model:** consumers would label a 5-minute call as 15 minutes.
+
+### D40 — Time grids and timelines use a fixed 24-hour clock axis across DST
+
+**Serves:** C4, C7, C8, C9, C13; D7, D12, D33, D34, D37, D38, D39
+
+**Status:** accepted. The user chose a fixed clock axis over an elapsed-time axis. Amends the geometry in D7, D12,
+D33, D34, D37 and D39; model shapes, input timestamps and slot labels are unchanged.
+
+**Why:** events and shading used elapsed milliseconds while slot labels divided every date into 24 hours. In New
+York, 09:00 appeared at 8/23 of the spring-transition day and 10/25 of the autumn-transition day, away from its label
+at 9/24. Weekly timeline dates also had different effective widths from their headers.
+
+- **Coordinates:** each displayed date has 24 clock hours. Real instants determine clipping and whether an event or
+  the clock is inside the range; local dates and times determine positions. A 09:00 event and the now indicator at
+  09:00 sit at 9/24 of their date in both layouts. Transition offsets come from the installed Temporal polyfill's
+  `getTimeZoneTransition`; no host time zone or assumed one-hour DST change is used.
+- **Missing and repeated hours:** missing clock labels remain on the axis. Both occurrences of a repeated clock
+  time share a position. Event lanes and timeline stacks use projected geometry, so visually overlapping events
+  remain separate even when their real intervals do not overlap.
+- **Transition-crossing intervals:** a bar encloses the clock positions visited by its real interval. Spring
+  01:30–03:30 spans two displayed hours. Autumn 01:30 in the first hour to 01:15 in the second spans the repeated
+  01:00–02:00 band. This keeps one forward bar without changing the event's actual bounds. An exclusive end at a
+  transition uses the offset before the transition, so it does not include the next occurrence.
+- **Shading:** real availability and background intervals are clipped, split at offset transitions, projected, then
+  merged before inverse gaps are calculated. A rollback can produce separate shaded bands; their gaps stay visible.
+  Repeated-hour coverage combines on the shared axis. All-day backgrounds and timeline events use
+  date boundaries directly, including dates on which midnight does not exist.
+- **Minimum and short lengths:** D39's thresholds measure displayed clock minutes, after projection. Minimum lengths
+  participate in visual lane assignment and remain clipped at the displayed day's end.
+
+**Rejected:** an elapsed-time axis with 23/25-hour days and skipped/repeated labels. It preserves actual duration on
+screen but changes the shared time-grid axis and timeline header model. Retaining elapsed geometry under clock labels
+was rejected because it leaves the alignment defect in place.
+
+**Verification:** calendar-level regression cases in `packages/core/src/tests/layout-dst.spec.ts` cover spring and
+autumn transitions, half-hour changes in Lord Howe, midnight changes in Santiago, repeated-hour lanes and inverse
+shading, minimum sizes, weekly day boundaries and all-day events.
 
 ## Test cases
 
@@ -1579,7 +1616,7 @@ Generic parameters are shown as `unknown` on the parts for brevity; the real par
 - The event store's `update` takes an updater (`update(id, event => next)`) instead of a partial patch, because a `Partial` of the timed/all-day union type-checks invalid mixes.
 - Duplicate event ids are reported with `console.error` (the lint config bans `console.warn`; React reports keys the same way).
 - The D21 lint boundary is implemented in `eslint.config.mjs`: `lib/calendar/core/**` (excluding `tests/`) cannot import React, `@tanstack/react-*`, `~/…` or the React adapter.
-- Time-grid fractions use the real wall-clock day length in `timeZone`, but slots are always 24 h ÷ `slotMinutes`; on DST days the slot labels and event positions disagree (the DST question above).
+- ~~Time-grid fractions use real day lengths under a fixed 24-hour slot axis, misaligning DST positions.~~ Settled by D40.
 - `knip` reports `lib/calendar/core/index.ts` as unused until an adapter imports it.
 
 **From the prototype:**
@@ -1601,7 +1638,7 @@ Generic parameters are shown as `unknown` on the parts for brevity; the real par
 - Temporal browser support and polyfill choice.
 - App spec Q1 (min column width): handled as `minColumnWidth` → CSS variable; confirm the app still wants it.
 - App spec Q2 (list-on-mobile): stays app logic under D5 (the app picks the view key); no core support planned.
-- DST days: should a 23/25-hour day keep 24 hourly slots (FullCalendar's behaviour) or show the real wall-clock hours? Affects slot and segment fractions.
+- ~~DST days: fixed 24-hour slots or real 23/25-hour axes?~~ Settled by D40: fixed clock slots and equal date widths.
 - `TResourceData` as a second generic: assumed alongside `TData` (D8), not asked.
 - D2: the development-only warning on duplicate ids was added without asking.
 - D17: `dayOverflow` is data-dependent but sits in the static view definition; it may belong on the calendar options instead.

@@ -40,6 +40,17 @@ input changed).
 Until `'~mount'`, the state derives "now" from `initialNow` when given, otherwise from the clock. To render on a server
 and hydrate on the client, pass the same `initialNow` to both.
 
+## DST and axis positions
+
+Time grids and timelines use a fixed 24-hour clock axis in `timeZone`: 09:00 aligns with the 09:00 slot on DST days,
+and timeline dates keep equal widths. The two occurrences of a repeated hour share clock positions; visually
+overlapping events receive separate lanes or stack rows. A transition-crossing bar encloses the clock positions
+visited by its real interval. Actual event timestamps and durations remain available on `segment.event`.
+
+Backgrounds, availability and the now indicator use the same axis. All-day spans follow date boundaries even when
+midnight is skipped. Minimum and short event lengths measure displayed clock minutes (design D40).
+Timed shading can split into separate bands at a DST transition; inverse layers retain the gaps between them.
+
 ## Events
 
 Events are plain objects (design D2, D7, D8), discriminated by `kind`: `'timed'` events take `ZonedDateTime` bounds,

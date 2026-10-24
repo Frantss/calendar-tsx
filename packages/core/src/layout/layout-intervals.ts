@@ -1,6 +1,6 @@
 import type { Temporal } from 'temporal-polyfill';
 
-/** A half-open span of epoch milliseconds. */
+/** A half-open millisecond span: epoch instants before projection, clock coordinates after it (D40). */
 export type LayoutIntervals_Interval = { startMs: number; endMs: number };
 
 /** Clips each interval to `day`, dropping the empty ones, sorted by start. */

@@ -11,7 +11,9 @@ import type {
   Calendar_TimelineViewSettings,
 } from '#calendar.types';
 import type { LayoutIntervals_Interval as Interval } from '#layout/layout-intervals';
-import { layoutIntervals_clip, layoutIntervals_complement } from '#layout/layout-intervals';
+import { layoutIntervals_complement } from '#layout/layout-intervals';
+import { layoutAxis_coverage, layoutAxis_create, layoutAxis_date } from '#layout/layout-axis';
+import type { LayoutAxis } from '#layout/layout-axis';
 
 const DEFAULT_SLOT_MINUTES = 60;
 const MINUTES_PER_DAY = 24 * 60;
@@ -20,8 +22,6 @@ const matchesResource = <TData, TResourceData>(
   event: Calendar_Event<TData>,
   resource?: Calendar_Resource<TResourceData>,
 ) => !resource || (event.resourceIds ?? []).includes(resource.id);
-
-const startOfDay = (date: Temporal.PlainDate, timeZone: string) => date.toZonedDateTime({ timeZone }).epochMilliseconds;
 
 /** Each item takes the lowest stack row where it overlaps nothing; touching intervals do not overlap (D34). */
 const stack = <T extends Interval>(items: T[]) => {
@@ -40,16 +40,15 @@ const stack = <T extends Interval>(items: T[]) => {
 const buildRow = <TData, TResourceData>({
   resource,
   events,
-  range,
-  timeZone,
+  axis,
 }: {
   resource?: Calendar_Resource<TResourceData>;
   events: Calendar_Event<TData>[];
-  range: Interval;
-  timeZone: string;
+  axis: LayoutAxis;
 }): Calendar_TimelineRow<TData, TResourceData> => {
-  const length = range.endMs - range.startMs;
-  const fraction = (ms: number) => (ms - range.startMs) / length;
+  const range = axis.range;
+  const length = axis.endMs - axis.startMs;
+  const fraction = axis.fraction;
   const key = resource?.id ?? 'all';
 
   const items = events.flatMap(event => {
@@ -57,19 +56,21 @@ const buildRow = <TData, TResourceData>({
 
     const isAllDay = calendarEvents_isAllDay(event);
     const span = calendarEvents_dateSpan(event);
-    const startMs = isAllDay ? startOfDay(span.start, timeZone) : event.start.epochMilliseconds;
-    const endMs = isAllDay ? startOfDay(span.end.add({ days: 1 }), timeZone) : event.end.epochMilliseconds;
+    const startMs = isAllDay ? layoutAxis_date(span.start) : event.start.epochMilliseconds;
+    const endMs = isAllDay ? layoutAxis_date(span.end.add({ days: 1 })) : event.end.epochMilliseconds;
+    const bounds = isAllDay ? axis : range;
 
-    if (endMs <= range.startMs || startMs >= range.endMs) return [];
+    if (endMs <= bounds.startMs || startMs >= bounds.endMs) return [];
+
+    const clipped = { startMs: Math.max(startMs, bounds.startMs), endMs: Math.min(endMs, bounds.endMs) };
 
     return [
       {
         event,
         isAllDay,
-        startMs: Math.max(startMs, range.startMs),
-        endMs: Math.min(endMs, range.endMs),
-        continuesBefore: startMs < range.startMs,
-        continuesAfter: endMs > range.endMs,
+        ...(isAllDay ? clipped : axis.project(clipped)),
+        continuesBefore: startMs < bounds.startMs,
+        continuesAfter: endMs > bounds.endMs,
       },
     ];
   });
@@ -86,12 +87,12 @@ const buildRow = <TData, TResourceData>({
   }));
 
   // Its gaps are the unavailable segments; a resource with none is unavailable throughout (D12).
-  const availability = layoutIntervals_clip(
+  const availability = layoutAxis_coverage(
+    axis,
     (resource?.availability ?? []).map(period => ({
       startMs: period.start.epochMilliseconds,
       endMs: period.end.epochMilliseconds,
     })),
-    range,
   );
 
   return {
@@ -101,7 +102,7 @@ const buildRow = <TData, TResourceData>({
     segments,
     rows: Math.max(0, ...segments.map(segment => segment.row + 1)),
     unavailable: resource
-      ? layoutIntervals_complement(availability, range).map(gap => ({
+      ? layoutIntervals_complement(availability, axis).map(gap => ({
           key: `${key}:unavailable:${gap.startMs}`,
           start: fraction(gap.startMs),
           span: (gap.endMs - gap.startMs) / length,
@@ -128,10 +129,8 @@ export const layoutTimeline_build = <TData, TResourceData>({
   const dates = calendarNavigation_days(range);
   const slotMinutes = definition.slotMinutes ?? DEFAULT_SLOT_MINUTES;
   const slotsPerDay = MINUTES_PER_DAY / slotMinutes;
-  const interval = {
-    startMs: startOfDay(range.start, timeZone),
-    endMs: startOfDay(range.end.add({ days: 1 }), timeZone),
-  };
+  const axis = layoutAxis_create(range, timeZone);
+  const interval = axis.range;
   const today = now.toPlainDate();
   const groups = definition.groupBy === 'resource' ? resources : [undefined];
   const nowMs = now.epochMilliseconds;
@@ -152,11 +151,8 @@ export const layoutTimeline_build = <TData, TResourceData>({
         return { key: `${date.toString()}T${time.toString()}`, date, time, col: day * slotsPerDay + index };
       }),
     ),
-    rows: groups.map(resource => buildRow({ resource, events, range: interval, timeZone })),
-    now:
-      nowMs >= interval.startMs && nowMs < interval.endMs
-        ? (nowMs - interval.startMs) / (interval.endMs - interval.startMs)
-        : undefined,
+    rows: groups.map(resource => buildRow({ resource, events, axis })),
+    now: nowMs >= interval.startMs && nowMs < interval.endMs ? axis.fraction(axis.point(nowMs)) : undefined,
     minSlotWidth: definition.minSlotWidth,
   };
 };

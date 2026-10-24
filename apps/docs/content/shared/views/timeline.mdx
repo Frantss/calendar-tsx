@@ -37,7 +37,8 @@ timelineView({ days: 1, groupBy: 'resource', slotMinutes: 30 }); // a day
 ## Model
 
 `layout` is `{ kind: 'timeline', days, slots, rows, now, minSlotWidth }`. Every `start` and `span` is a **fraction of the
-whole range**, 0 at its first midnight and 1 at its last, in real time.
+whole range**, 0 at its first midnight and 1 at its last, with 24 clock hours per displayed date. Dates keep equal
+widths across daylight-saving transitions. Repeated hours share clock positions; visually overlapping events stack.
 
 - `days` holds one `{ key, date, isToday, colStart, colSpan }` per day, for the header. `colStart` and `colSpan` count
   slot columns.
