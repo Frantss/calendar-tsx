@@ -40,7 +40,7 @@ export default defineConfig({
     entry: {
       index: 'export/index.ts',
     },
-    format: ['esm', 'cjs'],
+    format: ['esm'],
     platform: 'browser',
     dts: true,
     sourcemap: true,
