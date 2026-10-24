@@ -1,0 +1,27 @@
+---
+title: Selection and event editing
+description: Opt into selection, movement and resizing with typed proposals and layout previews.
+---
+
+<include>../../../shared/features/interactions.mdx#intro</include>
+
+<include>../../../shared/features/interactions.mdx#setup</include>
+
+The example imports typed sample events, the initial date and the registry from `core/interactions.ts`.
+Solid reads reactive options inside an accessor; its interaction preview is also an accessor.
+
+<include lang='tsx' meta='title="solid/interactions.tsx"'>
+  ../../../../examples/solid/interactions.tsx#setup
+</include>
+
+<include>../../../shared/features/interactions.mdx#bindings</include>
+
+`EditableDay` maps the time-grid layout's columns inside `TimeGridViewBody`. Each column renders its sources:
+
+<include lang='tsx'>../../../../examples/solid/interactions.tsx#bindings</include>
+
+<include>../../../shared/features/interactions.mdx#preview</include>
+
+<include lang='tsx'>../../../../examples/solid/interactions.tsx#preview</include>
+
+<include>../../../shared/features/interactions.mdx#rest</include>

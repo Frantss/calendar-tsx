@@ -1,0 +1,34 @@
+---
+title: Selection and event editing
+description: Register independent operations, mount browser bindings and apply typed event proposals.
+---
+
+<include>../../../shared/features/interactions.mdx#intro</include>
+
+<include>../../../shared/features/interactions.mdx#setup</include>
+
+The following example imports the registry and typed event inputs from `core/interactions.ts`.
+It applies event and navigation proposals by syncing new options. Call `destroy` when removing the calendar.
+
+<include lang='ts' meta='title="core/interaction-host.ts"'>
+  ../../../../examples/core/interaction-host.ts#setup
+</include>
+
+## Attach browser elements
+
+Core consumers render their own DOM. Register each measured track with a surface ref and attach source refs to
+events and resize handles. The helper below shows one column and event; in a renderer, register the column once
+and bind each of its events separately. Run the cleanup when replacing those elements.
+
+<include lang='ts'>../../../../examples/core/interaction-host.ts#bindings</include>
+
+Use `timeGridSurface()` for an all-day track, `timelineSurface(row.key)` for a timeline lane and
+`dayGridSurface(section.key, row.key)` for a day-grid row. Measure the track without axis labels or gutters.
+
+<include>../../../shared/features/interactions.mdx#preview</include>
+
+Core consumers observe `calendar.api.interactions.store.state.preview` and subscribe to that store to redraw their
+overlays. The [React example](/docs/react/features/interactions#render-the-draft) and
+[Solid example](/docs/solid/features/interactions#render-the-draft) illustrate the same geometry.
+
+<include>../../../shared/features/interactions.mdx#rest</include>

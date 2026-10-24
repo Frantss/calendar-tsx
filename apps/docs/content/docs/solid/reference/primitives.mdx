@@ -1,6 +1,6 @@
 ---
 title: Primitives and providers
-description: useCalendar, Calendar, CalendarProvider, useCalendarSelector and useCalendarEventStore.
+description: Calendar setup, context, selectors, event stores and interaction bindings.
 ---
 
 ## `useCalendar`
@@ -24,6 +24,20 @@ Read signals inside the accessor (`view: view()`), not outside it, or changes wo
   Don't pass type arguments such as `useCalendar<Booking>(…)`: TypeScript then stops inferring the rest, and `view`
   and `onNavigate` widen to `string`. Type `events` instead, for example as `Calendar_EventInput<Booking>[]`.
 </Callout>
+
+## `useCalendarInteractions`
+
+```tsx
+const bindings = useCalendarInteractions(calendar);
+const preview = () => bindings.preview();
+```
+
+Requires interaction and pointer features. Returns callback refs for `root`, `surface(descriptor)` and
+`source(key, descriptor)`, an `operation(key, descriptor)` ref for custom operations, `cancel()`, and a reactive
+`preview` accessor. Read `preview()` inside reactive rendering. The hook mounts browser listeners with the owner
+and releases them on cleanup. Display-only calendars do not call this hook.
+
+See [selection and event editing](../features/interactions) for setup, source refs and preview rendering.
 
 ## `CalendarProvider`
 

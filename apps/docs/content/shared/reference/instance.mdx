@@ -18,6 +18,26 @@
 | `setView(view, date?)`     | Calls `onNavigate` with `view`, keeping the date unless one is given. |
 | `navigate({ view, date })` | Calls `onNavigate` with either or both.                               |
 
-No action changes the calendar by itself. See [navigation](../features/navigation).
+Navigation actions emit a request for the owner to apply. See [navigation](../features/navigation).
+
+## Interaction APIs
+
+Register operation features to install their APIs. These methods do not exist on display-only calendar types.
+
+| API             | Methods                                                                                                                                                                |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `selection`     | `begin(anchor)`, `evaluate(anchor, target)`                                                                                                                            |
+| `move`          | `begin(eventId, sourceResourceId?)`, `evaluate(eventId, target, sourceResourceId?)`                                                                                    |
+| `resize`        | `begin(eventId, edge)`, `evaluate(eventId, edge, target)`                                                                                                              |
+| `externalDrop`  | `begin(event, metadata?)`, `evaluate(event, target, metadata?)`                                                                                                        |
+| `crossCalendar` | `prepare(eventId, sourceResourceId?)`                                                                                                                                  |
+| `transfer`      | `begin(preparedSource)`, `evaluate(preparedSource, target)`                                                                                                            |
+| `interactions`  | `update(token, target)`, `commit(token)`, `cancel(token, reason?)`, `isActive(token)`, `refresh()`, `unavailable(token, reason)`, `locate(point)`, `project(proposal)` |
+| `pointer`       | `settings()` returns the resolved pointer, touch and scroll configuration.                                                                                             |
+
+`interactions.store` exposes the readonly session, candidate, outcome and derived preview. Start a session through
+its operation API; the shared controls do not provide an unrestricted `begin`. `evaluate` returns a proposal or
+reason without opening a session. A valid commit emits the operation's callback and, for selection, updates its
+owned state slice. See [selection and editing](../features/interactions#programmatic-edits).
 
 </section>

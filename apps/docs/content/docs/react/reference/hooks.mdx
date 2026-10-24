@@ -1,6 +1,6 @@
 ---
 title: Hooks and providers
-description: useCalendar, Calendar, CalendarProvider, useCalendarSelector and useCalendarEventStore.
+description: Calendar setup, context, selectors, event stores and interaction bindings.
 ---
 
 ## `useCalendar`
@@ -21,6 +21,20 @@ Takes the [options](options) and returns the [instance](instance). Set accessibl
   Don't pass type arguments such as `useCalendar<Booking>(…)`: TypeScript then stops inferring the rest, and `view`
   and `onNavigate` widen to `string`. Type `events` instead, for example as `Calendar_EventInput<Booking>[]`.
 </Callout>
+
+## `useCalendarInteractions`
+
+```tsx
+const bindings = useCalendarInteractions(calendar);
+```
+
+Requires interaction and pointer features. Returns stable callback refs for `root`, `surface(descriptor)` and
+`source(key, descriptor)`, an `operation(key, descriptor)` ref for custom operations, `cancel()`, and the derived
+`preview` value. The hook mounts browser listeners and cleans them up on unmount. Registration alone does not
+attach listeners; display-only calendars do not call this hook.
+
+Render `preview` as a separate overlay and read rejection reasons from `calendar.api.interactions.store`.
+See [selection and event editing](../features/interactions) for typed setup and rendering examples.
 
 ## `CalendarProvider`
 

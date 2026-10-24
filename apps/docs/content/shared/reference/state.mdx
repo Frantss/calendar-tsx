@@ -8,6 +8,11 @@
 
 Registered [features](../extending/features#state) add their state slices next to these.
 
+`dateSelectionFeature` adds `selectedRange: Calendar_Selection | null`. Control it with `state` and
+`onSelectionChange`, or provide an external `atoms.selectedRange` store. Transient editing state is separate:
+`calendar.api.interactions.store.state` contains the session, candidate, outcome and preview. Draft changes do not
+rebuild the base layout. See [interaction ownership](../features/interactions#state-and-ownership).
+
 `layout` is typed as the union of the layouts your views use, so only those cases need handling. Each layout's model is
 documented with its view:
 

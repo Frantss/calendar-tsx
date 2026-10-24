@@ -1,0 +1,56 @@
+External drops create event proposals. Cross-calendar transfers move an existing event between two calendars.
+Both use the same layout hit testing, previews and constraints as [event editing](interactions).
+
+## External event sources
+
+Register `interactionFeature()`, `pointerFeature()` and `externalDropFeature()` on the receiving calendar.
+Movement and selection are unnecessary. Add `onExternalDrop: ({ after }) => addEvent(after)` to insert the
+accepted event into your application state.
+
+Attach a palette item after its element mounts:
+
+<include lang='ts'>../../../examples/core/interaction-commands.ts#external</include>
+
+Call the returned cleanup on unmount. `makeEvent` runs when a gesture begins; give each new event a unique ID.
+The payload preserves your event data type. Metadata is optional and arrives on the proposal.
+
+`externalDrop.accept(event, metadata)` can reject a source. `externalDrop.placement` uses the movement policy
+shape independently of movement: conversion is opt-in and resource assignment defaults to replacing the list.
+Duplicate destination IDs are rejected.
+
+For a keyboard equivalent, call `api.externalDrop.begin(event, metadata?)`, update the returned active token with
+a date target, then commit. The application still inserts the emitted `after` event.
+
+## Cross-calendar transfers
+
+Register `interactionFeature()`, `pointerFeature()` and `crossCalendarFeature()` on both calendars. Give each
+a unique `crossCalendar: { id }`. The source also needs `eventMoveFeature()`; the receiver can accept transfers
+without movement or selection.
+
+Mount each calendar's bindings and register its event sources and surfaces. Dragging an event onto another
+calendar reserves the source movement session and validates the destination proposal. The receiver applies its
+own constraints and movement placement settings. Duplicate IDs in the destination are rejected.
+
+Commit calls `onEventTransfer` once on the **source**, with:
+
+```ts
+{
+  kind: ('transfer', sourceId, destinationId, before, after);
+}
+```
+
+Remove `before.id` from the source and add `after` to the destination in one application transaction.
+The library mutates neither array. Keep authoritative event state shared between the calendars so the UI cannot
+apply only half of a transfer. Use `crossCalendar.accept(sourceId)` on the destination to restrict senders.
+
+## Programmatic transfers
+
+The source prepares a handle; the receiver begins a session with that handle. Release prepared handles when
+abandoning a transfer. The DOM driver manages these lifetimes for pointer gestures.
+
+This helper assumes the default internal draft owner. Controlled ownership must acknowledge pending snapshots
+before the coordinator continues or releases the prepared source.
+
+<include lang='ts'>../../../examples/core/interaction-commands.ts#transfer</include>
+
+See [editing policies](editing-policies) for conversion and resource assignment rules.

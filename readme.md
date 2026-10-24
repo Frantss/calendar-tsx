@@ -13,6 +13,7 @@ parts.
 - Framework-agnostic core; React and Solid bindings on top
 - Controlled view and date: navigation actions only emit `onNavigate`
 - Events are input; the core never owns them
+- Opt-in selection, movement, resizing, touch, external drops and cross-calendar transfers
 - Strict Temporal types, laid out in one `timeZone`
 - Unstyled: geometry arrives as `--cal-*` custom properties and `data-*` attributes; optional themes style it
 - Composable parts with a `render` prop (element or function), after Ark v6
@@ -35,6 +36,10 @@ core entry point. The documentation site is a
 [Fumadocs](https://fumadocs.dev) app on TanStack Start in [apps/docs](apps/docs), with one root per framework. Pages
 in `apps/docs/content/docs` include shared text from `apps/docs/content/shared` and code from `apps/docs/examples`,
 which `check:types` compiles.
+
+Start with the interaction guides for [React](apps/docs/content/docs/react/features/interactions.mdx) or
+[Solid](apps/docs/content/docs/solid/features/interactions.mdx). They cover feature registration, event proposals,
+DOM bindings and draft previews, with links to scheduling policies and transfers.
 
 ## Development
 

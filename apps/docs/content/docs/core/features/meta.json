@@ -2,6 +2,9 @@
   "pages": [
     "navigation",
     "events",
+    "interactions",
+    "editing-policies",
+    "drops-and-transfers",
     "recurrence",
     "background-events",
     "background-layers",

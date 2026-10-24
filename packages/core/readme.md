@@ -266,3 +266,150 @@ createCalendar({ ...options, views, features });
 Time-grid columns get `backgrounds: { key, layer, kind, start, span }[]`, as fractions of the day. Day-grid cells get
 `backgrounds: { key, layer, kind }[]` from all-day ranges, and from inverse layers on the days none of their ranges
 touch. Render them with `TimeGridViewBackground` and `DayGridViewDayBackground`.
+
+## Interaction operations
+
+Selection, movement and resizing are independent programmatic features (D56):
+
+```ts
+import {
+  createCalendar,
+  calendarFeatures,
+  calendarViews,
+  timeGridView,
+  interactionFeature,
+  eventResizeFeature,
+} from '@calendar-tsx/core';
+
+const features = calendarFeatures({ interactions: interactionFeature(), resize: eventResizeFeature() });
+const views = calendarViews({ features, views: { day: timeGridView({ days: 1 }) } });
+const calendar = createCalendar({
+  ...options,
+  features,
+  views,
+  view: 'day',
+  onEventResize: proposal => save(proposal.after),
+});
+const session = calendar.api.resize.begin('appointment', 'end');
+if (session.status === 'active') {
+  calendar.api.interactions.update(session.token, { kind: 'timed', at: newEnd });
+  calendar.api.interactions.commit(session.token);
+}
+```
+
+Register `dateSelectionFeature` for `selection.begin/evaluate` and persistent `selectedRange`; register
+`eventMoveFeature` for `move.begin/evaluate`. `resize.begin/evaluate` requires neither of those. Shared controls
+observe `store`, `update`, `unavailable`, `commit`, `cancel`, `refresh` and `isActive(token)`. The latter checks the runtime lease even while controlled snapshot acknowledgment is pending. Callbacks and evaluation results retain the
+consumer's event data. Events change only when the application applies a proposal. Selection writes through D29's
+internal/controlled/external state ownership and reports `onSelectionChange`.
+
+The [React guide](../../apps/docs/content/docs/react/features/interactions.mdx) and
+[Solid guide](../../apps/docs/content/docs/solid/features/interactions.mdx) show complete setup, source refs and
+preview rendering using the public exports. Core-only consumers use the same feature registry and operation APIs.
+
+`constraintsFeature` checks concrete supplied events, including timed/all-day/background overlap. Optional
+`allowedRanges`, `businessHours`, `resourceIds` and `resourceAvailability` constrain the entire proposed interval.
+Recurring definitions and generated occurrence IDs remain outside editing and conflict expansion. `allow` adds a
+synchronous predicate for built-in scheduling proposals. Rules run during preview and again at commit.
+
+Registering `constraintsFeature()` prevents overlap by default. Set `preventOverlap: false` to enforce other rules
+while permitting overlap. Keep rule arrays and predicates stable until their contents change; reference changes
+trigger draft revalidation. See the [policy guide](../../apps/docs/content/docs/react/features/editing-policies.mdx).
+
+Moves preserve elapsed timed duration or inclusive all-day length. Opt into `movement.allowConversion` to reset
+conversion to one all-day date or one timed hour; `defaultTimedMinutes` and `conversionDuration: 'preserve'` override
+that policy. Resource moves replace the entire list by default. `resourceMode: 'replace-source'` replaces only the
+assignment passed to `move.begin/evaluate`; `allowResourceChange: false` preserves assignments. Use `canMove`,
+`resizing.canResize` and `resizing.fromStart` for editing permissions. Resize never converts event kinds.
+
+Drafts live in a separate store and do not derive the base layout. `interactionOwnership` chooses internal,
+controlled (`read` / `onChange`) or external (`atom`) ownership. Mode and atom are fixed at creation. Controlled
+owners acknowledge the requested snapshot object; pending writes return `awaiting-owner`. `~update` refreshes
+sessions, current callbacks and settings; changed sources or navigation cancel them. Mounted subscribable external
+atoms refresh automatically; other atoms require `interactions.refresh()`. Final unmount cancels pending leases.
+
+Third-party features extend `Calendar_OperationMap<TData>` with intent/target/proposal types and contribute
+`interaction: { operation: createInteractionOperation({ ... }) }`, plus their D29 options/API map entries. Targets can
+be non-date values. Descriptors own activation, source identity, equality, evaluation, API binding and completion;
+validators and `deps` are optional interaction contributions. Dependency values compare by reference; return primitive
+setting fields when callers may recreate their setting objects. Declare `requires: ['interactionFeature'] as const`.
+The constructor validates prerequisites by stable feature identity before installing APIs. See the
+[public extension fixture](tests/types/third-party/public-feature.ts).
+
+A feature's `constructApi` context also exposes resolved `features` and current `state`. Register
+`context.onOptionsChange(callback)` and `context.onMount(() => cleanup)` during construction to own per-instance
+resources. Option callbacks run even when layout inputs are unchanged. Mount callbacks run once per active lifetime;
+cleanup runs in reverse order on the last release and supports remount.
+
+## Layout interaction capabilities
+
+Day-grid, time-grid and timeline layouts provide optional `locate` and `project` methods (D57). `interactionFeature` dispatches
+through the active resolved layout, including replacements and third-party layouts:
+
+```ts
+const hit = calendar.api.interactions.locate({
+  kind: 'timeGrid',
+  surface: { kind: 'column', key: 'all:2026-03-11' },
+  fraction: 9 / 24,
+});
+if (hit.status === 'valid') {
+  // Pass hit.target to the owning operation's begin/evaluate, or interactions.update(token, hit.target).
+}
+const preview = calendar.api.interactions.store.state.preview;
+if (preview?.status === 'valid' && preview.kind === 'timeGrid') {
+  preview.geometry; // surface identifiers and axis fractions for separate overlays
+}
+```
+
+Positions are fractions of a measured surface, with no DOM objects. Time-grid surfaces are `{ kind: 'column', key }`
+or `{ kind: 'allDay' }`; timeline surfaces are `{ kind: 'lane', key }`. Timed positions snap to the view's
+`slotMinutes`, defaulting to 30 in time grids and 60 in timelines. `dateKind: 'allDay'` selects dates in timeline
+lanes. Fractions follow the visible dates and clock window. Fraction 1 is the final visible window end for timed targets, and the final displayed date for all-day targets.
+
+Hits retain their local `clock` and distinct instant `candidates`. Nonexistent local times return `unavailable`;
+repeated times preserve a matching supplied `offset`, otherwise use the earlier occurrence. Both use D40's fixed
+clock axis. Supplying a point for another layout returns `different-layout`.
+
+The readonly transient store derives `preview` from accepted candidates and the current base model. Invalid or
+absent candidates produce `null`; unsupported projection produces an `unavailable` result. Ownership snapshots
+remain semantic: controlled and external owners do not store derived geometry. Draft changes do not rebuild or
+notify the base model. Previews use separate overlays without repacking neighboring events. Event previews reuse
+the layout math, including minimum lengths, clipping, resources and inclusive all-day ends; selection previews
+carry no fabricated event or payload. `interactions.project(proposal)` also projects a semantic proposal without
+starting a session. Projection does not apply or commit the proposal.
+
+Third-party layouts add a `Calendar_LayoutInteractionMap` entry keyed by their layout kind, specifying `point`,
+`target` and `geometry`. Annotate their descriptor with
+`Calendar_LayoutFeature<'myKind', MySettings, MyModel>` and implement either capability as needed. Each receives the
+current decorated model, the actual normalized/staged layout input, and active view settings. Points, targets and
+geometry may have their own shapes. The runtime contains no builtin-kind dispatch. Missing capabilities return
+`locate-unsupported` or `project-unsupported`; semantic operations remain usable. See the
+[public layout fixture](tests/types/third-party/public-layout.ts).
+
+## Browser bindings and transfers
+
+Register `pointerFeature` with `interactionFeature` and the desired operations, then mount
+`createCalendarInteractionHost(calendar)` from `@calendar-tsx/core`. Register elements with `host.surface` and
+`host.source`; `host.mount(root)` returns cleanup. Source descriptors contain `eventId`, an optional resize `edge`
+and dragged `resourceId`. Use `timeGridSurface(column.key)`, `timeGridSurface()` for an all-day track,
+`timelineSurface(row.key)` or `dayGridSurface(section.key, row.key)`. Measure only the date/time track, excluding
+axis labels and gutters. Coordinates account for RTL and clipping; previews remain consumer-rendered overlays.
+
+`touchFeature` enables hold activation (`touch.delay`, default 500 ms; `tolerance`, default eight pixels).
+`autoScrollFeature` enables nested/window edge scrolling (`edge`, default 40 pixels; `speed`, default 600 px/s).
+Mouse activation uses `pointer.distance`, default four pixels. Touch movement before activation yields to scrolling.
+Each driver reads active per-view settings. Without a mounted host, feature registration adds no browser listeners.
+
+External palettes attach `createExternalDraggable(element, () => ({ event, metadata }))` and release its returned
+cleanup. Receivers register `externalDropFeature`; `onExternalDrop` receives `{ kind: 'create', after, metadata }`.
+`externalDrop.accept` can reject sources, and `externalDrop.placement` configures conversion/resources independently
+of movement. Duplicate destination IDs are rejected. Events retain their consumer payload type.
+
+Register `crossCalendarFeature` and a unique `crossCalendar.id` on both hosts; the source also needs movement.
+`onEventTransfer` fires once on the source with `{ kind: 'transfer', sourceId, destinationId, before, after }`.
+Apply both sides in your application transaction. The library changes neither input array. Receivers validate their
+own constraints. Programmatic coordination uses `crossCalendar.prepare(eventId, resourceId?)`, then the receiver's
+`transfer.begin/evaluate`; always call the prepared handle's `release()` when abandoning a transfer.
+
+Third-party operations bind `{ begin, target? }` through `host.source`; they need no event/date shape. Custom surface
+resolvers return their own `Calendar_LayoutPoint` variant. Missing layout capabilities remain unavailable.

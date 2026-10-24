@@ -118,3 +118,24 @@ indicator and `data-today` can differ and hydration fails.
 
 Parts render no styles: position them with CSS reading `--cal-*` custom properties (for example
 `left: calc(var(--cal-col-start) / var(--cal-columns) * 100%)`).
+
+## Interaction refs
+
+Register `interactionFeature()`, `pointerFeature()` and the operations you need with `calendarFeatures`. Pass the
+calendar to `useCalendarInteractions(calendar)`. Attach `bindings.root` to the calendar container,
+`bindings.surface(timeGridSurface(column.key))` to each measured track, and
+`bindings.source(segment.key, { eventId: segment.event.id })` to event elements. A resize handle adds
+`edge: 'start'` or `'end'` and a distinct ref key. Resizing works without movement or selection.
+
+The hook owns driver mounting and cleanup. Refs remain stable while descriptors update. Use `bindings.operation`
+for a third-party operation's `begin/target` binding. Render the derived `bindings.preview()` geometry as an overlay;
+preview elements should not intercept pointer hits. All-day tracks, timeline lanes and day-grid rows use the exported
+`timeGridSurface()`, `timelineSurface(row.key)` and `dayGridSurface(section.key, row.key)` helpers. Register track
+bounds without axis labels or gutters. Touch and autoscroll remain separate opt-in features.
+
+See the [core browser binding contract](../core/readme.md#browser-bindings-and-transfers) for activation settings,
+external sources, transfers and scheduling policies. Display-only calendars do not mount interaction bindings.
+
+The docs include a [Solid interaction setup and rendering guide](../../apps/docs/content/docs/solid/features/interactions.mdx),
+[editing policies](../../apps/docs/content/docs/solid/features/editing-policies.mdx), and
+[external drops and transfers](../../apps/docs/content/docs/solid/features/drops-and-transfers.mdx).

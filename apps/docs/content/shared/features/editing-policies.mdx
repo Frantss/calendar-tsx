@@ -1,0 +1,88 @@
+Register only the policies and drivers your calendar needs. Factory configuration supplies defaults;
+per-view `features` entries override them using your registry aliases.
+
+<include lang='ts' meta='title="core/interaction-policies.ts"'>
+  ../../../examples/core/interaction-policies.ts#policies
+</include>
+
+The read-only view in this example disables its registered movement and resizing operations. The APIs remain
+installed. Settings can also arrive as live calendar options such as `movement`, `resizing` and `constraints`.
+Resolution order is factory defaults, live options, per-view `features[alias]`, then direct per-view settings.
+
+Keep array rules and predicate functions stable while their contents are unchanged. Interaction dependencies
+compare references. In React, declare rules outside the component or memoize them; recreating a business-hours
+array during every draft render can repeatedly revalidate the session.
+
+## Movement and resources
+
+| Setting               | Default         | Effect                                                   |
+| --------------------- | --------------- | -------------------------------------------------------- |
+| `enabled`             | `true`          | Allows movement while the feature is registered.         |
+| `allowConversion`     | `false`         | Allows timed and all-day kinds to change.                |
+| `conversionDuration`  | `'reset'`       | A conversion becomes one all-day date or one timed hour. |
+| `defaultTimedMinutes` | `60`            | Timed duration when conversion resets.                   |
+| `allowResourceChange` | `true`          | Allows a destination resource to replace assignments.    |
+| `resourceMode`        | `'replace-all'` | Replaces the whole resource list with the destination.   |
+| `canMove(event)`      | Unrestricted    | Rejects events for which the predicate returns `false`.  |
+
+Within the same kind, moves preserve elapsed timed duration or inclusive all-day length. A day-grid move of a
+timed event retains its local start time. Conversion with `'preserve'` uses elapsed duration; timed-to-all-day
+conversion rounds down to whole dates with a minimum of one date.
+
+Use `resourceMode: 'replace-source'` to replace only the dragged assignment. For multi-resource events,
+include its `resourceId` in the source descriptor or pass it to `move.begin/evaluate`. With
+`allowResourceChange: false`, moving to an unassigned resource is rejected and existing assignments stay intact.
+
+## Resizing
+
+`eventResizeFeature({ fromStart: false })` permits only end resizing. Both edges are enabled by default.
+`resizing.enabled` disables the operation, and `canResize(event, edge)` can reject individual edits.
+
+Resizing keeps the opposite edge fixed and never changes the event kind. Timed end must be after start.
+All-day end is inclusive, so equal start and end represents one date.
+
+## Constraints
+
+Register `constraintsFeature` to check selection, movement, resizing, creation and transfers. It validates the
+preview and revalidates at commit.
+
+| Setting                  | Behavior                                                                                                           |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `preventOverlap`         | Defaults to `true` when this feature is registered. Set `false` to use other constraints while permitting overlap. |
+| `allowedRanges`          | Concrete background ranges, or a function of the proposed dates and time zone, containing the entire proposal.     |
+| `businessHours`          | Weekly rules containing the entire proposal, resolved in the calendar time zone.                                   |
+| `resourceIds`            | Allowlist for assigned resource IDs.                                                                               |
+| `resourceAvailability`   | Each assigned resource must exist and its availability must contain the entire proposal.                           |
+| `allow(proposal, input)` | Synchronous custom predicate: return `true`, `false` or a rejection reason string.                                 |
+
+Adjacent allowed windows form a union. Overlap checks include timed, all-day and background events.
+Events with disjoint nonempty resource lists do not conflict. An event being moved or resized does not conflict
+with its own original input.
+
+Constraints inspect concrete supplied events. They do not expand recurring definitions for conflicts, and
+generated recurring occurrences are not editable by these operations. Apply recurrence edits in your application.
+
+Background rendering alone does not enforce constraints. Supply rules to `constraintsFeature` even when the
+same rules already shade your calendar.
+
+## Touch and scrolling
+
+`pointerFeature` activates after four pixels by default. Add `touchFeature` to accept touch input: its default
+hold is 500 ms with an eight-pixel movement tolerance. Movement before activation yields to normal scrolling.
+
+Add `autoScrollFeature` for nested-container and window edge scrolling. Its defaults are a 40 px edge zone and
+600 px/s maximum speed. Registering either feature alone does not mount listeners; use the interaction bindings.
+
+Each driver supports `enabled: false` in its settings. These settings do not install the associated operation:
+touch input still needs selection, movement, resizing or a custom operation.
+
+## Time zones and DST
+
+Timed hit testing snaps to the view's slot interval on its fixed wall-clock axis. Nonexistent local times return
+`unavailable`. Repeated times preserve a supplied source offset when possible; otherwise they choose the earlier
+occurrence. Hit results retain the local clock and candidate instants for custom feedback.
+
+Hidden dates, visible-hour windows and resource grouping determine the measurable surfaces. Register only the
+date/time track so labels and gutters do not distort hit testing.
+
+Return to [selection and event editing](interactions) for bindings and ownership.
