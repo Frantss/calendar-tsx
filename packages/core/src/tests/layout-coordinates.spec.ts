@@ -168,14 +168,19 @@ it('uses visible date ordinals for timeline positions', () => {
   expect(layoutCoordinates_timelinePosition(coordinates, fragment)).toEqual({ start: 0.75, span: 1 / 48 });
 });
 
-it('returns no geometry for hidden dates, hidden hours and empty visible axes', () => {
+it('keeps the dates of a range that hidden weekdays would leave empty', () => {
   const coordinates = plan('2026-03-08', '2026-03-08', { hiddenDays: [7] });
 
-  expect(coordinates.times).toEqual([]);
-  expect(coordinates.dates.weeks[0].dateIndices).toEqual([]);
+  expect(coordinates.dates.dates.map(String)).toEqual(['2026-03-08']);
+  expect(layoutCoordinates_projectTime(coordinates, source('2026-03-08T09:00-04:00', '2026-03-08T10:00-04:00'), 'shown')).toHaveLength(1);
+});
+
+it('returns no geometry for hidden dates and hidden hours', () => {
+  const coordinates = plan('2026-03-08', '2026-03-09', { hiddenDays: [7] });
+
+  expect(coordinates.dates.dates.map(String)).toEqual(['2026-03-09']);
   expect(layoutCoordinates_projectTime(coordinates, source('2026-03-08T09:00-04:00', '2026-03-08T10:00-04:00'), 'hidden')).toEqual([]);
   expect(layoutCoordinates_projectInstant(coordinates, instant('2026-03-08T09:00-04:00'))).toBeUndefined();
-  expect(layoutCoordinates_resolve(coordinates, { dateIndex: 0, clockNanoseconds: 0n }).kind).toBe('outside');
   const daytime = plan('2026-03-09', '2026-03-09', { timeWindow: { startMinutes: 480, endMinutes: 1080 } });
   expect(layoutCoordinates_projectTime(daytime, source('2026-03-09T07:00-04:00', '2026-03-09T08:00-04:00'), 'early')).toEqual([]);
   expect(layoutCoordinates_resolve(daytime, { dateIndex: 0, clockNanoseconds: 1080n * minute }).kind).toBe('outside');

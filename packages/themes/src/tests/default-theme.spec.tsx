@@ -273,6 +273,13 @@ it('keeps the axis track when the grid has no columns', async () => {
   expect(tracks[0]).toBe('64px');
 });
 
+it('shows a one-day grid whose only date is a hidden weekday', async () => {
+  // 2026-03-11 is a Wednesday
+  await themesSetup_render(<TimeGrid />, { views: { day: timeGridView({ days: 1, hiddenDays: [3] }) } });
+
+  expect(themesSetup_part('time-grid-column').map(column => column.dataset['weekday'])).toEqual(['3']);
+});
+
 it('lines column headers up with their columns', async () => {
   await themesSetup_render(<TimeGrid />, { view: 'week' });
   const headers = themesSetup_part('time-grid-column-header').map(header => themesSetup_rect(header).left);

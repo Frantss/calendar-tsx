@@ -57,7 +57,8 @@ a short event's content on one line, and covers the content of an event too shor
 without a clipped slice of text. Both settings are minutes, not pixels. Half a slot is always half the slot height: 24px
 with the default `3rem` slots, 16px with `compact.css`, before the gap between events.
 
-`hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`).
+`hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`). A range whose dates are
+all hidden, such as a one-day view on a Saturday, shows them anyway.
 
 `timeWindow: { startMinutes: 480, endMinutes: 1080 }` shows 08:00–18:00. For 22:00–06:00 use
 `{ startMinutes: 1320, endMinutes: 1800 }`; the following morning belongs to the starting date. Hiding Tuesday

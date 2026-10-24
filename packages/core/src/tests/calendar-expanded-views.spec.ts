@@ -242,10 +242,12 @@ it('keeps one daily slot per calendar date across daylight saving', () => {
   expect(model.days.map(day => day.span)).toEqual([1 / 3, 1 / 3, 1 / 3]);
 });
 
-it('returns empty visible models when the selected date is hidden', () => {
+it('shows the selected date when hidden weekdays would leave the range empty', () => {
   const options = { date: '2026-03-14' };
-  expect(grid(dayGridView({ days: 1, hiddenDays: [6], maxEventsPerDay: 3 }), options).layout.sections[0]?.rows).toEqual([]);
-  expect((setup(timelineView({ days: 1, hiddenDays: [6] }), options).layout as Calendar_TimelineLayout<unknown, unknown>).now).toBeUndefined();
+  const rows = grid(dayGridView({ days: 1, hiddenDays: [6], maxEventsPerDay: 3 }), options).layout.sections[0]?.rows;
+  const timeline = setup(timelineView({ days: 1, hiddenDays: [6] }), options).layout as Calendar_TimelineLayout<unknown, unknown>;
+  expect(rows?.flatMap(row => row.days.map(day => day.date.toString()))).toEqual(['2026-03-14']);
+  expect(timeline.days.map(day => day.date.toString())).toEqual(['2026-03-14']);
 });
 
 it('rejects invalid durations, visibility and duplicate grouping keys', () => {

@@ -92,8 +92,9 @@ the number of calendar days since a range's start.
 - Project all-day spans by matching visible date cells. An event wholly on hidden dates yields no geometry.
 - A bar may cover adjacent visible cells separated by hidden dates, with omission metadata. Calendar row boundaries
   still split month/day-grid bars.
-- Hiding every weekday is an invalid configuration. A valid one-day range whose date is hidden produces an empty
-  axis; it must not produce fractions with a zero denominator. The coordinate layer does not change controlled dates.
+- Hiding every weekday is an invalid configuration. When hidden weekdays would leave a range without a date, such as
+  a one-day range on a hidden weekday, they do not apply to that range and its dates render. The coordinate layer
+  does not change controlled dates. (Earlier, such a range produced an empty axis; see D44.)
 
 For example, Friday and Monday become consecutive visible indices when the weekend is hidden. A Friday–Monday
 all-day event occupies those two cells. A Saturday-only event occupies neither cell.

@@ -1,7 +1,12 @@
 import type { Temporal } from 'temporal-polyfill';
 import { calendarEvents_isAllDay, calendarEvents_overlaps } from '#calendar-events';
 import { calendarNavigation_contains, calendarNavigation_days } from '#calendar-navigation';
-import { calendarPeriods_groups, calendarPeriods_months, calendarPeriods_pad } from '#calendar-periods';
+import {
+  calendarPeriods_groups,
+  calendarPeriods_hiddenDays,
+  calendarPeriods_months,
+  calendarPeriods_pad,
+} from '#calendar-periods';
 import type {
   Calendar_DayGridColumn,
   Calendar_DayGridLayout,
@@ -62,6 +67,7 @@ export const layoutDayGrid_build = <TData, TResourceData>({
   today: Temporal.PlainDate;
 }): Calendar_DayGridLayout<TData, TResourceData> => {
   const coordinates = layoutCoordinates_dates(range, definition, firstDayOfWeek);
+  const hiddenDays = calendarPeriods_hiddenDays(range, definition);
   const groupedResources = calendarPeriods_groups(definition.groupBy).includes('resource');
   const allDayBackgrounds = backgroundEvents.filter(calendarEvents_isAllDay);
   const sections = sections_of(definition, period, range, firstDayOfWeek, resources).map(
@@ -73,7 +79,7 @@ export const layoutDayGrid_build = <TData, TResourceData>({
       const rows: Calendar_DayGridRow<TData, TResourceData>[] = [];
       for (let index = 0; index < dates.length; index += chunkSize) {
         const rowDates = dates.slice(index, index + chunkSize);
-        const visible = rowDates.filter(date => !definition.hiddenDays?.some(day => day === date.dayOfWeek));
+        const visible = rowDates.filter(date => !hiddenDays.some(day => day === date.dayOfWeek));
         const rowStart = rowDates[0];
         if (!rowStart) continue;
         const pairs =

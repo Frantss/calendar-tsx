@@ -74,7 +74,8 @@ the final slot has its actual proportional size. Slot models expose `dayOffset`,
 
 An overnight window belongs to its starting date. Hiding Tuesday leaves Monday's Tuesday-morning portion visible.
 All-day items retain their anchor dates. Month rows keep their calendar-week boundaries; bars and overflow only
-occupy visible cells. Hiding all seven weekdays is invalid. A hidden controlled day produces an empty layout.
+occupy visible cells. Hiding all seven weekdays is invalid. When hidden weekdays would leave the range without a date, as a one-day view on
+a hidden weekday would, the range shows its dates anyway.
 
 Navigation exposes `inputRange` alongside `range` and `period`. Fetch events for `inputRange`: it includes the
 following morning when an overnight window needs it. `range` remains the inclusive anchor envelope, and `period`

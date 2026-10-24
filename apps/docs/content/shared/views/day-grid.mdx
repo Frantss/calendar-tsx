@@ -44,7 +44,7 @@ An event appears in every resource it names. Unassigned events appear only in un
 | `maxEventsPerDay`                | Visible bar rows per grid row. Further rows are hidden and counted; `Infinity` removes the cap.         |
 | `dayOverflow(date, resourceId?)` | Marks a date/resource cell as having more events, such as events not loaded yet.                        |
 
-Hidden weekdays do not change `period`, its inclusive fetch `range`, or navigation steps. Bars project onto the remaining columns; events entirely on hidden dates disappear. A selected range with no visible dates has no rows. See [overflow](../features/overflow).
+Hidden weekdays do not change `period`, its inclusive fetch `range`, or navigation steps. Bars project onto the remaining columns; events entirely on hidden dates disappear. When every date in the selected range is a hidden weekday, the range shows its dates anyway, so a one-day grid on a hidden day still has its columns. See [overflow](../features/overflow).
 
 </section>
 

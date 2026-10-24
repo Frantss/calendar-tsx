@@ -71,8 +71,19 @@ export const calendarPeriods_step = (
     : start.add({ months: (settings.months ?? (settings.period === 'quarter' ? 3 : 1)) * direction });
 };
 
-export const calendarPeriods_visibleDays = (range: Calendar_Range, settings: Calendar_VisibilitySettings) =>
-  calendarNavigation_days(range).filter(date => !settings.hiddenDays?.some(day => day === date.dayOfWeek));
+/** The weekdays hidden in a range; none when hiding them would leave the range without a date (D44). */
+export const calendarPeriods_hiddenDays = (range: Calendar_Range, settings: Calendar_VisibilitySettings) => {
+  const hidden = settings.hiddenDays ?? [];
+  const days = calendarNavigation_days(range);
+
+  return days.every(date => hidden.some(day => day === date.dayOfWeek)) ? [] : hidden;
+};
+
+export const calendarPeriods_visibleDays = (range: Calendar_Range, settings: Calendar_VisibilitySettings) => {
+  const hidden = calendarPeriods_hiddenDays(range, settings);
+
+  return calendarNavigation_days(range).filter(date => !hidden.some(day => day === date.dayOfWeek));
+};
 
 export const calendarPeriods_pad = (
   period: Calendar_Range,

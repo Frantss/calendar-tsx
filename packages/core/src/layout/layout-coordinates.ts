@@ -1,6 +1,7 @@
 import { Temporal } from 'temporal-polyfill';
 
 import { calendarNavigation_days, calendarNavigation_startOfWeek } from '#calendar-navigation';
+import { calendarPeriods_hiddenDays } from '#calendar-periods';
 import type { Calendar_DayOfWeek, Calendar_Range, Calendar_TimeViewSettings } from '#calendar.types';
 import { layoutIntervals_merge } from '#layout/layout-intervals';
 
@@ -98,6 +99,7 @@ export const layoutCoordinates_dates = (
     throw new RangeError('[calendar] invalid coordinate time window');
   if (hidden.size === 7 || [...hidden].some(day => !Number.isInteger(day) || day < 1 || day > 7))
     throw new RangeError('[calendar] invalid hidden weekdays');
+  const applied = new Set(calendarPeriods_hiddenDays(range, settings));
   if (!Number.isInteger(firstDayOfWeek) || firstDayOfWeek < 1 || firstDayOfWeek > 7)
     throw new RangeError('[calendar] invalid first weekday');
   if (Temporal.PlainDate.compare(range.start, range.end) > 0)
@@ -110,7 +112,7 @@ export const layoutCoordinates_dates = (
   for (const day of calendarNavigation_days(range)) {
     const key = calendarNavigation_startOfWeek(day, firstDayOfWeek).toString();
     if (weeks[weeks.length - 1]?.key !== key) weeks.push({ key, dateIndices: [] });
-    if (hidden.has(day.dayOfWeek as Calendar_DayOfWeek)) continue;
+    if (applied.has(day.dayOfWeek as Calendar_DayOfWeek)) continue;
     const index = dates.length;
     weeks[weeks.length - 1].dateIndices.push(index);
     indexByDate.set(day.toString(), index);

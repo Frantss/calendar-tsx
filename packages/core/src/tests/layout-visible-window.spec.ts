@@ -198,7 +198,7 @@ it('keeps partial-slot positions proportional and clips minimum paint size at vi
   ]);
 });
 
-it('returns empty geometry when the controlled date is hidden, without changing navigation', () => {
+it('keeps the controlled date when it is a hidden weekday, without changing navigation', () => {
   const definition = { ...night, hiddenDays: [1] as const };
   const hidden = createCalendarViews({ day: timeGridView(definition), timeline: timelineView(definition) });
   for (const view of ['day', 'timeline'] as const) {
@@ -213,11 +213,10 @@ it('returns empty geometry when the controlled date is hidden, without changing 
     });
     expect(calendar.store.state.context.date.toString()).toBe('2026-03-09');
     const model = calendar.store.state.layout;
-    if (model.kind === 'timeGrid') expect(model.columns).toEqual([]);
+    if (model.kind === 'timeGrid') expect(model.columns.map(column => column.date.toString())).toEqual(['2026-03-09']);
     if (model.kind === 'timeline') {
-      expect(model.days).toEqual([]);
-      expect(model.slots).toEqual([]);
-      expect(model.rows[0].segments).toEqual([]);
+      expect(model.days.map(day => day.date.toString())).toEqual(['2026-03-09']);
+      expect(model.slots.length).toBeGreaterThan(0);
     }
   }
 });

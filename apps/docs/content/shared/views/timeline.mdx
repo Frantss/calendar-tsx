@@ -45,7 +45,8 @@ Set `minEventMinutes` to choose a different duration, or `0` for exact time widt
 - [Background events](../features/background-events) shade the track without taking stack rows.
   Register `backgroundFeature` to add [background layers](../features/background-layers).
 
-`hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`).
+`hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`). A range whose dates are
+all hidden, such as a one-day view on a Saturday, shows them anyway.
 
 `timeWindow: { startMinutes: 480, endMinutes: 1080 }` shows 08:00–18:00. For 22:00–06:00 use
 `{ startMinutes: 1320, endMinutes: 1800 }`; the following morning belongs to the starting date. Hiding Tuesday

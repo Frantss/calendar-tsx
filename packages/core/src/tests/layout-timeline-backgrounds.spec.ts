@@ -274,16 +274,16 @@ it('uses anchor membership for all-day shading on dates with a skipped midnight'
   expect(row().backgrounds[0]).toMatchObject({ start: 0, span: 1 });
 });
 
-it('keeps a hidden single-day timeline empty and does not resolve layer callbacks', () => {
+it('shades a single-day timeline whose only date is a hidden weekday', () => {
   const ranges = vi.fn(() => []);
   const { row } = setup({
     settings: { hiddenDays: [3] },
     events: [fixtures_background(fixtures_allDay('holiday', { start: '2026-03-11' }))],
     backgrounds: [{ id: 'inverse', kind: 'closed', inverse: true, ranges }],
   });
-  expect(row().backgroundEvents).toEqual([]);
-  expect(row().backgrounds).toEqual([]);
-  expect(ranges).not.toHaveBeenCalled();
+  expect(row().backgroundEvents).toHaveLength(1);
+  expect(row().backgrounds).toHaveLength(1);
+  expect(ranges).toHaveBeenCalled();
 });
 
 it('keeps layers opt-in, re-derives them on updates, and always exposes background events', () => {
