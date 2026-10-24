@@ -282,8 +282,8 @@
     background-color: var(--calendar-weekend, color-mix(in oklab, var(--calendar-text) 3%, transparent));
   }
 
+  /* Muted text only: a fill would match the weekend shade and the header bands */
   :where([data-scope='calendar'][data-part='day-grid-day'][data-outside]) {
-    background: var(--calendar-surface-muted);
     color: var(--calendar-text-muted);
   }
 
@@ -310,6 +310,18 @@
     background: var(--calendar-accent);
     color: var(--calendar-accent-contrast);
     font-weight: 600;
+  }
+
+  /*
+   * `:hover` lifts the plain trigger hover above the today rule, so today restates its fill. A halo rather than a
+   * lighter fill marks the hover, so the marker's contrast holds with any accent.
+   */
+  :where([data-scope='calendar'][data-today])
+    :where(
+      [data-scope='calendar']:is([data-part='day-grid-day-trigger'], [data-part='time-grid-column-trigger'])
+    ):hover {
+    background: var(--calendar-accent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--calendar-accent) 24%, transparent);
   }
 
   /* A pill, so it reads as an action rather than a bar */
@@ -558,6 +570,11 @@
   :where([data-scope='calendar'][data-today]) :where([data-scope='calendar'][data-part='timeline-day-trigger']) {
     background: var(--calendar-accent);
     color: var(--calendar-accent-contrast);
+  }
+
+  :where([data-scope='calendar'][data-today]) :where([data-scope='calendar'][data-part='timeline-day-trigger']):hover {
+    background: var(--calendar-accent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--calendar-accent) 24%, transparent);
   }
 
   :where([data-scope='calendar'][data-part='timeline-slot-label']) {

@@ -40,3 +40,23 @@
   `packages/react/src/time-grid-view.tsx` and `packages/react/src/timeline-view.tsx` (and the Solid equivalents).
 - **Why it matters:** a custom theme written from the table sizes the time-grid body and timeline track from
   `--cal-slots`, which is wrong for a window with a final partial slot.
+
+## List views cannot mark today
+
+- **What:** the list layout's days carry no `isToday`, unlike day-grid days, time-grid columns and timeline days, and
+  `ListViewDay` emits no `data-today`. A theme therefore has nothing to select, and the default theme shows today's
+  date in an agenda exactly like any other day.
+- **Where:** `packages/core/src/calendar.types.ts:389` (`Calendar_ListDay` has `date` but no `isToday`, compare `:258`,
+  `:351`, `:415`); `packages/react/src/list-view.tsx:71` emits the day's attributes; the default theme's day header is
+  at `packages/themes/default.css:672`.
+- **Why it matters:** "today" is one of the roles D26 gives its own channel, and an agenda is where people most often
+  look for it. Fixing it touches the core model and every adapter, not only the theme.
+
+## The high-contrast muted-surface finding no longer covers outside-month days
+
+- **What:** outside-month days no longer take the muted surface in `default.css`; they keep only muted text. The
+  4.47:1 light-mode border against the muted surface, recorded above, now applies to header bands and the list's date
+  rail rather than to outside-month days.
+- **Where:** `packages/themes/default.css:285` (outside-month days); `packages/themes/high-contrast.css:14` and `:17`.
+- **Why it matters:** the earlier finding and `apps/docs/content/shared/styling/themes.mdx` name outside-month days as
+  the example of a muted surface.

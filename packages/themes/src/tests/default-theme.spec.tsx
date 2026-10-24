@@ -1,7 +1,7 @@
 /// <reference types="@vitest/browser-playwright" />
 
 import { expect, it } from 'vitest';
-import { cdp } from 'vitest/browser';
+import { cdp, page } from 'vitest/browser';
 
 import type {
   Calendar_BackgroundSegment,
@@ -382,6 +382,27 @@ it.each([
   const today = themesSetup_part('day-grid-day', '[data-today]')[0]?.querySelector('[data-part="day-grid-day-trigger"]');
 
   expect(today && getComputedStyle(today).backgroundColor).toBe(accent);
+});
+
+it("rings today's marker on hover and keeps its fill", async () => {
+  await themesSetup_render(<Month />, { view: 'month' });
+  const today = themesSetup_part('day-grid-day', '[data-today]')[0]?.querySelector('[data-part="day-grid-day-trigger"]');
+  if (!today) throw new Error('no today marker');
+  await page.elementLocator(today).hover();
+  const { backgroundColor, color, boxShadow } = getComputedStyle(today);
+  await page.elementLocator(today).unhover();
+
+  expect(backgroundColor).toBe('rgb(24, 24, 27)');
+  expect(color).toBe('rgb(255, 255, 255)');
+  expect(boxShadow).toMatch(/ 0px 0px 0px 3px$/);
+});
+
+it('mutes days outside the month without a fill, so they read apart from weekends', async () => {
+  await themesSetup_render(<Month />, { view: 'month' });
+  const outside = themesSetup_part('day-grid-day', '[data-outside]').find(day => !['6', '7'].includes(day.dataset.weekday ?? ''));
+
+  expect(outside && getComputedStyle(outside).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+  expect(outside && getComputedStyle(outside).color).toBe('rgb(91, 91, 99)');
 });
 
 it('yields to unlayered consumer styles', async () => {
