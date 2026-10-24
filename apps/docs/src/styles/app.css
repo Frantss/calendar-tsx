@@ -2,6 +2,46 @@
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
+/* The docs chrome takes the palette of the default calendar theme (`packages/themes/default.css`). */
+@theme {
+  --color-fd-background: #f5f4f1;
+  --color-fd-foreground: #1c1b19;
+  --color-fd-muted: #ecebe6;
+  --color-fd-muted-foreground: #5f5c56;
+  --color-fd-popover: #faf9f7;
+  --color-fd-popover-foreground: #1c1b19;
+  --color-fd-card: #fbfaf8;
+  --color-fd-card-foreground: #1c1b19;
+  --color-fd-border: #dedbd4;
+  --color-fd-primary: #b4441e;
+  --color-fd-primary-foreground: #ffffff;
+  --color-fd-secondary: #ecebe6;
+  --color-fd-secondary-foreground: #1c1b19;
+  --color-fd-accent: #f6e2d8;
+  --color-fd-accent-foreground: #7a2c12;
+  --color-fd-ring: #b4441e;
+}
+
+.dark,
+.dark #nd-sidebar {
+  --color-fd-background: #171615;
+  --color-fd-foreground: #f2efe9;
+  --color-fd-muted: #201f1d;
+  --color-fd-muted-foreground: #a9a49b;
+  --color-fd-popover: #1c1b19;
+  --color-fd-popover-foreground: #f2efe9;
+  --color-fd-card: #1c1b19;
+  --color-fd-card-foreground: #f2efe9;
+  --color-fd-border: #34322e;
+  --color-fd-primary: #f08a5d;
+  --color-fd-primary-foreground: #1a0d07;
+  --color-fd-secondary: #262422;
+  --color-fd-secondary-foreground: #f2efe9;
+  --color-fd-accent: #3a2219;
+  --color-fd-accent-foreground: #f6b896;
+  --color-fd-ring: #f08a5d;
+}
+
 html {
   scrollbar-gutter: stable;
 }
