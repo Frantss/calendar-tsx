@@ -1,7 +1,8 @@
-import { Temporal } from 'temporal-polyfill';
+import type { Temporal } from 'temporal-polyfill';
 
 import { calendarEvents_dateSpan } from '#calendar-events';
 import type { Calendar_BackgroundEventSpan, Calendar_BarSegment, Calendar_Event } from '#calendar.types';
+import { layoutCoordinates_dateColumns } from '#layout/layout-coordinates';
 
 type Span = { colStart: number; colEnd: number };
 
@@ -29,23 +30,15 @@ const clip = <TData>(events: Calendar_Event<TData>[], columns: Temporal.PlainDat
 
   if (!first || !last) return [];
 
-  return events.map(event => {
+  return events.flatMap(event => {
     const span = calendarEvents_dateSpan(event);
-    const continuesBefore = Temporal.PlainDate.compare(span.start, first) < 0;
-    const continuesAfter = Temporal.PlainDate.compare(span.end, last) > 0;
-
-    return {
-      event,
-      colStart: first.until(continuesBefore ? first : span.start).days,
-      colEnd: first.until(continuesAfter ? last : span.end).days,
-      continuesBefore,
-      continuesAfter,
-    };
+    const projected = layoutCoordinates_dateColumns(columns, span);
+    return projected ? [{ event, ...projected }] : [];
   });
 };
 
 /**
- * Lays events out as bars across contiguous day columns (D17). Events must already be ordered;
+ * Lays events out as bars across visible day columns (D17). Events must already be ordered;
  * spans are clipped to the columns and flagged when they continue past either edge.
  */
 export const layoutBars_build = <TData>(

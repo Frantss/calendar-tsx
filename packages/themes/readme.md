@@ -81,7 +81,7 @@ CSS that declares its own layers after importing the theme beats it, and anythin
 layered, so see [Tailwind](#tailwind).
 
 **Scrolling.** `TimeGridView` scrolls, with a sticky header. Give it a height (`max-block-size: 40rem`) to
-scroll inside the page rather than show all 24 hours.
+scroll inside the page. A view's `timeWindow` limits the clock range before rendering.
 
 ## High contrast theme
 

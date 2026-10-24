@@ -188,7 +188,7 @@ export const createCalendar = <
     const order = options.eventOrder;
 
     const visible = calendarEvents_normalize(input.events, input.timeZone).filter(event =>
-      calendarEvents_overlaps(event, viewContext.range),
+      calendarEvents_overlaps(event, viewContext.inputRange),
     );
     // Background events are shaded, not laid out: they skip ordering and feature stages (D37).
     const backgroundEvents = visible.filter(event => event.display === 'background');
@@ -205,6 +205,8 @@ export const createCalendar = <
       {
         range: viewContext.range,
         period: viewContext.period,
+        inputRange: viewContext.inputRange,
+        firstDayOfWeek: input.firstDayOfWeek,
         events,
         backgroundEvents,
         resources: input.resources ?? [],

@@ -27,7 +27,14 @@ type MonthViewProps<TData> = { model: Calendar_MonthLayout<TData> } & Calendar_H
 >;
 
 export const MonthView = forwardRef<HTMLDivElement, MonthViewProps<unknown>>(({ model, ...props }, ref) => (
-  <calendar.div {...calendarProps_merge({ role: 'grid', ...part('month-root') }, props)} state={model} ref={ref} />
+  <calendar.div
+    {...calendarProps_merge(
+      { role: 'grid', style: vars({ columns: model.weekdays.length }), ...part('month-root') },
+      props,
+    )}
+    state={model}
+    ref={ref}
+  />
 )) as <TData>(props: MonthViewProps<TData> & RefAttributes<HTMLDivElement>) => ReactElement | null;
 
 export const MonthViewHeader = forwardRef<HTMLDivElement, Calendar_HTMLProps<'div'>>((props, ref) => (
@@ -55,7 +62,10 @@ type MonthViewWeekProps<TData> = { week: Calendar_MonthWeek<TData> } & Calendar_
 
 export const MonthViewWeek = forwardRef<HTMLDivElement, MonthViewWeekProps<unknown>>(({ week, ...props }, ref) => (
   <calendar.div
-    {...calendarProps_merge({ role: 'row', style: vars({ rows: week.rows }), ...part('month-week') }, props)}
+    {...calendarProps_merge(
+      { role: 'row', style: vars({ rows: week.rows, columns: week.days.length }), ...part('month-week') },
+      props,
+    )}
     state={week}
     ref={ref}
   />

@@ -12,12 +12,14 @@ timelineView({ days: 1, groupBy: 'resource', slotMinutes: 30 }); // a day
 
 ## Settings
 
-| Setting        | Type         | Default  | Description                                                          |
-| -------------- | ------------ | -------- | -------------------------------------------------------------------- |
-| `days`         | `number`     | required | Days shown. `7` starts on `firstDayOfWeek`; others start on `date`.  |
-| `groupBy`      | `'resource'` | none     | One row per resource. Without it, the layout has one row.            |
-| `slotMinutes`  | `number`     | `60`     | Length of each slot; should divide a day evenly.                     |
-| `minSlotWidth` | `string`     | none     | Passed through as the slot columns' minimum width, such as `'3rem'`. |
+| Setting        | Type                                           | Default     | Description                                                          |
+| -------------- | ---------------------------------------------- | ----------- | -------------------------------------------------------------------- |
+| `days`         | `number`                                       | required    | Days shown. `7` starts on `firstDayOfWeek`; others start on `date`.  |
+| `groupBy`      | `'resource'`                                   | none        | One row per resource. Without it, the layout has one row.            |
+| `slotMinutes`  | `number`                                       | `60`        | Positive integer slot length; the final slot may be shorter.         |
+| `minSlotWidth` | `string`                                       | none        | Passed through as the slot columns' minimum width, such as `'3rem'`. |
+| `hiddenDays`   | `readonly Calendar_DayOfWeek[]`                | `[]`        | Hidden ISO weekdays.                                                 |
+| `timeWindow`   | `{ startMinutes: number; endMinutes: number }` | `[0, 1440)` | Visible clock window, including overnight offsets.                   |
 
 `next()` and `prev()` move by `days` days.
 
@@ -28,6 +30,19 @@ timelineView({ days: 1, groupBy: 'resource', slotMinutes: 30 }); // a day
 - [Background events](../features/background-events) and [background layers](../features/background-layers) don't
   shade the timeline yet.
 
+`hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`).
+
+`timeWindow: { startMinutes: 480, endMinutes: 1080 }` shows 08:00–18:00. For 22:00–06:00 use
+`{ startMinutes: 1320, endMinutes: 1800 }`; the following morning belongs to the starting date. Hiding Tuesday
+still leaves Monday's Tuesday-morning portion visible. All-day items retain their calendar-date membership.
+
+Bounds are integer clock minutes: `0 <= startMinutes < 1440` and
+`startMinutes < endMinutes <= startMinutes + 1440`. Defaults are no hidden weekdays and `[0, 1440)`.
+`slotMinutes` is a positive integer; a final partial slot keeps its actual size. Fetch events for navigation's
+`inputRange`, which includes the following date when needed.
+
+Hiding all seven weekdays is invalid. A controlled date with no visible weekdays produces an empty layout.
+
 </section>
 
 <section id='reference'>
@@ -36,13 +51,13 @@ timelineView({ days: 1, groupBy: 'resource', slotMinutes: 30 }); // a day
 
 ## Model
 
-`layout` is `{ kind: 'timeline', days, slots, rows, now, minSlotWidth }`. Every `start` and `span` is a **fraction of the
-whole range**, 0 at its first midnight and 1 at its last, with 24 clock hours per displayed date. Dates keep equal
+`layout` is `{ kind: 'timeline', coordinates, slotUnits, days, slots, rows, now, minSlotWidth }`. Every `start` and `span` is a **fraction of the
+concatenated visible windows**. The default has 24 clock hours per displayed date. Dates keep equal
 widths across daylight-saving transitions. Repeated hours share clock positions; visually overlapping events stack.
 
 - `days` holds one `{ key, date, isToday, colStart, colSpan }` per day, for the header. `colStart` and `colSpan` count
   slot columns.
-- `slots` holds one `{ key, date, time, col }` per slot across the range.
+- `slots` holds `{ key, date, time, dayOffset, col, start, span }` per slot. Fractional bounds give partial slots their actual width.
 - `rows` holds one row per resource, or a single row without `groupBy`.
 - `now` is the current time's fraction of the range, only while the clock is inside it.
 

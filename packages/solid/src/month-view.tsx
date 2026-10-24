@@ -28,7 +28,15 @@ type MonthViewProps<TData> = { model: Calendar_MonthLayout<TData> } & Calendar_H
 export const MonthView = <TData,>(props: MonthViewProps<TData>) => {
   const [local, rest] = splitProps(props, ['model']);
 
-  return <calendar.div {...calendarProps_merge({ role: 'grid', ...part('month-root') }, rest)} state={local.model} />;
+  return (
+    <calendar.div
+      {...calendarProps_merge(
+        () => ({ role: 'grid', style: vars({ columns: local.model.weekdays.length }), ...part('month-root') }),
+        rest,
+      )}
+      state={local.model}
+    />
+  );
 };
 
 export const MonthViewHeader = (props: Calendar_HTMLProps<'div'>) => (
@@ -62,7 +70,11 @@ export const MonthViewWeek = <TData,>(props: MonthViewWeekProps<TData>) => {
   return (
     <calendar.div
       {...calendarProps_merge(
-        () => ({ role: 'row', style: vars({ rows: local.week.rows }), ...part('month-week') }),
+        () => ({
+          role: 'row',
+          style: vars({ rows: local.week.rows, columns: local.week.days.length }),
+          ...part('month-week'),
+        }),
         rest,
       )}
       state={local.week}

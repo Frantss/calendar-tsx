@@ -48,8 +48,9 @@ export const calendarNavigation_resolve = (
     firstDayOfWeek: (options.firstDayOfWeek ?? DEFAULT_FIRST_DAY_OF_WEEK) as Calendar_FirstDayOfWeek,
   };
   const period = layout.period(date, definition, navigation);
+  const range = layout.range(period, definition, navigation);
 
-  return { period, range: layout.range(period, definition, navigation) };
+  return { period, range, inputRange: layout.inputRange?.(range, definition) ?? range };
 };
 
 /** Range and period for any view and date, without an instance (app R2.5). */

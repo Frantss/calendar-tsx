@@ -13,7 +13,7 @@ date and calls `onNavigate` with them, and the calendar moves when you pass them
 | `setView(view, date?)`     | `view`, keeping the current date unless one is given.      |
 | `navigate({ view, date })` | Either or both; omitted fields keep their current value.   |
 
-`onNavigate` receives `{ view, date, range, period }`. Because the next range arrives with the call, you can update the
+`onNavigate` receives `{ view, date, range, period, inputRange }`. Because the next range arrives with the call, you can update the
 URL or start fetching events for it before the calendar re-renders.
 
 </section>
@@ -22,11 +22,11 @@ URL or start fetching events for it before the calendar re-renders.
 
 ## Range and period
 
-Every view and date resolve to two inclusive date ranges, available as `state.context.range` and
-`state.context.period`:
+Every view and date resolve to three inclusive date ranges on `state.context`:
 
 - **`period`** is the nominal span: the month, or `days` days. Use it for titles.
-- **`range`** is what is visible. For a month it extends to whole weeks; otherwise it equals `period`. Fetch events for it.
+- **`range`** is the anchor-date envelope, including month padding and hidden weekdays.
+- **`inputRange`** covers dates needed by the visible windows. Fetch events for it; an overnight window can need the following date.
 
 | View                         | Period                              | Range                |
 | ---------------------------- | ----------------------------------- | -------------------- |
@@ -34,8 +34,7 @@ Every view and date resolve to two inclusive date ranges, available as `state.co
 | Time grid or list, `days: 7` | The week containing `date`          | Same as period       |
 | Time grid or list, other     | `days` days starting at `date`      | Same as period       |
 
-Weeks start on the `firstDayOfWeek` option, from `1` (Monday) to `7` (Sunday, the default). Only events overlapping the
-range are laid out.
+Weeks start on the `firstDayOfWeek` option, from `1` (Monday) to `7` (Sunday, the default). Input filtering uses `inputRange`; layout projection then clips to visible dates and hours.
 
 To get the range for any view and date without a calendar, for example to fetch on the server, use
 `getCalendarNavigation`:
@@ -43,9 +42,14 @@ To get the range for any view and date without a calendar, for example to fetch 
 ```ts
 import { getCalendarNavigation } from '@calendar-tsx/core';
 
-const { range, period } = getCalendarNavigation(views.views, 'month', Temporal.PlainDate.from('2026-03-11'), {
-  firstDayOfWeek: 1,
-});
+const { range, period, inputRange } = getCalendarNavigation(
+  views.views,
+  'month',
+  Temporal.PlainDate.from('2026-03-11'),
+  {
+    firstDayOfWeek: 1,
+  },
+);
 ```
 
 </section>

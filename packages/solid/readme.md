@@ -74,6 +74,16 @@ your views and features, annotate the selector with `Calendar_StateOf` from `@ca
   is an accessor. Solid has no elements to clone, so there is no `render={<El />}` form.
 - Parts take `class`, not `className`, and `ref` as in any Solid component.
 
+## Visible dates and hours
+
+Configure `hiddenDays` on the core view factories and `timeWindow` on `timeGridView` or `timelineView`. The parts
+consume the resulting geometry; callers keep mapping columns, slots and segments as usual. Slots expose
+`dayOffset` to label after-midnight times, and a single event can appear in multiple date columns.
+
+For custom CSS, use `--cal-columns` for month widths, each axis label's `--cal-start`/`--cal-span` for its position,
+and `--cal-slot-units` for time-grid height. Timeline headers use `--cal-slot-columns` so final partial slots keep
+their proportional width. The bundled themes handle these values. Fetch events for navigation's `inputRange`.
+
 ## Server rendering
 
 The package renders with `renderToString` and hydrates with `hydrate`; no separate entry is needed. Pass the same
@@ -81,4 +91,4 @@ The package renders with `renderToString` and hydrates with `hydrate`; no separa
 indicator and `data-today` can differ and hydration fails.
 
 Parts render no styles: position them with CSS reading `--cal-*` custom properties (for example
-`left: calc(var(--cal-col-start) / 7 * 100%)`).
+`left: calc(var(--cal-col-start) / var(--cal-columns) * 100%)`).

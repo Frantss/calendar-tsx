@@ -51,6 +51,34 @@ Backgrounds, availability and the now indicator use the same axis. All-day spans
 midnight is skipped. Minimum and short event lengths measure displayed clock minutes (design D40).
 Timed shading can split into separate bands at a DST transition; inverse layers retain the gaps between them.
 
+## Hidden weekdays and visible hours
+
+All built-in views accept `hiddenDays`, using ISO weekdays (`1` Monday through `7` Sunday). Time grids and timelines
+also accept a `timeWindow` in nominal clock minutes:
+
+```ts
+import { timeGridView, timelineView } from '@calendar-tsx/core';
+
+timeGridView({ days: 7, hiddenDays: [6, 7], timeWindow: { startMinutes: 480, endMinutes: 1080 } });
+timelineView({ days: 1, timeWindow: { startMinutes: 1320, endMinutes: 1800 } }); // 22:00–06:00
+```
+
+Defaults show every weekday and `[0, 1440)`. Window bounds are integers: `0 <= startMinutes < 1440` and
+`startMinutes < endMinutes <= startMinutes + 1440`. A positive integer `slotMinutes` need not divide the window;
+the final slot has its actual proportional size. Slot models expose `dayOffset`, `start` and `span` for labels.
+
+An overnight window belongs to its starting date. Hiding Tuesday leaves Monday's Tuesday-morning portion visible.
+All-day items retain their anchor dates. Month rows keep their calendar-week boundaries; bars and overflow only
+occupy visible cells. Hiding all seven weekdays is invalid. A hidden controlled day produces an empty layout.
+
+Navigation exposes `inputRange` alongside `range` and `period`. Fetch events for `inputRange`: it includes the
+following morning when an overnight window needs it. `range` remains the inclusive anchor envelope, and `period`
+keeps its navigation meaning. Input filtering is coarse; layouts clip to actual visible windows afterward.
+
+Layout models expose their shared `coordinates`. Timed segments retain exact `fragments`, including offsets and
+occurrences, separately from D40's enclosing rectangle. Resource, event and clock changes reuse timed plans for a
+stable view definition. Coordinate helper functions remain internal.
+
 ## Events
 
 Events are plain objects (design D2, D7, D8), discriminated by `kind`: `'timed'` events take `ZonedDateTime` bounds,

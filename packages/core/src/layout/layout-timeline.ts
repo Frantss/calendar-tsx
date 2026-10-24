@@ -1,9 +1,9 @@
-import { Temporal } from 'temporal-polyfill';
+import type { Temporal } from 'temporal-polyfill';
 
 import { calendarEvents_dateSpan, calendarEvents_isAllDay } from '#calendar-events';
-import { calendarNavigation_days } from '#calendar-navigation';
 import type {
   Calendar_Event,
+  Calendar_FirstDayOfWeek,
   Calendar_Range,
   Calendar_Resource,
   Calendar_TimelineLayout,
@@ -12,12 +12,19 @@ import type {
 } from '#calendar.types';
 import type { LayoutIntervals_Interval as Interval } from '#layout/layout-intervals';
 import { layoutIntervals_complement } from '#layout/layout-intervals';
-import { layoutAxis_coverage, layoutAxis_create, layoutAxis_date } from '#layout/layout-axis';
-import type { LayoutAxis } from '#layout/layout-axis';
+import {
+  layoutCoordinates_bounds,
+  layoutCoordinates_coverage,
+  layoutCoordinates_dateColumns,
+  layoutCoordinates_length,
+  layoutCoordinates_plan,
+  layoutCoordinates_projectInstant,
+  layoutCoordinates_projectTime,
+  layoutCoordinates_slots,
+} from '#layout/layout-coordinates';
+import type { LayoutCoordinates_Fragment, LayoutCoordinates_Plan } from '#layout/layout-coordinates';
 
 const DEFAULT_SLOT_MINUTES = 60;
-const MINUTES_PER_DAY = 24 * 60;
-
 const matchesResource = <TData, TResourceData>(
   event: Calendar_Event<TData>,
   resource?: Calendar_Resource<TResourceData>,
@@ -37,64 +44,78 @@ const stack = <T extends Interval>(items: T[]) => {
   });
 };
 
+type Projected<TData> = { event: Calendar_Event<TData>; fragments: readonly LayoutCoordinates_Fragment[] };
+
 const buildRow = <TData, TResourceData>({
   resource,
   events,
-  axis,
+  plan,
 }: {
   resource?: Calendar_Resource<TResourceData>;
-  events: Calendar_Event<TData>[];
-  axis: LayoutAxis;
+  events: Projected<TData>[];
+  plan: LayoutCoordinates_Plan;
 }): Calendar_TimelineRow<TData, TResourceData> => {
-  const range = axis.range;
-  const length = axis.endMs - axis.startMs;
-  const fraction = axis.fraction;
+  const length = layoutCoordinates_length(plan);
+  const total = length * plan.dates.dates.length;
   const key = resource?.id ?? 'all';
-
-  const items = events.flatMap(event => {
-    if (!matchesResource(event, resource)) return [];
-
-    const isAllDay = calendarEvents_isAllDay(event);
-    const span = calendarEvents_dateSpan(event);
-    const startMs = isAllDay ? layoutAxis_date(span.start) : event.start.epochMilliseconds;
-    const endMs = isAllDay ? layoutAxis_date(span.end.add({ days: 1 })) : event.end.epochMilliseconds;
-    const bounds = isAllDay ? axis : range;
-
-    if (endMs <= bounds.startMs || startMs >= bounds.endMs) return [];
-
-    const clipped = { startMs: Math.max(startMs, bounds.startMs), endMs: Math.min(endMs, bounds.endMs) };
-
-    return [
-      {
-        event,
-        isAllDay,
-        ...(isAllDay ? clipped : axis.project(clipped)),
-        continuesBefore: startMs < bounds.startMs,
-        continuesAfter: endMs > bounds.endMs,
-      },
-    ];
-  });
-
+  const items = events.flatMap(
+    ({
+      event,
+      fragments,
+    }): (Projected<TData> & Interval & { isAllDay: boolean; continuesBefore: boolean; continuesAfter: boolean })[] => {
+      if (!matchesResource(event, resource)) return [];
+      if (calendarEvents_isAllDay(event)) {
+        const span = layoutCoordinates_dateColumns(plan.dates.dates, calendarEvents_dateSpan(event));
+        return span
+          ? [
+              {
+                event,
+                fragments,
+                isAllDay: true,
+                startMs: span.colStart * length,
+                endMs: (span.colEnd + 1) * length,
+                continuesBefore: span.continuesBefore,
+                continuesAfter: span.continuesAfter,
+              },
+            ]
+          : [];
+      }
+      const bounds = layoutCoordinates_bounds(fragments);
+      if (!bounds.length) return [];
+      const starts = bounds.map(
+        part => part.dateIndex * length + Number(part.clock.start - plan.dates.clock.start) / 1_000_000,
+      );
+      const ends = bounds.map(
+        part => part.dateIndex * length + Number(part.clock.end - plan.dates.clock.start) / 1_000_000,
+      );
+      return [
+        {
+          event,
+          fragments,
+          isAllDay: false,
+          startMs: Math.min(...starts),
+          endMs: Math.max(...ends),
+          continuesBefore: event.start.epochNanoseconds < fragments[0].source.start.epochNanoseconds,
+          continuesAfter: event.end.epochNanoseconds > fragments[fragments.length - 1].source.end.epochNanoseconds,
+        },
+      ];
+    },
+  );
   const segments = stack(items).map(item => ({
     key: `${key}:${item.event.id}`,
     event: item.event,
-    start: fraction(item.startMs),
-    span: (item.endMs - item.startMs) / length,
+    fragments: item.fragments,
+    start: item.startMs / total,
+    span: (item.endMs - item.startMs) / total,
     row: item.row,
     isAllDay: item.isAllDay,
     continuesBefore: item.continuesBefore,
     continuesAfter: item.continuesAfter,
   }));
-
-  // Its gaps are the unavailable segments; a resource with none is unavailable throughout (D12).
-  const availability = layoutAxis_coverage(
-    axis,
-    (resource?.availability ?? []).map(period => ({
-      startMs: period.start.epochMilliseconds,
-      endMs: period.end.epochMilliseconds,
-    })),
+  const availability = layoutCoordinates_coverage(
+    plan,
+    (resource?.availability ?? []).map(period => ({ start: period.start.toInstant(), end: period.end.toInstant() })),
   );
-
   return {
     key,
     resource,
@@ -102,10 +123,10 @@ const buildRow = <TData, TResourceData>({
     segments,
     rows: Math.max(0, ...segments.map(segment => segment.row + 1)),
     unavailable: resource
-      ? layoutIntervals_complement(availability, axis).map(gap => ({
+      ? layoutIntervals_complement(availability, { startMs: 0, endMs: total }).map(gap => ({
           key: `${key}:unavailable:${gap.startMs}`,
-          start: fraction(gap.startMs),
-          span: (gap.endMs - gap.startMs) / length,
+          start: gap.startMs / total,
+          span: (gap.endMs - gap.startMs) / total,
         }))
       : [],
   };
@@ -118,6 +139,7 @@ export const layoutTimeline_build = <TData, TResourceData>({
   resources,
   timeZone,
   now,
+  firstDayOfWeek,
 }: {
   definition: Calendar_TimelineViewSettings;
   range: Calendar_Range;
@@ -125,34 +147,45 @@ export const layoutTimeline_build = <TData, TResourceData>({
   resources: Calendar_Resource<TResourceData>[];
   timeZone: string;
   now: Temporal.ZonedDateTime;
+  firstDayOfWeek?: Calendar_FirstDayOfWeek;
 }): Calendar_TimelineLayout<TData, TResourceData> => {
-  const dates = calendarNavigation_days(range);
+  const plan = layoutCoordinates_plan(range, definition, timeZone, firstDayOfWeek);
+  const dates = plan.dates.dates;
   const slotMinutes = definition.slotMinutes ?? DEFAULT_SLOT_MINUTES;
-  const slotsPerDay = MINUTES_PER_DAY / slotMinutes;
-  const axis = layoutAxis_create(range, timeZone);
-  const interval = axis.range;
-  const today = now.toPlainDate();
+  const slots = layoutCoordinates_slots(plan.dates, slotMinutes);
   const groups = definition.groupBy === 'resource' ? resources : [undefined];
-  const nowMs = now.epochMilliseconds;
-
+  const clock = layoutCoordinates_projectInstant(plan, now.toInstant());
+  const projected = events.map(event => ({
+    event,
+    fragments:
+      event.kind === 'timed'
+        ? layoutCoordinates_projectTime(plan, { start: event.start.toInstant(), end: event.end.toInstant() }, event.id)
+        : [],
+  }));
   return {
     kind: 'timeline',
+    coordinates: plan,
+    slotUnits: (dates.length * layoutCoordinates_length(plan)) / 60_000 / slotMinutes,
     days: dates.map((date, index) => ({
       key: date.toString(),
       date,
-      isToday: date.equals(today),
-      colStart: index * slotsPerDay,
-      colSpan: slotsPerDay,
+      isToday: date.equals(now.toPlainDate()),
+      colStart: index * slots.length,
+      colSpan: slots.length,
     })),
     slots: dates.flatMap((date, day) =>
-      Array.from({ length: slotsPerDay }, (_, index) => {
-        const time = Temporal.PlainTime.from('00:00').add({ minutes: index * slotMinutes });
-
-        return { key: `${date.toString()}T${time.toString()}`, date, time, col: day * slotsPerDay + index };
-      }),
+      slots.map((slot, index) => ({
+        key: `${date.toString()}T${slot.time.toString()}`,
+        date,
+        time: slot.time,
+        dayOffset: slot.dayOffset,
+        col: day * slots.length + index,
+        start: (day + slot.position.start) / dates.length,
+        span: slot.position.span / dates.length,
+      })),
     ),
-    rows: groups.map(resource => buildRow({ resource, events, axis })),
-    now: nowMs >= interval.startMs && nowMs < interval.endMs ? axis.fraction(axis.point(nowMs)) : undefined,
+    rows: groups.map(resource => buildRow({ resource, events: projected, plan })),
+    now: clock ? (clock.dateIndex + clock.position) / dates.length : undefined,
     minSlotWidth: definition.minSlotWidth,
   };
 };

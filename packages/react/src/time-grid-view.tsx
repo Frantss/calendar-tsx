@@ -38,7 +38,12 @@ export const TimeGridView = forwardRef<HTMLDivElement, TimeGridViewProps<unknown
         {
           role: 'region',
           'aria-label': 'Time grid',
-          style: vars({ columns: model.columns.length, slots: model.slots.length, 'all-day-rows': model.allDay?.rows }),
+          style: vars({
+            columns: model.columns.length,
+            slots: model.slots.length,
+            'slot-units': model.slotUnits,
+            'all-day-rows': model.allDay?.rows,
+          }),
           ...part('time-grid-root'),
         },
         props,
@@ -171,7 +176,11 @@ export const TimeGridViewBody = forwardRef<HTMLDivElement, TimeGridViewProps<unk
     <calendar.div
       {...calendarProps_merge(
         {
-          style: vars({ slots: model.slots.length, 'min-column-width': model.minColumnWidth }),
+          style: vars({
+            slots: model.slots.length,
+            'slot-units': model.slotUnits,
+            'min-column-width': model.minColumnWidth,
+          }),
           ...part('time-grid-body'),
         },
         props,
@@ -193,7 +202,18 @@ export const TimeGridViewAxisLabel = forwardRef<
   HTMLDivElement,
   { slot: Calendar_TimeGridSlot } & Calendar_HTMLProps<'div', Calendar_TimeGridSlot>
 >(({ slot, ...props }, ref) => (
-  <calendar.div {...calendarProps_merge(part('time-grid-axis-label'), props)} state={slot} ref={ref} />
+  <calendar.div
+    {...calendarProps_merge(
+      {
+        style: vars({ start: slot.start, span: slot.span }),
+        'data-day-offset': slot.dayOffset,
+        ...part('time-grid-axis-label'),
+      },
+      props,
+    )}
+    state={slot}
+    ref={ref}
+  />
 ));
 
 export const TimeGridViewColumn = forwardRef<HTMLDivElement, ColumnProps<unknown, unknown>>(

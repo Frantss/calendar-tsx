@@ -14,17 +14,19 @@ timeGridView({ days: 1 }); // a day
 
 ## Settings
 
-| Setting             | Type                               | Default            | Description                                                          |
-| ------------------- | ---------------------------------- | ------------------ | -------------------------------------------------------------------- |
-| `days`              | `number`                           | required           | Days shown. `7` starts on `firstDayOfWeek`; others start on `date`.  |
-| `allDay`            | `boolean`                          | `true`             | `false` drops the all-day row from the layout.                       |
-| `slotMinutes`       | `number`                           | `30`               | Length of each time slot; should divide a day evenly.                |
-| `minColumnWidth`    | `string`                           | none               | Passed through for horizontal scrolling, for example `'8rem'`.       |
-| `groupBy`           | `'resource'`                       | none               | One column per resource and day. See [resource view](resource-view). |
-| `groupOrder`        | `'resource-first' \| 'date-first'` | `'resource-first'` | Column order when grouped.                                           |
-| `overlap`           | `'side-by-side' \| 'cascade'`      | `'side-by-side'`   | How overlapping events share a column. See [overlap](#overlap).      |
-| `minEventMinutes`   | `number`                           | `15`               | Shorter events are laid out this long. `0` turns it off.             |
-| `shortEventMinutes` | `number`                           | `30`               | Events laid out shorter than this are flagged `isShort`.             |
+| Setting             | Type                                           | Default            | Description                                                          |
+| ------------------- | ---------------------------------------------- | ------------------ | -------------------------------------------------------------------- |
+| `days`              | `number`                                       | required           | Days shown. `7` starts on `firstDayOfWeek`; others start on `date`.  |
+| `allDay`            | `boolean`                                      | `true`             | `false` drops the all-day row from the layout.                       |
+| `slotMinutes`       | `number`                                       | `30`               | Positive integer slot length; the final slot may be shorter.         |
+| `minColumnWidth`    | `string`                                       | none               | Passed through for horizontal scrolling, for example `'8rem'`.       |
+| `groupBy`           | `'resource'`                                   | none               | One column per resource and day. See [resource view](resource-view). |
+| `groupOrder`        | `'resource-first' \| 'date-first'`             | `'resource-first'` | Column order when grouped.                                           |
+| `overlap`           | `'side-by-side' \| 'cascade'`                  | `'side-by-side'`   | How overlapping events share a column. See [overlap](#overlap).      |
+| `minEventMinutes`   | `number`                                       | `15`               | Shorter events are laid out this long. `0` turns it off.             |
+| `shortEventMinutes` | `number`                                       | `30`               | Events laid out shorter than this are flagged `isShort`.             |
+| `hiddenDays`        | `readonly Calendar_DayOfWeek[]`                | `[]`               | Hidden ISO weekdays.                                                 |
+| `timeWindow`        | `{ startMinutes: number; endMinutes: number }` | `[0, 1440)`        | Visible clock window, including overnight offsets.                   |
 
 `next()` and `prev()` move by `days` days.
 
@@ -47,6 +49,19 @@ An event laid out shorter than `shortEventMinutes` is flagged `isShort`, emitted
 a short event's content on one line. Both settings are minutes, not pixels: with the default `3rem` slots, 15 minutes is
 24px. Lower them if you make the slots taller.
 
+`hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`).
+
+`timeWindow: { startMinutes: 480, endMinutes: 1080 }` shows 08:00–18:00. For 22:00–06:00 use
+`{ startMinutes: 1320, endMinutes: 1800 }`; the following morning belongs to the starting date. Hiding Tuesday
+still leaves Monday's Tuesday-morning portion visible. All-day items retain their calendar-date membership.
+
+Bounds are integer clock minutes: `0 <= startMinutes < 1440` and
+`startMinutes < endMinutes <= startMinutes + 1440`. Defaults are no hidden weekdays and `[0, 1440)`.
+`slotMinutes` is a positive integer; a final partial slot keeps its actual size. Fetch events for navigation's
+`inputRange`, which includes the following date when needed.
+
+Hiding all seven weekdays is invalid. A controlled date with no visible weekdays produces an empty layout.
+
 </section>
 
 <section id='reference'>
@@ -55,35 +70,35 @@ a short event's content on one line. Both settings are minutes, not pixels: with
 
 ## Model
 
-`layout` is `{ kind: 'timeGrid', slots, columns, allDay, minColumnWidth }`.
+`layout` is `{ kind: 'timeGrid', coordinates, slotUnits, slots, columns, allDay, minColumnWidth }`.
 
-- `slots` holds one `{ key, time }` per `slotMinutes` across the day, for axis labels.
+- `slots` holds `{ key, time, dayOffset, start, span }` for axis labels. Bounds are fractions of the visible window.
 - `columns` holds one column per day.
 - `allDay` holds bar `segments`, `backgroundEvents` and `rows` for all-day events, with columns indexed like `columns`. It is absent when the
   view sets `allDay: false`.
 
-Positions inside a column are **fractions of a fixed 24-hour clock day**, 0 at midnight and 1 at the next midnight.
-09:00 sits at 9/24 on daylight-saving days too. Missing clock hours remain on the axis; repeated hours share their
+Positions inside a column are **fractions of its visible clock window**. The default window is a fixed 24-hour
+clock day, where 09:00 sits at 9/24 on daylight-saving days too. Missing clock hours remain on the axis; repeated hours share their
 clock positions, and visually overlapping events take separate lanes. Event timestamps retain their real offsets.
 
-| Column field                               | Description                                                       |
-| ------------------------------------------ | ----------------------------------------------------------------- |
-| `date`                                     | The day.                                                          |
-| `isToday`                                  | The day is today in `timeZone`.                                   |
-| `segments`                                 | Timed events in this column.                                      |
-| `lanes`                                    | The most lanes any overlap cluster in the column uses.            |
-| `backgroundEvents`                         | See [background events](../features/background-events).           |
-| `now`                                      | Fraction of the day for the current time, only on today's column. |
-| `resource`, `isUnavailable`, `unavailable` | See [resource view](resource-view).                               |
+| Column field                               | Description                                                         |
+| ------------------------------------------ | ------------------------------------------------------------------- |
+| `date`                                     | The day.                                                            |
+| `isToday`                                  | The day is today in `timeZone`.                                     |
+| `segments`                                 | Timed events in this column.                                        |
+| `lanes`                                    | The most lanes any overlap cluster in the column uses.              |
+| `backgroundEvents`                         | See [background events](../features/background-events).             |
+| `now`                                      | Fraction of the window containing now, including overnight columns. |
+| `resource`, `isUnavailable`, `unavailable` | See [resource view](resource-view).                                 |
 
 | Timed segment field                 | Description                                                      |
 | ----------------------------------- | ---------------------------------------------------------------- |
 | `event`                             | The event, in the calendar's time zone.                          |
-| `start`, `span`                     | Fractions of the day.                                            |
+| `start`, `span`                     | Fractions of the visible window.                                 |
 | `lane`, `lanes`                     | Its lane, and the lane count of its overlap cluster.             |
 | `inlineStart`, `inlineSize`         | Fractions of the column's width, after widening and any cascade. |
 | `isShort`                           | Laid out shorter than `shortEventMinutes`.                       |
-| `continuesBefore`, `continuesAfter` | The event is clipped at midnight.                                |
+| `continuesBefore`, `continuesAfter` | The event is clipped at a window boundary.                       |
 
 Events that overlap, directly or through others, form a cluster. Each takes the lowest free lane, and every event in
 the cluster shares the cluster's lane count. Events that only touch do not overlap. Place events with `inlineStart` and

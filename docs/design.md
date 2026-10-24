@@ -1114,6 +1114,43 @@ was rejected because it leaves the alignment defect in place.
 autumn transitions, half-hour changes in Lord Howe, midnight changes in Santiago, repeated-hour lanes and inverse
 shading, minimum sizes, weekly day boundaries and all-day events.
 
+**Coordinate foundation:** `packages/core/src/layout/layout-coordinates.ts` provides internal visible-date axes,
+overnight clock windows, gap/fold branches, exact source projection and reverse lookup. Its fragments preserve
+coverage independently of rendering; `layoutCoordinates_enclose` derives D40's enclosing event rectangle per date.
+The builders now use this foundation through D41. D40's shading and enclosing event policy remain in force.
+
+### D41 — Built-in views share visible-date and clock-window coordinates
+
+**Status:** accepted through the requested layout integration. Extends D40's fixed clock coordinates to visible
+windows and compressed weekdays; amends D7, D17, D19, D33, D34, D35 and D37's full-day/contiguous-column assumptions.
+
+- **Settings:** all built-in views accept `hiddenDays` as ISO weekdays. Time grids and timelines also accept
+  `timeWindow: { startMinutes, endMinutes }`. Defaults are no hidden dates and `[0, 1440)`. Bounds are integers with
+  `0 <= startMinutes < 1440` and `startMinutes < endMinutes <= startMinutes + 1440`. Slots use positive integer
+  minutes and may end in a partial slot. Hiding all weekdays is invalid; a hidden controlled day stays empty.
+- **Ownership:** an overnight window belongs to its starting date. Hidden weekdays apply to that anchor, while
+  timed events and weekly rules use actual source instants. All-day items keep calendar-date membership.
+- **Navigation:** `period` and `range` retain their nominal and anchor-envelope meanings. `inputRange` is the coarse
+  inclusive input envelope, including the following date when needed. Core filtering and range callbacks use this
+  coverage. Layout features can provide `inputRange(range, settings)`; omission falls back to `range` without a
+  core switch on built-in kinds. Navigation remains controlled.
+- **Projection:** layouts retain a shared coordinate plan on their models. Source fragments preserve instants,
+  offsets and occurrences; D40 event geometry encloses visited clock positions. Shading combines projected source
+  coverage before complementing it. Minimum paint sizing stays clipped to the visible window. The overnight now
+  indicator follows the actual instant independently of the anchor's `isToday` flag.
+- **Date bars:** visible ordinals replace calendar-day distance. Calendar weeks are formed before hiding days, so
+  month row counts and keys remain stable. Hidden-only events take no row and do not contribute to overflow.
+  Resource grouping still composes date and resource order as in D19.
+- **Rendering:** React and Solid emit column counts and explicit slot geometry. Partial slots retain proportional
+  sizes in both themes and headers. Slots expose `dayOffset`; timeline dates keep equal window widths across DST.
+
+**Rejected:** filtering cells after bar packing (leaves gaps and phantom overflow), resolving only window endpoints
+with Temporal's compatible disambiguation (includes incorrect source coverage in a narrow repeated hour), and
+duplicating date/time arithmetic inside adapters. Branch-specific inverse shading and fragmented event painting
+remain separate possible policy changes; D41 does not adopt them.
+
+Implementation details are recorded in [the coordinate model](coordinate-model.md).
+
 ## Test cases
 
 Plain assertions grouped by area, each tagged with the capability (`C`), decision (`D`), chart edge or app requirement (`app R`) it protects. Core cases run without a DOM against `calendar_create` with `clock_fixed`; React cases render the parts.

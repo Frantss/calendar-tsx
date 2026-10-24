@@ -59,8 +59,18 @@ The context does not carry the instance's types, so `useCalendarSelector` return
 your views and features, annotate the selector with `Calendar_StateOf` from `@calendar-tsx/core`: `useCalendarSelector((state: Calendar_StateOf<typeof calendar>) => …)`.
 
 Parts render no styles: position them with CSS reading `--cal-*` custom properties (for example
-`left: calc(var(--cal-col-start) / 7 * 100%)`). Every part accepts `render={<El />}` or
+`left: calc(var(--cal-col-start) / var(--cal-columns) * 100%)`). Every part accepts `render={<El />}` or
 `render={(props, state) => …}` to swap its element.
+
+## Visible dates and hours
+
+Configure `hiddenDays` on the core view factories and `timeWindow` on `timeGridView` or `timelineView`. The parts
+consume the resulting geometry; callers keep mapping columns, slots and segments as usual. Slots expose
+`dayOffset` to label after-midnight times, and a single event can appear in multiple date columns.
+
+For custom CSS, use `--cal-columns` for month widths, each axis label's `--cal-start`/`--cal-span` for its position,
+and `--cal-slot-units` for time-grid height. Timeline headers use `--cal-slot-columns` so final partial slots keep
+their proportional width. The bundled themes handle these values. Fetch events for navigation's `inputRange`.
 
 ## Server rendering
 

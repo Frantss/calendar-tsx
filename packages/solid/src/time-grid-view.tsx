@@ -42,6 +42,7 @@ export const TimeGridView = <TData, TResourceData>(props: TimeGridViewProps<TDat
           style: vars({
             columns: local.model.columns.length,
             slots: local.model.slots.length,
+            'slot-units': local.model.slotUnits,
             'all-day-rows': local.model.allDay?.rows,
           }),
           ...part('time-grid-root'),
@@ -177,7 +178,11 @@ export const TimeGridViewBody = <TData, TResourceData>(props: TimeGridViewProps<
     <calendar.div
       {...calendarProps_merge(
         () => ({
-          style: vars({ slots: local.model.slots.length, 'min-column-width': local.model.minColumnWidth }),
+          style: vars({
+            slots: local.model.slots.length,
+            'slot-units': local.model.slotUnits,
+            'min-column-width': local.model.minColumnWidth,
+          }),
           ...part('time-grid-body'),
         }),
         rest,
@@ -197,7 +202,19 @@ export const TimeGridViewAxisLabel = (
 ) => {
   const [local, rest] = splitProps(props, ['slot']);
 
-  return <calendar.div {...calendarProps_merge(part('time-grid-axis-label'), rest)} state={local.slot} />;
+  return (
+    <calendar.div
+      {...calendarProps_merge(
+        () => ({
+          style: vars({ start: local.slot.start, span: local.slot.span }),
+          'data-day-offset': local.slot.dayOffset,
+          ...part('time-grid-axis-label'),
+        }),
+        rest,
+      )}
+      state={local.slot}
+    />
+  );
 };
 
 export const TimeGridViewColumn = <TData, TResourceData>(props: ColumnProps<TData, TResourceData>) => {

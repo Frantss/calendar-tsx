@@ -1,3 +1,5 @@
+import { Temporal } from 'temporal-polyfill';
+import { timeGridView } from '@calendar-tsx/core';
 import { expect, it } from 'vitest';
 import { page } from 'vitest/browser';
 
@@ -94,7 +96,9 @@ it('exposes a labelled region with grid geometry', async () => {
   const { ui } = await setup({ view: 'week' });
 
   await expect.element(ui.region).toHaveAttribute('data-part', 'time-grid-root');
-  expect(ui.region.element().getAttribute('style')).toBe('--cal-columns: 7; --cal-slots: 48; --cal-all-day-rows: 0;');
+  expect(ui.region.element().style.getPropertyValue('--cal-columns')).toBe('7');
+  expect(ui.region.element().style.getPropertyValue('--cal-slots')).toBe('48');
+  expect(ui.region.element().style.getPropertyValue('--cal-all-day-rows')).toBe('0');
 });
 
 it('positions timed events and flags overlaps', async () => {
@@ -182,4 +186,33 @@ it('renders background events as inert shades under the events', async () => {
   ]);
   expect(shades[1]?.hasAttribute('data-continues-after')).toBe(true);
   expect([allDay, ...shades].every(shade => shade?.getAttribute('aria-hidden') === 'true')).toBe(true);
+});
+
+it('exposes proportional slot geometry and hides weekday columns through public view settings', async () => {
+  const { ui } = await setup({
+    view: 'day',
+    views: { day: timeGridView({ days: 7, hiddenDays: [6, 7], slotMinutes: 30, timeWindow: { startMinutes: 490, endMinutes: 540 } }) },
+  });
+  expect(ui.part('time-grid-column')).toHaveLength(5);
+  expect(ui.part('time-grid-root')[0]?.style.getPropertyValue('--cal-slot-units')).toBe(String(50 / 30));
+  expect(
+    ui.part('time-grid-axis-label').map(label => [label.style.getPropertyValue('--cal-start'), label.style.getPropertyValue('--cal-span')]),
+  ).toEqual([
+    ['0', '0.6'],
+    ['0.6', '0.4'],
+  ]);
+});
+
+it('renders an overnight event and now in its starting-date column', async () => {
+  const { ui } = await setup({
+    view: 'day',
+    views: { day: timeGridView({ days: 1, timeWindow: { startMinutes: 1320, endMinutes: 1800 } }) },
+    now: Temporal.ZonedDateTime.from('2026-03-12T05:00[America/New_York]').toInstant(),
+    events: [fixtures_timed('Morning', { date: '2026-03-12', start: '00:30', end: '01:30' })],
+  });
+  expect(ui.part('time-grid-event')).toHaveLength(1);
+  expect(ui.part('time-grid-event')[0]?.style.getPropertyValue('--cal-start')).toBe(String(150 / 480));
+  expect(ui.part('time-grid-now')).toHaveLength(1);
+  expect(ui.part('time-grid-column')[0]?.hasAttribute('data-today')).toBe(false);
+  expect(ui.part('time-grid-axis-label').filter(label => label.dataset.dayOffset === '1')).toHaveLength(12);
 });

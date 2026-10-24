@@ -260,7 +260,7 @@
   :where([data-scope='calendar'][data-part='time-grid-column']) {
     border-inline-start: 1px solid var(--calendar-border);
     background-image: linear-gradient(to bottom, var(--calendar-border) 1px, transparent 1px);
-    background-size: 100% calc(100% / var(--cal-slots));
+    background-size: 100% calc(100% / var(--cal-slot-units, var(--cal-slots)));
   }
 
   :where([data-scope='calendar'][data-part='time-grid-column'][data-today]) {
@@ -414,7 +414,7 @@
   /* One line per slot, drawn from the slot count rather than one element per slot (D13) */
   :where([data-scope='calendar'][data-part='timeline-lane']) {
     background-image: linear-gradient(to right, var(--calendar-border) 1px, transparent 1px);
-    background-size: calc(100% / var(--cal-slots)) 100%;
+    background-size: calc(100% / var(--cal-slot-units, var(--cal-slots))) 100%;
   }
 
   /* A focused event stays under the sticky resource column and header */
@@ -532,7 +532,7 @@
       inset: 0;
       forced-color-adjust: none;
       background-image: linear-gradient(to bottom, GrayText 1px, transparent 1px);
-      background-size: 100% calc(100% / var(--cal-slots));
+      background-size: 100% calc(100% / var(--cal-slot-units, var(--cal-slots)));
       pointer-events: none;
     }
 
@@ -541,8 +541,12 @@
       position: absolute;
       inset: 0;
       forced-color-adjust: none;
-      background-image: linear-gradient(to right, GrayText 1px, transparent 1px);
-      background-size: calc(100% / var(--cal-slots)) 100%;
+      background-image: repeating-linear-gradient(
+        to right,
+        GrayText 0 1px,
+        transparent 1px calc(100% / var(--cal-day-slot-units, var(--cal-slots)))
+      );
+      background-size: calc(100% / var(--cal-days, 1)) 100%;
       pointer-events: none;
     }
   }

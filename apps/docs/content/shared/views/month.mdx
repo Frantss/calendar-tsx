@@ -17,9 +17,15 @@ monthView({ maxEventsPerDay: 3 });
 | `maxEventsPerDay` | `number`                                | Bar rows shown per week; bars in further rows are hidden and counted.        |
 | `dayOverflow`     | `(date: Temporal.PlainDate) => boolean` | Marks a day as having more events, for example ones you have not loaded yet. |
 | `fixedWeekCount`  | `boolean`                               | Always show six weeks, so the grid keeps its height from month to month.     |
+| `hiddenDays`      | `readonly Calendar_DayOfWeek[]`         | Hidden ISO weekdays; defaults to none.                                       |
 
 The view shows the month containing `date`, padded to whole weeks that start on `firstDayOfWeek` (Sunday by default).
 `next()` and `prev()` move by one month. See [overflow](../features/overflow) for the hidden rows.
+
+`hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`).
+Calendar week rows keep their boundaries and keys. Hidden dates take no cells, bar rows or overflow counts.
+
+Hiding all seven weekdays is invalid. A controlled date with no visible weekdays produces an empty layout.
 
 </section>
 
@@ -29,7 +35,7 @@ The view shows the month containing `date`, padded to whole weeks that start on 
 
 ## Model
 
-`layout` is `{ kind: 'month', weekdays, weeks }`. `weekdays` holds the first week's seven dates, for column headers.
+`layout` is `{ kind: 'month', coordinates, weekdays, weeks }`. `weekdays` holds the first week's seven dates, for column headers.
 
 Each week holds `days`, its bar `segments`, its `backgroundEvents` and `rows`, the number of bar rows shown (at most
 `maxEventsPerDay`). See [background events](../features/background-events).

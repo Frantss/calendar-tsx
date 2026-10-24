@@ -13,12 +13,17 @@ listView({ period: 'month' });
 
 Pass either `days` or `period`, not both.
 
-| Setting  | Type                | Description                                                                                |
-| -------- | ------------------- | ------------------------------------------------------------------------------------------ |
-| `days`   | `number`            | Days covered. `7` starts on `firstDayOfWeek`; others start on `date`.                      |
-| `period` | `'month' \| 'year'` | The calendar month or year containing `date`. `next()` and `prev()` land on its first day. |
+| Setting      | Type                            | Description                                                                                |
+| ------------ | ------------------------------- | ------------------------------------------------------------------------------------------ |
+| `days`       | `number`                        | Days covered. `7` starts on `firstDayOfWeek`; others start on `date`.                      |
+| `period`     | `'month' \| 'year'`             | The calendar month or year containing `date`. `next()` and `prev()` land on its first day. |
+| `hiddenDays` | `readonly Calendar_DayOfWeek[]` | Hidden ISO weekdays; defaults to none.                                                     |
 
 Only days with at least one event are listed, so a quiet range has no days; render an empty state for it.
+
+`hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`).
+
+Hiding all seven weekdays is invalid. A controlled date with no visible weekdays produces an empty layout.
 
 </section>
 
@@ -28,7 +33,7 @@ Only days with at least one event are listed, so a quiet range has no days; rend
 
 ## Model
 
-`layout` is `{ kind: 'list', days }`. Each day is `{ key, date, events }`.
+`layout` is `{ kind: 'list', coordinates, days }`. Each day is `{ key, date, events }`.
 
 </section>
 

@@ -84,7 +84,8 @@ it('exposes a labelled region with slot geometry', async () => {
   const { ui } = await setup({ view: 'timeline_week' });
 
   await expect.element(ui.region).toHaveAttribute('data-part', 'timeline-root');
-  expect(ui.region.element().getAttribute('style')).toBe('--cal-slots: 168; --cal-min-slot-width: 2rem;');
+  expect(ui.region.element().style.getPropertyValue('--cal-slots')).toBe('168');
+  expect(ui.region.element().style.getPropertyValue('--cal-min-slot-width')).toBe('2rem');
   expect(ui.part('timeline-day-header')[1]?.getAttribute('style')).toBe('--cal-col-start: 24; --cal-col-span: 24;');
   expect(ui.part('timeline-slot-label')[25]?.getAttribute('style')).toBe('--cal-col-start: 25;');
 });

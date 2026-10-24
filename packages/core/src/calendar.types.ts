@@ -1,5 +1,10 @@
 import type { ReadonlyStore } from '@tanstack/store';
 import type { Temporal } from 'temporal-polyfill';
+import type {
+  LayoutCoordinates_DateAxis,
+  LayoutCoordinates_Fragment,
+  LayoutCoordinates_Plan,
+} from '#layout/layout-coordinates';
 
 /** `'background'` shades the range under the other events instead of laying it out as one (D37). */
 export type Calendar_EventDisplay = 'auto' | 'background';
@@ -68,7 +73,7 @@ export type Calendar_BackgroundLayer<TKind extends string = string> = {
   inverse?: boolean;
   /** Limits the layer to these resources' columns; omitted, it shades every column. */
   resourceIds?: string[];
-  /** A list, or a function of the visible range and `timeZone`; both are compared by reference. */
+  /** A list, or a function of the input date envelope and `timeZone`; both are compared by reference. */
   ranges: Calendar_BackgroundRange[] | ((range: Calendar_Range, timeZone: string) => Calendar_BackgroundRange[]);
 };
 
@@ -79,7 +84,7 @@ export type Calendar_WeeklyRule = {
   endTime: Temporal.PlainTime;
 };
 
-/** A shaded span in a time-grid column, as fractions of the column's day. */
+/** A shaded span in a time-grid column, as fractions of the column's visible clock window. */
 export type Calendar_BackgroundSegment = { key: string; layer: string; kind: string; start: number; span: number };
 
 /** A layer that shades a whole month day. */
@@ -134,7 +139,17 @@ export interface Calendar_ListDay_FeatureMap {}
 export interface Calendar_TimelineRow_FeatureMap {}
 export interface Calendar_TimelineSegment_FeatureMap {}
 
-export type Calendar_MonthViewSettings = {
+export type Calendar_DateViewSettings = {
+  /** Hidden ISO weekdays, Monday 1 through Sunday 7. Hiding all seven is invalid. */
+  hiddenDays?: readonly Calendar_DayOfWeek[];
+};
+
+export type Calendar_TimeViewSettings = Calendar_DateViewSettings & {
+  /** Nominal clock minutes; an end beyond 1440 belongs to the anchor date's following morning. */
+  timeWindow?: { startMinutes: number; endMinutes: number };
+};
+
+export type Calendar_MonthViewSettings = Calendar_DateViewSettings & {
   maxEventsPerDay: number;
   dayOverflow?: (date: Temporal.PlainDate) => boolean;
   /** Always show six weeks (D35). */
@@ -142,7 +157,7 @@ export type Calendar_MonthViewSettings = {
 };
 
 /** Whole weeks from the week containing the date; built as a month model (D35). */
-export type Calendar_DayGridViewSettings = {
+export type Calendar_DayGridViewSettings = Calendar_DateViewSettings & {
   weeks: number;
   maxEventsPerDay: number;
   dayOverflow?: (date: Temporal.PlainDate) => boolean;
@@ -151,7 +166,7 @@ export type Calendar_DayGridViewSettings = {
 /** How overlapping timed events share a column (D38). */
 export type Calendar_TimeGridOverlap = 'side-by-side' | 'cascade';
 
-export type Calendar_TimeGridViewSettings = {
+export type Calendar_TimeGridViewSettings = Calendar_TimeViewSettings & {
   days: number;
   groupBy?: 'resource';
   groupOrder?: 'resource-first' | 'date-first';
@@ -167,9 +182,10 @@ export type Calendar_TimeGridViewSettings = {
 };
 
 /** A run of `days` days, or the calendar month or year containing the date (D36). */
-export type Calendar_ListViewSettings = { days: number; period?: never } | { period: 'month' | 'year'; days?: never };
+export type Calendar_ListViewSettings = Calendar_DateViewSettings &
+  ({ days: number; period?: never } | { period: 'month' | 'year'; days?: never });
 
-export type Calendar_TimelineViewSettings = {
+export type Calendar_TimelineViewSettings = Calendar_TimeViewSettings & {
   days: number;
   groupBy?: 'resource';
   slotMinutes?: number;
@@ -218,6 +234,7 @@ export type Calendar_MonthWeek<TData, TFeatures = {}> = {
 
 export type Calendar_MonthLayout<TData, TFeatures = {}> = {
   kind: 'month';
+  coordinates: LayoutCoordinates_DateAxis;
   weekdays: Temporal.PlainDate[];
   weeks: Calendar_MonthWeek<TData, TFeatures>[];
 };
@@ -225,7 +242,9 @@ export type Calendar_MonthLayout<TData, TFeatures = {}> = {
 export type Calendar_TimeGridSegment<TData, TFeatures = {}> = {
   key: string;
   event: Calendar_Event<TData>;
-  /** Fractions of the column's day. */
+  /** Exact source coverage before D40 enclosure and minimum paint sizing. */
+  fragments: readonly LayoutCoordinates_Fragment[];
+  /** Fractions of the column's visible clock window. */
   start: number;
   span: number;
   lane: number;
@@ -241,7 +260,7 @@ export type Calendar_TimeGridSegment<TData, TFeatures = {}> = {
 
 export type Calendar_UnavailableSegment = { key: string; start: number; span: number };
 
-/** A background event clipped to one time-grid column, as fractions of the column's day (D37). */
+/** A background event clipped to one time-grid column, as fractions of the column's visible clock window (D37). */
 export type Calendar_BackgroundEventSegment<TData> = {
   key: string;
   event: Calendar_Event<TData>;
@@ -266,10 +285,19 @@ export type Calendar_TimeGridColumn<TData, TResourceData, TFeatures = {}> = {
   now?: number;
 } & Calendar_PickFeatures<Calendar_TimeGridColumn_FeatureMap, TFeatures>;
 
-export type Calendar_TimeGridSlot = { key: string; time: Temporal.PlainTime };
+export type Calendar_TimeGridSlot = {
+  key: string;
+  time: Temporal.PlainTime;
+  dayOffset: number;
+  start: number;
+  span: number;
+};
 
 export type Calendar_TimeGridLayout<TData, TResourceData, TFeatures = {}> = {
   kind: 'timeGrid';
+  coordinates: LayoutCoordinates_Plan;
+  /** Visible duration divided by slotMinutes; may include a final partial slot. */
+  slotUnits: number;
   slots: Calendar_TimeGridSlot[];
   columns: Calendar_TimeGridColumn<TData, TResourceData, TFeatures>[];
   allDay?: {
@@ -286,7 +314,11 @@ export type Calendar_ListDay<TData, TFeatures = {}> = {
   events: Calendar_Event<TData>[];
 } & Calendar_PickFeatures<Calendar_ListDay_FeatureMap, TFeatures>;
 
-export type Calendar_ListLayout<TData, TFeatures = {}> = { kind: 'list'; days: Calendar_ListDay<TData, TFeatures>[] };
+export type Calendar_ListLayout<TData, TFeatures = {}> = {
+  kind: 'list';
+  coordinates: LayoutCoordinates_DateAxis;
+  days: Calendar_ListDay<TData, TFeatures>[];
+};
 
 /** A day in the timeline header, as slot columns. */
 export type Calendar_TimelineDay = {
@@ -297,11 +329,21 @@ export type Calendar_TimelineDay = {
   colSpan: number;
 };
 
-export type Calendar_TimelineSlot = { key: string; date: Temporal.PlainDate; time: Temporal.PlainTime; col: number };
+export type Calendar_TimelineSlot = {
+  key: string;
+  date: Temporal.PlainDate;
+  time: Temporal.PlainTime;
+  col: number;
+  dayOffset: number;
+  start: number;
+  span: number;
+};
 
 export type Calendar_TimelineSegment<TData, TFeatures = {}> = {
   key: string;
   event: Calendar_Event<TData>;
+  /** Empty for all-day events, which follow anchor dates rather than source instants. */
+  fragments: readonly LayoutCoordinates_Fragment[];
   /** Fractions of the range. */
   start: number;
   span: number;
@@ -325,6 +367,8 @@ export type Calendar_TimelineRow<TData, TResourceData, TFeatures = {}> = {
 
 export type Calendar_TimelineLayout<TData, TResourceData, TFeatures = {}> = {
   kind: 'timeline';
+  coordinates: LayoutCoordinates_Plan;
+  slotUnits: number;
   days: Calendar_TimelineDay[];
   slots: Calendar_TimelineSlot[];
   rows: Calendar_TimelineRow<TData, TResourceData, TFeatures>[];
@@ -348,7 +392,9 @@ export type Calendar_LayoutKey = keyof Calendar_Layout_FeatureMap<unknown, unkno
 export type Calendar_LayoutInput<TData, TResourceData> = {
   range: Calendar_Range;
   period: Calendar_Range;
-  /** Normalised to `timeZone`, clipped to `range`, sorted by `eventOrder`; no background events. */
+  inputRange: Calendar_Range;
+  firstDayOfWeek?: Calendar_FirstDayOfWeek;
+  /** Normalised to `timeZone`, filtered to `inputRange`, sorted by `eventOrder`; no background events. */
   events: Calendar_Event<TData>[];
   /** The events with `display: 'background'`: normalised and clipped likewise, in input order (D37). */
   backgroundEvents: Calendar_Event<TData>[];
@@ -399,8 +445,10 @@ export type Calendar_LayoutFeature<TKind extends string = string, TSettings = an
   kind: TKind;
   /** The nominal period around `date`. */
   period: (date: Temporal.PlainDate, settings: TSettings, options: Calendar_NavigationOptions) => Calendar_Range;
-  /** The visible days for `period`, padding included. */
+  /** The anchor-date envelope for `period`, padding included. */
   range: (period: Calendar_Range, settings: TSettings, options: Calendar_NavigationOptions) => Calendar_Range;
+  /** Coarse input dates, including the following morning for overnight windows. Defaults to range. */
+  inputRange?: (range: Calendar_Range, settings: TSettings) => Calendar_Range;
   /** The date one period before or after `date`. */
   step: (date: Temporal.PlainDate, settings: TSettings, direction: 1 | -1) => Temporal.PlainDate;
   build: (input: Calendar_LayoutInput<any, any>, settings: TSettings) => Calendar_AnyLayout;
@@ -453,8 +501,10 @@ export type Calendar_ValidateFeatures<
 export type Calendar_Navigation<TViews extends Calendar_Views> = {
   view: keyof TViews & string;
   date: Temporal.PlainDate;
-  /** Visible days, including month padding. */
+  /** Anchor-date envelope, including month padding and hidden weekdays. */
   range: Calendar_Range;
+  /** Coarse dates needed by the display windows; use this when fetching input events. */
+  inputRange: Calendar_Range;
   /** Nominal day, week or month. */
   period: Calendar_Range;
 };

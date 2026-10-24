@@ -36,7 +36,14 @@ export const TimelineView = <TData, TResourceData>(props: TimelineViewProps<TDat
         () => ({
           role: 'region',
           'aria-label': 'Timeline',
-          style: vars({ slots: local.model.slots.length, 'min-slot-width': local.model.minSlotWidth }),
+          style: vars({
+            slots: local.model.slots.length,
+            'slot-units': local.model.slotUnits,
+            days: local.model.days.length,
+            'day-slot-units': local.model.slotUnits / Math.max(1, local.model.days.length),
+            'slot-columns': local.model.slots.map(slot => `minmax(0, ${slot.span}fr)`).join(' ') || 'minmax(0, 1fr)',
+            'min-slot-width': local.model.minSlotWidth,
+          }),
           ...part('timeline-root'),
         }),
         rest,
@@ -106,7 +113,11 @@ export const TimelineViewSlotLabel = (
   return (
     <calendar.div
       {...calendarProps_merge(
-        () => ({ style: vars({ 'col-start': local.slot.col }), ...part('timeline-slot-label') }),
+        () => ({
+          style: vars({ 'col-start': local.slot.col }),
+          'data-day-offset': local.slot.dayOffset,
+          ...part('timeline-slot-label'),
+        }),
         rest,
       )}
       state={local.slot}

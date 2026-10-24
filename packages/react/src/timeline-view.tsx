@@ -35,7 +35,14 @@ export const TimelineView = forwardRef<HTMLDivElement, TimelineViewProps<unknown
         {
           role: 'region',
           'aria-label': 'Timeline',
-          style: vars({ slots: model.slots.length, 'min-slot-width': model.minSlotWidth }),
+          style: vars({
+            slots: model.slots.length,
+            'slot-units': model.slotUnits,
+            days: model.days.length,
+            'day-slot-units': model.slotUnits / Math.max(1, model.days.length),
+            'slot-columns': model.slots.map(slot => `minmax(0, ${slot.span}fr)`).join(' ') || 'minmax(0, 1fr)',
+            'min-slot-width': model.minSlotWidth,
+          }),
           ...part('timeline-root'),
         },
         props,
@@ -104,7 +111,10 @@ export const TimelineViewSlotLabel = forwardRef<
   { slot: Calendar_TimelineSlot } & Calendar_HTMLProps<'div', Calendar_TimelineSlot>
 >(({ slot, ...props }, ref) => (
   <calendar.div
-    {...calendarProps_merge({ style: vars({ 'col-start': slot.col }), ...part('timeline-slot-label') }, props)}
+    {...calendarProps_merge(
+      { style: vars({ 'col-start': slot.col }), 'data-day-offset': slot.dayOffset, ...part('timeline-slot-label') },
+      props,
+    )}
     state={slot}
     ref={ref}
   />

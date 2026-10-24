@@ -1,10 +1,10 @@
 <section id='state'>
 
-| Field     | Type                     | Description                                                       |
-| --------- | ------------------------ | ----------------------------------------------------------------- |
-| `context` | `Calendar_ViewContext`   | `view`, `kind`, `date`, `range` and `period` of the current view. |
-| `layout`  | `Calendar_Layout`        | The render model for the active view; switch on `layout.kind`.    |
-| `now`     | `Temporal.ZonedDateTime` | The clock's current time in `timeZone`.                           |
+| Field     | Type                     | Description                                                                     |
+| --------- | ------------------------ | ------------------------------------------------------------------------------- |
+| `context` | `Calendar_ViewContext`   | `view`, `kind`, `date`, `range`, `period` and `inputRange` of the current view. |
+| `layout`  | `Calendar_Layout`        | The render model for the active view; switch on `layout.kind`.                  |
+| `now`     | `Temporal.ZonedDateTime` | The clock's current time in `timeZone`.                                         |
 
 Registered [features](../extending/features#state) add their state slices next to these.
 
