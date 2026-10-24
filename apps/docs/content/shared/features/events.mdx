@@ -27,6 +27,9 @@ payload type inferred from `data`:
 
 <include lang='ts'>../../../examples/core/events.ts#create</include>
 
+For repeating events, add the optional [recurrence feature](recurrence). One-off and recurring definitions share
+the same `events` array and event store.
+
 ## Hiding events
 
 There is no hidden flag: filter the array. Memoize the result, so the calendar only re-derives when it changes.

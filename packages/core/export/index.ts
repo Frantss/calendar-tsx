@@ -2,6 +2,7 @@ export type * from '#calendar.types';
 export { createCalendar } from '#calendar';
 export { fixedClock, intervalClock } from '#calendar-clock';
 export { createEvent } from '#calendar-events';
+export type { Calendar_EventStore } from '#calendar-event-store';
 export { createEventStore } from '#calendar-event-store';
 export { getCalendarNavigation } from '#calendar-navigation';
 export { dayGridLayout, listLayout, timeGridLayout, timelineLayout } from '#calendar-layouts';

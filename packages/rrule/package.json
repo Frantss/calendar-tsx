@@ -1,0 +1,52 @@
+{
+  "name": "@calendar-tsx/rrule",
+  "version": "0.0.1",
+  "description": "Temporal recurrence definitions for calendar-tsx, powered by rrule-temporal.",
+  "license": "MIT",
+  "author": "Frantss <frantss.bongiovanni@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Frantss/calendar-tsx.git",
+    "directory": "packages/rrule"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "imports": {
+    "#*": "./src/*.ts"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "test": "vp test",
+    "test:coverage": "vp test --coverage",
+    "test:dev": "vp test --watch",
+    "check:types": "vp exec tsc --noEmit",
+    "check:package": "publint --strict && attw --pack --no-emoji --profile esm-only"
+  },
+  "dependencies": {
+    "rrule-temporal": "2.2.8"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@calendar-tsx/core": "workspace:*",
+    "publint": "^0.3.25",
+    "temporal-polyfill": "^1.0.6",
+    "typescript": "^7.0.2"
+  },
+  "peerDependencies": {
+    "@calendar-tsx/core": "workspace:^",
+    "temporal-polyfill": "^1.0.6"
+  }
+}

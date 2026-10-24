@@ -24,6 +24,7 @@ parts.
 | [`@calendar-tsx/react`](packages/react)   | React bindings — hooks and parts.                    | [readme](packages/react/readme.md)  |
 | [`@calendar-tsx/solid`](packages/solid)   | Solid bindings — hooks and parts.                    | [readme](packages/solid/readme.md)  |
 | [`@calendar-tsx/core`](packages/core)     | Framework-agnostic calendar engine.                  | [readme](packages/core/readme.md)   |
+| [`@calendar-tsx/rrule`](packages/rrule)   | Optional recurrence powered by rrule-temporal.       | [readme](packages/rrule/readme.md)  |
 | [`@calendar-tsx/themes`](packages/themes) | Stylesheets: a positioning base and a default theme. | [readme](packages/themes/readme.md) |
 
 The design, requirements and decision log live in [docs/design.md](docs/design.md). The documentation site is a

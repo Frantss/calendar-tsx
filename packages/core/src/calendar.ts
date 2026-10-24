@@ -3,6 +3,7 @@ import { Temporal } from 'temporal-polyfill';
 
 import { intervalClock } from '#calendar-clock';
 import { calendarEvents_defaultOrder, calendarEvents_normalize, calendarEvents_overlaps } from '#calendar-events';
+import { calendarSources_createResolver } from '#calendar-sources';
 import { calendarNavigation_resolve, calendarNavigation_view } from '#calendar-navigation';
 import type {
   Calendar_AnyLayout,
@@ -97,6 +98,7 @@ export const createCalendar = <
   let options = initial as AnyOptions;
   const clock = () => options.clock ?? defaultClock;
   const features = features_all(options);
+  const resolveEvents = calendarSources_createResolver(features);
   const featureKeys = Object.values(features).flatMap(feature => feature.trackedOptions ?? []);
 
   const persisted = createStore(tracked_from(options, options.initialNow ?? clock().now(), featureKeys));
@@ -187,9 +189,10 @@ export const createCalendar = <
     const viewContext = { ...navigation, kind: definition.kind } as unknown as Calendar_ViewContext<TViews>;
     const order = options.eventOrder;
 
-    const visible = calendarEvents_normalize(input.events, input.timeZone).filter(event =>
-      calendarEvents_overlaps(event, viewContext.inputRange),
-    );
+    const visible = calendarEvents_normalize(
+      resolveEvents(input.events, viewContext.inputRange, input.timeZone),
+      input.timeZone,
+    ).filter(event => calendarEvents_overlaps(event, viewContext.inputRange));
     // Background events are shaded, not laid out: they skip ordering and feature stages (D37).
     const backgroundEvents = visible.filter(event => event.display === 'background');
 

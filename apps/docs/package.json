@@ -30,6 +30,7 @@
   "devDependencies": {
     "@calendar-tsx/core": "workspace:*",
     "@calendar-tsx/react": "workspace:*",
+    "@calendar-tsx/rrule": "workspace:*",
     "@calendar-tsx/solid": "workspace:*",
     "@calendar-tsx/themes": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",

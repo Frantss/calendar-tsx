@@ -12,9 +12,9 @@
 
 A headless calendar library that satisfies `docs/calendar-spec.md` (R1–R11): a framework-agnostic core on TanStack Store, Temporal for all date math, a React adapter with Ark-style composable parts, and no styles.
 
-- **In scope:** views, navigation and visible range, event layout, background events (D37), resources and availability shading, overflow, now indicator, click/focus targets, geometry exposed as CSS variables and data attributes.
+- **In scope:** views, navigation and visible range, event layout, optional RRule recurrence (D50), background events (D37), resources and availability shading, overflow, now indicator, click/focus targets, geometry exposed as CSS variables and data attributes.
 - **Out of scope (consumer's job):** URL sync, header controls and selectors, data fetching, the drawer, drafts as data, colours and copy per event kind.
-- **Not supported:** drag and resize, date selection, recurrence. Timeline views were here until D34.
+- **Not supported:** drag and resize, date selection. Recurrence was here until D50. Timeline views were here until D34.
 
 ### Working assumptions (from Stage 0, unconfirmed)
 
@@ -1260,6 +1260,50 @@ The core extends each timed event's projected end to that minimum before assigni
 The React and Solid examples omit slot labels for daily columns, include minutes for subday slots, and expose full titles and actual date/time ranges through `title` and `aria-label`. This removes repeated midnight labels and makes ellipsized bar content available without changing the event data.
 
 Rejected: CSS-only minimum widths (stacking cannot see the enlarged bars); fixed pixel widths with measured browser layout (adds resize-dependent layout and adapter behavior to a headless engine); opt-in minima only in the playground (leaves the default library behavior unusable for short events).
+
+### D50 — Optional RRule definitions resolve before event normalization
+
+**Decision:** `@calendar-tsx/rrule` provides `rruleFeature` and `createRRuleEvent`. One-off and recurring definitions
+share `events`, one ID space and the existing stores (D2, D37). `Calendar_EventInput` remains the concrete union;
+`Calendar_EventDefinition<TData, TFeatures>` adds the union of registered `Calendar_EventInput_FeatureMap` entries.
+The builder adds `~source: 'rruleFeature'`. Explicit feature types gate definitions; missing runtime resolvers throw.
+
+A feature's pure `resolveEvents(source, { range, timeZone })` runs calendar-wide before normalization, range filtering,
+background splitting, ordering and existing feature stages. It receives the inclusive `inputRange`, including month padding and any following date needed by an overnight window.
+Core memoizes the latest resolution by definitions reference, range and display zone. The optional package weakly
+caches compiled definitions and at most four range/zone expansions per definition. Clock ticks do not expand again.
+Inputs are immutable. Layouts and adapters receive ordinary concrete events; stores retain definitions.
+
+`rrule-temporal` 2.2.8 supplies selectors, counts and nominal wall-time candidates. Input accepts RRULE strings or plain native
+selector options (`freq: 'MONTHLY'`, `byDay: ['2FR']`, `bySetPos: [-1]`). Instantiated rule objects are excluded. RDATE, EXDATE,
+EXRULE and multiline recurrence sets are supported. Exclusions apply after COUNT and win over inclusions.
+
+Temporal remains the public date API (D7). `start` supplies DTSTART and the recurrence zone; conflicting embedded
+DTSTART/TZID values throw. Options omit DTSTART/TZID and use Temporal UNTIL. The engine receives nominal UTC
+`Temporal.ZonedDateTime` values, then the calendar resolves their wall fields in the seed zone using `compatible`:
+gaps move forward and folds choose the earlier offset. An explicit seed offset is preserved. Gap candidates count
+toward COUNT; post-filtering them was rejected because it would shorten finite rules. UTC UNTIL is checked against
+resolved instants. Display-zone changes preserve the schedule. Seed subsecond precision is retained; all dates use
+the ISO 8601 calendar. Supplying the application's Temporal namespace to the engine preserves output branding.
+No JavaScript Date transport or CommonJS interop wrapper remains.
+
+Timed duration is positive elapsed time, without years/months. All-day duration is positive whole days/weeks,
+defaulting to one day, with the existing inclusive end. Expansion looks back far enough to include prior starts
+still overlapping the view. Resource IDs, background display and data pass through. Generated IDs derive from the
+series ID and scheduled start; `occurrence` retains `seriesId` and `originalStart` before normalization. An instance
+replacement uses EXDATE plus a one-off event; series editing updates the stored definition.
+
+**Alternatives considered:** a native daily/weekly recurrence implementation was rejected in favor of the requested
+RRule language. A post-sort feature hook cannot generate prior-start or background occurrences correctly. Separate
+recurring options/stores would duplicate the event ownership and ID model. Native RRule TZID was rejected after
+cross-host checks produced different instants. Unbounded full-result engine caches were rejected. The requested migration to `rrule-temporal` replaces the original
+`rrule` 2.8.1 engine and its subdaily stall. Eligible range queries can seek forward. Default safety budgets are
+10,000 iterations and 1,000,000 candidate evaluations, configurable through native options; exhaustion throws.
+Large or complex queries still do not have a fixed CPU-time guarantee.
+
+**Verification:** the optional package tests rule syntax, selectors, exceptions and COUNT, UTC/local UNTIL, compatible
+DST, nanoseconds, overlap lookback, stable IDs, store ownership, memoization and all layouts. Adapter tests render
+occurrences and remove a series through each framework's event store.
 
 ## Test cases
 

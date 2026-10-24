@@ -95,6 +95,11 @@ const yoga = createEvent({ id: 'yoga', kind: 'timed', start, end, data: { title:
 const fair = createEvent<EventData>({ id: 'fair', kind: 'allDay', start: Temporal.PlainDate.from('2026-03-11'), data });
 ```
 
+Recurring definitions can share `events` with one-off inputs through the optional
+[`@calendar-tsx/rrule`](../rrule/readme.md) package. `Calendar_EventDefinition<TData, TFeatures>` includes inputs
+contributed by registered features; `Calendar_EventInput<TData>` remains the concrete timed/all-day union used by
+layouts. Stores retain definitions, and generated events expose `occurrence.seriesId` and `occurrence.originalStart`.
+
 ## Background events
 
 An event with `display: 'background'` is shaded under the other events instead of laid out as one (design D37). It
@@ -152,9 +157,13 @@ const views = createCalendarViews({
 createCalendar({ ...options, views: views.views, features: { ...views.features }, x: { calendarWide: true } });
 ```
 
-- **Hooks:** `getInitialState`, `constructApi`, an `events` stage after the core sort, and a `decorate` pass that adds
+- **Hooks:** `getInitialState`, `constructApi`, `resolveEvents` before normalization, an `events` stage after the core sort, and a `decorate` pass that adds
   model fields. Stages rerun when their input or `deps` change. Feature options are read untracked unless the feature
   lists their keys in `trackedOptions`.
+- **Sources:** `Calendar_EventInput_FeatureMap<TData>` adds event definition variants. Each carries `~source` equal to
+  its feature key. Its `resolveEvents(source, { range, timeZone })` hook runs calendar-wide, before background
+  splitting, and returns concrete events. Resolution is cached by input reference, visible range and display zone;
+  feature state and other options are not source dependencies. A missing resolver throws.
 - **Settings:** a feature's defaults, then the calendar option, then the view's setting, shallow-merged per layer.
 - **State:** each slice is uncontrolled, controlled through `state`, or kept in an external store through `atoms`.
 - **Types:** features extend the `Calendar_*_FeatureMap` interfaces by declaration merging, keyed by their export name.

@@ -2,6 +2,7 @@
   "pages": [
     "navigation",
     "events",
+    "recurrence",
     "background-events",
     "background-layers",
     "overflow",

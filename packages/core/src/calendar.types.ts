@@ -12,6 +12,7 @@ export type Calendar_EventDisplay = 'auto' | 'background';
 export type Calendar_TimedEventInput<TData> = {
   id: string;
   kind: 'timed';
+  '~source'?: never;
   start: Temporal.ZonedDateTime;
   end: Temporal.ZonedDateTime;
   resourceIds?: string[];
@@ -23,6 +24,7 @@ export type Calendar_TimedEventInput<TData> = {
 export type Calendar_AllDayEventInput<TData> = {
   id: string;
   kind: 'allDay';
+  '~source'?: never;
   start: Temporal.PlainDate;
   /** Inclusive; defaults to `start`. */
   end?: Temporal.PlainDate;
@@ -35,8 +37,28 @@ export type Calendar_AllDayEventInput<TData> = {
 /** Discriminated by `kind`. */
 export type Calendar_EventInput<TData> = Calendar_TimedEventInput<TData> | Calendar_AllDayEventInput<TData>;
 
-/** An input after normalization: timed events are expressed in the calendar's `timeZone`. */
-export type Calendar_Event<TData> = Calendar_EventInput<TData>;
+/** A definition resolved by the feature registered under `~source` (D50). */
+export type Calendar_EventSource<TData> = { id: string; data: TData; '~source': string };
+
+/** Feature-owned event definitions, keyed by the feature's export name. */
+// oxlint-disable-next-line no-unused-vars -- merges must repeat the generic
+export interface Calendar_EventInput_FeatureMap<TData> {}
+
+/** One-off inputs plus definitions supported by the registered features. */
+export type Calendar_EventDefinition<TData, TFeatures = Calendar_Features> =
+  | Calendar_EventInput<TData>
+  | (Calendar_EventSource<TData> &
+      Calendar_EventInput_FeatureMap<TData>[string extends keyof TFeatures
+        ? keyof Calendar_EventInput_FeatureMap<TData>
+        : Extract<keyof TFeatures, keyof Calendar_EventInput_FeatureMap<TData>>]);
+
+/** An event after resolution and normalization; timed dates use the calendar's `timeZone`. */
+export type Calendar_Event<TData> = Calendar_EventInput<TData> & {
+  occurrence?: { seriesId: string; originalStart: Temporal.ZonedDateTime | Temporal.PlainDate };
+};
+
+/** Resolution is calendar-wide and memoized by definitions, visible range and display zone (D50). */
+export type Calendar_EventSourceContext = { range: Calendar_Range; timeZone: string };
 
 export type Calendar_Availability = { start: Temporal.ZonedDateTime; end: Temporal.ZonedDateTime };
 
@@ -488,6 +510,11 @@ export type Calendar_Feature = {
   trackedOptions?: readonly string[];
   /** Actions merged onto `api`. */
   constructApi?: (context: Calendar_FeatureContext) => Record<string, unknown>;
+  /** Resolves this feature's definitions before normalization, filtering and background splitting (D50). */
+  resolveEvents?: (
+    source: Calendar_EventSource<unknown>,
+    context: Calendar_EventSourceContext,
+  ) => Calendar_Event<unknown>[];
   /** Runs after the core sort, in registration order, in the views that list the feature. */
   events?: Calendar_FeatureStage<Calendar_Event<unknown>[]>;
   /** Adds model fields to the built layout, in the views that list the feature. */
@@ -594,7 +621,7 @@ export type Calendar_Options<
    * Ids must be unique; tracked by reference. Events with `display: 'background'` are shaded under the others: no
    * lanes or rows, no `eventOrder`, no feature `events` stages, not in `day.events` or the list (D37).
    */
-  events: Calendar_EventInput<TData>[];
+  events: Calendar_EventDefinition<TData, NoInfer<TFeatures>>[];
   /** Tracked by reference. */
   resources?: Calendar_Resource<TResourceData>[];
   /** Read when the layout derives; changing it alone does not re-derive. */

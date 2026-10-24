@@ -237,6 +237,9 @@ importers:
       '@calendar-tsx/react':
         specifier: workspace:*
         version: link:../../packages/react
+      '@calendar-tsx/rrule':
+        specifier: workspace:*
+        version: link:../../packages/rrule
       '@calendar-tsx/solid':
         specifier: workspace:*
         version: link:../../packages/solid
@@ -311,6 +314,9 @@ importers:
       '@arethetypeswrong/cli':
         specifier: ^0.18.5
         version: 0.18.5
+      '@calendar-tsx/rrule':
+        specifier: workspace:*
+        version: link:../rrule
       '@types/react':
         specifier: ^19.3.0
         version: 19.3.0
@@ -339,6 +345,28 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(vitest@5.0.1)
 
+  packages/rrule:
+    dependencies:
+      rrule-temporal:
+        specifier: 2.2.8
+        version: 2.2.8
+    devDependencies:
+      '@arethetypeswrong/cli':
+        specifier: ^0.18.5
+        version: 0.18.5
+      '@calendar-tsx/core':
+        specifier: workspace:*
+        version: link:../core
+      publint:
+        specifier: ^0.3.25
+        version: 0.3.25
+      temporal-polyfill:
+        specifier: ^1.0.6
+        version: 1.0.6
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+
   packages/solid:
     dependencies:
       '@calendar-tsx/core':
@@ -354,6 +382,9 @@ importers:
       '@arethetypeswrong/cli':
         specifier: ^0.18.5
         version: 0.18.5
+      '@calendar-tsx/rrule':
+        specifier: workspace:*
+        version: link:../rrule
       publint:
         specifier: ^0.3.25
         version: 0.3.25
@@ -3486,6 +3517,9 @@ packages:
   rou3@1.0.0:
     resolution: {integrity: sha512-ySeaQkSrua+ut9g+65I7FHqOFBaY8tV0FmccXItoq0q21se32Q3u4YiW7/RqXSosWgYJaaKwRHXy3BST9PeCNQ==}
     engines: {node: '>=20.19.0'}
+
+  rrule-temporal@2.2.8:
+    resolution: {integrity: sha512-+wWUe0J02oMh1UWKIt1RTu2H0Cz+gP11O/iweK0MN2UP6JLGeepTUkbSBa90Hxq0W+ywSxM9IlJNouIUdMOwhg==}
 
   sade@1.8.1:
     resolution: {integrity: sha512-xal3CZX1Xlo/k4ApwCFrHVACi9fBqJ7V+mwhBsuf/1IOKbBy098Fex+Wa/5QMubw09pSZ/u8EY8PWgevJsXp1A==}
@@ -6985,6 +7019,10 @@ snapshots:
   rou3@0.9.2: {}
 
   rou3@1.0.0: {}
+
+  rrule-temporal@2.2.8:
+    dependencies:
+      temporal-spec: 1.0.1
 
   sade@1.8.1:
     dependencies:

@@ -73,6 +73,16 @@ export const calendarEvents_normalize = <TData>(
   events: Calendar_EventInput<TData>[],
   timeZone: string,
 ): Calendar_Event<TData>[] => {
+  calendarEvents_checkIds(events);
+
+  return events.map(event =>
+    calendarEvents_isAllDay(event)
+      ? event
+      : { ...event, start: event.start.withTimeZone(timeZone), end: event.end.withTimeZone(timeZone) },
+  );
+};
+
+export const calendarEvents_checkIds = (events: readonly { id: string }[]) => {
   if (isDevelopment()) {
     const seen = new Set<string>();
 
@@ -81,10 +91,4 @@ export const calendarEvents_normalize = <TData>(
       seen.add(event.id);
     }
   }
-
-  return events.map(event =>
-    calendarEvents_isAllDay(event)
-      ? event
-      : { ...event, start: event.start.withTimeZone(timeZone), end: event.end.withTimeZone(timeZone) },
-  );
 };

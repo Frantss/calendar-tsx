@@ -1,0 +1,65 @@
+<section id='intro'>
+
+Add the optional `@calendar-tsx/rrule` package to expand repeating definitions in the visible range. It uses `rrule-temporal`
+2.2.8 and keeps the core free of that dependency.
+
+```bash
+pnpm add @calendar-tsx/rrule
+```
+
+Register `rruleFeature` and create definitions with `createRRuleEvent`. Pass them in `events` alongside one-off
+events. `start` owns the recurrence's seed and zone; `duration` supplies each occurrence's length.
+
+<include lang='ts'>../../../examples/core/recurrence.ts#series</include>
+
+</section>
+
+<section id='behavior'>
+
+## Strings and options objects
+
+Use an RRULE string or a plain options object. Both support monthly/yearly rules, ordinal weekdays and BYSETPOS.
+Options use string frequencies and camel-case arrays such as `byDay: ['2FR']` and `bySetPos: [-1]`. Instantiated
+rule objects are excluded; no constants import is needed.
+
+<include lang='ts'>../../../examples/core/recurrence.ts#options</include>
+
+Options use Temporal for `until` and omit `dtstart`/`tzid`. A string's embedded DTSTART must agree with `start`;
+conflicting dates or zones throw. Strings can include DTSTART, RRULE, RDATE, EXDATE and EXRULE lines. They do not
+accept complete VCALENDAR/VEVENT documents or RDATE periods.
+
+`rdate` includes extra dates; `exdate` removes dates; `exrule` accepts one rule or an array of rules. Exclusions win
+over all inclusions and do not replenish COUNT. A UTC UNTIL ending in `Z` is inclusive and compares actual instants.
+Timed exception dates may use another zone. All-day exceptions and UNTIL use `Temporal.PlainDate`.
+
+## Time zones and duration
+
+Timed occurrences keep the seed zone's wall-clock schedule. Changing the calendar's display zone converts the
+results after expansion. Temporal's `compatible` rule shifts DST gaps forward and uses the earlier offset in folds;
+an explicitly offset seed retains its instant. Gap candidates still count toward COUNT.
+
+Timed duration must be positive, without years/months. Days and weeks are elapsed multiples of 24 hours. Start
+nanoseconds are preserved. All-day duration uses whole days/weeks and defaults to one day; its generated end is
+inclusive. Use daily or coarser frequencies for all-day rules.
+
+<include lang='ts'>../../../examples/core/recurrence.ts#all-day</include>
+
+## Occurrences and editing
+
+Layouts expose concrete events with stable IDs and `occurrence: { seriesId, originalStart }`. `originalStart` keeps
+the scheduled start before display-zone conversion. Resource IDs, background display and data pass through.
+Expansion includes starts before the view when their duration overlaps it.
+
+Event stores retain definitions. Update or remove the series by its ID. To replace one occurrence, exclude its
+original start and add a one-off event. Replace definitions and arrays when editing; they are compared by reference.
+For an initially empty store that will hold series, type its initial array as `Calendar_EventDefinition<EventData>[]`.
+
+Clock ticks reuse expansion. Each definition caches at most four range/zone queries; the engine's full-result
+cache is disabled. Nominal wall times travel as UTC Temporal values before the calendar applies compatible DST
+resolution in the seed zone.
+
+The engine enforces default limits of 10,000 outer iterations and 1,000,000 candidate evaluations. Options objects
+can set `maxIterations` and `maxCandidateEvaluations`. Exhaustion throws instead of returning partial occurrences;
+large or complex queries can still be expensive. The former `rrule` subdaily selector stall no longer applies.
+
+</section>

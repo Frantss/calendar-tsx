@@ -18,12 +18,13 @@ which supports the installed Changesets 3 CLI.
 
 ## npm setup
 
-Configure trusted publishing separately for all four public packages:
+Configure trusted publishing separately for all five public packages:
 
 - `@calendar-tsx/core`
 - `@calendar-tsx/react`
 - `@calendar-tsx/solid`
 - `@calendar-tsx/themes`
+- `@calendar-tsx/rrule`
 
 In each package's **Settings → Trusted publishing**, add a GitHub Actions publisher with these values:
 
@@ -101,7 +102,7 @@ Select the affected packages, choose version bumps, and describe the consumer-vi
 ready to publish. `version:release` updates versions, changelogs and the lockfile, then formats the release files.
 Changesets' own automatic commits are disabled because the GitHub action owns the release commit.
 
-Before the first automated release, include all four public packages in changesets so their changelogs are
+Before the first automated release, include all five public packages in changesets so their changelogs are
 initialized. The workflow refuses to publish if a public package lacks a changelog entry for its current version.
 This prevents publishing a version for which the action would silently omit its GitHub Release.
 
