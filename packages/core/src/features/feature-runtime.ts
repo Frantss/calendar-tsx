@@ -24,6 +24,10 @@ const deps_equal = (a: unknown[] | undefined, b: unknown[] | undefined) =>
   a === b || (!!a && !!b && a.length === b.length && a.every((dep, index) => dep === b[index]));
 
 export const calendarFeatures_createRuntime = (features: Calendar_Features, input: RuntimeInput) => {
+  const entries = Object.entries(features);
+  const canonical = Object.fromEntries(
+    entries.map(([alias, feature]) => [(feature as Calendar_ConfiguredFeature)['~id'] ?? alias, feature]),
+  );
   const initialState: Record<string, unknown> = Object.assign(
     {},
     ...Object.values(features).map(feature => feature.getInitialState?.()),
@@ -58,12 +62,7 @@ export const calendarFeatures_createRuntime = (features: Calendar_Features, inpu
     if (previous) return previous;
     const feature = features[alias] as Calendar_ConfiguredFeature;
     const result: Calendar_FeatureContext = {
-      features: Object.fromEntries(
-        Object.entries(features).map(([alias, feature]) => [
-          (feature as Calendar_ConfiguredFeature)['~id'] ?? alias,
-          feature,
-        ]),
-      ),
+      features: { ...canonical },
       get state() {
         return input.calendarState;
       },
@@ -73,7 +72,7 @@ export const calendarFeatures_createRuntime = (features: Calendar_Features, inpu
       onOptionsChange: input.onOptionsChange,
       onMount: input.onMount,
       settings: (key, defaults) => {
-        const match = Object.entries(features).find(([, feature]) => feature.interaction?.settings === key);
+        const match = entries.find(([, feature]) => feature.interaction?.settings === key);
         const configured = match ? (match[1] as Calendar_ConfiguredFeature)['~config'] : undefined;
         const override = match ? (input.view as { features?: Record<string, object> }).features?.[match[0]] : undefined;
         const layers = [
