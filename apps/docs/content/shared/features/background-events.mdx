@@ -6,8 +6,8 @@ for dated items from your data, such as a holiday or a booked-out afternoon. For
 
 <include lang='ts'>../../../examples/core/events.ts#background</include>
 
-Background events go in `events` with the rest, so they share the id space, the
-[event store](events#event-store) and `TData`.
+Background events go in `events` with the rest, so they share the id space, the [event store](events#event-store) and
+`TData`.
 
 - They take no lane or row, skip `eventOrder`, and never count toward `maxEventsPerDay`.
 - The core leaves them out of every event list it hands out: `day.events`, bar segments, timed segments and list days.
@@ -25,7 +25,7 @@ Background events go in `events` with the rest, so they share the id space, the
 | --------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Time grid | `column.backgroundEvents` | `{ key, event, start, span }` as fractions of the day. An all-day background event covers the whole column, even with `allDay: false`.              |
 | Time grid | `allDay.backgroundEvents` | `{ key, event, colStart, colSpan }` across the all-day row.                                                                                         |
-| Month     | `week.backgroundEvents`   | `{ key, event, colStart, colSpan }`, for all-day background events only.                                                                            |
+| Day grid  | `row.backgroundEvents`    | `{ key, event, colStart, colSpan }`, for all-day background events only.                                                                            |
 | List      | none                      | Background events are left out.                                                                                                                     |
 | Timeline  | `row.backgroundEvents`    | `{ key, event, start, span }` as fractions of the visible track. All-day events follow anchor dates; timed coverage can split at dates or DST gaps. |
 
@@ -38,15 +38,15 @@ cell, since part of a day would read as the whole day.
 
 ## Parts
 
-| Part                                | Model prop | Where                                                     |
-| ----------------------------------- | ---------- | --------------------------------------------------------- |
-| `TimeGridViewBackgroundEvent`       | `segment`  | In `TimeGridViewColumn`, before the events.               |
-| `TimeGridViewAllDayBackgroundEvent` | `segment`  | In `TimeGridViewAllDay`, before the bars.                 |
-| `DayGridViewWeekBackgroundEvent`    | `segment`  | In `DayGridViewWeek`, after the days and before the bars. |
-| `TimelineViewBackgroundEvent`       | `segment`  | In `TimelineViewLane`, beneath foreground events.         |
+| Part                                | Model prop | Where                                                    |
+| ----------------------------------- | ---------- | -------------------------------------------------------- |
+| `TimeGridViewBackgroundEvent`       | `segment`  | In `TimeGridViewColumn`, before the events.              |
+| `TimeGridViewAllDayBackgroundEvent` | `segment`  | In `TimeGridViewAllDay`, before the bars.                |
+| `DayGridViewRowBackgroundEvent`     | `segment`  | In `DayGridViewRow`, after the days and before the bars. |
+| `TimelineViewBackgroundEvent`       | `segment`  | In `TimelineViewLane`, beneath foreground events.        |
 
 Each renders an `aria-hidden` `div` with `data-continues-before` and `data-continues-after`. They aren't interactive:
-`base.css` lets clicks through to the day triggers and events. Render them before the bars and events, because grid
+`base.css` passes clicks through to the day triggers and events. Render them before the bars and events, because grid
 items paint in DOM order. The [week](../views/week-and-day-view) and [day-grid](../views/day-grid-view) examples render them.
 
 </section>

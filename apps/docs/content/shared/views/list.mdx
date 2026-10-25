@@ -14,27 +14,14 @@ listView({ months: 3 });
 listView({ weeks: 1, hiddenDays: [6, 7] });
 ```
 
-Choose exactly one of `days`, `weeks`, `months`, or `period`. Counts must be positive integers.
+<include>./common.mdx#durations</include>
 
-| Duration    | Meaning                                                                |
-| ----------- | ---------------------------------------------------------------------- |
-| `days: N`   | N dates from `date`; `7` keeps its existing week alignment.            |
-| `weeks: N`  | N whole weeks from `firstDayOfWeek`.                                   |
-| `months: N` | N calendar months from the first day of the anchor month.              |
-| `period`    | `'month'`, `'quarter'`, or `'year'`, aligned to its calendar boundary. |
-
-`next()` and `prev()` advance the configured duration. Month-based steps land on the first day. `hiddenDays` omits ISO weekdays (`1` Monday to `7` Sunday) without changing the nominal period or its inclusive fetch range; at least one weekday must remain visible.
-
-Only days with at least one event are listed, so a quiet range has no days; render an empty state for it.
-
-`hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`). A range whose dates are
-all hidden, such as a one-day view on a Saturday, shows them anyway.
-
-Hiding all seven weekdays is invalid. A controlled date with no visible weekdays produces an empty layout.
+The list shows only days with at least one event, so a quiet range has no days; render `ListViewEmpty` for it.
+`hiddenDays` omits weekdays as in the other views (see [hidden weekdays](day-grid-view#hidden-weekdays)).
 
 ## Resource grouping
 
-Reuse the same factory for an agenda grouped by resource:
+`groupBy` turns the agenda into resource and date sections:
 
 ```ts
 listView({ weeks: 1, groupBy: 'resource' });
@@ -42,9 +29,14 @@ listView({ weeks: 1, groupBy: ['resource', 'date'] });
 listView({ weeks: 1, groupBy: ['date', 'resource'] });
 ```
 
-`'resource'` and `['resource']` put resources first, followed by their dates. The ordered pairs choose whether the outer sections are resources or dates. Omitting `groupBy`, `'date'`, and `['date']` produce the ordinary agenda. Keys cannot repeat, and month grouping is specific to day grids.
+`'resource'` and `['resource']` mean resources first, then their dates; the ordered pairs choose which comes outside.
+Omitting `groupBy`, or passing `'date'` or `['date']`, gives the ordinary agenda. Keys cannot repeat, and `'month'`
+grouping exists only in day grids.
 
-Resources follow their input order, and dates are chronological. Events assigned to several known resources appear in each matching group. Unassigned events and unknown-resource assignments are excluded from resource agendas, as in resource grids and timelines. Ordinary agendas include them. Empty dates and resources are omitted, so an agenda with no matching events has one list-wide empty state.
+Resources follow their input order and dates are chronological. An event assigned to several known resources appears
+in each group. Resource agendas leave out unassigned events and unknown resource IDs, as resource grids and timelines
+do; ordinary agendas include them. Empty dates and resources are omitted, so an agenda with no matching events has one
+list-wide empty state.
 
 ### Resources before dates
 
@@ -62,13 +54,19 @@ With `groupBy: ['date', 'resource']`, each section shows a date and lists the re
 
 [Open the date-first agenda in the playground](/docs/playground#view=agenda_dates_rooms&data=busy).
 
-Render `layout.sections` with `ListViewSection` and `ListViewSectionHeader` to show the grouping headings. The day headings show dates in resource-first lists and resource names in date-first lists. Both orders work with all list durations and `hiddenDays`.
+Render `layout.sections` with `ListViewSection` and `ListViewSectionHeader`, then each section's `days` with the day
+and event parts. Day headings show dates in resource-first lists and resource names in date-first lists. Both orders
+work with every duration and `hiddenDays`.
 
 ## Date headings
 
-The supplied themes place the date beside its event rows. Give `ListViewDayHeader` a `<time dateTime={day.date.toString()}>` containing a `<strong>` day number and a `<span>` with the weekday and month/year. The React and Solid examples show this composition. The full date remains the heading's accessible name, and date formatting belongs to your application.
+The supplied themes place the date beside its event rows. Give `ListViewDayHeader` a
+`<time dateTime={day.date.toString()}>` holding a `<strong>` day number and a `<span>` with the weekday and month or
+year, as the React and Solid examples do. The full date stays the heading's accessible name; you format it.
 
-The date column narrows with the list, and its labels wrap when space is limited. Override `--calendar-list-date-width` (default `10rem`) to cap its width. `ListViewDay` emits `--cal-events` so the heading spans that day's event rows; render the header and events as direct children of the day.
+The date column narrows with the list and its labels wrap. `--calendar-list-date-width` (default `10rem`) caps its
+width. `ListViewDay` emits `--cal-events` so the heading spans the day's event rows; render the header and events as
+direct children of the day.
 
 </section>
 
@@ -82,9 +80,10 @@ The date column narrows with the list, and its labels wrap when space is limited
 
 - Each section is `{ key, resource?, date?, days }`. `resource` identifies a resource-first section; `date` identifies a date-first section. Ordinary lists have one section with neither field.
 - Each day is `{ key, date, resource?, events }`. Grouped day keys identify both the date and resource.
-- `layout.days` is a flat index of the same day objects in section order. Existing consumers can keep using it; section headings require iterating `sections`.
+- `layout.days` is a flat index of the same day objects in section order. Section headings need `sections`.
 
-`Calendar_ListLayout`, `Calendar_ListSection`, and `Calendar_ListDay` take event data, resource data, and features as their generic parameters. If a feature decorates days, update the sections and rebuild the flat index from those days.
+`Calendar_ListLayout`, `Calendar_ListSection` and `Calendar_ListDay` take event data, resource data and features as
+generic parameters. A feature that decorates days must update the sections and rebuild the flat index from them.
 
 </section>
 

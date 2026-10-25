@@ -3,6 +3,8 @@
 Resources as rows on a horizontal time axis. Overlapping events in a row stack, and the row grows to fit them. An event
 that crosses midnight is one bar.
 
+<CalendarPreview view='timeline_week' />
+
 ```ts
 import { timelineView } from '@calendar-tsx/core';
 
@@ -14,16 +16,7 @@ timelineView({ period: 'year', slotMinutes: 1440, minSlotWidth: '6rem' });
 
 ## Settings
 
-Choose exactly one of `days`, `weeks`, `months`, or `period`. Counts must be positive integers.
-
-| Duration    | Meaning                                                                |
-| ----------- | ---------------------------------------------------------------------- |
-| `days: N`   | N dates from `date`; `7` keeps its existing week alignment.            |
-| `weeks: N`  | N whole weeks from `firstDayOfWeek`.                                   |
-| `months: N` | N calendar months from the first day of the anchor month.              |
-| `period`    | `'month'`, `'quarter'`, or `'year'`, aligned to its calendar boundary. |
-
-`next()` and `prev()` advance the configured duration. Month-based steps land on the first day. `hiddenDays` omits ISO weekdays (`1` Monday to `7` Sunday) without changing the nominal period or its inclusive fetch range; at least one weekday must remain visible.
+<include>./common.mdx#durations</include>
 
 | Setting           | Type                           | Default               | Description                                                          |
 | ----------------- | ------------------------------ | --------------------- | -------------------------------------------------------------------- |
@@ -31,33 +24,35 @@ Choose exactly one of `days`, `weeks`, `months`, or `period`. Counts must be pos
 | `slotMinutes`     | `number`                       | `60`                  | Positive integer slot length; the final slot may be shorter.         |
 | `minSlotWidth`    | `string`                       | none                  | Passed through as the slot columns' minimum width, such as `'3rem'`. |
 | `minEventMinutes` | `number`                       | half of `slotMinutes` | Minimum display duration, also used for stacking. `0` turns it off.  |
+| `hiddenDays`      | ISO weekdays                   | none                  | See [hidden weekdays](#hidden-weekdays).                             |
+| `timeWindow`      | `{ startMinutes, endMinutes }` | `[0, 1440)`           | See [visible hours](#visible-hours).                                 |
 
-Set `minSlotWidth` for month and year timelines to keep daily columns readable. With the supplied themes, the timeline scrolls horizontally when the columns exceed its width.
-
-Brief timed events occupy at least half a slot by default. With daily slots and `minSlotWidth: '6rem'`, this gives a bar at least `3rem` wide on ordinary days. The core stacks using the enlarged display spans, so neighboring short events remain separately selectable. The event's actual start and end stay unchanged; use them for labels and event details. Display spans stop at the visible range's end, where a bar can be narrower than the minimum.
-
-Set `minEventMinutes` to choose a different duration, or `0` for exact time widths. The minimum is measured in visible clock minutes, including across hidden dates and daylight-saving changes. It does not resize all-day events. Keep CSS inline padding and borders inside the calculated width; a CSS-only minimum would enlarge bars without restacking them.
+Set `minSlotWidth` on month and year timelines to keep daily columns readable; the supplied themes then scroll the
+timeline horizontally.
 
 - An event appears in every row whose resource it names.
-- All-day events have no separate row. They stack with the timed events, from the start of their first day to the
-  start of the day after their last.
+- All-day events have no separate row. They stack with timed events, from the start of their first day to the start
+  of the day after their last.
 - A resource's [availability](resource-view) is shaded as in the resource view.
-- [Background events](../features/background-events) shade the track without taking stack rows.
-  Register `backgroundFeature` to add [background layers](../features/background-layers).
+- [Background events](../features/background-events) shade the track without taking stack rows. Register
+  `backgroundFeature` to add [background layers](../features/background-layers).
 
-`hiddenDays: [6, 7]` hides Saturday and Sunday using ISO weekdays (Monday `1`, Sunday `7`). A range whose dates are
-all hidden, such as a one-day view on a Saturday, shows them anyway.
+## Brief events
 
-`timeWindow: { startMinutes: 480, endMinutes: 1080 }` shows 08:00–18:00. For 22:00–06:00 use
-`{ startMinutes: 1320, endMinutes: 1800 }`; the following morning belongs to the starting date. Hiding Tuesday
-still leaves Monday's Tuesday-morning portion visible. All-day items retain their calendar-date membership.
+A brief timed event is displayed at least `minEventMinutes` long, half a slot by default, measured in visible clock
+minutes across hidden dates and daylight-saving changes. With daily slots and `minSlotWidth: '6rem'`, a bar is then at
+least `3rem` wide. Stacking uses the enlarged span, so neighboring brief events stay separately selectable. The event
+keeps its real start and end for labels. Bars clip at the visible range's end, where one can be narrower than the
+minimum. All-day events keep their date spans. Keep CSS padding and borders inside the computed width: a CSS-only
+minimum would enlarge bars without restacking them.
 
-Bounds are integer clock minutes: `0 <= startMinutes < 1440` and
-`startMinutes < endMinutes <= startMinutes + 1440`. Defaults are no hidden weekdays and `[0, 1440)`.
-`slotMinutes` is a positive integer; a final partial slot keeps its actual size. Fetch events for navigation's
-`inputRange`, which includes the following date when needed.
+## Hidden weekdays
 
-Hiding all seven weekdays is invalid. A controlled date with no visible weekdays produces an empty layout.
+<include>./common.mdx#hidden-days</include>
+
+## Visible hours
+
+<include>./common.mdx#time-window</include>
 
 </section>
 
@@ -67,9 +62,11 @@ Hiding all seven weekdays is invalid. A controlled date with no visible weekdays
 
 ## Model
 
-`layout` is `{ kind: 'timeline', coordinates, slotUnits, slotMinutes, hourOffset, days, slots, rows, now, minSlotWidth }`. Every `start` and `span` is a **fraction of the
-concatenated visible windows**. The default has 24 clock hours per displayed date. Dates keep equal
-widths across daylight-saving transitions. Repeated hours share clock positions; visually overlapping events stack.
+`layout` is `{ kind: 'timeline', coordinates, slotUnits, slotMinutes, hourOffset, days, slots, rows, now, minSlotWidth }`.
+Every `start` and `span` is a fraction of the concatenated visible windows. Dates keep equal widths across
+daylight-saving transitions.
+
+<include>./common.mdx#clock-axis</include>
 
 - `days` holds one `{ key, date, isToday, colStart, colSpan, start, span }` per day, for the header. `colStart` and `colSpan` count
   slot columns.
@@ -92,6 +89,7 @@ widths across daylight-saving transitions. Repeated hours share clock positions;
 | ----------------------------------- | ------------------------------------------------------------------ |
 | `event`                             | The event, in the calendar's time zone.                            |
 | `start`, `span`                     | Display position and duration as fractions of the visible range.   |
+| `fragments`                         | Exact coverage before clock enclosure and minimum sizing.          |
 | `row`                               | Zero-based stack row; each event takes the lowest row free for it. |
 | `isAllDay`                          | The event is all-day.                                              |
 | `isMultiDay`                        | The event covers more than one date, before clipping.              |
@@ -99,12 +97,11 @@ widths across daylight-saving transitions. Repeated hours share clock positions;
 
 Stacking follows [event order](../features/events#order). Display spans that only touch don't overlap.
 
-Timed shading is clipped to visible anchor windows and can split at dates or DST gaps. All-day shading follows
-anchor dates, including their overnight portions. Hidden weekdays contribute no shading. Layer ranges are merged
-before inverse gaps are computed. Range callbacks receive `inputRange`, including any following morning.
-
-Unassigned background events shade every resource; assigned ones shade their matching rows. An ungrouped timeline
-includes all background events. Resource-limited layers apply only to matching resource rows.
+Background events and layers are fractions of the track and take no stack rows. Timed shading clips to visible anchor
+windows and can split at dates or DST gaps; all-day shading follows anchor dates, including their overnight portions.
+Hidden weekdays get no shading. Layer ranges merge before inverse gaps are computed, and range callbacks receive
+`inputRange`. In a resource timeline, unassigned background events shade every row, and assigned ones and
+resource-limited layers shade only matching rows. An ungrouped timeline shows every background event.
 
 </section>
 
@@ -112,26 +109,28 @@ includes all background events. Resource-limited layers apply only to matching r
 
 <section id='parts-table'>
 
-| Part                          | Model prop                | Element  | Notes                                                                                            |
-| ----------------------------- | ------------------------- | -------- | ------------------------------------------------------------------------------------------------ |
-| `TimelineView`                | `model`                   | `div`    | `role='region'`, labelled "Timeline". Scrolls both ways.                                         |
-| `TimelineViewHeader`          | none                      | `div`    | Sticky; holds the day headers and the slot labels.                                               |
-| `TimelineViewDayHeader`       | `day`                     | `div`    | `data-today`, `data-date`, `data-weekday`.                                                       |
-| `TimelineViewDayTrigger`      | `calendar`, `day`, `view` | `button` | Navigates through `calendar` to `view` on the day. See [day triggers](../features/day-triggers). |
-| `TimelineViewSlotLabel`       | `slot`                    | `div`    | `slot` is the time slot, not the HTML attribute.                                                 |
-| `TimelineViewBody`            | none                      | `div`    | Holds the rows and the now indicator.                                                            |
-| `TimelineViewRow`             | `row`                     | `div`    | `data-unavailable`, `data-resource-id`.                                                          |
-| `TimelineViewResource`        | `row`                     | `div`    | The resource cell; sticks to the start edge.                                                     |
-| `TimelineViewLane`            | `row`                     | `div`    | Holds the row's unavailable time and events.                                                     |
-| `TimelineViewUnavailable`     | `segment`                 | `div`    | `aria-hidden`.                                                                                   |
-| `TimelineViewBackground`      | `background`              | `div`    | `aria-hidden`, `data-layer`, `data-kind`; render inside `TimelineViewLane`.                      |
-| `TimelineViewBackgroundEvent` | `segment`                 | `div`    | `aria-hidden`, continuation flags; render inside `TimelineViewLane`.                             |
-| `TimelineViewEvent`           | `segment`                 | `button` | `data-all-day`, `data-multi-day`, `data-continues-before`, `data-continues-after`.               |
-| `TimelineViewNowIndicator`    | `model`                   | `div`    | `aria-hidden`. Renders only while now is inside the range.                                       |
+| Part                          | Model prop                | Element  | Notes                                                                                             |
+| ----------------------------- | ------------------------- | -------- | ------------------------------------------------------------------------------------------------- |
+| `TimelineView`                | `model`                   | `div`    | `role='region'`, labelled "Timeline". Scrolls both ways. `--cal-slot-columns` sizes header slots. |
+| `TimelineViewHeader`          | none                      | `div`    | Sticky; holds the day headers and the slot labels.                                                |
+| `TimelineViewDayHeader`       | `day`                     | `div`    | `data-today`, `data-date`, `data-weekday`.                                                        |
+| `TimelineViewDayTrigger`      | `calendar`, `day`, `view` | `button` | Navigates through `calendar` to `view` on the day. See [day triggers](../features/day-triggers).  |
+| `TimelineViewSlotLabel`       | `slot`                    | `div`    | `slot` is the time slot, not the HTML attribute.                                                  |
+| `TimelineViewBody`            | none                      | `div`    | Holds the rows and the now indicator.                                                             |
+| `TimelineViewRow`             | `row`                     | `div`    | `data-unavailable`, `data-resource-id`.                                                           |
+| `TimelineViewResource`        | `row`                     | `div`    | The resource cell; sticks to the start edge.                                                      |
+| `TimelineViewLane`            | `row`                     | `div`    | Holds the row's unavailable time and events.                                                      |
+| `TimelineViewUnavailable`     | `segment`                 | `div`    | `aria-hidden`.                                                                                    |
+| `TimelineViewBackground`      | `background`              | `div`    | `aria-hidden`, `data-layer`, `data-kind`; render inside `TimelineViewLane`.                       |
+| `TimelineViewBackgroundEvent` | `segment`                 | `div`    | `aria-hidden`, continuation flags; render inside `TimelineViewLane`.                              |
+| `TimelineViewEvent`           | `segment`                 | `button` | `data-all-day`, `data-multi-day`, `data-continues-before`, `data-continues-after`.                |
+| `TimelineViewNowIndicator`    | `model`                   | `div`    | `aria-hidden`. Renders only while now is inside the range.                                        |
 
 The parts render no slot cells; themes draw the slot lines as a background of each lane.
 
-When each day has one slot, the date header is enough; omit the slot-label row instead of repeating midnight. For subday slots, include minutes in their labels. The examples provide a full event label with actual dates and times through `title` and `aria-label`, so clipped bar text remains available.
+With one slot per day, omit the slot-label row; the date header is enough. For subday slots, include minutes in the
+labels. The examples put the full event dates and times in `title` and `aria-label`, so clipped bar text stays
+available.
 
 </section>
 

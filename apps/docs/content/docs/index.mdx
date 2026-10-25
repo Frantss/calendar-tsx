@@ -9,8 +9,8 @@ icon: CalendarDays
 </Callout>
 
 The core computes a render-ready view model on [TanStack Store](https://tanstack.com/store) and
-[Temporal](https://tc39.es/proposal-temporal/docs/): month grids with spanning bars, time grids with overlap lanes and
-resource columns, and lists. Framework bindings render it as unstyled, composable parts, and
+[Temporal](https://tc39.es/proposal-temporal/docs/): day grids with spanning bars, time grids with overlap lanes and
+resource columns, lists and resource timelines. Framework bindings render it as unstyled, composable parts, and
 optional themes style them.
 
 ## Choose your framework
@@ -23,9 +23,10 @@ optional themes style them.
 
 ## Packages
 
-| Package                | Description                                            |
-| ---------------------- | ------------------------------------------------------ |
-| `@calendar-tsx/react`  | React bindings: hooks and parts.                       |
-| `@calendar-tsx/solid`  | Solid bindings: primitives and parts.                  |
-| `@calendar-tsx/core`   | Framework-agnostic calendar engine.                    |
-| `@calendar-tsx/themes` | Stylesheets: a positioning base, themes and a density. |
+| Package                | Description                                                 |
+| ---------------------- | ----------------------------------------------------------- |
+| `@calendar-tsx/react`  | React bindings: hooks and parts.                            |
+| `@calendar-tsx/solid`  | Solid bindings: primitives and parts.                       |
+| `@calendar-tsx/core`   | Framework-agnostic calendar engine with native recurrence.  |
+| `@calendar-tsx/rrule`  | Optional RRULE recurrence, powered by `rrule-temporal`.     |
+| `@calendar-tsx/themes` | Stylesheets: a positioning base, themes, density and print. |

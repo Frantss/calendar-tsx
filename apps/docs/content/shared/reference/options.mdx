@@ -20,7 +20,7 @@ the others, and view keys widen to `string`. Type `events` as `Calendar_EventInp
 | `onNavigate`     | `(next: Calendar_Navigation) => void`    | required        | No             |
 | `events`         | `Calendar_EventInput<TData>[]`           | required        | Yes            |
 | `resources`      | `Calendar_Resource<TResourceData>[]`     | `[]`            | Yes            |
-| `firstDayOfWeek` | `1`–`7` (Monday–Sunday)                  | `7` (Sunday)    | Yes            |
+| `firstDayOfWeek` | `1` to `7`, or `DayOfWeek.*`             | `7` (Sunday)    | Yes            |
 | `eventOrder`     | `(a, b, context) => number`              | see below       | No             |
 | `clock`          | `Calendar_Clock`                         | one-minute tick | No             |
 | `initialNow`     | `Temporal.Instant`                       | clock's `now()` | No             |
@@ -31,10 +31,9 @@ the others, and view keys widen to `string`. Type `events` as `Calendar_EventInp
 `eventOrder` alone does not re-order until a tracked input changes. **Read once** options are read at creation and
 fixed afterwards. Changing feature definitions throws; create a new instance to change them.
 
-Pass feature options to their factories and per-view overrides to the view definitions; see [features](../extending/features).
-
-`views`, `events`, `resources` and each `state` slice are compared **by reference**. Pass a new array or object to signal a change, and
-keep the same reference otherwise, or every update re-derives.
+`views`, `events`, `resources` and each `state` slice are compared by reference. Pass a new array or object to signal
+a change and keep the same reference otherwise, or every update re-derives. Feature options go to their factories and
+per-view overrides to the view definitions; see [features](../extending/features).
 
 ## `timeZone`
 
@@ -43,10 +42,9 @@ counts as today.
 
 ## `id`
 
-Identifies this calendar. It is optional for ordinary calendars; event transfers need distinct, nonempty IDs on
-both sides. It does not identify a peer, register a feature or join a drag scope. Set `transfer` separately to
-configure acceptance and relocation overrides. Changing an ID invalidates prepared sources for that calendar
-and revalidates its active receiving draft.
+Identifies this calendar. Ordinary calendars can omit it; event transfers need distinct, nonempty IDs on both sides.
+It does not name a peer, register a feature or join a drag scope; `transfer` configures acceptance and relocation.
+Changing an ID invalidates the calendar's prepared sources and revalidates its active receiving draft.
 
 ## `views`, `view` and `date`
 
@@ -56,7 +54,7 @@ selects one, and `date` is any day inside the period to show. Both are controlle
 
 ## `features`
 
-Configured feature definitions keyed by consumer aliases:
+Configured feature definitions, keyed by aliases you choose:
 
 ```ts
 const features = calendarFeatures({ background: backgroundFeature(defaultBackgrounds) });
@@ -70,8 +68,8 @@ update through a new `views` reference. See [features](../extending/features).
 
 ## `onNavigate`
 
-Called by every navigation action with the next `view`, `date`, `range`, `period` and `inputRange`. Store `view` and `date` and pass
-them back in.
+Every navigation action calls it with the next `view`, `date`, `range`, `period` and `inputRange`. Store `view` and
+`date` and pass them back in.
 
 ## `events` and `resources`
 
@@ -93,7 +91,7 @@ Where feature state lives; see [feature state](../extending/features#state).
 
 ## Interaction options
 
-These fields are available when their corresponding features are registered:
+Each field exists only when its feature is registered:
 
 | Feature                                               | Live settings                                   | Callback                                                                    |
 | ----------------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
@@ -118,4 +116,4 @@ not register any of these operations.
 See [selection and editing](../features/interactions), [policies](../features/editing-policies), and
 [external drops and transfers](../features/drops-and-transfers).
 
-Accessible-label `locale` belongs on the framework's `CalendarProvider` or `Calendar`, rather than core or hook options.
+The accessible-label `locale` is a prop of the framework's `CalendarProvider` or `Calendar`, not a calendar option.

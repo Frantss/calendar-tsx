@@ -1,0 +1,133 @@
+FullCalendar is a configured widget: you pass options and it renders. calendar-tsx splits that into a calendar you
+create from options, which computes the layout, and parts you render yourself. Most FullCalendar options map onto view
+factories, calendar options or features; its render hooks become the children of parts.
+
+This guide maps FullCalendar v7 names. Read [concepts](concepts) first: controlled navigation and events-as-input
+change how the pieces fit together.
+
+## Steps
+
+1. Install the packages, plus `@calendar-tsx/themes` if you want a look out of the box. See
+   [installation](installation).
+2. Import `@calendar-tsx/themes/fullcalendar.css` to keep FullCalendar's classic look while you migrate. See
+   [themes](../styling/themes).
+3. Rewrite the view list as view factories, and keep `view` and `date` in your own state.
+4. Convert events to Temporal values, shifting all-day end dates.
+5. Render the parts for each layout, moving `eventContent` and friends into their children.
+6. Register features for editing, backgrounds and recurrence as you need them.
+
+## Views
+
+FullCalendar picks views by name. Here each view is a key of your own bound to a factory:
+
+| FullCalendar            | calendar-tsx                                                            |
+| ----------------------- | ----------------------------------------------------------------------- |
+| `dayGridMonth`          | `dayGridView({ period: 'month', maxEventsPerDay: 4 })`                  |
+| `dayGridWeek`           | `dayGridView({ weeks: 1, maxEventsPerDay: 4 })`                         |
+| `timeGridWeek`          | `timeGridView({ weeks: 1 })`                                            |
+| `timeGridDay`           | `timeGridView({ days: 1 })`                                             |
+| `listWeek`              | `listView({ weeks: 1 })`                                                |
+| `multiMonthYear`        | `dayGridView({ period: 'year', groupBy: 'month', maxEventsPerDay: 2 })` |
+| `resourceTimeGridDay`   | `timeGridView({ days: 1, groupBy: 'resource' })`                        |
+| `resourceTimelineWeek`  | `timelineView({ weeks: 1, groupBy: 'resource' })`                       |
+| `duration: { days: 4 }` | `days: 4` on any factory                                                |
+
+See the [day grid](../views/day-grid-view), [week and day](../views/week-and-day-view), [list](../views/list-view),
+[timeline](../views/timeline-view) and [resource](../views/resource-view) pages.
+
+## Options
+
+| FullCalendar                         | calendar-tsx                                                                                                    |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `initialView`, `initialDate`         | `view` and `date`, which you own and update from `onNavigate`                                                   |
+| `datesSet`                           | `onNavigate`, which receives `range`, `period` and `inputRange`                                                 |
+| `timeZone`                           | `timeZone`, an IANA name; there is no `'local'`                                                                 |
+| `firstDay` (`0` is Sunday)           | `firstDayOfWeek`, ISO (`7` is Sunday); use `DayOfWeek`                                                          |
+| `hiddenDays` (`0` is Sunday)         | `hiddenDays` on the view factory, ISO weekdays                                                                  |
+| `slotMinTime`, `slotMaxTime`         | `timeWindow: { startMinutes, endMinutes }` on time grids and timelines                                          |
+| `slotDuration`                       | `slotMinutes`                                                                                                   |
+| `dayMaxEvents`                       | `maxEventsPerDay`, required on day grids                                                                        |
+| `fixedWeekCount`                     | `fixedWeekCount` on day grids; off by default here                                                              |
+| `slotEventOverlap`                   | `overlap: 'cascade'`; the default here is `'side-by-side'`                                                      |
+| `eventMinHeight`, `eventShortHeight` | `minEventMinutes`, `shortEventMinutes`, in minutes instead of pixels                                            |
+| `eventOrder`                         | `eventOrder`, a comparator                                                                                      |
+| `nowIndicator`                       | Render `TimeGridViewNowIndicator` or `TimelineViewNowIndicator`; see [now and today](../features/now-and-today) |
+| `locale`                             | `locale` for accessible labels; you format all visible text                                                     |
+| `headerToolbar`                      | Your own buttons calling `api.prev()`, `api.next()`, `api.today()`; see [navigation](../features/navigation)    |
+| `height`, `contentHeight`            | Your CSS                                                                                                        |
+
+## Events
+
+FullCalendar events take `Date`s or strings, a boolean `allDay` and an exclusive `end`. Here `kind` picks the shape,
+timed events take `Temporal.ZonedDateTime` and all-day events take `Temporal.PlainDate` with an inclusive `end`.
+Extra fields go in `data`.
+
+```ts
+import { createEvent } from '@calendar-tsx/core';
+import { Temporal } from 'temporal-polyfill';
+
+// FullCalendar input with ISO strings; timed strings carry an offset
+type FullCalendarEvent = { id: string; title: string; start: string; end?: string; allDay?: boolean };
+
+const fromFullCalendar = (event: FullCalendarEvent, timeZone: string) => {
+  const data = { title: event.title };
+
+  if (event.allDay) {
+    const start = Temporal.PlainDate.from(event.start);
+    // FullCalendar's all-day end is exclusive; ours is inclusive
+    const end = event.end ? Temporal.PlainDate.from(event.end).subtract({ days: 1 }) : start;
+
+    return createEvent({ id: event.id, kind: 'allDay', start, end, data });
+  }
+
+  const start = Temporal.Instant.from(event.start).toZonedDateTimeISO(timeZone);
+  const end = event.end ? Temporal.Instant.from(event.end).toZonedDateTimeISO(timeZone) : start;
+
+  return createEvent({ id: event.id, kind: 'timed', start, end, data });
+};
+```
+
+- `resourceId` and `resourceIds` become `resourceIds`.
+- `display: 'background'` keeps its meaning. `'inverse-background'` has no equivalent; use an inverse
+  [background layer](../features/background-layers).
+- Event sources, JSON feeds and `refetchEvents` have no equivalent. Fetch for `onNavigate`'s `inputRange` and pass
+  the array; pass a new array to change it. See [events](../features/events).
+- `rrule`, `exdate` and `exrule` from `@fullcalendar/rrule` move to `@calendar-tsx/rrule`, with Temporal seeds. See
+  [recurrence](../features/recurrence).
+
+## Rendering and callbacks
+
+Render hooks become part children: write the event's markup inside the event part, and the day number inside the day
+part. There is no built-in toolbar or more-link popover (FullCalendar's event popover): the overflow part tells you when a day has
+hidden events, and you open your own popover. See [overflow](../features/overflow).
+
+Parts are native elements, so `eventClick` becomes an `onClick` on the event part, and `eventDidMount` becomes a ref.
+
+## Editing
+
+`editable`, `selectable` and `droppable` become features you register. They report proposals; your callback applies
+them to your events.
+
+| FullCalendar                                                    | calendar-tsx                                                                                                          |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `editable`, `eventDrop`                                         | `eventMoveFeature()` and `onEventMove`                                                                                |
+| `eventResize`                                                   | `eventResizeFeature()` and `onEventResize`                                                                            |
+| `selectable`, `select`                                          | `dateSelectionFeature()` and `onSelectionChange`                                                                      |
+| `Draggable`, `droppable`, `eventReceive`                        | `createExternalDraggable`, `externalDropFeature()` and `onExternalDrop`                                               |
+| `eventLeave`, `eventReceive` between calendars                  | `eventTransferFeature()`, a calendar `id` and `onEventTransfer`                                                       |
+| `longPressDelay`, `eventLongPressDelay`, `selectLongPressDelay` | `touchFeature()` with `delay`                                                                                         |
+| `eventOverlap`, `selectOverlap`                                 | `constraintsFeature()`, which prevents overlap unless `preventOverlap: false`; FullCalendar allows overlap by default |
+| `eventConstraint`, `selectConstraint`                           | `allowedRanges` and `businessHours` on `constraintsFeature()`                                                         |
+| `eventAllow`, `selectAllow`                                     | `allow` on `constraintsFeature()`                                                                                     |
+| `eventStartEditable`, `eventDurationEditable`                   | `canMove` and `canResize`                                                                                             |
+
+All interactions also need `interactionFeature()` and, for pointer input, `pointerFeature()`. See
+[selection and event editing](../features/interactions), [editing policies](../features/editing-policies) and
+[external drops and transfers](../features/drops-and-transfers).
+
+## Business hours
+
+FullCalendar's `businessHours` shades those hours, and `eventConstraint: 'businessHours'` limits edits to them. Here: shade with an inverse
+`backgroundFeature` layer built from `createWeeklyRanges`, and constrain edits with `businessHours` on
+`constraintsFeature()`. Per-resource hours become layers scoped to resources, or each resource's `availability`. See
+[background layers](../features/background-layers).

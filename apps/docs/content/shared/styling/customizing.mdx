@@ -12,39 +12,42 @@ Override any `--calendar-*` token on an element around the calendar, or on `:roo
 
 Defaults from `default.css`, light then dark:
 
-| Token                                                                                     | Default                                                      |
-| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `--calendar-surface`, `--calendar-surface-muted`                                          | `#ffffff` `#f4f4f5`, `#161618` `#1f1f22`                     |
-| `--calendar-text`, `--calendar-text-muted`                                                | `#18181b` `#5b5b63`, `#f1f1f3` `#a3a3ab`                     |
-| `--calendar-border`                                                                       | `#e2e2e5`, `#323236`                                         |
-| `--calendar-border-strong`                                                                | unset: the border mixed 15% toward the text                  |
-| `--calendar-accent`, `--calendar-accent-contrast`                                         | `#18181b` `#ffffff`, `#f1f1f3` `#18181b`                     |
-| `--calendar-event-color`, `--calendar-event-color-contrast`                               | `#2f63d6` `#ffffff`, `#7ea6ff` `#0b1530`                     |
-| `--calendar-event`, `--calendar-event-border`                                             | unset: see [roles](#roles)                                   |
-| `--calendar-event-text`, `--calendar-focus-ring`                                          | unset: fall back to the text and the accent                  |
-| `--calendar-radius`, `--calendar-bar-radius`                                              | `0.375rem`, `0.25rem`                                        |
-| `--calendar-font-size`, `--calendar-font-size-sm`, `--calendar-font-size-xs`              | `0.875rem`, `0.75rem`, `0.6875rem`                           |
-| `--calendar-slot-height`, `--calendar-axis-width`                                         | `3rem`, `4rem`                                               |
-| `--calendar-bar-height`, `--calendar-bar-gap`, `--calendar-bar-inset`                     | `1.375rem`, `2px`, `2px`                                     |
-| `--calendar-day-header-height`, `--calendar-overflow-height`, `--calendar-row-min-height` | `2.25rem`, `1.5rem`, `6rem`                                  |
-| `--calendar-event-gap`                                                                    | `4px`: space off each timed event's width and height         |
-| `--calendar-resource-width`                                                               | `10rem`: the timeline's resource column                      |
-| `--calendar-background`                                                                   | unset: the text mixed 6% into transparent                    |
-| `--calendar-now`                                                                          | `#d4321f`, `#ff6d5a`                                         |
-| `--calendar-background-event-color`                                                       | `#1a8a6e`, `#4cc9a4`                                         |
-| `--calendar-background-event`                                                             | unset: the background event color mixed 14% into transparent |
-| `--calendar-weekend`                                                                      | unset: the text mixed 3% into transparent                    |
+| Token                                                                                     | Default                                                                                     |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `--calendar-surface`, `--calendar-surface-muted`                                          | `#ffffff` `#f4f4f5`, `#161618` `#1f1f22`                                                    |
+| `--calendar-text`, `--calendar-text-muted`                                                | `#18181b` `#5b5b63`, `#f1f1f3` `#a3a3ab`                                                    |
+| `--calendar-border`                                                                       | `#e2e2e5`, `#323236`                                                                        |
+| `--calendar-border-strong`                                                                | unset: the border mixed 15% toward the text                                                 |
+| `--calendar-accent`, `--calendar-accent-contrast`                                         | `#18181b` `#ffffff`, `#f1f1f3` `#18181b`                                                    |
+| `--calendar-event-color`, `--calendar-event-color-contrast`                               | `#2f63d6` `#ffffff`, `#7ea6ff` `#0b1530`                                                    |
+| `--calendar-event`, `--calendar-event-border`                                             | unset: see [roles](#roles)                                                                  |
+| `--calendar-event-text`, `--calendar-focus-ring`                                          | unset: fall back to the text and the accent                                                 |
+| `--calendar-radius`, `--calendar-bar-radius`                                              | `0.375rem`, `0.25rem`                                                                       |
+| `--calendar-font-size`, `--calendar-font-size-sm`, `--calendar-font-size-xs`              | `0.875rem`, `0.75rem`, `0.6875rem`                                                          |
+| `--calendar-slot-height`, `--calendar-axis-width`                                         | `3rem`, `4rem`                                                                              |
+| `--calendar-bar-height`, `--calendar-bar-gap`, `--calendar-bar-inset`                     | `1.375rem`, `2px`, `2px`                                                                    |
+| `--calendar-day-header-height`, `--calendar-overflow-height`, `--calendar-row-min-height` | `2.25rem`, `1.5rem`, `6rem`                                                                 |
+| `--calendar-event-gap`                                                                    | `4px`: space off each timed event's width and height                                        |
+| `--calendar-resource-width`                                                               | `10rem`: the timeline's resource column                                                     |
+| `--calendar-background`                                                                   | unset: the text mixed 6% into transparent                                                   |
+| `--calendar-now`                                                                          | `#d4321f`, `#ff6d5a`                                                                        |
+| `--calendar-background-event-color`                                                       | `#1a8a6e`, `#4cc9a4`                                                                        |
+| `--calendar-background-event`                                                             | unset: the background event color mixed 14% into transparent                                |
+| `--calendar-weekend`                                                                      | unset: the text mixed 3% into transparent                                                   |
+| `--calendar-section-min-width`                                                            | `20rem`: the narrowest day-grid section column                                              |
+| `--calendar-section-gap`                                                                  | `1rem` between day-grid sections; `2rem` columns and `1.5rem` rows in multi-month overviews |
+| `--calendar-list-date-width`                                                              | `10rem`: the widest list date column                                                        |
 
-The event fill, border and text, the background fills, `--calendar-weekend`, `--calendar-border-strong` and `--calendar-focus-ring` are unset on purpose. A custom property declared as `var(--other)`
-resolves where it is declared, so a default on `:root` would ignore an override of the token it points to further
-down.
+The event fill, border and text, the background fills, `--calendar-weekend`, `--calendar-border-strong` and
+`--calendar-focus-ring` are unset on purpose. A custom property declared as `var(--other)` resolves where it is
+declared, so a default on `:root` would ignore an override of the token it points to further down.
 
 The size tokens also drive layout in `base.css`, which falls back to the same defaults when no theme is loaded,
 except `--calendar-day-header-height`, which falls back to `2rem`.
 
 ## Roles
 
-Each kind of thing on the calendar has its own color, so they read apart at a glance:
+Each kind of thing on the calendar has its own color:
 
 | Role               | Token                               | Drawn as                                                        |
 | ------------------ | ----------------------------------- | --------------------------------------------------------------- |
@@ -109,26 +112,27 @@ Colors use `light-dark()`, so they follow the inherited `color-scheme`. The them
 }
 ```
 
-The shadcn/ui theme is the exception: it follows shadcn's `.dark` class instead.
+The shadcn/ui, Material UI and FullCalendar themes also follow their library's own dark-mode selector; see
+[themes](themes).
 
 ## Forced colors
 
 Under `forced-colors: active` (Windows High Contrast), the browser drops fills. Events keep their borders, and the
-default theme restores state that fills carried, with system colors:
+default theme redraws what fills carried with system colors:
 
-- today's marker and the now line in `Highlight`;
-- slot lines, unavailable hatching and outside-month dates in `GrayText`.
+- Today's marker and the now line use `Highlight`.
+- Slot lines, unavailable hatching and outside-month dates use `GrayText`.
+- Background layers are hatched in `GrayText` at the opposite angle from unavailable time, and background events are
+  hatched the same way in `Highlight`, so the three stay apart.
 
 Every theme inherits these rules. For more contrast without forced colors, use the
 [high contrast theme](themes#high-contrast).
 
 ## Overriding rules
 
-The themes use cascade layers and zero-specificity selectors, so:
-
-- **Unlayered CSS** always wins over them, without `!important`.
-- **Layered CSS** wins only if its layer comes after the calendar's. CSS that declares its own layers after importing
-  a theme beats it; layers declared earlier lose.
+The themes use cascade layers and zero-specificity selectors. Unlayered CSS always wins over them, without
+`!important`. Layered CSS wins only if its layer comes after the calendar's: CSS that declares its own layers after
+importing a theme beats it, and layers declared earlier lose.
 
 Select parts by their attributes, or pass a class to the part:
 
@@ -142,7 +146,8 @@ Select parts by their attributes, or pass a class to the part:
 
 ## Scrolling
 
-`TimeGridView` scrolls, with a sticky header. Give it a height to scroll inside the page rather than show all 24 hours:
+`TimeGridView` scrolls, with a sticky header. Give it a height to scroll inside the page instead of showing every
+hour, or set the view's `timeWindow` to limit the clock range before rendering:
 
 ```css
 [data-scope='calendar'][data-part='time-grid-root'] {

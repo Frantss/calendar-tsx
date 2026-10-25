@@ -2,12 +2,13 @@
 
 The current time sets which day is today and where the now indicator sits. The calendar reads it from a clock:
 
-| Where             | Field                                                               |
-| ----------------- | ------------------------------------------------------------------- |
-| Day-grid days     | `isToday`, rendered as `data-today`                                 |
-| Time-grid columns | `isToday`, and `now`: the fraction of the day for the now indicator |
-| State             | `state.now`, a `Temporal.ZonedDateTime` in `timeZone`               |
-| Navigation        | `today()` goes to today in `timeZone`                               |
+| Where             | Field                                                                                        |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| Day-grid days     | `isToday`, rendered as `data-today`                                                          |
+| Time-grid columns | `isToday`, and `now`: the fraction of the day for the now indicator                          |
+| Timelines         | Day headers' `isToday`, and the layout's `now`: the fraction of the range, absent outside it |
+| State             | `state.now`, a `Temporal.ZonedDateTime` in `timeZone`                                        |
+| Navigation        | `today()` goes to today in `timeZone`                                                        |
 
 ## Clock
 
@@ -16,7 +17,7 @@ Two clocks are built in:
 
 <include lang='ts'>../../../examples/core/clock.ts#clock</include>
 
-`fixedClock(instant)` never ticks, for tests, stories and screenshots. A clock is any `{ now, subscribe }`.
+`fixedClock(instant)` never ticks, for tests, stories and screenshots. Any `{ now, subscribe }` object is a clock.
 
 The clock starts when the calendar mounts and stops when it unmounts. Before that, the current time comes from `initialNow`
 if given; see [server rendering](server-rendering).

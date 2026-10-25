@@ -1,43 +1,43 @@
-Register only the policies and drivers your calendar needs. Factory configuration supplies defaults;
-per-view `features` entries override them using your registry aliases.
+Register only the policies and drivers you need. Factory configuration supplies defaults, and per-view `features`
+entries override them by registry alias.
 
 <include lang='ts' meta='title="core/interaction-policies.ts"'>
   ../../../examples/core/interaction-policies.ts#policies
 </include>
 
-The read-only view in this example disables its registered movement and resizing operations. The APIs remain
-installed. Settings can also arrive as live calendar options such as `movement`, `resizing` and `constraints`.
-Resolution order is factory defaults, live options, per-view `features[alias]`, then direct per-view settings.
+The read-only view disables its movement and resizing operations; their APIs stay installed. Settings can also arrive
+as live calendar options such as `movement`, `resizing` and `constraints`. They resolve in this order: factory
+defaults, live options, per-view `features[alias]`, then direct per-view settings.
 
-Keep array rules and predicate functions stable while their contents are unchanged. Interaction dependencies
-compare references. In React, declare rules outside the component or memoize them; recreating a business-hours
-array during every draft render can repeatedly revalidate the session.
+Interaction dependencies compare by reference, so keep rule arrays and predicates stable until their contents change.
+In React, declare them outside the component or memoize them; a business-hours array recreated on every render
+revalidates the draft each time.
 
 ## Movement and resources
 
-Use `createEventRelocationPolicy` to define shared conversion and resource settings with inferred literal types.
-Pass it once as the calendar's `eventRelocationPolicy`. Movement, external creation and transfer receiving inherit
-it. Each feature accepts a partial `relocationPolicy` override. The helper returns the supplied object unchanged;
-the policy installs no operations.
+`createEventRelocationPolicy` types shared conversion and resource settings with inferred literals and returns the
+object unchanged; it installs no operation. Pass it once as the calendar's `eventRelocationPolicy`, and movement,
+external creation and transfer receiving inherit it. Each of those features accepts a partial `relocationPolicy`
+override.
 
 <include lang='ts' meta='title="core/interaction-placement.ts"'>
   ../../../examples/core/interaction-placement.ts#placement
 </include>
 
-Fields resolve in this order, with later defined values winning: library defaults, calendar policy, feature factory
-configuration, live feature settings, per-view `features[alias]`, then direct view settings. Omitted and `undefined`
-fields inherit; `false` overrides `true`. Policy objects merge by field, so overriding resource behavior preserves
-the inherited conversion settings.
+Fields resolve from library defaults, then calendar policy, factory configuration, live feature settings, per-view
+`features[alias]` and direct view settings, with later defined values winning. Omitted and `undefined` fields
+inherit, and `false` overrides `true`. Policies merge by field, so overriding resource behavior keeps the inherited
+conversion settings.
 
-In this example, movement inherits the calendar policy. External creation rejects kind conversion. Transfer
-receiving replaces only the dragged resource assignment. A transfer uses the receiving calendar's policy.
+Here, movement inherits the calendar policy, external creation rejects kind conversion, and transfer receiving
+replaces only the dragged resource. A transfer uses the receiving calendar's policy.
 
-Updating the calendar policy or a feature override revalidates an active draft and updates its preview. A policy
-that makes the proposal unavailable clears the preview and prevents commit; restoring permission revalidates the
-same session. Recreating a policy object with equal effective values does not trigger revalidation.
+Changing the calendar policy or a feature override revalidates the active draft and its preview. If the proposal
+becomes unavailable, the preview clears and commit is refused; restoring permission revalidates the same session. A
+recreated policy with equal values doesn't revalidate.
 
-Conversion and resource fields below belong to `eventRelocationPolicy` or a feature's `relocationPolicy`.
-`enabled` and `canMove` remain movement settings.
+`enabled` and `canMove` are movement settings. The other fields belong to `eventRelocationPolicy` or a feature's
+`relocationPolicy`.
 
 | Setting               | Default         | Effect                                                   |
 | --------------------- | --------------- | -------------------------------------------------------- |
@@ -49,64 +49,60 @@ Conversion and resource fields below belong to `eventRelocationPolicy` or a feat
 | `resourceMode`        | `'replace-all'` | Replaces the whole resource list with the destination.   |
 | `canMove(event)`      | Unrestricted    | Rejects events for which the predicate returns `false`.  |
 
-Within the same kind, moves preserve elapsed timed duration or inclusive all-day length. A day-grid move of a
-timed event retains its local start time. Conversion with `'preserve'` uses elapsed duration; timed-to-all-day
-conversion rounds down to whole dates with a minimum of one date.
+Moves within a kind keep the elapsed timed duration or the inclusive all-day length. Moving a timed event in a day
+grid keeps its local start time. `conversionDuration: 'preserve'` keeps elapsed duration; timed-to-all-day conversion
+rounds down to whole dates, at least one.
 
-Use `resourceMode: 'replace-source'` to replace only the dragged assignment. For multi-resource events,
-include its `resourceId` in the source descriptor or pass it to `move.begin/evaluate`. With
-`allowResourceChange: false`, moving to an unassigned resource is rejected and existing assignments stay intact.
+`resourceMode: 'replace-source'` replaces only the dragged assignment. For multi-resource events, put its `resourceId`
+in the source descriptor or pass it to `move.begin`/`move.evaluate`. With `allowResourceChange: false`, a move to an
+unassigned resource is rejected and assignments stay as they were.
 
 ## Resizing
 
-`eventResizeFeature({ fromStart: false })` permits only end resizing. Both edges are enabled by default.
-`resizing.enabled` disables the operation, and `canResize(event, edge)` can reject individual edits.
-
-Resizing keeps the opposite edge fixed and never changes the event kind. Timed end must be after start.
-All-day end is inclusive, so equal start and end represents one date.
+Both edges resize by default; `eventResizeFeature({ fromStart: false })` allows only the end. `resizing.enabled`
+disables the operation, and `canResize(event, edge)` rejects individual edits. The opposite edge stays fixed and the
+event kind never changes. A timed end must be after its start. All-day ends are inclusive, so equal start and end is
+one date.
 
 ## Constraints
 
-Register `constraintsFeature` to check selection, movement, resizing, creation and transfers. It validates the
-preview and revalidates at commit.
+`constraintsFeature` checks selection, movement, resizing, creation and transfers, on every preview and again at
+commit.
 
-| Setting                  | Behavior                                                                                                           |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `preventOverlap`         | Defaults to `true` when this feature is registered. Set `false` to use other constraints while permitting overlap. |
-| `allowedRanges`          | Concrete background ranges, or a function of the proposed dates and time zone, containing the entire proposal.     |
-| `businessHours`          | Weekly rules containing the entire proposal, resolved in the calendar time zone.                                   |
-| `resourceIds`            | Allowlist for assigned resource IDs.                                                                               |
-| `resourceAvailability`   | Each assigned resource must exist and its availability must contain the entire proposal.                           |
-| `allow(proposal, input)` | Synchronous custom predicate: return `true`, `false` or a rejection reason string.                                 |
+| Setting                  | Behavior                                                                                       |
+| ------------------------ | ---------------------------------------------------------------------------------------------- |
+| `preventOverlap`         | `true` once registered. Set `false` to keep other rules and allow overlap.                     |
+| `allowedRanges`          | Background ranges, or a function of the proposed dates and time zone, containing the proposal. |
+| `businessHours`          | Weekly rules containing the proposal, in the calendar time zone.                               |
+| `resourceIds`            | Allowlist for assigned resource IDs.                                                           |
+| `resourceAvailability`   | Each assigned resource must exist and its availability must contain the proposal.              |
+| `allow(proposal, input)` | Synchronous predicate returning `true`, `false` or a rejection reason string.                  |
 
-Adjacent allowed windows form a union. Overlap checks include timed, all-day and background events.
-Events with disjoint nonempty resource lists do not conflict. An event being moved or resized does not conflict
-with its own original input.
+Rules apply to the whole proposed interval, and adjacent allowed windows join. Overlap checks cover timed, all-day and
+background events. Events with disjoint nonempty resource lists don't conflict, and an edited event doesn't conflict
+with its own original.
 
-Constraints inspect concrete supplied events. They do not expand recurring definitions for conflicts, and
-generated recurring occurrences are not editable by these operations. Apply recurrence edits in your application.
-
-Background rendering alone does not enforce constraints. Supply rules to `constraintsFeature` even when the
-same rules already shade your calendar.
+Constraints check the concrete events you supply. They don't expand recurring definitions, and these operations can't
+edit generated occurrences; apply recurrence edits in your application. Shading a background doesn't enforce it:
+pass the same rules to `constraintsFeature`.
 
 ## Touch and scrolling
 
-`pointerFeature` activates after four pixels by default. Add `touchFeature` to accept touch input: its default
-hold is 500 ms with an eight-pixel movement tolerance. Movement before activation yields to normal scrolling.
+`pointerFeature` activates after four pixels (`distance`). `touchFeature` adds touch input with a 500 ms hold (`delay`) and an
+eight-pixel `tolerance`; movement before activation scrolls the page as usual. `autoScrollFeature` scrolls nested
+containers and the window near their edges, with a 40 px `edge` zone and 600 px/s maximum `speed`.
 
-Add `autoScrollFeature` for nested-container and window edge scrolling. Its defaults are a 40 px edge zone and
-600 px/s maximum speed. Registering either feature alone does not mount listeners; use the interaction bindings.
-
-Each driver supports `enabled: false` in its settings. These settings do not install the associated operation:
-touch input still needs selection, movement, resizing or a custom operation.
+Each driver reads per-view settings and accepts `enabled: false`. None of them mounts listeners alone (use the
+interaction bindings) or installs an operation: touch still needs selection, movement, resizing or a custom
+operation.
 
 ## Time zones and DST
 
-Timed hit testing snaps to the view's slot interval on its fixed wall-clock axis. Nonexistent local times return
-`unavailable`. Repeated times preserve a supplied source offset when possible; otherwise they choose the earlier
-occurrence. Hit results retain the local clock and candidate instants for custom feedback.
+Timed hits snap to the view's slot interval on its fixed wall-clock axis. A nonexistent local time is `unavailable`.
+A repeated time keeps the source's offset when it matches, and otherwise takes the earlier occurrence. Hits keep the
+local clock and candidate instants for custom feedback.
 
-Hidden dates, visible-hour windows and resource grouping determine the measurable surfaces. Register only the
-date/time track so labels and gutters do not distort hit testing.
+Hidden dates, visible-hour windows and resource grouping shape the surfaces. Register only the date/time track so labels
+and gutters don't skew hit testing.
 
-Return to [selection and event editing](interactions) for bindings and ownership.
+Back to [selection and event editing](interactions) for bindings and ownership.

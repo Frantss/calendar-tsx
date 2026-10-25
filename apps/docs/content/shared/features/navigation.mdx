@@ -13,8 +13,8 @@ date and calls `onNavigate` with them, and the calendar moves when you pass them
 | `setView(view, date?)`     | `view`, keeping the current date unless one is given.                                     |
 | `navigate({ view, date })` | Either or both; omitted fields keep their current value.                                  |
 
-`onNavigate` receives `{ view, date, range, period, inputRange }`. Because the next range arrives with the call, you can update the
-URL or start fetching events for it before the calendar re-renders.
+`onNavigate` receives `{ view, date, range, period, inputRange }`. The next range arrives with the call, so you can update the URL or
+start fetching events before the calendar re-renders.
 
 </section>
 
@@ -24,10 +24,12 @@ URL or start fetching events for it before the calendar re-renders.
 
 Every view and date resolve to three inclusive date ranges on `state.context`:
 
-- **`period`** is the nominal span: a calendar period, `months` months, `weeks` whole weeks, or `days` days. Use it for titles.
-- **`range`** is what is visible. Month-based day grids extend to whole weeks; other views use the period itself. Hidden dates remain inside this anchor envelope.
-
-- **`inputRange`** covers the source dates needed by visible windows, including the following morning for overnight windows. Fetch events for it.
+- `period` is the nominal span: a calendar period, `months` months, `weeks` whole weeks, or `days` days. Use it for
+  titles.
+- `range` is what is visible. Month-based day grids extend to whole weeks; other views use the period itself. Hidden
+  dates stay inside this anchor envelope.
+- `inputRange` covers the source dates the visible windows need, including the following morning for overnight
+  windows. Fetch events for it.
 
 | View                           | Period                                      | Range                                                                 |
 | ------------------------------ | ------------------------------------------- | --------------------------------------------------------------------- |
@@ -40,7 +42,10 @@ All four factories support `days`, `weeks`, `months`, and calendar `period` sett
 
 <include lang='ts'>../../../examples/core/view-variants.ts#periods</include>
 
-Weeks start on the `firstDayOfWeek` option, from `1` (Monday) to `7` (Sunday, the default). Input filtering uses `inputRange`; layout projection then clips to visible dates and hours.
+Weeks start on the `firstDayOfWeek` option, an ISO weekday from `1` (Monday) to `7` (Sunday, the default). The
+`DayOfWeek` constant names them (`DayOfWeek.Monday` is `1`) and also fits `hiddenDays` and weekly background
+`daysOfWeek`; plain numbers stay valid. The calendar filters input by `inputRange`, and layouts then clip to visible
+dates and hours.
 
 To get the range for any view and date without a calendar, for example to fetch on the server, use
 `getCalendarNavigation`:

@@ -23,8 +23,10 @@ renders: define views at module scope and memoize arrays.
 
 ## Views and layouts
 
-A view is a key of your own (`month`, `week`, `rooms`, …) bound to one of four layouts: day grid, time grid, list or timeline. All four factories accept day, week and month counts or calendar month, quarter and year periods. Day grids can group those dates by month and resource. Lists can group events by resource and date in either order.
-Several views can share a layout with different settings. You switch on `layout.kind` and render that layout's parts.
+A view is a key of your own (`month`, `week`, `rooms`) bound to one of four layouts: day grid, time grid, list or
+timeline. Every factory accepts day, week and month counts or calendar month, quarter and year periods. Day grids can
+group dates by month and resource; lists can group events by resource and date in either order. Several views can
+share a layout with different settings. You switch on `layout.kind` and render that layout's parts.
 
 ## Unstyled parts
 
@@ -35,6 +37,6 @@ values, never strings.
 ## Features
 
 Behavior beyond navigation and layout comes from [features](../extending/features). Call each feature factory with
-its defaults and collect the definitions in `calendarFeatures`. `calendarViews` binds that registry to named view
-definitions. Views inherit all registered features and can override their configuration. View factories supply
-layout features automatically.
+its defaults, collect the results in `calendarFeatures`, and bind that registry to your views with `calendarViews`.
+Views inherit every registered feature and can override its configuration. View factories supply their layout
+features themselves.

@@ -1,0 +1,70 @@
+FullCalendar and Schedule-X render a finished calendar UI that you configure. calendar-tsx computes the layout and
+gives you unstyled parts to render it, so you write more markup and own every pixel. Pick it when the calendar has
+to match your design system, or when you want Temporal values end to end. Pick one of the others when a ready-made
+calendar with a toolbar, popovers and modals is what you need. calendar-tsx is experimental: its API can change in any
+release.
+
+Checked against FullCalendar v7.1.3 and Schedule-X 4.9.1 on 2026-10-24. Both projects change; follow the linked
+sources for current details.
+
+✅ supported · 💎 paid plan · ❌ not supported · ❔ not documented
+
+## At a glance
+
+|                  | calendar-tsx                          | FullCalendar                                                                                   | Schedule-X                                                                                     |
+| ---------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| License          | ✅ MIT, every package                 | MIT core; resources and timelines need 💎 [Premium](https://fullcalendar.io/pricing)           | MIT core; resources and interactions need 💎 [Premium](https://schedule-x.dev/premium)         |
+| Rendering        | Headless model plus unstyled parts    | Renders its own DOM                                                                            | Renders its own UI with Preact                                                                 |
+| Frameworks       | React, Solid; the core works anywhere | React, Vue, Angular, Preact, Web Component, Salesforce LWC, vanilla JS                         | React, Vue, Angular, Svelte, Preact, vanilla JS                                                |
+| Dates in the API | Temporal in and out                   | JS `Date` in and out; Temporal only inside ([docs](https://fullcalendar.io/docs/date-library)) | Temporal `PlainDate` and `ZonedDateTime` ([docs](https://schedule-x.dev/docs/calendar/events)) |
+
+## Views
+
+|                      | calendar-tsx                                                  | FullCalendar                                     | Schedule-X                            |
+| -------------------- | ------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------- |
+| Month, week, day     | ✅ Yes                                                        | ✅ Yes                                           | ✅ Yes                                |
+| List or agenda       | ✅ Yes, any duration from a day to a year                     | ✅ Yes                                           | ✅ List, week agenda and month agenda |
+| Multi-month and year | ✅ Yes, day grids by months, quarter or year                  | ✅ Multi-month stack and grid                    | ✅ Year grid                          |
+| Timeline             | ✅ Yes, day to year periods                                   | 💎 Premium                                       | 💎 Premium, hourly and daily          |
+| Resource columns     | ✅ Yes, in time grids, day grids and lists; rows in timelines | 💎 Premium                                       | 💎 Premium, time grid                 |
+| Nested resources     | ❌ No, resources are a flat list                              | 💎 Premium                                       | 💎 Premium                            |
+| Custom views         | ✅ Your own layout features, in any framework                 | ✅ Yes; React and Preact views can be components | ✅ Preact only                        |
+
+## Interactions
+
+|                       | calendar-tsx                                  | FullCalendar                                                         | Schedule-X                                                |
+| --------------------- | --------------------------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------- |
+| Drag and drop, resize | ✅ Yes, opt-in features                       | ✅ Yes                                                               | 💎 Premium                                                |
+| Range selection       | ✅ Yes                                        | ✅ Yes                                                               | 💎 Premium, the Draw plugin creates events by dragging    |
+| Drag in from outside  | ✅ Yes, with relocation policies              | ✅ Yes, `Draggable`                                                  | 💎 Premium, drag to create                                |
+| Between calendars     | ✅ Yes, event transfers                       | ✅ Yes, `eventLeave` and `eventReceive`                              | ❔ Not documented                                         |
+| Touch                 | ✅ Hold to start, with auto-scroll            | ✅ Long press                                                        | ❔ Not documented                                         |
+| Validation            | ✅ Constraints, business hours, overlap rules | ✅ Constraint, overlap and allow callbacks for events and selections | ✅ `onBeforeEventUpdate`, for the Premium drag and resize |
+
+The calendar-tsx features report proposals and never change your events: you apply them. See
+[selection and event editing](../features/interactions) and [external drops and transfers](../features/drops-and-transfers).
+
+## Data and time
+
+|                   | calendar-tsx                                                         | FullCalendar                                                                                                                 | Schedule-X                                              |
+| ----------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Time zones        | ✅ Any IANA zone; events are converted to it and laid out there      | ✅ `local`, `UTC` or an IANA zone; returned dates support only local and UTC ([docs](https://fullcalendar.io/docs/timeZone)) | ✅ IANA zone, `UTC` by default                          |
+| Recurrence        | ✅ Daily and weekly in the core; full RRULE in `@calendar-tsx/rrule` | ✅ Simple built-in rules; `@fullcalendar/rrule` plugin                                                                       | ✅ Partial RRULE in `@schedule-x/event-recurrence`      |
+| Background events | ✅ Yes, including timelines                                          | ✅ Yes                                                                                                                       | ✅ Yes, with RRULE                                      |
+| Business hours    | ✅ Background layers, per resource, inverse or weekly                | ✅ `businessHours`, per resource                                                                                             | ❔ Not documented; `dayBoundaries` limits visible hours |
+
+## Styling and rendering
+
+|                   | calendar-tsx                                                                    | FullCalendar                                             | Schedule-X                                                                 |
+| ----------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Default look      | None; optional CSS themes                                                       | Five stock themes with dark mode                         | Default theme, an unofficial shadcn theme, `isDark`                        |
+| Design systems    | Themes that read shadcn/ui and Material UI variables, Tailwind, or your own CSS | Class-name props, shadcn, MUI and Bootstrap integrations | `--sx-color-*` CSS variables                                               |
+| Event content     | You render every part                                                           | `*Content` hooks per framework                           | Custom components per slot, `_customContent`                               |
+| Toolbar, popovers | You build them; parts emit the data                                             | Built in                                                 | Built-in header and event modal; interactive modal and sidebar are Premium |
+| Server rendering  | Yes, with a seeded `initialNow`                                                 | Yes, in React                                            | Next.js needs `'use client'`                                               |
+
+See [themes](../styling/themes) and [server rendering](../features/server-rendering).
+
+## Moving from FullCalendar
+
+See [migrating from FullCalendar](migrating-from-fullcalendar) for option, event and callback mappings.

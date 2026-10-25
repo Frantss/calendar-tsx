@@ -1,36 +1,34 @@
 <section id='intro'>
 
-Selection, movement and resizing are separate opt-in features. Your application owns event data, handles committed
-proposals and renders handles, previews and feedback. Try the controls in the [playground](/docs/playground).
+Selection, movement and resizing are separate opt-in features. Your application owns event data, applies committed
+proposals and renders handles, previews and feedback. Try them in the [playground](/docs/playground).
 
-| Factory                  | Installs                                                 | Prerequisites |
-| ------------------------ | -------------------------------------------------------- | ------------- |
-| `interactionFeature()`   | Shared session controls and preview store                | None          |
-| `dateSelectionFeature()` | `api.selection`, `selectedRange` and `onSelectionChange` | Interaction   |
-| `eventMoveFeature()`     | `api.move` and `onEventMove`                             | Interaction   |
-| `eventResizeFeature()`   | `api.resize` and `onEventResize`                         | Interaction   |
-| `pointerFeature()`       | Browser input settings                                   | Interaction   |
-| `touchFeature()`         | Touch hold activation                                    | Pointer       |
-| `autoScrollFeature()`    | Edge scrolling                                           | Pointer       |
-| `constraintsFeature()`   | Validation of scheduling proposals                       | Interaction   |
-| `externalDropFeature()`  | `api.externalDrop` and `onExternalDrop`                  | Interaction   |
-| `eventTransferFeature()` | `api.transfer` and `onEventTransfer`                     | Interaction   |
+| Factory                  | Installs                                                 | Requires    |
+| ------------------------ | -------------------------------------------------------- | ----------- |
+| `interactionFeature()`   | Shared session controls and preview store                | None        |
+| `dateSelectionFeature()` | `api.selection`, `selectedRange` and `onSelectionChange` | Interaction |
+| `eventMoveFeature()`     | `api.move` and `onEventMove`                             | Interaction |
+| `eventResizeFeature()`   | `api.resize` and `onEventResize`                         | Interaction |
+| `pointerFeature()`       | Browser input settings                                   | Interaction |
+| `touchFeature()`         | Touch hold activation                                    | Pointer     |
+| `autoScrollFeature()`    | Edge scrolling                                           | Pointer     |
+| `constraintsFeature()`   | Validation of scheduling proposals                       | Interaction |
+| `externalDropFeature()`  | `api.externalDrop` and `onExternalDrop`                  | Interaction |
+| `eventTransferFeature()` | `api.transfer` and `onEventTransfer`                     | Interaction |
 
-Prerequisites use factory identities, so registry aliases are your choice. For resize-only pointer editing, register
-interaction, pointer and resize. Selection and movement are unnecessary. Without an operation, its API and callbacks
-are absent from the calendar type.
+Prerequisites match factory identities, so you pick the registry aliases. Pointer resizing alone needs interaction,
+pointer and resize. An operation you don't register has no API or callbacks on the calendar type.
 
 ## Register features and views
 
-Keep definitions stable at module scope or create them once per calendar. Feature registration is fixed for an
-instance's lifetime. Use `enabled: false` in an operation's settings to disable it temporarily; create a new instance
-when changing the registry itself.
+Create definitions once, at module scope or per calendar. The registry is fixed for an instance's lifetime: set
+`enabled: false` in an operation's settings to pause it, and create a new instance to change the registry.
 
 <include lang='ts' meta='title="core/interactions.ts"'>
   ../../../examples/core/interactions.ts#registry
 </include>
 
-This example renders timed columns only. Register an all-day surface separately when enabling the all-day row.
+The example renders timed columns only. Register the all-day track as its own surface when you show the all-day row.
 
 </section>
 
@@ -38,12 +36,12 @@ This example renders timed columns only. Register an all-day surface separately 
 
 ## Own the data
 
-Type the event input as `Calendar_EventInput<Booking>[]` and let the calendar infer its generics. A committed move
-or resize emits `{ before, after }`; resize also reports `edge`. The example replaces the matching input event.
-Use the same callback boundary to validate with your server or persist changes.
+Type the event input as `Calendar_EventInput<Booking>[]` and let the calendar infer its generics. A committed move or
+resize emits `{ before, after }`, and resize adds `edge`. The example replaces the matching input event; validate with
+your server or persist in the same callback.
 
-Selection emits a range. Timed ranges use `Temporal.ZonedDateTime`; all-day ranges use inclusive
-`Temporal.PlainDate` start and end dates. Selection stays within one resource assignment.
+Selection emits a range within one resource assignment. Timed ranges use `Temporal.ZonedDateTime`; all-day ranges use
+inclusive `Temporal.PlainDate` start and end dates.
 
 </section>
 
@@ -51,12 +49,10 @@ Selection emits a range. Timed ranges use `Temporal.ZonedDateTime`; all-day rang
 
 ## Bind the rendered tracks and events
 
-Import view parts and `useCalendarInteractionBindings` from your framework package. Import `timeGridSurface`,
-`timelineSurface` and `dayGridSurface` from `@calendar-tsx/core`.
-
-Attach `bindings.root` to the calendar container. Register each actual date/time track as a surface, excluding
-axis labels and gutters. Attach a source ref to each event and a distinct source key to each resize handle.
-Include `resourceId` when an event renders in a resource track.
+Import the view parts and `useCalendarInteractionBindings` from your framework package, and the surface descriptors
+from `@calendar-tsx/core`. Attach `bindings.root` to the calendar container. Register each date/time track as a
+surface, without axis labels or gutters. Attach a source ref to each event and a distinct source key to each resize
+handle, with `resourceId` when the event renders in a resource track.
 
 | Rendered track                | Descriptor                             |
 | ----------------------------- | -------------------------------------- |
@@ -65,8 +61,10 @@ Include `resourceId` when an event renders in a resource track.
 | Timeline resource lane        | `timelineSurface(row.key)`             |
 | Day-grid row within a section | `dayGridSurface(section.key, row.key)` |
 
-Blank-space gestures select when selection is installed. Event gestures move when movement is installed.
-A source with `edge: 'start'` or `'end'` resizes. The opposite edge stays fixed.
+Gestures on blank space select, when selection is registered. Gestures on an event move it, when movement is
+registered. A source with `edge: 'start'` or `'end'` resizes and keeps the opposite edge fixed. Pointer positions
+are fractions of the surface's bounding box, mirrored for right-to-left surfaces, so a partly scrolled track still
+maps correctly.
 
 </section>
 
@@ -74,20 +72,21 @@ A source with `edge: 'start'` or `'end'` resizes. The opposite edge stays fixed.
 
 ## Render the draft
 
-The interaction store derives preview geometry from the candidate and active layout. Draft updates do not rebuild the base
-layout or repack neighboring events. A rejected candidate has no preview; its reason is available at
-`calendar.api.interactions.store.state.candidate`.
+The interaction store derives preview geometry from the candidate and the active layout. Drafts don't rebuild the base
+layout or repack neighboring events. A rejected candidate has no preview; read its reason from
+`calendar.api.interactions.store.state.candidate`. Event previews reuse the layout math, including minimum lengths,
+clipping, resources and inclusive all-day ends. Selection previews carry no event or payload.
 
-For time-grid columns, `start/span` are vertical fractions and `inlineStart/inlineSize` are horizontal fractions.
-All-day, timeline and day-grid surfaces use `start/span` horizontally. Filter geometry by its `surface` identifier
-before rendering. Keep overlays `aria-hidden` and set `pointer-events: none`.
+In time-grid columns, `start`/`span` are vertical fractions and `inlineStart`/`inlineSize` horizontal ones. All-day,
+timeline and day-grid surfaces use `start`/`span` horizontally. Filter geometry by its `surface` key before rendering,
+and keep overlays `aria-hidden` with `pointer-events: none`.
 
 </section>
 
 <section id='rest'>
 
-The following CSS supplies an end handle and draft overlay for the column example. Load a calendar theme or its
-positioning base as in the quick start.
+This CSS supplies an end handle and the draft overlay for the column example, on top of a theme or its positioning
+base:
 
 ```css
 .resize-end {
@@ -110,53 +109,62 @@ positioning base as in the quick start.
 }
 ```
 
-The handles above are pointer targets. Supply keyboard controls through the same operation APIs, label them,
-and announce completion or rejection in a live region. The [playground](/docs/playground) demonstrates both
-pointer handles and keyboard actions.
+Handles are pointer targets only. Provide labelled keyboard controls through the operation APIs below, and announce
+completion or rejection in a live region. The [playground](/docs/playground) has both.
 
 ## Programmatic edits
 
-Operation APIs expose `begin` and `evaluate`. `evaluate` returns a valid proposal or a rejection/unavailability
-reason without opening a session. `begin` returns a typed session handle when its status is `active`; another active session
-returns `busy`.
+Each operation API has `begin` and `evaluate`. `evaluate` returns a valid proposal, or a rejection or unavailability
+reason, without opening a session. `begin` returns `{ status: 'active', session }`, or `busy` while another session is
+active.
 
-The handle exposes `update(target)`, `commit()` and `cancel(reason?)`, with structured status results. Commit revalidates against current inputs.
-The following helper uses the default internal draft owner and releases rejected sessions:
+The session has `update(target)`, `commit()`, `cancel(reason?)`, `unavailable(reason)` and `isActive()`, and keeps its
+operation's target and event-data types. Each command returns a discriminated result; valid updates and commits carry
+the typed proposal. `commit` revalidates against current inputs. `isActive()` checks the session's lease, which stays
+held while a controlled owner has not acknowledged a write. This helper uses the default internal owner and releases
+rejected sessions:
 
 <include lang='ts'>../../../examples/core/interaction-commands.ts#command</include>
 
-Use `selection.begin(anchor)` for selection and `resize.begin(eventId, edge)` for resizing. Targets are
+Begin selection with `selection.begin(anchor)` and resizing with `resize.begin(eventId, edge)`. Targets are
 `{ kind: 'timed', at: zonedDateTime, resourceId? }` or `{ kind: 'allDay', at: plainDate, resourceId? }`.
 
 ## State and ownership
 
-Committed selection lives at `calendar.store.state.selectedRange`. It is internal by default; control it with
-`state: { selectedRange }` plus `onSelectionChange`, or supply `atoms: { selectedRange }`.
+Committed selection lives at `calendar.store.state.selectedRange`. The calendar owns it by default; control it with
+`state: { selectedRange }` plus `onSelectionChange`, or pass `atoms: { selectedRange }`.
 
-Transient sessions live separately at `api.interactions.store`. Its state contains `session`, `candidate`,
-`outcome` and derived `preview`. The default `interactionOwnership` is `{ mode: 'internal' }`. Advanced owners can use:
+Sessions live separately in `api.interactions.store`, whose state holds `session`, `candidate`, `outcome` and the
+derived `preview`. `interactionOwnership` defaults to `{ mode: 'internal' }`. Other owners:
 
-- `{ mode: 'controlled', read, onChange }`: the owner accepts snapshots and returns them through `read()`.
-- `{ mode: 'external', atom }`: the atom exposes `state`, `setState` and optionally `subscribe`.
+- `{ mode: 'controlled', read, onChange }` accepts snapshots and returns them through `read()`.
+- `{ mode: 'external', atom }` uses an atom with `state`, `setState` and optional `subscribe`.
 
-These owners store `Calendar_InteractionSnapshot`, which excludes preview geometry. Ownership mode and external
-atom identity are fixed at creation. Controlled commands can return `awaiting-owner`; acknowledge the snapshot
-and refresh before continuing. Browser drivers handle delayed acknowledgment, including release before acceptance.
+Both store `Calendar_InteractionSnapshot`, which has no preview geometry. Mode and atom are fixed at creation. A
+controlled owner acknowledges the exact snapshot object it received; until then commands return `awaiting-owner`.
+Browser drivers handle late acknowledgment, including a release before acceptance. A mounted external atom with
+`subscribe` refreshes the runtime on change; otherwise call `api.interactions.refresh()` after writing it. Options
+updates refresh sessions, callbacks and settings. Changing sources or navigating cancels the session, and the last
+unmount cancels pending leases.
 
 ## Browser lifetime and cancellation
 
-Registering features installs no listeners. The adapter hook mounts the shared DOM bindings and cleans them up
-on unmount. It does not expose a second mount method. Observe programmatic drafts through the store selector without installing pointer input. Core-only consumers can call `createCalendarInteractionBindings(calendar)`, attach its refs, and
-retain the cleanup returned by `bindings.mount()`; also mount the calendar with `calendar['~mount']()`.
+Registering features adds no listeners. `useCalendarInteractionBindings` mounts the shared DOM bindings, cleans them up
+on unmount, and returns refs, `cancel` and the preview. To watch programmatic drafts without pointer input, select from
+`api.interactions.store`.
 
-Escape, pointer cancellation, window blur, unmount and removal of required surfaces cancel an active gesture.
-Changing view, date or time zone cancels the session; changed event inputs and constraints are checked before commit.
+Without a framework, `createCalendarInteractionBindings(calendar)` returns the same refs and a `mount()` that returns
+cleanup; also call `calendar['~mount']()`. The lower-level `createCalendarInteractionHost(calendar)` takes elements
+directly: `host.surface(element, descriptor)` and `host.source(element, { eventId, edge?, resourceId? })` register
+them, and `host.mount(root)` returns cleanup.
 
-Built-in hit testing supports day-grid, time-grid and timeline. List views can use programmatic controls.
-Third-party layouts can supply `locate/project`; missing capabilities return `unavailable`. See
-[writing features](../extending/features#layout-features).
+Escape, pointer cancellation, window blur, unmount and removal of a required surface cancel a gesture. Changing view,
+date or time zone cancels the session. Changed events and constraints are checked again at commit.
 
-See [editing policies](editing-policies) for conversion, constraints, touch and scrolling, and
-[external drops and transfers](drops-and-transfers) for adding or moving events across calendars.
+Day grids, time grids and timelines support hit testing. Lists support the programmatic APIs only. Third-party layouts
+can implement `locate` and `project`; see [writing features](../extending/features#layout-features).
+
+Continue with [editing policies](editing-policies) for conversion, constraints, touch and scrolling, and
+[external drops and transfers](drops-and-transfers) for adding events and moving them across calendars.
 
 </section>
