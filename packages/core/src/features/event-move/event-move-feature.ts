@@ -1,13 +1,8 @@
-import {
-  calendarPlacement_place,
-  calendarRelocation_mergeSettings,
-  calendarRelocation_resolve,
-} from '#features/interaction/placement';
+import { calendarDateEdit_evaluate } from '#features/interaction/date-edit';
+import { calendarRelocation_mergeSettings, calendarRelocation_resolve } from '#features/interaction/placement';
 import type { Calendar_ConfiguredFeature } from '#features/feature.types';
 import { createInteractionOperation } from '#features/interaction/interaction-runtime';
-import type { Calendar_InteractionEvaluation } from '#features/interaction/interaction.types';
 import type { Calendar_DateTarget } from '#features/interaction/date-target.types';
-import type { Calendar_MoveProposal } from '#features/event-move/event-move.types';
 import { isDateTarget, calendarDateTarget_equal } from '#features/interaction/date-target';
 
 const moveOperation = createInteractionOperation({
@@ -16,23 +11,7 @@ const moveOperation = createInteractionOperation({
   acceptsTarget: isDateTarget,
   sameTarget: calendarDateTarget_equal,
   kind: 'move',
-  create(intent, target, input): Calendar_InteractionEvaluation<Calendar_MoveProposal> {
-    if (intent.kind !== 'move') return { status: 'unavailable', reason: 'wrong-operation' };
-    const before = input.events.find(event => event.id === intent.eventId);
-    if (!before) return { status: 'rejected', reason: 'source-removed' };
-    if (before['~source']) return { status: 'unavailable', reason: 'source-unsupported' };
-    const settings = { ...input.movement, ...input.views[input.view].movement };
-    if (settings.canMove?.(before) === false) return { status: 'unavailable', reason: 'event-not-editable' };
-    const after = calendarPlacement_place(
-      before,
-      target,
-      calendarRelocation_resolve(input, 'movement'),
-      intent.sourceResourceId,
-    );
-    return typeof after === 'string'
-      ? { status: 'unavailable', reason: after }
-      : { status: 'valid', proposal: { kind: 'move', before, after } };
-  },
+  create: (intent, target, input) => calendarDateEdit_evaluate('move', intent, target, input),
   scheduling: proposal => ({ kind: 'event', event: proposal.after, excludeEventId: proposal.before.id }),
   api: commands => ({
     move: {

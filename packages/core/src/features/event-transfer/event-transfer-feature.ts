@@ -1,13 +1,10 @@
+import { calendarDateEdit_evaluate } from '#features/interaction/date-edit';
 import { calendarFeatures_active } from '#features/calendar-features';
 import type { Calendar_EventInput } from '#events/event.types';
 import type { Calendar_ConfiguredFeature } from '#features/feature.types';
 import type { Calendar_DateTarget } from '#features/interaction/date-target.types';
 import { isDateTarget, calendarDateTarget_equal } from '#features/interaction/date-target';
-import {
-  calendarPlacement_place,
-  calendarRelocation_mergeSettings,
-  calendarRelocation_resolve,
-} from '#features/interaction/placement';
+import { calendarRelocation_mergeSettings, calendarRelocation_resolve } from '#features/interaction/placement';
 import { createInteractionOperation } from '#features/interaction/interaction-runtime';
 import type { Calendar_TransferSource, Calendar_TransferSettings } from '#features/event-transfer/event-transfer.types';
 
@@ -17,26 +14,7 @@ const transferOperation = createInteractionOperation({
   source: intent => intent.source.read(),
   acceptsTarget: isDateTarget,
   sameTarget: calendarDateTarget_equal,
-  create(intent, target, input) {
-    const before = intent.source.read();
-    if (!before) return { status: 'unavailable', reason: 'source-changed' };
-    const settings = { ...input.transfer, ...input.views[input.view].transfer };
-    if (!input.id || input.id === intent.source.id) return { status: 'rejected', reason: 'same-calendar' };
-    if (settings.accept?.(intent.source.id) === false) return { status: 'rejected', reason: 'calendar-rejected' };
-    if (input.events.some(event => event.id === before.id)) return { status: 'rejected', reason: 'duplicate-event-id' };
-    const after = calendarPlacement_place(
-      before,
-      target,
-      calendarRelocation_resolve(input, 'transfer'),
-      intent.source.sourceResourceId,
-    );
-    return typeof after === 'string'
-      ? { status: 'unavailable', reason: after }
-      : {
-          status: 'valid',
-          proposal: { kind: 'transfer', before, after, sourceId: intent.source.id, destinationId: input.id },
-        };
-  },
+  create: (intent, target, input) => calendarDateEdit_evaluate('transfer', intent, target, input),
   scheduling: proposal => ({ kind: 'event', event: proposal.after }),
   api: (commands, context) => ({
     transfer: {
