@@ -15,13 +15,6 @@ export const layoutIntervals_stack = <T>(items: T[], bounds: (item: T) => Layout
   });
 };
 
-/** Clips each interval to `day`, dropping the empty ones, sorted by start. */
-export const layoutIntervals_clip = (intervals: LayoutIntervals_Interval[], day: LayoutIntervals_Interval) =>
-  intervals
-    .map(interval => ({ startMs: Math.max(interval.startMs, day.startMs), endMs: Math.min(interval.endMs, day.endMs) }))
-    .filter(interval => interval.endMs > interval.startMs)
-    .sort((a, b) => a.startMs - b.startMs);
-
 /** Joins overlapping and touching intervals; expects them sorted by start. */
 export const layoutIntervals_merge = (sorted: LayoutIntervals_Interval[]) => {
   const merged: LayoutIntervals_Interval[] = [];

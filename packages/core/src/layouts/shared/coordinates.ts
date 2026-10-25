@@ -431,19 +431,6 @@ export const layoutCoordinates_hourOffset = (axis: LayoutCoordinates_DateAxis, s
 export const layoutCoordinates_length = (plan: LayoutCoordinates_Plan) =>
   Number(plan.dates.clock.end - plan.dates.clock.start) / 1_000_000;
 
-/** D40 shading combines exact source coverage on the shared clock axis before taking its complement. */
-export const layoutCoordinates_coverage = (
-  plan: LayoutCoordinates_Plan,
-  sources: readonly InstantRange[],
-  dateIndex?: number,
-) => {
-  return layoutCoordinates_coverFragments(
-    plan,
-    sources.flatMap((source, index) => layoutCoordinates_projectTime(plan, source, String(index))),
-    dateIndex,
-  );
-};
-
 export const layoutCoordinates_coverFragments = (
   plan: LayoutCoordinates_Plan,
   fragments: readonly LayoutCoordinates_Fragment[],

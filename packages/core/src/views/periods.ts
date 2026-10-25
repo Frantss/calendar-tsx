@@ -76,12 +76,6 @@ export const calendarPeriods_hiddenDays = (range: Calendar_Range, settings: Cale
   return days.every(date => hidden.some(day => day === date.dayOfWeek)) ? [] : hidden;
 };
 
-export const calendarPeriods_visibleDays = (range: Calendar_Range, settings: Calendar_VisibilitySettings) => {
-  const hidden = calendarPeriods_hiddenDays(range, settings);
-
-  return calendarDates_days(range).filter(date => !hidden.some(day => day === date.dayOfWeek));
-};
-
 export const calendarPeriods_pad = (
   period: Calendar_Range,
   firstDayOfWeek: number,

@@ -48,7 +48,7 @@ export const layoutSurfaces_time = <T, R>(
           : [],
       );
     type Item = ReturnType<typeof items>[number];
-    const paint = (item: Item, key = `${resource?.id ?? 'all'}:${item.event.id}`, offset = 0) => ({
+    const paint = (item: Item, key: string, offset = 0) => ({
       key,
       event: item.event,
       start: (offset + item.startMs) / total,
@@ -267,7 +267,6 @@ export const layoutSurfaces_compile = <T, R>(
         );
   return {
     plan,
-    groups,
     slotMinutes,
     surfaces,
     allDay,

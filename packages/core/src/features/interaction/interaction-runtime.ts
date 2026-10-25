@@ -263,7 +263,6 @@ export const calendarInteractions_create = (host: {
     isActive: () => lease === token,
   });
   const runtime = {
-    isActive: (token: number) => lease === token,
     store: readonlyStore,
     locate: <const P extends Calendar_LayoutPoint>(point: P): Calendar_LayoutLocation<P['kind']> => {
       const layout = host.layout?.();

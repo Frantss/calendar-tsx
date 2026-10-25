@@ -258,3 +258,44 @@ These wrappers have observable details beyond type erasure: several invoke callb
 specification, optional callbacks are resolved at different times, and API binding receives new command functions.
 A direct cast is not established as behavior-equivalent. This layer is a candidate for further design work, with
 no measured net saving or passing replacement recorded in this audit.
+
+## 2026-10-24 verified private-code deletion result
+
+### 19. The current core is 235 runtime tokens smaller than `91e2096`
+
+- **What:** current core source contains 6,932 physical lines, 5,113 implementation-file lines, 3,946 runtime-bearing
+  lines and 33,098 runtime tokens. Against `91e2096`, those totals decrease by 31, 31, 24 and 235 respectively.
+  Runtime tokens decrease by 0.71%. Against the earlier `21c6931` control, the cumulative token reduction is 3.04%.
+- **Where:** `packages/core/src/views/periods.ts:79`,
+  `packages/core/src/features/interaction/date-target.ts:11`,
+  `packages/core/src/layouts/shared/intervals.ts:18`,
+  `packages/core/src/layouts/shared/coordinates.ts:434`,
+  `packages/core/src/layouts/shared/surfaces.ts:49`,
+  `packages/core/src/features/interaction/interaction-runtime.ts:265`.
+- **Why it matters:** the savings include the four uncalled helpers and the three unconsumed private values from
+  findings 15 and 16. Public session `isActive`, group membership, coordinate operations and operation forwarding
+  remain present. No tests, public contracts, dependencies or exports changed. The half-size target remains unmet.
+- **Evidence:** `pnpm run build`, `pnpm run check:all` and `pnpm run test` pass. All 671 tests pass in 68 files;
+  the public declarations are byte-identical to the pre-deletion build. Built JavaScript decreases from 138,436
+  to 138,340 bytes, and gzip from 32,428 to 32,407 bytes with the same Python `gzip.compress(..., mtime=0)` call.
+  Complete logs and before/after measurements are under `/tmp/calendar-core-deletions/`. Storybook was not rerun
+  for these private deletions. Existing lint warnings remain unchanged.
+
+Initial sandboxed commands failed before the successful allowed reruns. The build reported:
+
+```text
+Error: Failed to start the Vite preview server for prerendering
+[cause]: Error: listen EPERM: operation not permitted ::1:3000
+```
+
+The package checker reported:
+
+```text
+~/packages/core$ attw --pack --no-emoji --profile esm-only
+error while checking file:
+Command failed: npm pack
+```
+
+The package checker suppresses its subprocess output; no more specific cause was reported. Both allowed reruns
+passed. The root build also ran its configured postbuild formatter; the final diff contains only the six intended
+source files and this report. The earlier uncommitted audit text remains intact.
