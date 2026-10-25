@@ -22,6 +22,7 @@ import {
   playgroundDataSets,
   playgroundLocales,
   playgroundThemes,
+  playgroundViewPreset,
   serializePlaygroundConfig,
 } from '@/playground/config';
 import { ContrastReadout } from '@/playground/contrast-readout';
@@ -65,6 +66,7 @@ const viewOptions: { value: PlaygroundView; label: string }[] = [
   { value: 'agenda_rooms', label: 'Resource agenda' },
   { value: 'agenda_dates_rooms', label: 'Resource agenda by date' },
   { value: 'timeline_day', label: 'Day timeline' },
+  { value: 'timeline_nested', label: 'Nested resources timeline' },
   { value: 'timeline_week', label: 'Week timeline' },
   { value: 'timeline_month', label: 'Month timeline' },
   { value: 'timeline_quarter', label: 'Quarter timeline' },
@@ -600,7 +602,7 @@ function Playground() {
                     aria-label='View'
                     className={`${inputClass} max-w-52`}
                     value={config.view}
-                    onChange={event => update({ view: event.target.value as PlaygroundView })}
+                    onChange={event => update(playgroundViewPreset(event.target.value as PlaygroundView))}
                   >
                     {viewOptions.map(option => (
                       <option key={option.value} value={option.value}>

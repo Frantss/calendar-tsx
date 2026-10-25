@@ -87,6 +87,7 @@ export const createPlaygroundViews = ({
       agenda_rooms: listView({ weeks: 1, groupBy: 'resource', hiddenDays }),
       agenda_dates_rooms: listView({ weeks: 1, groupBy: ['date', 'resource'], hiddenDays }),
       timeline_day: timelineView({ days: 1, groupBy: 'resource', minSlotWidth: '4rem', ...timed }),
+      timeline_nested: timelineView({ days: 1, groupBy: 'resource', minSlotWidth: '4rem', ...timed }),
       timeline_week: timelineView({ weeks: 1, groupBy: 'resource', minSlotWidth: '4rem', ...timed }),
       timeline_month: timelineView({
         period: 'month',

@@ -39,6 +39,7 @@ import {
   TimelineViewBody,
   TimelineViewRow,
   TimelineViewResource,
+  TimelineViewResourceToggle,
   TimelineViewLane,
   TimelineViewEvent,
   TimelineViewUnavailable,
@@ -104,7 +105,17 @@ export const PreviewLayout = ({
         <TimelineViewBody>
           {layout.rows.map(row => (
             <TimelineViewRow key={row.key} row={row}>
-              <TimelineViewResource row={row}>{row.resource?.title}</TimelineViewResource>
+              <TimelineViewResource row={row}>
+                {calendar.api.resourceExpansion && (
+                  <TimelineViewResourceToggle
+                    row={row}
+                    calendar={{ api: { resourceExpansion: calendar.api.resourceExpansion } }}
+                  >
+                    <span aria-hidden='true'>{row.isExpanded ? '−' : '+'}</span>
+                  </TimelineViewResourceToggle>
+                )}
+                {row.resource?.title}
+              </TimelineViewResource>
               <TimelineViewLane row={row} ref={bindings.surface(timelineSurface(row.key))}>
                 {row.backgroundEvents.map(segment => (
                   <TimelineViewBackgroundEvent key={segment.key} segment={segment} />

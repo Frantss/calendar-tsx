@@ -22,6 +22,7 @@ export const playgroundThemes = [
 export const playgroundDataSets = [
   { id: 'sample', label: 'Sample week' },
   { id: 'busy', label: 'Busy weeks' },
+  { id: 'nested', label: 'Nested resources' },
   { id: 'empty', label: 'Only my events' },
 ] as const;
 
@@ -96,6 +97,13 @@ export const defaultPlaygroundConfig = (today: string): PlaygroundConfig => ({
   changes: [],
   tokens: emptyTokenOverrides(),
 });
+
+export const playgroundViewPreset = (
+  view: PlaygroundView,
+): Pick<PlaygroundConfig, 'view'> & Partial<PlaygroundConfig> =>
+  view === 'timeline_nested'
+    ? { view, data: 'nested', slotMinutes: 60, visibleStart: '08:00', visibleEnd: '18:00' }
+    : { view };
 
 const oneOf =
   <T extends string | number>(values: readonly T[]) =>
@@ -192,8 +200,9 @@ const sanitizeEvents = (input: unknown): PlaygroundEvent[] => {
 /** Reads a config from a URL hash; anything missing or invalid falls back to the default. */
 export const parsePlaygroundConfig = (hash: string, today: string): PlaygroundConfig => {
   const params = new URLSearchParams(hash.replace(/^#/, ''));
-  const fallback = defaultPlaygroundConfig(today);
   const view = params.get('view');
+  const defaults = defaultPlaygroundConfig(today);
+  const fallback = { ...defaults, ...playgroundViewPreset(isView(view) ? view : defaults.view) };
   const date = params.get('date');
   const theme = params.get('theme');
   const density = params.get('density');
@@ -240,7 +249,7 @@ export const parsePlaygroundConfig = (hash: string, today: string): PlaygroundCo
 
 /** The config as a hash; settings left at their default are omitted, so shared links stay short. */
 export const serializePlaygroundConfig = (config: PlaygroundConfig) => {
-  const fallback = defaultPlaygroundConfig(config.date);
+  const fallback = { ...defaultPlaygroundConfig(config.date), ...playgroundViewPreset(config.view) };
   const params = new URLSearchParams({ view: config.view, date: config.date });
   const add = (key: string, value: string | number, base: string | number) => {
     if (value !== base) params.set(key, String(value));

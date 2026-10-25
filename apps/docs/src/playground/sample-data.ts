@@ -97,6 +97,25 @@ const busyEvents = (anchor: Temporal.PlainDate, timeZone: string): Calendar_Even
   ]);
 };
 
+const nestedEvents = (anchor: Temporal.PlainDate, timeZone: string): Calendar_EventInput<Booking>[] => {
+  const bookings = [
+    ['office-briefing', 'Office briefing', '08:30', '09:00', 'office'],
+    ['planning', 'Planning', '09:00', '10:00', 'room-a'],
+    ['review', 'Design review', '10:30', '11:30', 'room-b'],
+    ['workshop', 'Workshop', '13:00', '15:00', 'room-c'],
+  ] as const;
+  return sampleDays(anchor).flatMap(date =>
+    bookings.map(([id, title, start, end, resource]) => ({
+      id: `${id}-${date.toString()}`,
+      kind: 'timed' as const,
+      start: date.toZonedDateTime({ timeZone, plainTime: start }),
+      end: date.toZonedDateTime({ timeZone, plainTime: end }),
+      resourceIds: [resource],
+      data: { title },
+    })),
+  );
+};
+
 /** The events added in the playground, as calendar input in `timeZone`. */
 export const playgroundEvents = (events: PlaygroundEvent[], timeZone: string): Calendar_EventInput<Booking>[] =>
   events.map(event => {
@@ -131,9 +150,11 @@ export const playgroundEvents = (events: PlaygroundEvent[], timeZone: string): C
 export const dataSetEvents = (set: PlaygroundDataSet, anchor: Temporal.PlainDate, timeZone: string) =>
   set === 'empty'
     ? []
-    : set === 'busy'
-      ? [...sampleEvents(anchor, timeZone), ...busyEvents(anchor, timeZone)]
-      : sampleEvents(anchor, timeZone);
+    : set === 'nested'
+      ? nestedEvents(anchor, timeZone)
+      : set === 'busy'
+        ? [...sampleEvents(anchor, timeZone), ...busyEvents(anchor, timeZone)]
+        : sampleEvents(anchor, timeZone);
 
 /** Three rooms: A open on weekdays, B closed over lunch, C closed on Mondays. */
 export const sampleRooms = (anchor: Temporal.PlainDate, timeZone: string): Calendar_Resource<Room>[] => {
@@ -164,5 +185,34 @@ export const sampleRooms = (anchor: Temporal.PlainDate, timeZone: string): Calen
       availability: days.filter(date => date.dayOfWeek !== 1).map(date => open(date, '07:00', '21:00')),
       data: { capacity: 12 },
     },
+  ];
+};
+
+export const dataSetResources = (
+  set: PlaygroundDataSet,
+  anchor: Temporal.PlainDate,
+  timeZone: string,
+): Calendar_Resource<Room>[] => {
+  const rooms = sampleRooms(anchor, timeZone);
+  if (set !== 'nested') return rooms;
+  return [
+    { id: 'office', title: 'Main office', availability: rooms[2]!.availability, data: { capacity: 24 } },
+    {
+      id: 'floor-1',
+      title: 'First floor',
+      parentId: 'office',
+      availability: rooms[0]!.availability,
+      data: { capacity: 12 },
+    },
+    { ...rooms[0]!, parentId: 'floor-1' },
+    { ...rooms[1]!, parentId: 'floor-1' },
+    {
+      id: 'floor-2',
+      title: 'Second floor',
+      parentId: 'office',
+      availability: rooms[2]!.availability,
+      data: { capacity: 12 },
+    },
+    { ...rooms[2]!, parentId: 'floor-2' },
   ];
 };

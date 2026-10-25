@@ -31,7 +31,7 @@ import { postPlaygroundMessage, readPlaygroundMessage } from '@/playground/messa
 import previewCss from '@/playground/preview.css?url';
 import { describeEvent, PreviewLayout } from '@/playground/preview-views';
 import type { Booking } from '@/playground/sample-data';
-import { dataSetEvents, playgroundEvents, sampleRooms } from '@/playground/sample-data';
+import { dataSetEvents, dataSetResources, playgroundEvents } from '@/playground/sample-data';
 import standInsCss from '@/playground/stand-ins.css?url';
 import { tokenOverridesCss } from '@/playground/tokens';
 import { createPlaygroundViews } from '@/playground/views';
@@ -249,7 +249,10 @@ function PreviewCalendar({
     () => applyChanges([...generated, ...added], config.changes, id),
     [generated, added, config.changes, id],
   );
-  const resources = useMemo(() => sampleRooms(Temporal.PlainDate.from(month), timeZone), [month, timeZone]);
+  const resources = useMemo(
+    () => dataSetResources(config.data, Temporal.PlainDate.from(month), timeZone),
+    [config.data, month, timeZone],
+  );
   const [businessHours] = useState<Calendar_WeeklyRule[]>(() => [
     {
       daysOfWeek: [1, 2, 3, 4, 5],

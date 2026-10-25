@@ -333,3 +333,52 @@ Sandboxed package validation: error while checking file: Command failed: npm pac
 Dependency restoration completed from the existing store. Browser checks, the
 full build and package validation then passed with the required local process
 and cache access. No required checks remain skipped.
+
+## Playground preset verification: 2026-10-24
+
+- **What:** The playground's View selector now includes `Nested resources timeline`.
+  Its defaults select the nested data set, a one-day Timeline, hourly slots and
+  08:00–18:00. The hierarchy contains Main office, two floors and three rooms.
+  Daily bookings include an independently assigned office event, including on
+  weekends. The nested data set remains selectable for other views.
+- **Where:** `apps/docs/src/playground/config.ts:101`;
+  `apps/docs/src/playground/views.ts:90`;
+  `apps/docs/src/playground/sample-data.ts:100`;
+  `apps/docs/src/playground/sample-data.ts:191`;
+  `apps/docs/src/routes/_site/docs/playground.tsx:69`.
+- **Why it matters:** The preset supplies visible multi-level resources and
+  bookings on the user's chosen date. Shared links restore both the preset and
+  customized settings.
+
+The preview registers `resourceExpansionFeature` independently of optional
+scheduling operations (`apps/docs/src/playground/interactions.ts:62`) and renders
+the native toggle part (`apps/docs/src/playground/preview-views.tsx:110`). Resource
+data follows the selected data set (`apps/docs/src/routes/playground/preview.tsx:253`).
+
+Verification:
+
+- `pnpm run build` and `pnpm run check:all` passed. The same 18 existing lint
+  diagnostics remain, with no new warnings.
+- `pnpm run test` passed all 697 workspace tests, including 13 docs tests. New
+  cases exercise preset/shared-link defaults, custom settings and the real
+  playground hierarchy, events and expansion feature together.
+- The live `/docs/playground` iframe was exercised through its View selector.
+  Collapsing First floor hid Rooms A/B and their bookings; collapsing Main office
+  left only its own row and booking. Reopening Main office retained First floor's
+  collapsed state. Enter and Space both operated the focused toggle.
+- Reloading `#view=timeline_nested&date=2026-10-24&tz=UTC` restored six rows, four
+  bookings and the preset's visible window. Expansion resets to its initial state
+  on a full reload; it is not serialized into the shared link.
+- At a 390px viewport, the outer document remained 390px wide and the preset
+  retained all six resource rows. The desktop iframe was also inspected visually.
+  No new application console errors occurred. The existing initial favicon 404
+  is already recorded in [docs-preview.md](docs-preview.md).
+- The optional Playwright CLI was unavailable offline (`ENOTCACHED`). Live browser
+  verification used the available Playwright browser tools instead. Screenshot
+  capture outside that tool's allowed roots was rejected; the screenshot was
+  captured within the workspace and inspected successfully.
+
+The normal build, check and test scripts used the existing
+`--config.manage-package-manager-versions=false` runtime workaround. No required
+verification remains skipped. Command logs are in
+`/private/tmp/calendar-playground-nested-{build,check,test}.log`.

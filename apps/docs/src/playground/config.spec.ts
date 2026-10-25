@@ -2,10 +2,70 @@ import { createCalendar, fixedClock } from '@calendar-tsx/core';
 import { Temporal } from 'temporal-polyfill';
 import { expect, it } from 'vitest';
 
-import { defaultPlaygroundConfig, parsePlaygroundConfig, serializePlaygroundConfig } from './config';
+import { defaultPlaygroundConfig, parsePlaygroundConfig, playgroundViewPreset, serializePlaygroundConfig } from './config';
 import { createPlaygroundViews } from './views';
+import { dataSetEvents, dataSetResources } from './sample-data';
+import { createPlaygroundFeatures } from './interactions';
 
 const date = '2026-03-11';
+
+it('opens the nested-resource preset from a shared link and preserves custom settings', () => {
+  const config = parsePlaygroundConfig('#view=timeline_nested&date=2026-10-24&tz=UTC', date);
+  expect(config).toMatchObject({ data: 'nested', slotMinutes: 60, visibleStart: '08:00', visibleEnd: '18:00' });
+  expect(parsePlaygroundConfig(serializePlaygroundConfig(config), date)).toEqual(config);
+  const changed = { ...config, data: 'sample' as const, slotMinutes: 30 as const, visibleStart: '00:00', visibleEnd: '00:00' };
+  expect(parsePlaygroundConfig(serializePlaygroundConfig(changed), date)).toEqual(changed);
+  expect({ ...defaultPlaygroundConfig(date), ...playgroundViewPreset('timeline_nested') }).toMatchObject({
+    view: 'timeline_nested',
+    data: 'nested',
+    slotMinutes: 60,
+    visibleStart: '08:00',
+    visibleEnd: '18:00',
+  });
+});
+
+it('builds the playground hierarchy with bookings on weekends and independent nested toggles', () => {
+  const config = parsePlaygroundConfig('#view=timeline_nested&date=2026-10-24&tz=UTC', date);
+  const anchor = Temporal.PlainDate.from(config.date);
+  const features = createPlaygroundFeatures(config.interactions);
+  const calendar = createCalendar({
+    features,
+    views: createPlaygroundViews(config),
+    view: config.view,
+    date: anchor,
+    timeZone: 'UTC',
+    events: dataSetEvents(config.data, anchor, 'UTC'),
+    resources: dataSetResources(config.data, anchor, 'UTC'),
+    onNavigate: () => {},
+    clock: fixedClock(Temporal.Instant.from('2026-10-24T12:00Z')),
+  });
+  const rows = () => {
+    const layout = calendar.store.state.layout;
+    if (layout.kind !== 'timeline') throw new Error('Expected timeline');
+    return layout.rows;
+  };
+  expect(rows().map(row => [row.key, row.depth])).toEqual([
+    ['office', 0],
+    ['floor-1', 1],
+    ['room-a', 2],
+    ['room-b', 2],
+    ['floor-2', 1],
+    ['room-c', 2],
+  ]);
+  expect(
+    rows()
+      .filter(row => row.segments.length)
+      .map(row => row.key),
+  ).toEqual(['office', 'room-a', 'room-b', 'room-c']);
+  calendar.api.resourceExpansion.toggle('floor-1');
+  expect(rows().map(row => row.key)).toEqual(['office', 'floor-1', 'floor-2', 'room-c']);
+  calendar.api.resourceExpansion.toggle('office');
+  expect(rows().map(row => row.key)).toEqual(['office']);
+  expect(rows()[0].segments[0].event.data.title).toBe('Office briefing');
+  calendar.api.resourceExpansion.toggle('office');
+  expect(rows().map(row => row.key)).toEqual(['office', 'floor-1', 'floor-2', 'room-c']);
+  expect(dataSetResources('sample', anchor, 'UTC').map(resource => resource.parentId)).toEqual([undefined, undefined, undefined]);
+});
 
 it('round-trips geometry controls through a shared playground link', () => {
   const config = {

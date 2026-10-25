@@ -1,5 +1,6 @@
 import {
   calendarFeatures,
+  resourceExpansionFeature,
   interactionFeature,
   pointerFeature,
   dateSelectionFeature,
@@ -58,6 +59,7 @@ export const parseInteractions = (value: unknown): PlaygroundInteractions =>
 
 export const createPlaygroundFeatures = (settings: PlaygroundInteractions) =>
   calendarFeatures({
+    resourceExpansionFeature: resourceExpansionFeature(),
     interactionFeature: interactionFeature(),
     pointerFeature: pointerFeature(),
     ...(settings.selection ? { dateSelectionFeature: dateSelectionFeature() } : {}),
