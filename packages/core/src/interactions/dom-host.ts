@@ -170,15 +170,13 @@ const trackPointer = (
   }
   const abort = new AbortController();
   let latest = down;
-  let active = false;
-  let ended = false;
+  let phase: 'waiting' | 'active' | 'released' = 'waiting';
   let destination: Host | undefined;
   let session: DomSession | undefined;
   let transfer: DomTransfer | undefined;
   let frame = 0;
   let timer = 0;
   let finalizing = false;
-  let finishRequested = false;
   let watched: { unsubscribe: () => void } | undefined;
   const involved = new Set<Host>();
   const involve = (host: Host) => {
@@ -187,14 +185,13 @@ const trackPointer = (
     cancellations.get(host)!.add(cleanup);
   };
   const cleanup = () => {
-    if (ended) return;
-    ended = true;
+    if (abort.signal.aborted) return;
+    abort.abort();
     for (const host of involved) {
       const callbacks = cancellations.get(host);
       callbacks?.delete(cleanup);
       if (!callbacks?.size) cancellations.delete(host);
     }
-    abort.abort();
     finalizing = true;
     const captured = down.target as HTMLElement;
     if (captured.hasPointerCapture?.(down.pointerId)) captured.releasePointerCapture(down.pointerId);
@@ -228,7 +225,7 @@ const trackPointer = (
     }
   };
   const update = () => {
-    if (!active || ended) return;
+    if (phase === 'waiting' || abort.signal.aborted) return;
     if (
       (origin && !origin.root()?.isConnected) ||
       !(down.target as Node).isConnected ||
@@ -302,21 +299,21 @@ const trackPointer = (
   };
   let previous = window.performance.now();
   const tick = (now: number) => {
-    if (ended) return;
-    if (!finishRequested) scroll(Math.min(50, now - previous));
+    if (abort.signal.aborted) return;
+    if (phase !== 'released') scroll(Math.min(50, now - previous));
     previous = now;
     update();
-    if (finishRequested && !ended) {
-      finalizing = true;
-      const result = session?.commit();
-      if (result?.status !== 'awaiting-owner') cleanup();
-      else finalizing = false;
-    }
-    if (!ended) frame = window.requestAnimationFrame(tick);
+    if (phase === 'released' && !abort.signal.aborted) finish();
+    if (!abort.signal.aborted) frame = window.requestAnimationFrame(tick);
+  };
+  const finish = () => {
+    finalizing = true;
+    if (session?.commit().status === 'awaiting-owner') finalizing = false;
+    else cleanup();
   };
   const activate = () => {
-    if (ended || active) return;
-    active = true;
+    if (abort.signal.aborted || phase !== 'waiting') return;
+    phase = 'active';
     if (origin) beginAt(origin);
     if (!external && !session) {
       cleanup();
@@ -331,76 +328,63 @@ const trackPointer = (
     frame = window.requestAnimationFrame(tick);
   };
   if (origin) involve(origin);
-  document.addEventListener(
+  const listen = <K extends keyof DocumentEventMap>(
+    type: K,
+    handler: (event: DocumentEventMap[K]) => void,
+    options: AddEventListenerOptions = {},
+  ) => document.addEventListener(type, handler, { signal: abort.signal, ...options });
+  const pointer = (handler: (event: PointerEvent) => void) => (event: PointerEvent) => {
+    if (event.pointerId === down.pointerId) handler(event);
+  };
+  listen(
     'pointermove',
-    event => {
-      if (event.pointerId !== down.pointerId) return;
+    pointer(event => {
       latest = event;
       const distance = Math.hypot(event.clientX - down.clientX, event.clientY - down.clientY);
-      if (!active && down.pointerType === 'touch' && distance > (config.touch?.tolerance ?? 8)) cleanup();
-      else if (!active && down.pointerType !== 'touch' && distance >= (config.pointer.distance ?? 4)) activate();
-      if (active) {
+      if (phase === 'waiting' && down.pointerType === 'touch' && distance > (config.touch?.tolerance ?? 8)) cleanup();
+      else if (phase === 'waiting' && down.pointerType !== 'touch' && distance >= (config.pointer.distance ?? 4))
+        activate();
+      if (phase !== 'waiting') {
         event.preventDefault();
         update();
       }
-    },
-    { signal: abort.signal, passive: false },
+    }),
+    { passive: false },
   );
-  document.addEventListener(
+  listen(
     'pointerup',
-    event => {
-      if (event.pointerId !== down.pointerId) return;
+    pointer(event => {
       latest = event;
-      finishRequested = true;
+      if (phase !== 'waiting') phase = 'released';
       update();
-      finalizing = true;
-      if (session) {
-        const status = session.commit();
-        if (status.status === 'awaiting-owner') {
-          finalizing = false;
-          return;
-        }
-      }
-      cleanup();
-    },
-    { signal: abort.signal },
+      finish();
+    }),
   );
-  document.addEventListener(
-    'pointercancel',
-    event => {
-      if (event.pointerId === down.pointerId) cleanup();
-    },
-    { signal: abort.signal },
-  );
-  document.addEventListener(
+  listen('pointercancel', pointer(cleanup));
+  listen(
     'lostpointercapture',
-    event => {
-      if (event.pointerId === down.pointerId && !finalizing && !finishRequested) cleanup();
-    },
-    { signal: abort.signal },
+    pointer(() => {
+      if (!finalizing && phase !== 'released') cleanup();
+    }),
   );
-  document.addEventListener(
-    'keydown',
-    event => {
-      if (event.key === 'Escape') cleanup();
-    },
-    { signal: abort.signal },
-  );
-  document.addEventListener(
+  listen('keydown', event => {
+    if (event.key === 'Escape') cleanup();
+  });
+  listen(
     'touchmove',
     event => {
-      if (active) event.preventDefault();
+      if (phase !== 'waiting') event.preventDefault();
       else cleanup();
     },
-    { signal: abort.signal, passive: false },
+    { passive: false },
   );
-  document.addEventListener(
+  listen(
     'scroll',
     () => {
-      if (active) update();
+      if (phase !== 'waiting') update();
       else if (down.pointerType === 'touch') cleanup();
     },
-    { signal: abort.signal, capture: true },
+    { capture: true },
   );
   window.addEventListener('blur', cleanup, { signal: abort.signal });
   if (down.pointerType === 'touch') timer = window.setTimeout(activate, Math.max(0, config.touch?.delay ?? 500));
