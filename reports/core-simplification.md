@@ -191,3 +191,70 @@ implementation, full-suite result or performance comparison is claimed.
   runtime either. Source-size reduction and compressed bundle reduction measure different outcomes.
 - **Evidence:** final `pnpm run build`, `pnpm run check:all` and `pnpm run test` pass; 671 tests pass in 68 files.
   Storybook passes 146 cases in 17 files. Gzip uses the same `gzip.compress(..., mtime=0)` call for both bundles.
+
+## 2026-10-24 further removal audit at `91e2096`
+
+### 15. Four private helpers have no callers
+
+Repository-wide symbol searches find only these declarations. None appears in the package entry point or generated
+public declarations. Counts include complete runtime declarations, excluding imports, types, comments and blank lines.
+
+| Helper                        | Declaration                                                | Source lines | Runtime lines | Runtime tokens |
+| ----------------------------- | ---------------------------------------------------------- | -----------: | ------------: | -------------: |
+| `calendarPeriods_visibleDays` | `packages/core/src/views/periods.ts:79`                    |            5 |             4 |             48 |
+| `isBuiltinProposal`           | `packages/core/src/features/interaction/date-target.ts:11` |            2 |             2 |             26 |
+| `layoutIntervals_clip`        | `packages/core/src/layouts/shared/intervals.ts:19`         |            5 |             5 |             81 |
+| `layoutCoordinates_coverage`  | `packages/core/src/layouts/shared/coordinates.ts:435`      |           11 |            11 |             48 |
+| Total                         |                                                            |           23 |            22 |            203 |
+
+The declarations account for 0.61% of the current 33,333 runtime tokens. Their absence has no observed consumer
+behavior: an isolated deletion candidate passes the core build, source/public compiler fixtures and all 368 core
+tests in 26 files. Generated public declarations are byte-identical. That candidate changes no tests.
+
+The candidate and verification log are under `/tmp/calendar-core-removal-audit/`. Production sources remain
+unchanged by this audit. Workspace build/check/test and Storybook commands were not rerun for the report.
+
+### 16. Three private values are not consumed
+
+- The runtime-level `isActive` method at `packages/core/src/features/interaction/interaction-runtime.ts:266` has no
+  caller. Public session handles implement their own lease check at line 263. The unused method is not a public
+  interaction control.
+- The returned `groups` property at `packages/core/src/layouts/shared/surfaces.ts:257` has no reader. Group membership
+  is still used within compilation and all-day placement; the array itself is not unused.
+- Every call to `paint` supplies its key at `packages/core/src/layouts/shared/surfaces.ts:49`. Its resource/event key
+  default is not selected by any call. The offset default is used.
+
+These values add private implementation without contributing to the current call paths. They are not included in
+the verified deletion candidate or its 203-token total.
+
+### 17. Three coordinate operations are consumed only by internal tests
+
+| Helper                               | Declaration                                           | Source lines | Runtime lines | Runtime tokens |
+| ------------------------------------ | ----------------------------------------------------- | -----------: | ------------: | -------------: |
+| `layoutCoordinates_resolve`          | `packages/core/src/layouts/shared/coordinates.ts:319` |           17 |            17 |            191 |
+| `layoutCoordinates_projectDates`     | `packages/core/src/layouts/shared/coordinates.ts:373` |           35 |            34 |            326 |
+| `layoutCoordinates_timelinePosition` | `packages/core/src/layouts/shared/coordinates.ts:364` |            8 |             8 |             66 |
+| Total                                |                                                       |           60 |            59 |            583 |
+
+Production hit location uses `clockTarget` and `calendarClock_candidates` instead of the coordinate resolver
+(`packages/core/src/layouts/shared/interaction-geometry.ts:9`, `packages/core/src/features/interaction/clock.ts:3`).
+Date bars use `layoutCoordinates_dateColumns` through `layoutSurfaces_dates`, rather than the date-run projector
+(`packages/core/src/layouts/shared/surfaces.ts:118`). Timeline builders and previews calculate their own fractions.
+
+This is a second internal implementation path, accounting for another 1.75% of runtime tokens. It is not an
+unconditional deletion: `docs/coordinate-model.md` explicitly requires reverse lookup, date runs, omission metadata
+and round-trip invariants. `packages/core/src/layouts/shared/tests/coordinates.spec.ts:3` imports all three helpers
+and asserts those behaviors. No equivalence result covers their absence. Their savings are excluded from the
+verified deletion candidate.
+
+### 18. Operation erasure performs runtime forwarding for type correlation
+
+`eraseOperation` at `packages/core/src/features/interaction/interaction-runtime.ts:33` constructs another descriptor
+and command object. Its source, equality, creation, scheduling and completion wrappers primarily apply TypeScript
+casts and forward arguments. The private descriptor shape is repeated in
+`packages/core/src/features/interaction/operation.internal.ts:16`.
+
+These wrappers have observable details beyond type erasure: several invoke callbacks as methods of the original
+specification, optional callbacks are resolved at different times, and API binding receives new command functions.
+A direct cast is not established as behavior-equivalent. This layer is a candidate for further design work, with
+no measured net saving or passing replacement recorded in this audit.
