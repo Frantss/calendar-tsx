@@ -1,4 +1,3 @@
-import type { Calendar_InteractionInput } from '#features/interaction/interaction.types';
 import {
   calendarPlacement_place,
   calendarRelocation_mergeSettings,
@@ -10,13 +9,6 @@ import type { Calendar_InteractionEvaluation } from '#features/interaction/inter
 import type { Calendar_DateTarget } from '#features/interaction/date-target.types';
 import type { Calendar_MoveProposal } from '#features/event-move/event-move.types';
 import { isDateTarget, calendarDateTarget_equal } from '#features/interaction/date-target';
-
-const relocationPolicy = (input: Calendar_InteractionInput) =>
-  calendarRelocation_resolve(
-    input,
-    input.movement?.relocationPolicy,
-    input.views[input.view].movement?.relocationPolicy,
-  );
 
 const moveOperation = createInteractionOperation({
   enabled: input => (input.views[input.view].movement?.enabled ?? input.movement?.enabled) !== false,
@@ -31,7 +23,12 @@ const moveOperation = createInteractionOperation({
     if (before['~source']) return { status: 'unavailable', reason: 'source-unsupported' };
     const settings = { ...input.movement, ...input.views[input.view].movement };
     if (settings.canMove?.(before) === false) return { status: 'unavailable', reason: 'event-not-editable' };
-    const after = calendarPlacement_place(before, target, relocationPolicy(input), intent.sourceResourceId);
+    const after = calendarPlacement_place(
+      before,
+      target,
+      calendarRelocation_resolve(input, 'movement'),
+      intent.sourceResourceId,
+    );
     return typeof after === 'string'
       ? { status: 'unavailable', reason: after }
       : { status: 'valid', proposal: { kind: 'move', before, after } };
@@ -63,7 +60,7 @@ export const eventMoveFeature = (
         input.movement?.canMove,
         input.views[input.view].movement?.enabled,
         input.views[input.view].movement?.canMove,
-        ...Object.values(relocationPolicy(input)),
+        ...Object.values(calendarRelocation_resolve(input, 'movement')),
       ],
       operation: moveOperation,
     },

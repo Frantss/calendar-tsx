@@ -1,4 +1,3 @@
-import type { Calendar_InteractionInput } from '#features/interaction/interaction.types';
 import type { Calendar_EventInput } from '#events/event.types';
 import type { Calendar_ConfiguredFeature } from '#features/feature.types';
 import type { Calendar_DateTarget } from '#features/interaction/date-target.types';
@@ -10,13 +9,6 @@ import {
 } from '#features/interaction/placement';
 import { createInteractionOperation } from '#features/interaction/interaction-runtime';
 import type { Calendar_ExternalDropSettings } from '#features/external-drop/external-drop.types';
-
-const relocationPolicy = (input: Calendar_InteractionInput) =>
-  calendarRelocation_resolve(
-    input,
-    input.externalDrop?.relocationPolicy,
-    input.views[input.view].externalDrop?.relocationPolicy,
-  );
 
 const createOperation = createInteractionOperation({
   kind: 'create',
@@ -30,7 +22,7 @@ const createOperation = createInteractionOperation({
       return { status: 'rejected', reason: 'external-source-rejected' };
     if (input.events.some(event => event.id === intent.event.id))
       return { status: 'rejected', reason: 'duplicate-event-id' };
-    const after = calendarPlacement_place(intent.event, target, relocationPolicy(input));
+    const after = calendarPlacement_place(intent.event, target, calendarRelocation_resolve(input, 'externalDrop'));
     return typeof after === 'string'
       ? { status: 'unavailable', reason: after }
       : { status: 'valid', proposal: { kind: 'create', after, metadata: intent.metadata } };
@@ -61,7 +53,7 @@ export const externalDropFeature = (config: Calendar_ExternalDropSettings = {}) 
         input.externalDrop?.accept,
         input.views[input.view].externalDrop?.enabled,
         input.views[input.view].externalDrop?.accept,
-        ...Object.values(relocationPolicy(input)),
+        ...Object.values(calendarRelocation_resolve(input, 'externalDrop')),
       ],
     },
   }) as const satisfies Calendar_ConfiguredFeature;

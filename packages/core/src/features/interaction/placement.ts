@@ -24,14 +24,18 @@ export const calendarRelocation_mergeSettings = (layers: readonly unknown[]): ob
 
 export const calendarRelocation_resolve = (
   input: Calendar_InteractionInput,
-  ...overrides: (Calendar_EventRelocationPolicy | undefined)[]
+  key: 'movement' | 'externalDrop' | 'transfer',
 ): Required<Calendar_EventRelocationPolicy> => ({
   allowConversion: false,
   conversionDuration: 'reset',
   defaultTimedMinutes: 60,
   allowResourceChange: true,
   resourceMode: 'replace-all',
-  ...mergePolicy([input.eventRelocationPolicy, ...overrides]),
+  ...mergePolicy([
+    input.eventRelocationPolicy,
+    input[key]?.relocationPolicy,
+    input.views[input.view][key]?.relocationPolicy,
+  ]),
 });
 
 export const calendarPlacement_place = (

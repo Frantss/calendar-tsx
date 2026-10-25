@@ -1,4 +1,3 @@
-import type { Calendar_InteractionInput } from '#features/interaction/interaction.types';
 import { calendarFeatures_active } from '#features/calendar-features';
 import type { Calendar_EventInput } from '#events/event.types';
 import type { Calendar_ConfiguredFeature } from '#features/feature.types';
@@ -11,13 +10,6 @@ import {
 } from '#features/interaction/placement';
 import { createInteractionOperation } from '#features/interaction/interaction-runtime';
 import type { Calendar_TransferSource, Calendar_TransferSettings } from '#features/event-transfer/event-transfer.types';
-
-const relocationPolicy = (input: Calendar_InteractionInput) =>
-  calendarRelocation_resolve(
-    input,
-    input.transfer?.relocationPolicy,
-    input.views[input.view].transfer?.relocationPolicy,
-  );
 
 const transferOperation = createInteractionOperation({
   kind: 'transfer',
@@ -32,7 +24,12 @@ const transferOperation = createInteractionOperation({
     if (!input.id || input.id === intent.source.id) return { status: 'rejected', reason: 'same-calendar' };
     if (settings.accept?.(intent.source.id) === false) return { status: 'rejected', reason: 'calendar-rejected' };
     if (input.events.some(event => event.id === before.id)) return { status: 'rejected', reason: 'duplicate-event-id' };
-    const after = calendarPlacement_place(before, target, relocationPolicy(input), intent.source.sourceResourceId);
+    const after = calendarPlacement_place(
+      before,
+      target,
+      calendarRelocation_resolve(input, 'transfer'),
+      intent.source.sourceResourceId,
+    );
     return typeof after === 'string'
       ? { status: 'unavailable', reason: after }
       : {
@@ -118,7 +115,7 @@ export const eventTransferFeature = (config: Calendar_TransferSettings = {}) =>
         input.transfer?.accept,
         input.views[input.view].transfer?.enabled,
         input.views[input.view].transfer?.accept,
-        ...Object.values(relocationPolicy(input)),
+        ...Object.values(calendarRelocation_resolve(input, 'transfer')),
       ],
     },
   }) as const satisfies Calendar_ConfiguredFeature;
