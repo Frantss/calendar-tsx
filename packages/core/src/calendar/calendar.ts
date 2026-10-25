@@ -42,17 +42,12 @@ type Tracked = Pick<
   'timeZone' | 'views' | 'view' | 'date' | 'events' | 'resources' | 'firstDayOfWeek' | 'state'
 > & { now: Temporal.Instant };
 
-const tracked_from = (options: AnyOptions, now: Temporal.Instant): Tracked => ({
-  timeZone: options.timeZone,
-  views: options.views,
-  view: options.view,
-  date: options.date,
-  events: options.events,
-  resources: options.resources,
-  firstDayOfWeek: options.firstDayOfWeek,
-  state: options.state,
-  now,
-});
+const trackedKeys = ['timeZone', 'views', 'view', 'date', 'events', 'resources', 'firstDayOfWeek', 'state'] as const;
+const tracked_from = (options: AnyOptions, now: Temporal.Instant): Tracked =>
+  ({
+    ...Object.fromEntries(trackedKeys.map(key => [key, options[key]])),
+    now,
+  }) as Tracked;
 
 const records_equal = (a: Record<string, unknown> = {}, b: Record<string, unknown> = {}) => {
   const keys = Object.keys(a);
@@ -61,15 +56,9 @@ const records_equal = (a: Record<string, unknown> = {}, b: Record<string, unknow
 };
 
 const tracked_equals = (a: Tracked, b: Tracked) =>
-  a.timeZone === b.timeZone &&
-  a.views === b.views &&
-  a.view === b.view &&
-  a.date.equals(b.date) &&
-  a.events === b.events &&
-  a.resources === b.resources &&
-  a.firstDayOfWeek === b.firstDayOfWeek &&
-  records_equal(a.state, b.state) &&
-  a.now.equals(b.now);
+  trackedKeys.every(key =>
+    key === 'date' ? a.date.equals(b.date) : key === 'state' ? records_equal(a.state, b.state) : a[key] === b[key],
+  ) && a.now.equals(b.now);
 
 export const createCalendar = <
   TData,

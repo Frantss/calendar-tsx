@@ -56,61 +56,69 @@ export const calendarFeatures_createRuntime = (features: Calendar_Features, inpu
   };
 
   const configs = new WeakMap<Calendar_View, Map<string, unknown>>();
-  const contexts = new Map<string, Calendar_FeatureContext>();
-  const contextFor = (alias: string): Calendar_FeatureContext => {
-    const previous = contexts.get(alias);
-    if (previous) return previous;
-    const feature = features[alias] as Calendar_ConfiguredFeature;
-    const result: Calendar_FeatureContext = {
-      features: { ...canonical },
-      get state() {
-        return input.calendarState;
-      },
-      get layout() {
-        return input.layout;
-      },
-      onOptionsChange: input.onOptionsChange,
-      onMount: input.onMount,
-      settings: (key, defaults) => {
-        const match = entries.find(([, feature]) => feature.interaction?.settings === key);
-        const configured = match ? (match[1] as Calendar_ConfiguredFeature)['~config'] : undefined;
-        const override = match ? (input.view as { features?: Record<string, object> }).features?.[match[0]] : undefined;
-        const layers = [
-          defaults,
-          configured,
-          (input.options as Record<string, unknown>)[key],
-          override,
-          input.view[key],
-        ];
-        const merge = match?.[1].interaction?.mergeSettings;
-        return (merge ? merge(layers) : Object.assign({}, ...layers)) as typeof defaults;
-      },
-      get options() {
-        return input.options;
-      },
-      get view() {
-        return input.view;
-      },
-      get api() {
-        return input.api;
-      },
-      get config() {
-        const view = input.view;
-        let cached = configs.get(view);
-        if (!cached) configs.set(view, (cached = new Map()));
-        if (!cached.has(alias))
-          cached.set(
-            alias,
-            calendarFeatures_config(feature, (view as { features?: Record<string, unknown> }).features?.[alias]),
-          );
-        return cached.get(alias);
-      },
-      getState,
-      setState,
-    };
-    contexts.set(alias, result);
-    return result;
-  };
+  const settings = new Map(
+    entries
+      .filter(([, feature]) => feature.interaction?.settings !== undefined)
+      .toReversed()
+      .map(entry => [entry[1].interaction!.settings!, entry]),
+  );
+  const contexts = new Map<string, Calendar_FeatureContext>(
+    entries.map(([alias, configured]) => {
+      const feature = configured as Calendar_ConfiguredFeature;
+      return [
+        alias,
+        {
+          features: { ...canonical },
+          get state() {
+            return input.calendarState;
+          },
+          get layout() {
+            return input.layout;
+          },
+          onOptionsChange: input.onOptionsChange,
+          onMount: input.onMount,
+          settings: (key, defaults) => {
+            const match = settings.get(key);
+            const configured = match ? (match[1] as Calendar_ConfiguredFeature)['~config'] : undefined;
+            const override = match
+              ? (input.view as { features?: Record<string, object> }).features?.[match[0]]
+              : undefined;
+            const layers = [
+              defaults,
+              configured,
+              (input.options as Record<string, unknown>)[key],
+              override,
+              input.view[key],
+            ];
+            const merge = match?.[1].interaction?.mergeSettings;
+            return (merge ? merge(layers) : Object.assign({}, ...layers)) as typeof defaults;
+          },
+          get options() {
+            return input.options;
+          },
+          get view() {
+            return input.view;
+          },
+          get api() {
+            return input.api;
+          },
+          get config() {
+            const view = input.view;
+            let cached = configs.get(view);
+            if (!cached) configs.set(view, (cached = new Map()));
+            if (!cached.has(alias))
+              cached.set(
+                alias,
+                calendarFeatures_config(feature, (view as { features?: Record<string, unknown> }).features?.[alias]),
+              );
+            return cached.get(alias);
+          },
+          getState,
+          setState,
+        },
+      ];
+    }),
+  );
 
   const stages = new Map<string, { input: unknown; deps: unknown[] | undefined; output: unknown }>();
 
@@ -124,10 +132,10 @@ export const calendarFeatures_createRuntime = (features: Calendar_Features, inpu
     },
     constructApi: (api: object) => {
       for (const [alias, feature] of Object.entries(features))
-        Object.assign(api, feature.constructApi?.(contextFor(alias)));
+        Object.assign(api, feature.constructApi?.(contexts.get(alias)!));
     },
     run: <TValue>(alias: string, key: string, stage: Calendar_FeatureStage<TValue>, value: TValue): TValue => {
-      const context = contextFor(alias);
+      const context = contexts.get(alias)!;
       const deps = [context.config, ...(stage.deps?.(context) ?? [])];
       const cached = stages.get(key);
 
