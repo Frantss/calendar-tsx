@@ -112,3 +112,82 @@ implementation, full-suite result or performance comparison is claimed.
   existing public types, even if calls through the calendar runtime continued to pass.
 - **Evidence:** 54 direct descriptor comparisons matched the original with unmerged option/view inputs,
   enabled/disabled overrides, and timed/all-day relocation targets.
+
+## 2026-10-24 replacement-design investigation
+
+### 9. Replacing both timed builders still produces a small whole-core saving
+
+- **What:** an isolated replacement of both builders with one surface-based function and two signature-preserving
+  adapters reduced that slice from 293 to 217 runtime-bearing lines and from 2,148 to 1,655 runtime tokens.
+  Whole-core totals decreased from 4,107 to 4,031 lines and from 34,135 to 33,642 tokens, a 1.4% token reduction.
+- **Where:** `packages/core/src/layouts/time-grid/time-grid.ts:150`,
+  `packages/core/src/layouts/timeline/timeline.ts:103`; prototype and patch under
+  `/tmp/calendar-core-replacement/`, measured against `21c6931`.
+- **Why it matters:** even replacing whole builders leaves most implementation outside this slice. Repeated
+  layout branches also remain inside the shared function. This prototype does not establish a half-size design.
+- **Evidence:** all 366 core tests, source/public compiler fixtures, core build, identical public declarations,
+  720 complete-model/move/preview/commit comparisons and 54 direct descriptor comparisons passed. Reference-graph,
+  callback-order and performance equivalence remain outside the differential probe's scope.
+
+### 10. Preview construction and decoration use public models as intermediate representations
+
+- **What:** event preview projectors build a layout from the proposed event, then traverse that layout to extract
+  geometry. Background decorators separately traverse columns, rows or day cells to attach shading.
+- **Where:** `packages/core/src/layouts/time-grid/time-grid-interactions.ts:81`,
+  `packages/core/src/layouts/timeline/timeline-interactions.ts:85`,
+  `packages/core/src/layouts/day-grid/day-grid-interactions.ts:81`,
+  `packages/core/src/features/background/background-layouts.ts:107`.
+- **Why it matters:** a builder-only size comparison does not include these related assembly paths. Feature
+  decorators receive the output of preceding stages, so that intermediate model also carries observable ordering
+  and extension behavior.
+
+### 11. Command preflight ordering differs across session methods
+
+- **What:** update and commit check the lease, refresh, recheck the lease and then check owner acknowledgment.
+  Unavailable checks lease and acknowledgment without refreshing. Publication can invoke owner callbacks
+  synchronously; ownership snapshots, pending publication and the internal lease are distinct state.
+- **Where:** `packages/core/src/features/interaction/interaction-runtime.ts:122`,
+  `packages/core/src/features/interaction/interaction-runtime.ts:214`,
+  `packages/core/src/features/interaction/interaction-runtime.ts:239`,
+  `packages/core/src/features/interaction/interaction-runtime.ts:291`.
+- **Why it matters:** similar-looking guards do not prove identical transitions. Serialized model equality
+  cannot verify the callback order or the status returned when callbacks reenter a session method.
+
+## 2026-10-24 replacement implementation measurements
+
+### 12. The implemented candidate misses the half-size budget
+
+- **What:** against `21c6931`, all non-test core source decreases from 7,139 to 6,963 physical lines.
+  Implementation-file lines decrease from 5,320 to 5,144, runtime-bearing lines from 4,107 to 3,970, and runtime
+  tokens from 34,135 to 33,333. The runtime-token reduction is 2.35%, including the new shared implementation.
+- **Where:** `packages/core/src/layouts/shared/surfaces.ts:31`,
+  `packages/core/src/features/interaction/date-edit.ts:23`,
+  `packages/core/src/features/interaction/interaction-runtime.ts:208`,
+  `packages/core/src/interactions/dom-host.ts:173`; measured by `scripts/measure-core.mjs:1`.
+- **Why it matters:** the shared implementations retain most of the behavior-specific code removed from callers.
+  The architecture's proposed 2,050-line/17,000-token budget has no passing implementation result.
+- **Evidence:** source measurements read the control revision directly from Git. Build, test and package results
+  are recorded in `docs/core-simplification.md` and `/tmp/calendar-core-implementation/`.
+
+### 13. The guarded dispatcher retains distinct public command transitions
+
+- **What:** synchronous cancellation during a controlled publication makes the outer update return stale, with
+  no event completion callback. Marking a target unavailable retains the lease without refreshing; committing
+  afterward refreshes and cancels an operation disabled through the live settings object. The returned unavailable
+  result and the owned candidate retain separate object identities.
+- **Where:** `packages/core/src/tests/integration/interactions.spec.ts:338`,
+  `packages/core/src/features/interaction/interaction-runtime.ts:208`.
+- **Why it matters:** consolidating preflight checks must retain the public return values and synchronous owner
+  effects. The added regressions pass against both control and replacement implementations.
+
+### 14. The compiled size reduction is also small
+
+- **What:** a fresh workspace build produces 138,436 bytes of core JavaScript, compared with the saved control's
+  143,801 bytes, a 3.73% decrease. Gzip decreases from 32,813 to 32,428 bytes, or 1.17%. Root declarations remain
+  byte-for-byte identical. No manifests, lockfile, public exports, public type files or screenshot baselines changed.
+- **Where:** `packages/core/dist/index.js:1`, `packages/core/dist/index.d.ts:1`,
+  `/tmp/calendar-core-implementation/bundle-measurements.json`.
+- **Why it matters:** the candidate's smaller shared implementations do not produce a half-size distributed
+  runtime either. Source-size reduction and compressed bundle reduction measure different outcomes.
+- **Evidence:** final `pnpm run build`, `pnpm run check:all` and `pnpm run test` pass; 671 tests pass in 68 files.
+  Storybook passes 146 cases in 17 files. Gzip uses the same `gzip.compress(..., mtime=0)` call for both bundles.

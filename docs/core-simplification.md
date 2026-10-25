@@ -1,6 +1,71 @@
 # Core implementation simplification
 
-Status: first replacement implemented, 2026-10-24. Baseline: `c6de41e`. The half-size target remains unachieved.
+Status: replacement candidate implemented, 2026-10-24. The half-size target is missed. The original baseline is
+`c6de41e`; the replacement below is measured against `21c6931`.
+
+## Replacement implementation result
+
+The working tree now contains compiled timed surfaces shared by time-grid/timeline models and event previews,
+date-bar partitions shared by day grids and all-day tracks, and coverage queries shared by availability and
+background layers. The old `bars.ts` and `columns.ts` implementations are removed. A shared evaluator handles
+built-in date edits. One guarded dispatcher handles session commands; the DOM gesture uses activation/release
+phases and one completion path. Feature contexts and settings-key lookup compile from registration metadata.
+
+The resulting implementation is only slightly smaller. The proposed architecture did not deliver its size budget.
+
+| Measure                                                           | `21c6931` | Replacement | Reduction |
+| ----------------------------------------------------------------- | --------: | ----------: | --------: |
+| Physical source lines, including types                            |     7,139 |       6,963 |     2.47% |
+| Lines in implementation files, including imports and inline types |     5,320 |       5,144 |     3.31% |
+| Source lines containing runtime tokens, excluding imports         |     4,107 |       3,970 |     3.34% |
+| Runtime tokens, excluding imports                                 |    34,135 |      33,333 |     2.35% |
+| Built JavaScript bytes, including source-map reference            |   143,801 |     138,436 |     3.73% |
+| Gzipped built JavaScript bytes                                    |    32,813 |      32,428 |     1.17% |
+
+New helpers and compatibility adapters count in full. No implementation moved to another package or dependency.
+The new measurement utility is tooling, outside the core-source denominator; it contains no calendar behavior.
+Tests, comments, type syntax and imports do not earn runtime-token savings. Most deleted builder/evaluator code
+reappears in the shared implementation, so the source changes do not establish that most of core was unnecessary.
+
+Run the same source measurement from the repository root after installing the frozen lockfile:
+
+```bash
+NODE_NO_WARNINGS=1 node scripts/measure-core.mjs 21c6931
+NODE_NO_WARNINGS=1 node scripts/measure-core.mjs
+```
+
+The utility uses Node's TypeScript stripping and the installed Acorn 8.19.0 parser. It can read the reference's
+source directly from Git, without changing the checkout. Its baseline totals match the earlier measurement.
+
+The exact coordinate foundation, native recurrence, public extension protocols and declared public types remain.
+Hit location still reads the current decorated model. Day-grid event previews retain day-grid assembly, including
+its overflow callbacks; timed event previews query compiled surfaces without constructing slots or a public
+layout root. These choices preserve existing behavior but also limit the reduction.
+
+This candidate does not meet the proposal's feasibility gate. The half-size objective remains unfulfilled.
+It is left uncommitted for review; this result is not a claim that a half-size replacement is ready.
+
+### Replacement verification
+
+- Root declarations are byte-for-byte identical to the saved `21c6931` build.
+- The full workspace build, package/type checks and test suite pass. The suite now contains 671 tests in 68 files.
+- Storybook passes all 146 browser/screenshot cases in 17 files, without baseline changes.
+- The differential probe matches 720 complete calendar models and move/preview/commit cases across eight
+  zone/transition cases, plus 54 direct public descriptor comparisons with raw option/view input.
+- Two added public regressions cover synchronous controlled-owner cancellation during publication and the
+  difference between unavailable and commit refresh ordering. Both also pass against the control implementation.
+- An isolated smoke comparison with 1,200 events, 12 resources and seven dates used 12 measured samples after
+  warmup, alternating implementation order. Median grid derivation was 337.35 ms for the control and 337.59 ms
+  for the replacement; timeline derivation was 332.13 ms and 330.31 ms. Complete models matched. An earlier run
+  concurrent with other checks was slower and noisier. These samples do not establish general performance
+  equivalence or reference-graph/callback-order equivalence beyond the covered assertions.
+
+The final `pnpm run build`, `pnpm run check:all` and `pnpm run test` sequence passed against the final runtime
+source. Temporary artifacts and complete logs are under `/tmp/calendar-core-implementation/`. Gzip uses Python
+`gzip.compress` with `mtime=0` for both saved bundles. The initial sandboxed browser command failed with
+`Error: listen EPERM: operation not permitted ::1:63315`; the successful runs used an allowed local listener.
+The initial lint pass flagged four unbound internal surface-method references. Explicit `this: void` annotations
+resolve those references; existing unrelated warnings remain documented in `reports/lint-warnings.md`.
 
 ## Implementation result
 
@@ -244,3 +309,201 @@ and reported `dns error: failed to lookup address information`; I interrupted it
 `vite-plus` in this dependency-free worktree. Running it in the primary checkout reported
 `EPERM: operation not permitted` for its generated `node_modules/.vite-temp` configuration. The fallback uses the
 installed Oxfmt binary with a temporary JSON copy of the repository's formatting options.
+
+## Replacement design after the first result
+
+The next candidate replaces the layout assembly and interaction control flow. Extracting more helpers from the
+current implementations is insufficient. Keep the public descriptors and types as compatibility adapters; build
+the internals around compiled surfaces and a transaction dispatcher. This is a proposed architecture, not a
+verified half-size implementation.
+
+### Experiment that changed the recommendation
+
+I replaced the entire time-grid and timeline builders in an isolated copy of `21c6931`. A single `buildTimed`
+function handles surface enumeration, projection, placement, availability, background events, slots and model
+construction. The existing exported builder signatures become adapters. The new implementation counts in full.
+
+| Measure                                | Two original builders | Kernel and both adapters | Reduction |
+| -------------------------------------- | --------------------: | -----------------------: | --------: |
+| Formatted source lines                 |                   394 |                      278 |     29.4% |
+| Source lines containing runtime tokens |                   293 |                      217 |     25.9% |
+| Runtime tokens, excluding imports      |                 2,148 |                    1,655 |     23.0% |
+
+Across core, that is 4,107 to 4,031 runtime lines and 34,135 to 33,642 runtime tokens. A second builder-sharing
+pass therefore saves only 1.4% of runtime tokens. I rejected it as the main solution and did not apply it to
+production. This experiment also exposes a design problem: one function with repeated `grid ? ... : ...`
+branches retains two implementations inside the shared function.
+
+The isolated prototype passed all 366 core tests in 26 files, source and public compiler fixtures, and 720
+differential complete-model/move/preview/commit cases across eight time-zone/transition cases. Another 54 direct
+operation-descriptor comparisons passed. Its core build passed and produced root declarations identical to the
+current build. The differential comparisons preserve property presence, Temporal types/values, maps, keys and
+array order. They do not establish all reference identities, callback ordering or performance equivalence.
+
+The temporary experiment is under `/tmp/calendar-core-replacement/`: `control/`, `candidate/`, `prototype.patch`,
+`differential.mjs`, `measurements.json` and `build.log`. These are local experiment artifacts, not repository
+dependencies or an implementation being proposed for merge.
+
+### The replacement: compile a view, query surfaces, materialize the public model
+
+Today, layout builders assemble render models, background decorators traverse those models, and interaction
+projectors build another layout and extract its geometry. Replace these separate assembly paths with one private
+surface representation. Keep the existing coordinate plan, including exact source fragments, as its foundation.
+
+The private interface has three operations:
+
+```text
+compileView(definition, period, range, resources, coordinatePlan) -> surfaces
+querySurface(surface, sources, projectionPolicy, placementPolicy) -> placements
+materialize(layoutKind, surfaces, placements) -> existing public layout
+```
+
+A surface contains a stable identity, its position in the output hierarchy, visible date ordinals, optional
+resource assignment and a coordinate domain. Date surfaces and clock surfaces remain distinct. Time-grid columns
+and timeline rows differ in which date ordinals they contain. Day-grid rows contain date cells. List sections
+group date cells without packing them. Grouping constructs the surface hierarchy before event placement.
+
+Use explicit policies, rather than a layout-kind switch throughout the query:
+
+| Decision     | Policies required by current behavior                                                  |
+| ------------ | -------------------------------------------------------------------------------------- |
+| Membership   | Foreground resource assignment, unassigned background events, scoped background layers |
+| Projection   | Inclusive date membership, exact clock coverage, enclosing clock rectangle             |
+| Placement    | Preserve ordered first-fit rows, sort and pack overlap clusters, no packing            |
+| Paint sizing | No minimum, local-window minimum, full-timeline minimum                                |
+| Shading      | Union coverage, complement coverage, day-cell membership                               |
+
+These policies encode existing differences. For example, foreground events without assignments do not appear
+under resources; unassigned background events do. Day-grid timed background events do not become ordinary cell
+shading. An inverse day-grid layer tests whether a timed range touches the day. A timeline foreground rectangle
+may enclose several dates; its timed background events still produce separate per-date pieces.
+
+The four materializers own public nesting, key formats and field names. They perform no time arithmetic or
+packing. Their code counts toward the replacement. Public `coordinates`, `fragments`, continuation flags,
+`undefined` properties, ordering and shared event/resource references remain part of their output contract.
+
+For event previews, query the same surfaces with the proposed event as the only foreground input. Preserve the
+current isolated preview packing; existing events must not acquire influence over preview lanes. For selections,
+query date membership or clock enclosure without packing. Convert placements directly into public preview
+geometry. This removes the preview-only construction and traversal of a complete public layout.
+
+Backgrounds use the same coverage query. Preserve their position in the public feature decoration sequence.
+Third-party decorators can change a model before the background stage, so the background adapter must derive its
+surface inputs from the model it receives. It cannot silently reuse an earlier, stale scene. This adapter is a
+material feasibility risk: if reconstructing compatible surfaces costs as much as the existing decorator, the
+proposed saving does not exist.
+
+Custom layouts continue through their existing `build`, `locate` and `project` descriptors. Their arbitrary
+targets and geometry do not enter the built-in date/clock representation. There is no new consumer interface.
+
+### Replace interaction control flow with one guarded dispatcher
+
+The current runtime already shares operation dispatch and ownership. Another generic operation wrapper alone
+will not remove much code. The proposed change is to consolidate session command transitions and move built-in
+date-edit differences into ordered operation definitions.
+
+One synchronous dispatcher handles `begin`, `update`, `commit`, `unavailable`, `cancel` and `refresh`. Session
+handles only capture their token and submit commands. The dispatcher owns lease validity, source/context
+invalidation and revalidation. An ownership channel owns `read`, `publish` and identity acknowledgment. The
+preview store derives from the acknowledged semantic snapshot and current layout.
+
+Keep the lease, pending publication and owner snapshot as separate facts. A controlled owner can delay, replace,
+or synchronously acknowledge a publication. Collapsing them into one draft object would change behavior.
+Likewise, command results must retain the current distinctions between `busy`, `awaiting-owner`, `unchanged`,
+`stale-session` and invalid candidates.
+
+Use a central command preflight with the existing per-command ordering. `update` and `commit` refresh before
+checking acknowledgment; `unavailable` currently does not refresh. Recheck the lease after callbacks that can
+reenter the runtime. Apply observable effects synchronously in the current order; a deferred command queue would
+change callback behavior. Clear the lease before publishing completion and emitting a proposal.
+
+Movement, resize, creation and transfer become definitions with ordered guards, a transformation, a scheduling
+effect and an output adapter. Share source lookup, range checks and date transformations where their semantics
+match. Preserve per-operation error status and precedence. Keep transfer preparation/release as a source lease,
+with one source completion callback. Selection and third-party operations use the same dispatcher without being
+forced into an event-edit shape.
+
+Public descriptor callbacks remain independently callable with raw interaction input. Their adapters invoke the
+same evaluators after applying the current raw root/view rules. They must not assume access to a compiled calendar
+or change how explicit `undefined` overrides work. Factory exports, literal inference and extension maps remain.
+
+### Compile registration metadata; keep live input reads
+
+Compile feature aliases, prerequisite validation, operation registration, settings-key lookup and ordered stage
+lists when their definitions change. Keep the public factory objects and context contracts. Use that compiled
+metadata in both the calendar derivation and the interaction dispatcher instead of reconstructing registration
+information at each read.
+
+Live options remain live. Preserve D24's tracked fields, comparator behavior, injected clock and controlled
+navigation. Keep stage caches keyed by input identity and the declared dependencies; retain config identity per
+view/alias. Do not replace these with one global revision counter or cache public settings results under a new
+identity policy. External atoms, controlled feature state, lifecycle callback order and remount behavior still
+flow through the existing public context interface.
+
+This module also owns source resolution, normalization, foreground/background partitioning and derivation. Native
+recurrence can retain its current implementation and resolver seam. Rewriting recurrence does not remove the
+layout or interaction representations responsible for this proposal.
+
+### Replace the gesture flags with a gesture lifetime
+
+Keep the semantic dispatcher independent from DOM input. Give each gesture one lifetime with states `waiting`,
+`active`, `awaiting-owner` and `ended`, plus the temporary callback suppression needed during finalization. One
+event adapter routes pointer/touch/cancel/scroll events to that lifetime. One cleanup scope owns listeners,
+capture, timers, the animation frame, subscriptions and the prepared transfer source.
+
+Normalize hits to `{ host, surface, location }`; use the surface program for built-in hit interpretation and
+existing descriptor capabilities for extensions. Keep touch activation, captured activation settings versus live
+settings, destination switching and delayed post-release completion explicit. Share the horizontal/vertical
+scroll calculation while retaining nested scrolling fallback and window scrolling.
+
+The existing DOM host already uses `AbortController` and shared transport. This proposal earns savings only by
+removing repeated state-transition and cleanup paths. Merely introducing a reducer and an effect executor beside
+the current driver would add code. Source/event bindings and stable framework binding refs remain adapters, and
+their code is included in the DOM budget.
+
+### Size limits and feasibility gates
+
+Use `21c6931` as the new control. Target at most 2,050 runtime-bearing lines and 17,000 runtime tokens, including
+compatibility adapters, policies, tables and new helpers. These limits halve the current core. They are design
+budgets, not measured estimates or evidence that this architecture will fit.
+
+| Responsibility                                     | Current lines | Line budget | Current tokens | Token budget |
+| -------------------------------------------------- | ------------: | ----------: | -------------: | -----------: |
+| Calendar, assembly, views, dates and event sources |           704 |         310 |          6,048 |        2,450 |
+| Surfaces, coordinates, all layouts and backgrounds |         1,580 |         720 |         13,021 |        6,000 |
+| Interaction dispatcher, ownership and placement    |           433 |         220 |          3,653 |        1,800 |
+| Operation and input feature adapters               |           476 |         210 |          4,072 |        1,600 |
+| DOM driver and bindings                            |           684 |         360 |          4,941 |        2,750 |
+| Native recurrence, retained                        |           230 |         230 |          2,400 |        2,400 |
+| **Total**                                          |     **4,107** |   **2,050** |     **34,135** |   **17,000** |
+
+The geometry budget includes the existing exact coordinate foundation. The remaining surface compiler,
+materializers, shading and preview adapters must fit around it. This is the highest-risk budget. The other main
+risk is preserving synchronous owner/callback traces in a smaller dispatcher. Neither has a complete replacement
+or a passing equivalence result yet. There is no substantiated 50% saving to report from this investigation.
+
+The next useful experiment is a complete surface path covering time grid, timeline, day grid, list, background
+decoration, hit location and preview output. Measure it with the coordinate code and adapters included. Reject it
+if it cannot approach its budget. Independently validate the dispatcher with controlled-owner/reentrancy traces
+before combining it with the gesture lifetime. Avoid another production change that saves a small percentage
+while leaving these questions open.
+
+Before replacing production, require the existing workspace build/check/test commands, public declaration and
+extension fixtures, Storybook/browser cases and differential models. Extend the trace checks to compare callback
+order, reference identities, delayed acknowledgment, source replacement, equal-settings invalidation, transfers
+and cleanup. Measure representative large event/resource cases to catch an asymptotic regression from repeated
+surface scans. The isolated prototype's passing checks do not establish these guarantees for the new design.
+
+### Alternatives considered
+
+| Alternative                                                                 | Decision                                                                                                                                                  |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Continue helper extraction or merge only timed builders                     | Reject as the main approach. The measured net savings remain about 1.5% per pass.                                                                         |
+| Rewrite each module independently with its current internal representations | Lower migration risk, but retains model reconstruction and duplicate command preflights. No evidence supports a half-size outcome.                        |
+| Compile surfaces and consolidate transaction/gesture lifetimes              | Preferred next experiment. It removes whole assembly paths, but compatibility adapters and state transitions could consume the saving.                    |
+| Generate builders or encode arbitrary control flow in a generic interpreter | Reject. Count generated/runtime descriptions in full; reduced handwriting does not establish less implementation.                                         |
+| Replace scheduling and gesture behavior with an external engine             | No equivalent engine has been established. Wrapping different DST, ownership or extension semantics would require a separate compatibility investigation. |
+
+Repository changes for this investigation are documentation only. Full workspace builds, package checks and
+adapter/Storybook suites were not rerun for these documents. The isolated prototype checks above have a narrower
+scope. Production core remains at `21c6931`.
