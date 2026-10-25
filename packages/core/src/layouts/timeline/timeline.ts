@@ -1,6 +1,6 @@
-import { Temporal } from 'temporal-polyfill';
+import type { Temporal } from 'temporal-polyfill';
 import { calendarPeriods_groups } from '#views/periods';
-import { calendarEvents_dateSpan, calendarEvents_isAllDay, calendarEvents_isMultiDay } from '#events/events';
+import { calendarEvents_isAllDay, calendarEvents_isMultiDay } from '#events/events';
 import type { Calendar_BackgroundEventSegment } from '#layouts/layout.types';
 import type { Calendar_Event } from '#events/event.types';
 import type { Calendar_FirstDayOfWeek, Calendar_Range } from '#dates/date.types';
@@ -12,41 +12,21 @@ import type {
   Calendar_TimelineRow,
   Calendar_TimelineViewSettings,
 } from '#layouts/timeline/timeline.types';
-import type { LayoutIntervals_Interval as Interval } from '#layouts/shared/intervals';
-import { layoutIntervals_complement } from '#layouts/shared/intervals';
+import { layoutIntervals_complement, layoutIntervals_stack } from '#layouts/shared/intervals';
 import {
-  layoutCoordinates_bounds,
   layoutCoordinates_coverage,
-  layoutCoordinates_coverFragments,
-  layoutCoordinates_dateColumns,
   layoutCoordinates_hourOffset,
   layoutCoordinates_length,
   layoutCoordinates_plan,
   layoutCoordinates_projectInstant,
-  layoutCoordinates_projectTime,
   layoutCoordinates_slots,
 } from '#layouts/shared/coordinates';
-import type { LayoutCoordinates_Fragment, LayoutCoordinates_Plan } from '#layouts/shared/coordinates';
+import type { LayoutCoordinates_Plan } from '#layouts/shared/coordinates';
+import { layoutProjection_events, layoutProjection_enclose, layoutProjection_cover } from '#layouts/shared/projection';
+import type { LayoutProjection_Event } from '#layouts/shared/projection';
+import { layoutColumns_matches as matchesResource, layoutColumns_matchesBackground } from '#layouts/shared/columns';
 
 const DEFAULT_SLOT_MINUTES = 60;
-const matchesResource = <TData, TResourceData>(
-  event: Calendar_Event<TData>,
-  resource?: Calendar_Resource<TResourceData>,
-) => !resource || (event.resourceIds ?? []).includes(resource.id);
-
-/** Each item takes the lowest stack row where it overlaps nothing; touching intervals do not overlap (D34). */
-const stack = <T extends Interval>(items: T[]) => {
-  const rows: Interval[][] = [];
-  return items.map(item => {
-    let row = 0;
-    while (rows[row]?.some(other => other.startMs < item.endMs && item.startMs < other.endMs)) row++;
-    (rows[row] ??= []).push(item);
-    return { ...item, row };
-  });
-};
-
-type Projected<TData> = { event: Calendar_Event<TData>; fragments: readonly LayoutCoordinates_Fragment[] };
-
 const buildRow = <TData, TResourceData>({
   node,
   events,
@@ -55,8 +35,8 @@ const buildRow = <TData, TResourceData>({
   minEventMs,
 }: {
   node?: Calendar_ResourceNode<TResourceData>;
-  events: Projected<TData>[];
-  backgroundEvents: Projected<TData>[];
+  events: LayoutProjection_Event<TData>[];
+  backgroundEvents: LayoutProjection_Event<TData>[];
   plan: LayoutCoordinates_Plan;
   minEventMs: number;
 }): Calendar_TimelineRow<TData, TResourceData> => {
@@ -64,57 +44,18 @@ const buildRow = <TData, TResourceData>({
   const length = layoutCoordinates_length(plan);
   const total = length * plan.dates.dates.length;
   const key = resource?.id ?? 'all';
-  const items = events.flatMap(
-    ({
-      event,
-      fragments,
-    }): (Projected<TData> & Interval & { isAllDay: boolean; continuesBefore: boolean; continuesAfter: boolean })[] => {
-      if (!matchesResource(event, resource)) return [];
-      if (calendarEvents_isAllDay(event)) {
-        const span = layoutCoordinates_dateColumns(plan.dates.dates, calendarEvents_dateSpan(event));
-        return span
-          ? [
-              {
-                event,
-                fragments,
-                isAllDay: true,
-                startMs: span.colStart * length,
-                endMs: (span.colEnd + 1) * length,
-                continuesBefore: span.continuesBefore,
-                continuesAfter: span.continuesAfter,
-              },
-            ]
-          : [];
-      }
-      const bounds = layoutCoordinates_bounds(fragments);
-      if (!bounds.length) return [];
-      const starts = bounds.map(
-        part => part.dateIndex * length + Number(part.clock.start - plan.dates.clock.start) / 1_000_000,
-      );
-      const ends = bounds.map(
-        part => part.dateIndex * length + Number(part.clock.end - plan.dates.clock.start) / 1_000_000,
-      );
-      return [
-        {
-          event,
-          fragments,
-          isAllDay: false,
-          startMs: Math.min(...starts),
-          endMs: Math.min(total, Math.max(Math.max(...ends), Math.min(...starts) + minEventMs)),
-          continuesBefore: event.start.epochNanoseconds < fragments[0].source.start.epochNanoseconds,
-          continuesAfter: event.end.epochNanoseconds > fragments[fragments.length - 1].source.end.epochNanoseconds,
-        },
-      ];
-    },
+  const items = events.flatMap(projected =>
+    matchesResource(projected.event, resource) ? layoutProjection_enclose(plan, projected, minEventMs) : [],
   );
-  const segments = stack(items).map(item => ({
+  const rows = layoutIntervals_stack(items, item => item);
+  const segments = items.map((item, index) => ({
     key: `${key}:${item.event.id}`,
     event: item.event,
     fragments: item.fragments,
     start: item.startMs / total,
     span: (item.endMs - item.startMs) / total,
-    row: item.row,
-    isAllDay: item.isAllDay,
+    row: rows[index],
+    isAllDay: calendarEvents_isAllDay(item.event),
     isMultiDay: calendarEvents_isMultiDay(item.event),
     continuesBefore: item.continuesBefore,
     continuesAfter: item.continuesAfter,
@@ -131,34 +72,28 @@ const buildRow = <TData, TResourceData>({
     isExpanded: node?.isExpanded ?? false,
     isUnavailable: !!resource && availability.length === 0,
     segments,
-    backgroundEvents: backgroundEvents.flatMap(({ event, fragments }): Calendar_BackgroundEventSegment<TData>[] => {
-      if (resource && event.resourceIds && !event.resourceIds.includes(resource.id)) return [];
-      if (calendarEvents_isAllDay(event)) {
-        const span = layoutCoordinates_dateColumns(plan.dates.dates, calendarEvents_dateSpan(event));
-        return span
-          ? [
-              {
-                key: `${key}:background:${event.id}`,
-                event,
-                start: span.colStart / plan.dates.dates.length,
-                span: (span.colEnd - span.colStart + 1) / plan.dates.dates.length,
-                continuesBefore: span.continuesBefore,
-                continuesAfter: span.continuesAfter,
-              },
-            ]
-          : [];
-      }
-      return plan.dates.dates.flatMap((_date, dateIndex) => {
-        const parts = fragments.filter(part => part.dateIndex === dateIndex);
-        return layoutCoordinates_coverFragments(plan, parts, dateIndex).map((interval, index) => ({
+    backgroundEvents: backgroundEvents.flatMap((projected): Calendar_BackgroundEventSegment<TData>[] => {
+      const { event } = projected;
+      if (!layoutColumns_matchesBackground(event, resource)) return [];
+      if (calendarEvents_isAllDay(event))
+        return layoutProjection_enclose(plan, projected, 0).map(interval => ({
+          key: `${key}:background:${event.id}`,
+          event,
+          start: interval.startMs / total,
+          span: (interval.endMs - interval.startMs) / total,
+          continuesBefore: interval.continuesBefore,
+          continuesAfter: interval.continuesAfter,
+        }));
+      return plan.dates.dates.flatMap((_date, dateIndex) =>
+        layoutProjection_cover(plan, projected, dateIndex).map((interval, index) => ({
           key: `${key}:background:${event.id}:${dateIndex}:${index}`,
           event,
           start: (dateIndex * length + interval.startMs) / total,
           span: (interval.endMs - interval.startMs) / total,
-          continuesBefore: Temporal.Instant.compare(event.start.toInstant(), parts[0].source.start) < 0,
-          continuesAfter: Temporal.Instant.compare(event.end.toInstant(), parts[parts.length - 1].source.end) > 0,
-        }));
-      });
+          continuesBefore: interval.continuesBefore,
+          continuesAfter: interval.continuesAfter,
+        })),
+      );
     }),
     rows: Math.max(0, ...segments.map(segment => segment.row + 1)),
     unavailable: resource
@@ -200,15 +135,8 @@ export const layoutTimeline_build = <TData, TResourceData>({
     ? calendarResources_visible(resourceNodes ?? calendarResources_build(resources))
     : [undefined];
   const clock = layoutCoordinates_projectInstant(plan, now.toInstant());
-  const project = (event: Calendar_Event<TData>) => ({
-    event,
-    fragments:
-      event.kind === 'timed'
-        ? layoutCoordinates_projectTime(plan, { start: event.start.toInstant(), end: event.end.toInstant() }, event.id)
-        : [],
-  });
-  const projected = events.map(project);
-  const projectedBackgrounds = backgroundEvents.map(project);
+  const projected = layoutProjection_events(plan, events);
+  const projectedBackgrounds = layoutProjection_events(plan, backgroundEvents);
   return {
     kind: 'timeline',
     coordinates: plan,

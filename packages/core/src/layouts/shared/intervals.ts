@@ -3,6 +3,18 @@ import type { Temporal } from 'temporal-polyfill';
 /** A half-open millisecond span: epoch instants before projection, clock coordinates after it (D40). */
 export type LayoutIntervals_Interval = { startMs: number; endMs: number };
 
+/** First-fit rows preserve input order; touching half-open spans can share a row. */
+export const layoutIntervals_stack = <T>(items: T[], bounds: (item: T) => LayoutIntervals_Interval) => {
+  const rows: LayoutIntervals_Interval[][] = [];
+  return items.map(item => {
+    const interval = bounds(item);
+    let row = 0;
+    while (rows[row]?.some(other => other.startMs < interval.endMs && interval.startMs < other.endMs)) row++;
+    (rows[row] ??= []).push(interval);
+    return row;
+  });
+};
+
 /** Clips each interval to `day`, dropping the empty ones, sorted by start. */
 export const layoutIntervals_clip = (intervals: LayoutIntervals_Interval[], day: LayoutIntervals_Interval) =>
   intervals

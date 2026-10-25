@@ -1,12 +1,8 @@
-import { Temporal } from 'temporal-polyfill';
+import type { Temporal } from 'temporal-polyfill';
 
 import { calendarPeriods_groups } from '#views/periods';
-import { calendarEvents_dateSpan, calendarEvents_isAllDay, calendarEvents_overlaps } from '#events/events';
-import type {
-  Calendar_BackgroundEventSegment,
-  Calendar_BackgroundEventSpan,
-  Calendar_BarSegment,
-} from '#layouts/layout.types';
+import { calendarEvents_isAllDay } from '#events/events';
+import type { Calendar_BackgroundEventSpan, Calendar_BarSegment } from '#layouts/layout.types';
 import type { Calendar_Event } from '#events/event.types';
 import type { Calendar_FirstDayOfWeek, Calendar_Range } from '#dates/date.types';
 import type { Calendar_Resource } from '#calendar/calendar.types';
@@ -18,7 +14,6 @@ import type {
 } from '#layouts/time-grid/time-grid.types';
 import { layoutBars_background, layoutBars_build, layoutBars_rows } from '#layouts/shared/bars';
 import {
-  layoutCoordinates_bounds,
   layoutCoordinates_coverFragments,
   layoutCoordinates_hourOffset,
   layoutCoordinates_length,
@@ -28,6 +23,8 @@ import {
   layoutCoordinates_slots,
 } from '#layouts/shared/coordinates';
 import type { LayoutCoordinates_Fragment, LayoutCoordinates_Plan } from '#layouts/shared/coordinates';
+import { layoutProjection_events, layoutProjection_enclose, layoutProjection_cover } from '#layouts/shared/projection';
+import type { LayoutProjection_Event } from '#layouts/shared/projection';
 import { layoutIntervals_complement } from '#layouts/shared/intervals';
 import { layoutLanes_assign } from '#layouts/shared/lanes';
 import {
@@ -39,8 +36,6 @@ import {
 const DEFAULT_SLOT_MINUTES = 30;
 const DEFAULT_SHORT_EVENT_MINUTES = 30;
 const MS_PER_MINUTE = 60_000;
-
-type Projected<TData> = { event: Calendar_Event<TData>; fragments: readonly LayoutCoordinates_Fragment[] };
 
 const buildColumn = <TData, TResourceData>({
   dateIndex,
@@ -56,8 +51,8 @@ const buildColumn = <TData, TResourceData>({
 }: {
   dateIndex: number;
   resource?: Calendar_Resource<TResourceData>;
-  events: Projected<TData>[];
-  backgroundEvents: Projected<TData>[];
+  events: LayoutProjection_Event<TData>[];
+  backgroundEvents: LayoutProjection_Event<TData>[];
   availability: readonly LayoutCoordinates_Fragment[];
   plan: LayoutCoordinates_Plan;
   now: Temporal.ZonedDateTime;
@@ -69,55 +64,23 @@ const buildColumn = <TData, TResourceData>({
   const length = layoutCoordinates_length(plan);
   const key = `${resource?.id ?? 'all'}:${date.toString()}`;
   const localBounds = { startMs: 0, endMs: length };
-  const timed = events.flatMap(({ event, fragments }) => {
-    if (!matchesResource(event, resource)) return [];
-    const parts = fragments.filter(part => part.dateIndex === dateIndex);
-    const [bounds] = layoutCoordinates_bounds(parts);
-    if (!bounds) return [];
-    const startMs = Number(bounds.clock.start - plan.dates.clock.start) / 1_000_000;
-    const endMs = Number(bounds.clock.end - plan.dates.clock.start) / 1_000_000;
-    return [
-      {
-        event,
-        fragments: parts,
-        startMs,
-        endMs: Math.min(Math.max(endMs, startMs + minEventMs), length),
-        continuesBefore:
-          event.kind === 'timed' && Temporal.Instant.compare(event.start.toInstant(), parts[0].source.start) < 0,
-        continuesAfter:
-          event.kind === 'timed' &&
-          Temporal.Instant.compare(event.end.toInstant(), parts[parts.length - 1].source.end) > 0,
-      },
-    ];
-  });
-  const backgroundSegments = backgroundEvents.flatMap(
-    ({ event, fragments }): Calendar_BackgroundEventSegment<TData>[] => {
-      if (!matchesBackgroundResource(event, resource)) return [];
-      if (calendarEvents_isAllDay(event)) {
-        if (!calendarEvents_overlaps(event, { start: date, end: date })) return [];
-        const span = calendarEvents_dateSpan(event);
-        return [
-          {
-            key: `${key}:background:${event.id}`,
-            event,
-            start: 0,
-            span: 1,
-            continuesBefore: Temporal.PlainDate.compare(span.start, date) < 0,
-            continuesAfter: Temporal.PlainDate.compare(span.end, date) > 0,
-          },
-        ];
-      }
-      const parts = fragments.filter(part => part.dateIndex === dateIndex);
-      if (!parts.length) return [];
-      return layoutCoordinates_coverFragments(plan, parts, dateIndex).map((interval, index) => ({
-        key: index === 0 ? `${key}:background:${event.id}` : `${key}:background-part:${index}:${event.id}`,
-        event,
-        start: interval.startMs / length,
-        span: (interval.endMs - interval.startMs) / length,
-        continuesBefore: Temporal.Instant.compare(event.start.toInstant(), parts[0].source.start) < 0,
-        continuesAfter: Temporal.Instant.compare(event.end.toInstant(), parts[parts.length - 1].source.end) > 0,
-      }));
-    },
+  const timed = events.flatMap(projected =>
+    matchesResource(projected.event, resource) ? layoutProjection_enclose(plan, projected, minEventMs, dateIndex) : [],
+  );
+  const backgroundSegments = backgroundEvents.flatMap(projected =>
+    matchesBackgroundResource(projected.event, resource)
+      ? layoutProjection_cover(plan, projected, dateIndex).map((interval, index) => ({
+          key:
+            index === 0
+              ? `${key}:background:${projected.event.id}`
+              : `${key}:background-part:${index}:${projected.event.id}`,
+          event: projected.event,
+          start: interval.startMs / length,
+          span: (interval.endMs - interval.startMs) / length,
+          continuesBefore: interval.continuesBefore,
+          continuesAfter: interval.continuesAfter,
+        }))
+      : [],
   );
   const covered = layoutCoordinates_coverFragments(plan, availability, dateIndex);
   const placed = layoutLanes_assign(timed, overlap);
@@ -201,15 +164,11 @@ export const layoutTimeGrid_build = <TData, TResourceData>({
 }): Calendar_TimeGridLayout<TData, TResourceData> => {
   const plan = layoutCoordinates_plan(range, definition, timeZone, firstDayOfWeek);
   const dates = plan.dates.dates;
-  const project = (event: Calendar_Event<TData>): Projected<TData> => ({
-    event,
-    fragments:
-      event.kind === 'timed'
-        ? layoutCoordinates_projectTime(plan, { start: event.start.toInstant(), end: event.end.toInstant() }, event.id)
-        : [],
-  });
-  const timed = events.filter(event => event.kind === 'timed').map(project);
-  const backgrounds = backgroundEvents.map(project);
+  const timed = layoutProjection_events(
+    plan,
+    events.filter(event => event.kind === 'timed'),
+  );
+  const backgrounds = layoutProjection_events(plan, backgroundEvents);
   const availability = new Map(
     resources.map(resource => [
       resource,

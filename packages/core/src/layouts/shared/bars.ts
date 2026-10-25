@@ -4,25 +4,7 @@ import { calendarEvents_dateSpan, calendarEvents_isAllDay, calendarEvents_isMult
 import type { Calendar_BackgroundEventSpan, Calendar_BarSegment } from '#layouts/layout.types';
 import type { Calendar_Event } from '#events/event.types';
 import { layoutCoordinates_dateColumns } from '#layouts/shared/coordinates';
-
-type Span = { colStart: number; colEnd: number };
-
-/** Greedy packing: each span takes the lowest row where all of its columns are free. */
-const packRows = (spans: Span[]) => {
-  const rows: boolean[][] = [];
-
-  return spans.map(span => {
-    let row = 0;
-
-    while (rows[row]?.slice(span.colStart, span.colEnd + 1).some(Boolean)) row++;
-
-    const cells = (rows[row] ??= []);
-
-    for (let col = span.colStart; col <= span.colEnd; col++) cells[col] = true;
-
-    return row;
-  });
-};
+import { layoutIntervals_stack } from '#layouts/shared/intervals';
 
 /** Clips each event's date span to the columns and flags when it continues past either edge. */
 const clip = <TData>(events: Calendar_Event<TData>[], columns: Temporal.PlainDate[]) => {
@@ -48,7 +30,7 @@ export const layoutBars_build = <TData>(
   keyPrefix: string,
 ) => {
   const spans = clip(events, columns);
-  const rows = packRows(spans);
+  const rows = layoutIntervals_stack(spans, span => ({ startMs: span.colStart, endMs: span.colEnd + 1 }));
 
   return spans.map((span, index): Calendar_BarSegment<TData> => ({
     key: `${keyPrefix}:${span.event.id}`,

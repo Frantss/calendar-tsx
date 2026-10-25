@@ -16,6 +16,7 @@ import {
   layoutCoordinates_length,
   layoutCoordinates_projectTime,
 } from '#layouts/shared/coordinates';
+import type { LayoutCoordinates_Plan } from '#layouts/shared/coordinates';
 import { layoutIntervals_complement, layoutIntervals_day, layoutIntervals_merge } from '#layouts/shared/intervals';
 
 const layers_resolve = (layers: readonly Calendar_BackgroundLayer[], range: Calendar_Range, timeZone: string) =>
@@ -27,12 +28,11 @@ const layers_resolve = (layers: readonly Calendar_BackgroundLayer[], range: Cale
 const appliesTo = (layer: Calendar_BackgroundLayer, resourceId: string | undefined) =>
   !layer.resourceIds || (resourceId !== undefined && layer.resourceIds.includes(resourceId));
 
-export const timeGrid_decorate = (
-  grid: Calendar_TimeGridLayout<unknown, unknown>,
+const timedBackgrounds = (
+  plan: LayoutCoordinates_Plan,
   layers: readonly Calendar_BackgroundLayer[],
   timeZone: string,
 ) => {
-  const plan = grid.coordinates;
   const length = layoutCoordinates_length(plan);
   const resolved = plan.dates.dates.length
     ? layers_resolve(layers, plan.dates.inputRange, timeZone).map(({ layer, ranges }) => ({
@@ -49,34 +49,67 @@ export const timeGrid_decorate = (
                 `${layer.id}:${index}`,
               ),
         ),
+        coverage: new Map<number, LayoutIntervals_Interval[]>(),
       }))
     : [];
+  return (key: string, resourceId?: string, dateIndex?: number): Calendar_BackgroundSegment[] => {
+    const total = length * (dateIndex === undefined ? plan.dates.dates.length : 1);
+    return resolved.flatMap(({ layer, allDay, fragments, coverage }) => {
+      if (!appliesTo(layer, resourceId)) return [];
+      const index = dateIndex ?? -1;
+      let covered = coverage.get(index);
+      if (!covered) {
+        const full = plan.dates.dates.flatMap((date, day) =>
+          (dateIndex === undefined || dateIndex === day) &&
+          allDay.some(
+            range =>
+              Temporal.PlainDate.compare(range.start, date) <= 0 &&
+              Temporal.PlainDate.compare(range.end ?? range.start, date) >= 0,
+          )
+            ? [
+                {
+                  startMs: dateIndex === undefined ? day * length : 0,
+                  endMs: dateIndex === undefined ? (day + 1) * length : length,
+                },
+              ]
+            : [],
+        );
+        covered = layoutIntervals_merge(
+          [...full, ...layoutCoordinates_coverFragments(plan, fragments, dateIndex)].sort(
+            (a, b) => a.startMs - b.startMs,
+          ),
+        );
+        coverage.set(index, covered);
+      }
+      return (layer.inverse ? layoutIntervals_complement(covered, { startMs: 0, endMs: total }) : covered).map(
+        interval => ({
+          key: `${key}:${layer.id}:${interval.startMs}`,
+          layer: layer.id,
+          kind: layer.kind,
+          start: interval.startMs / total,
+          span: (interval.endMs - interval.startMs) / total,
+        }),
+      );
+    });
+  };
+};
+
+export const timeGrid_decorate = (
+  grid: Calendar_TimeGridLayout<unknown, unknown>,
+  layers: readonly Calendar_BackgroundLayer[],
+  timeZone: string,
+) => {
+  const backgrounds = timedBackgrounds(grid.coordinates, layers, timeZone);
   return {
     ...grid,
-    columns: grid.columns.map(column => {
-      const dateIndex = plan.dates.indexByDate.get(column.date.toString()) as number;
-      const backgrounds = resolved.flatMap(({ layer, allDay, fragments }): Calendar_BackgroundSegment[] => {
-        if (!appliesTo(layer, column.resource?.id)) return [];
-        const full = allDay.some(
-          range =>
-            Temporal.PlainDate.compare(range.start, column.date) <= 0 &&
-            Temporal.PlainDate.compare(range.end ?? range.start, column.date) >= 0,
-        );
-        const covered = full
-          ? [{ startMs: 0, endMs: length }]
-          : layoutCoordinates_coverFragments(plan, fragments, dateIndex);
-        return (layer.inverse ? layoutIntervals_complement(covered, { startMs: 0, endMs: length }) : covered).map(
-          interval => ({
-            key: `${column.key}:${layer.id}:${interval.startMs}`,
-            layer: layer.id,
-            kind: layer.kind,
-            start: interval.startMs / length,
-            span: (interval.endMs - interval.startMs) / length,
-          }),
-        );
-      });
-      return { ...column, backgrounds };
-    }),
+    columns: grid.columns.map(column => ({
+      ...column,
+      backgrounds: backgrounds(
+        column.key,
+        column.resource?.id,
+        grid.coordinates.dates.indexByDate.get(column.date.toString()),
+      ),
+    })),
   };
 };
 
@@ -128,53 +161,12 @@ export const timeline_decorate = (
   layers: readonly Calendar_BackgroundLayer[],
   timeZone: string,
 ) => {
-  const plan = timeline.coordinates;
-  const length = layoutCoordinates_length(plan);
-  const total = length * plan.dates.dates.length;
-  const resolved = plan.dates.dates.length
-    ? layers_resolve(layers, plan.dates.inputRange, timeZone).map(({ layer, ranges }) => {
-        const intervals = ranges.flatMap((range, index) =>
-          'allDay' in range
-            ? plan.dates.dates.flatMap((date, index) =>
-                Temporal.PlainDate.compare(range.start, date) <= 0 &&
-                Temporal.PlainDate.compare(range.end ?? range.start, date) >= 0
-                  ? [{ startMs: index * length, endMs: (index + 1) * length }]
-                  : [],
-              )
-            : layoutCoordinates_coverFragments(
-                plan,
-                layoutCoordinates_projectTime(
-                  plan,
-                  {
-                    start: range.start.toInstant(),
-                    end: range.end.toInstant(),
-                  },
-                  `${layer.id}:${index}`,
-                ),
-              ),
-        );
-        const covered = layoutIntervals_merge(intervals.sort((a, b) => a.startMs - b.startMs));
-        return {
-          layer,
-          intervals: layer.inverse ? layoutIntervals_complement(covered, { startMs: 0, endMs: total }) : covered,
-        };
-      })
-    : [];
+  const backgrounds = timedBackgrounds(timeline.coordinates, layers, timeZone);
   return {
     ...timeline,
     rows: timeline.rows.map(row => ({
       ...row,
-      backgrounds: resolved.flatMap(({ layer, intervals }): Calendar_BackgroundSegment[] =>
-        appliesTo(layer, row.resource?.id)
-          ? intervals.map(interval => ({
-              key: `${row.key}:${layer.id}:${interval.startMs}`,
-              layer: layer.id,
-              kind: layer.kind,
-              start: interval.startMs / total,
-              span: (interval.endMs - interval.startMs) / total,
-            }))
-          : [],
-      ),
+      backgrounds: backgrounds(row.key, row.resource?.id),
     })),
   };
 };
