@@ -12,7 +12,7 @@ import type {
   Calendar_TimeGridLayout,
   Calendar_TimeGridViewSettings,
 } from '#layouts/time-grid/time-grid.types';
-import { layoutTimeGrid_build } from '#layouts/time-grid/time-grid';
+import { layoutSurfaces_compile, layoutSurfaces_preview } from '#layouts/shared/surfaces';
 import {
   clockTarget,
   dateProposal,
@@ -78,32 +78,14 @@ export const layoutTimeGrid_project = (
                 .map(part => ({ surface: `column:${column.key}`, ...part.position })),
             );
   } else {
-    const preview = layoutTimeGrid_build({
-      firstDayOfWeek: input.firstDayOfWeek,
-      definition: settings,
-      range: input.range,
-      timeZone: input.timeZone,
-      now: input.now,
-      resources: input.resources,
-      events: calendarEvents_normalize([proposal.after], input.timeZone),
-      backgroundEvents: [],
-    });
-    geometry = [
-      ...preview.columns.flatMap(column =>
-        column.segments.map(segment => ({
-          surface: `column:${column.key}`,
-          start: segment.start,
-          span: segment.span,
-          inlineStart: segment.inlineStart,
-          inlineSize: segment.inlineSize,
-        })),
+    geometry = layoutSurfaces_preview(
+      layoutSurfaces_compile(
+        { ...input, events: calendarEvents_normalize([proposal.after], input.timeZone), backgroundEvents: [] },
+        settings,
+        'timeGrid',
       ),
-      ...(preview.allDay?.segments.map(segment => ({
-        surface: 'allDay',
-        start: segment.colStart / preview.columns.length,
-        span: segment.colSpan / preview.columns.length,
-      })) ?? []),
-    ];
+      'timeGrid',
+    );
   }
   return { status: 'valid', kind: 'timeGrid', geometry };
 };

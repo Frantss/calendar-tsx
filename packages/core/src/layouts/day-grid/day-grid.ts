@@ -18,8 +18,11 @@ import type { Calendar_FirstDayOfWeek, Calendar_Range } from '#dates/date.types'
 import type { Calendar_LayoutInput } from '#layouts/layout.types';
 import type { Calendar_Resource } from '#calendar/calendar.types';
 import { layoutCoordinates_dates } from '#layouts/shared/coordinates';
-import { layoutBars_background, layoutBars_build, layoutBars_rows } from '#layouts/shared/bars';
-import { layoutColumns_matches, layoutColumns_matchesBackground, layoutColumns_place } from '#layouts/shared/columns';
+import {
+  layoutSurfaces_dates,
+  layoutSurfaces_pairs,
+  layoutSurfaces_matches as layoutColumns_matches,
+} from '#layouts/shared/surfaces';
 import { layoutIntervals_day } from '#layouts/shared/intervals';
 
 type SectionRange<TResourceData> = {
@@ -81,10 +84,7 @@ export const layoutDayGrid_build = <TData, TResourceData>({
         const visible = rowDates.filter(date => !hiddenDays.some(day => day === date.dayOfWeek));
         const rowStart = rowDates[0];
         if (!rowStart) continue;
-        const pairs =
-          definition.groupOrder === 'date-first'
-            ? visible.flatMap(date => resourceGroups.map(resource => ({ date, resource })))
-            : resourceGroups.flatMap(resource => visible.map(date => ({ date, resource })));
+        const pairs = layoutSurfaces_pairs(visible, resourceGroups, definition.groupOrder);
         const columns: Calendar_DayGridColumn<TResourceData>[] = pairs.map(({ date, resource }) => ({
           key: resource ? `${resource.id}:${date.toString()}` : date.toString(),
           date,
@@ -94,26 +94,18 @@ export const layoutDayGrid_build = <TData, TResourceData>({
         const rowKey = rowStart.toString();
         const rowRange = { start: rowStart, end: rowDates[rowDates.length - 1] ?? rowStart };
         const rowEvents = events.filter(event => calendarEvents_overlaps(event, rowRange));
-        const segments = layoutColumns_place(
-          columns,
-          resourceGroups,
-          resource => rowEvents.filter(event => layoutColumns_matches(event, resource)),
-          layoutBars_build,
-          `${key}:${rowKey}`,
-        );
+        const {
+          segments,
+          backgroundEvents: backgroundSpans,
+          rows: stackCount,
+        } = layoutSurfaces_dates(columns, resourceGroups, rowEvents, allDayBackgrounds, `${key}:${rowKey}`);
         const isHidden = (segment: { row: number }) => segment.row >= definition.maxEventsPerDay;
         rows.push({
           key: rowKey,
           columnCount: columns.length,
           segments: segments.filter(segment => !isHidden(segment)),
-          backgroundEvents: layoutColumns_place(
-            columns,
-            resourceGroups,
-            resource => allDayBackgrounds.filter(event => layoutColumns_matchesBackground(event, resource)),
-            layoutBars_background,
-            `${key}:${rowKey}`,
-          ),
-          stackCount: Math.min(definition.maxEventsPerDay, layoutBars_rows(segments)),
+          backgroundEvents: backgroundSpans,
+          stackCount: Math.min(definition.maxEventsPerDay, stackCount),
           days: columns.map((column, col) => {
             const hiddenCount = segments.filter(
               segment => isHidden(segment) && col >= segment.colStart && col < segment.colStart + segment.colSpan,

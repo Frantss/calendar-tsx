@@ -12,7 +12,7 @@ import type {
   Calendar_TimelineViewSettings,
 } from '#layouts/timeline/timeline.types';
 import type { LayoutCoordinates_Plan } from '#layouts/shared/coordinates';
-import { layoutTimeline_build } from '#layouts/timeline/timeline';
+import { layoutSurfaces_compile, layoutSurfaces_preview } from '#layouts/shared/surfaces';
 import {
   clockTarget,
   dateProposal,
@@ -82,18 +82,13 @@ export const layoutTimeline_project = (
               ...part,
             })),
           )
-      : layoutTimeline_build({
-          firstDayOfWeek: input.firstDayOfWeek,
-          backgroundEvents: [],
-          definition: settings,
-          range: input.range,
-          timeZone: input.timeZone,
-          now: input.now,
-          resources: input.resources,
-          resourceNodes: input.resourceNodes,
-          events: calendarEvents_normalize([proposal.after], input.timeZone),
-        }).rows.flatMap(row =>
-          row.segments.map(segment => ({ surface: `lane:${row.key}`, start: segment.start, span: segment.span })),
+      : layoutSurfaces_preview(
+          layoutSurfaces_compile(
+            { ...input, events: calendarEvents_normalize([proposal.after], input.timeZone), backgroundEvents: [] },
+            settings,
+            'timeline',
+          ),
+          'timeline',
         );
   return { status: 'valid', kind: 'timeline', geometry };
 };

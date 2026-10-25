@@ -1,6 +1,5 @@
 import type {
   Calendar_BackgroundLayer,
-  Calendar_BackgroundRange,
   Calendar_BackgroundSegment,
   Calendar_DayBackground,
 } from '#features/background/background.types';
@@ -11,13 +10,10 @@ import type { Calendar_Range } from '#dates/date.types';
 import type { Calendar_TimeGridLayout } from '#layouts/time-grid/time-grid.types';
 import type { Calendar_TimelineLayout } from '#layouts/timeline/timeline.types';
 import type { LayoutIntervals_Interval } from '#layouts/shared/intervals';
-import {
-  layoutCoordinates_coverFragments,
-  layoutCoordinates_length,
-  layoutCoordinates_projectTime,
-} from '#layouts/shared/coordinates';
+import { layoutCoordinates_length } from '#layouts/shared/coordinates';
+import { layoutSurfaces_coverage } from '#layouts/shared/surfaces';
 import type { LayoutCoordinates_Plan } from '#layouts/shared/coordinates';
-import { layoutIntervals_complement, layoutIntervals_day, layoutIntervals_merge } from '#layouts/shared/intervals';
+import { layoutIntervals_complement, layoutIntervals_day } from '#layouts/shared/intervals';
 
 const layers_resolve = (layers: readonly Calendar_BackgroundLayer[], range: Calendar_Range, timeZone: string) =>
   layers.map(layer => ({
@@ -37,50 +33,14 @@ const timedBackgrounds = (
   const resolved = plan.dates.dates.length
     ? layers_resolve(layers, plan.dates.inputRange, timeZone).map(({ layer, ranges }) => ({
         layer,
-        allDay: ranges.filter(
-          (range): range is Extract<Calendar_BackgroundRange, { allDay: true }> => 'allDay' in range,
-        ),
-        fragments: ranges.flatMap((range, index) =>
-          'allDay' in range
-            ? []
-            : layoutCoordinates_projectTime(
-                plan,
-                { start: range.start.toInstant(), end: range.end.toInstant() },
-                `${layer.id}:${index}`,
-              ),
-        ),
-        coverage: new Map<number, LayoutIntervals_Interval[]>(),
+        coverage: layoutSurfaces_coverage(plan, ranges),
       }))
     : [];
   return (key: string, resourceId?: string, dateIndex?: number): Calendar_BackgroundSegment[] => {
     const total = length * (dateIndex === undefined ? plan.dates.dates.length : 1);
-    return resolved.flatMap(({ layer, allDay, fragments, coverage }) => {
+    return resolved.flatMap(({ layer, coverage }) => {
       if (!appliesTo(layer, resourceId)) return [];
-      const index = dateIndex ?? -1;
-      let covered = coverage.get(index);
-      if (!covered) {
-        const full = plan.dates.dates.flatMap((date, day) =>
-          (dateIndex === undefined || dateIndex === day) &&
-          allDay.some(
-            range =>
-              Temporal.PlainDate.compare(range.start, date) <= 0 &&
-              Temporal.PlainDate.compare(range.end ?? range.start, date) >= 0,
-          )
-            ? [
-                {
-                  startMs: dateIndex === undefined ? day * length : 0,
-                  endMs: dateIndex === undefined ? (day + 1) * length : length,
-                },
-              ]
-            : [],
-        );
-        covered = layoutIntervals_merge(
-          [...full, ...layoutCoordinates_coverFragments(plan, fragments, dateIndex)].sort(
-            (a, b) => a.startMs - b.startMs,
-          ),
-        );
-        coverage.set(index, covered);
-      }
+      const covered = coverage(dateIndex);
       return (layer.inverse ? layoutIntervals_complement(covered, { startMs: 0, endMs: total }) : covered).map(
         interval => ({
           key: `${key}:${layer.id}:${interval.startMs}`,
@@ -135,7 +95,7 @@ export const dayGrid_decorate = (
 
           const backgrounds = resolved.flatMap(({ layer, ranges }): Calendar_DayBackground[] => {
             if (!appliesTo(layer, day.resource?.id)) return [];
-            const allDayTouches = (range: Extract<Calendar_BackgroundRange, { allDay: true }>) =>
+            const allDayTouches = (range: { start: Temporal.PlainDate; end?: Temporal.PlainDate }) =>
               Temporal.PlainDate.compare(range.start, day.date) <= 0 &&
               Temporal.PlainDate.compare(range.end ?? range.start, day.date) >= 0;
             const shaded = layer.inverse

@@ -11,7 +11,7 @@ import type {
 } from '#layouts/list/list.types';
 import type { Calendar_Resource } from '#calendar/calendar.types';
 import { layoutCoordinates_dates } from '#layouts/shared/coordinates';
-import { layoutColumns_matches } from '#layouts/shared/columns';
+import { layoutSurfaces_matches as layoutColumns_matches } from '#layouts/shared/surfaces';
 
 export const layoutList_build = <TData, TResourceData>({
   range,
