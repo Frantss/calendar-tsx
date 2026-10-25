@@ -65,6 +65,7 @@ takes no overrides. An optional `~validateConfig` checks values at runtime, incl
 | `interaction`     | Optional operation descriptor, settings key, validators and dependencies.                |
 | `resolveEvents`   | Resolves definitions carrying the feature's stable source identity before normalization. |
 | `events`          | A stage over events after the core sort, before layout.                                  |
+| `resources`       | A stage over the full depth-first resource-node list, before layout.                     |
 | `decorate`        | A stage over the built layout; adds the feature's model fields.                          |
 
 A stage is `{ deps?, run }` and reruns when its input, resolved configuration or a `deps` value changes, so list every
@@ -170,9 +171,10 @@ A layout feature supplies a view kind:
 | `locate`  | Optional: a surface position → a semantic target.            |
 | `project` | Optional: a proposal → preview geometry.                     |
 
-`build` receives `range`, `period`, `inputRange`, foreground and background events, resources, `timeZone` and `now`;
-`settings` is the view definition. A new kind needs an entry in `Calendar_Layout_FeatureMap` keyed by the layout
-feature's name. Its view supplies the layout; it isn't a registry entry.
+`build` receives `range`, `period`, `inputRange`, foreground and background events, resources, `timeZone` and `now`.
+`resources` is the complete ordered resource list; `resourceNodes` holds prepared hierarchy metadata, including
+collapsed descendants. `settings` is the view definition. A new kind needs an entry in `Calendar_Layout_FeatureMap`
+keyed by the layout feature's name. Its view supplies the layout; it isn't a registry entry.
 
 ### Locating and projecting
 

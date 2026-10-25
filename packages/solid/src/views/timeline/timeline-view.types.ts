@@ -1,4 +1,5 @@
 import type {
+  Calendar_ResourceExpansionApi,
   Calendar_TimelineLayout,
   Calendar_TimelineRow,
   Calendar_TimelineSegment,
@@ -28,3 +29,8 @@ export type TimelineViewEventProps<TData> = { segment: Calendar_TimelineSegment<
 export type TimelineViewBackgroundEventProps<TData> = {
   segment: Calendar_BackgroundEventSegment<TData>;
 } & Calendar_HTMLProps<'div', Calendar_BackgroundEventSegment<TData>>;
+
+export type TimelineViewResourceToggleProps<TData, TResourceData> = {
+  row: Row<TData, TResourceData>;
+  calendar: { api: { resourceExpansion: Calendar_ResourceExpansionApi } };
+} & Calendar_HTMLProps<'button', Row<TData, TResourceData>>;

@@ -52,6 +52,11 @@ import type { Calendar_DayGridLayout } from '#layouts/day-grid/day-grid.types';
 import type { Calendar_TimeGridLayout } from '#layouts/time-grid/time-grid.types';
 import type { Calendar_ListLayout } from '#layouts/list/list.types';
 import type { Calendar_TimelineLayout } from '#layouts/timeline/timeline.types';
+import type {
+  ResourceExpansion_Options_FeatureMap,
+  ResourceExpansion_State_FeatureMap,
+  ResourceExpansion_Api_FeatureMap,
+} from '#features/resource-expansion/resource-expansion.feature-maps';
 
 /** Feature-owned event definitions, keyed by the feature's export name. */
 export interface Calendar_EventInput_FeatureMap<TData> extends Recurrence_EventInput_FeatureMap<TData> {}
@@ -88,6 +93,7 @@ export interface Calendar_Options_FeatureMap<TData, TResourceData>
     EventTransfer_Options_FeatureMap<TData>,
     Interaction_Options_FeatureMap,
     DateSelection_Options_FeatureMap,
+    ResourceExpansion_Options_FeatureMap,
     EventMove_Options_FeatureMap<TData>,
     EventResize_Options_FeatureMap<TData>,
     Constraints_Options_FeatureMap {}
@@ -104,7 +110,7 @@ export interface Calendar_ViewSettings_FeatureMap
     EventResize_ViewSettings_FeatureMap,
     Constraints_ViewSettings_FeatureMap {}
 /** State slices a feature owns; each is uncontrolled, controlled through `state`, or external through `atoms`. */
-export interface Calendar_State_FeatureMap extends DateSelection_State_FeatureMap {}
+export interface Calendar_State_FeatureMap extends DateSelection_State_FeatureMap, ResourceExpansion_State_FeatureMap {}
 /** Actions a feature merges onto `api`, with the consumer's event and resource payload types. */
 // oxlint-disable-next-line no-unused-vars -- merges must repeat the generics
 export interface Calendar_Api_FeatureMap<TData = unknown, TResourceData = unknown>
@@ -114,5 +120,6 @@ export interface Calendar_Api_FeatureMap<TData = unknown, TResourceData = unknow
     EventTransfer_Api_FeatureMap<TData>,
     Interaction_Api_FeatureMap,
     DateSelection_Api_FeatureMap,
+    ResourceExpansion_Api_FeatureMap,
     EventMove_Api_FeatureMap<TData>,
     EventResize_Api_FeatureMap<TData> {}

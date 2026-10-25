@@ -2,6 +2,7 @@ import type { Calendar_Event } from '#events/event.types';
 import type { Calendar_PickFeatures, Calendar_Features, Calendar_FeatureTypes } from '#features/feature.types';
 import type { Calendar_FirstDayOfWeek, Calendar_Range } from '#dates/date.types';
 import type { Calendar_Resource } from '#calendar/calendar.types';
+import type { Calendar_ResourceNode } from '#resources/resource.types';
 import type { Calendar_Views } from '#views/view.types';
 import type { Calendar_BarSegment_FeatureMap, Calendar_Layout_FeatureMap } from '#features/feature-maps.types';
 import type { Temporal } from 'temporal-polyfill';
@@ -54,6 +55,8 @@ export type Calendar_LayoutInput<TData, TResourceData> = {
   /** The events with `display: 'background'`: normalised and clipped likewise, in input order (D37). */
   backgroundEvents: Calendar_Event<TData>[];
   resources: Calendar_Resource<TResourceData>[];
+  /** All hierarchy nodes in depth-first order, including collapsed descendants. */
+  resourceNodes?: Calendar_ResourceNode<TResourceData>[];
   timeZone: string;
   now: Temporal.ZonedDateTime;
 };

@@ -7,6 +7,7 @@ import {
   fixedClock,
   listView,
   recurrenceFeature,
+  resourceExpansionFeature,
   timeGridView,
   timelineView,
 } from '@calendar-tsx/core';
@@ -154,6 +155,7 @@ export const scenario = (input: ScenarioInput = {}) => {
   const features = calendarFeatures({
     background: backgroundFeature(input.backgrounds ?? []),
     recurrence: recurrenceFeature(),
+    tree: resourceExpansionFeature(),
     rrule: rruleFeature(),
   });
   const views = calendarViews({ features, views: { ...standardViews, example: input.view ?? standardViews.month } });

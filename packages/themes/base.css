@@ -280,6 +280,16 @@
     inset-inline-start: 0;
     z-index: 2;
     min-inline-size: 0;
+    padding-inline-start: calc(var(--cal-resource-depth, 0) * var(--calendar-resource-indent, 1rem));
+  }
+
+  :where([data-scope='calendar'][data-part='timeline-resource-toggle']) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 1.5rem;
+    min-block-size: 1.5rem;
+    vertical-align: middle;
   }
 
   /* A minimum, so the lane and its shading stretch to a taller resource cell */

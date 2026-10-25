@@ -277,3 +277,59 @@ information: nodename nor servname provided, or not known`. It was interrupted
   without either dependency restoration or a Vite config cache write.
 - Build, workspace checks, runtime tests and browser verification were not run
   because this change contains research documentation only.
+
+## Implementation verification: 2026-10-24
+
+The user subsequently accepted the `parentId` approach and expandable Timeline
+rows. D62 in `docs/design.md:1763` records that contract. Findings 10 through 15
+above describe the pre-implementation snapshot at `c6de41e`.
+
+- **What:** Hierarchy validation and depth-first ordering, expansion ownership,
+  visible Timeline rows, consistent event previews, React/Solid native-button
+  toggles and theme indentation are now present. Parent events, backgrounds and
+  availability remain independent of descendants. Other views retain the full
+  resource order; agendas still omit empty groups.
+- **Where:** `packages/core/src/resources/resources.ts:4`;
+  `packages/core/src/features/resource-expansion/resource-expansion-feature.ts:10`;
+  `packages/core/src/layouts/timeline/timeline.ts:196`;
+  `packages/react/src/views/timeline/timeline-view.tsx:166`;
+  `packages/solid/src/views/timeline/timeline-view.tsx:175`;
+  `packages/themes/base.css:277`.
+- **Why it matters:** Hierarchical input, visible geometry and scheduling now
+  share a consistent resource identity without making collapse change event data.
+
+Final checks used pnpm 12.5.1 with
+`--config.manage-package-manager-versions=false` because the automatically
+selected pnpm shim returned `spawnSync .../pnpm ENOEXEC`.
+
+| Check                                               | Result                                                                                                                   |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm run build`                                    | Passed, including package exports, docs prerendering and Storybook build.                                                |
+| `pnpm run check:all`                                | Passed lint, formatting, all type fixtures and package validation. 18 existing lint warnings remain; no new diagnostics. |
+| `pnpm run test`                                     | 695 tests passed: core 383, React 67, Solid 69, themes 130, RRule 35, docs 11.                                           |
+| `pnpm run test:storybook`                           | 148 tests passed, including interaction checks and screenshot comparisons.                                               |
+| Changed-file formatting and `git diff --check`      | Passed.                                                                                                                  |
+| New documentation links and nested-resource anchors | Resolved in core, React and Solid documentation roots.                                                                   |
+
+The five hierarchy tests first failed against the original implementation:
+resource columns retained the original flat order, and duplicate, missing-parent
+and cycle inputs were accepted. The Solid button regression then exposed focus
+loss after object-keyed row replacement. Both failures now pass. Additional
+assertions cover controlled acknowledgment, external atoms, view overrides,
+instance isolation, resource replacement, direct assignments, hidden-resource
+constraints, active previews, pointer/keyboard input, RTL, light/dark focus and
+forced colors. The two new Storybook baselines were also inspected visually.
+
+Initial environment failures were resolved before final verification:
+
+```text
+Offline dependency restoration: ERR_PNPM_NO_OFFLINE_TARBALL (oxlint@1.85.0).
+Sandboxed browser startup: listen EPERM: operation not permitted ::1:63315.
+Sandboxed docs prerender: Failed to start the Vite preview server for prerendering;
+  cause: listen EPERM: operation not permitted ::1:3000.
+Sandboxed package validation: error while checking file: Command failed: npm pack.
+```
+
+Dependency restoration completed from the existing store. Browser checks, the
+full build and package validation then passed with the required local process
+and cache access. No required checks remain skipped.

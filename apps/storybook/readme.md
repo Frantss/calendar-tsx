@@ -3,6 +3,9 @@
 React calendar stories with per-story screenshot tests. Fixtures use a fixed date, time zone, locale and clock;
 core, React and RRule resolve to their source entries.
 
+[Timeline stories](stories/views/timeline.stories.tsx) cover nested rows, independent parent expansion and initially
+collapsed resources.
+
 ```bash
 pnpm run storybook        # dev server on port 6006
 pnpm run build:storybook  # writes apps/storybook/storybook-static

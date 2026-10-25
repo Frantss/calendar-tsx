@@ -22,6 +22,7 @@ Pass the resources to the calendar, in the order their columns should appear:
 | Resource field | Description                                                        |
 | -------------- | ------------------------------------------------------------------ |
 | `id`           | Matched against events' `resourceIds`.                             |
+| `parentId`     | Optional parent resource ID. Every parent must be included.        |
 | `title`        | For your headers.                                                  |
 | `availability` | Absolute intervals the resource is available; the gaps are shaded. |
 | `data`         | Your payload, typed as `TResourceData`.                            |
@@ -29,6 +30,15 @@ Pass the resources to the calendar, in the order their columns should appear:
 An event appears in every column whose resource ID is in its `resourceIds`; events without `resourceIds` appear in no
 resource column. With more than one day, `groupOrder: 'resource-first'` (the default) keeps each resource's days
 together so all-day bars can span them, and `'date-first'` groups by day and splits all-day bars per column.
+
+Resources with `parentId` form a hierarchy of any depth. Parents appear before descendants; roots and siblings
+retain their input order. Children may precede their parents in the input. IDs must be unique; missing parents,
+self-parenting and cycles throw. Replace the resource array when changing the hierarchy.
+
+Time grids, day grids and resource agendas use the full depth-first order. Agendas continue to omit empty groups.
+[Timeline](timeline-view#nested-resources) supports expanding and collapsing descendants. A parent is an ordinary
+resource with its own events and availability. Assignments, availability and backgrounds do not inherit through
+the hierarchy.
 
 </section>
 

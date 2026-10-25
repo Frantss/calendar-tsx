@@ -90,6 +90,7 @@ export const layoutTimeline_project = (
           timeZone: input.timeZone,
           now: input.now,
           resources: input.resources,
+          resourceNodes: input.resourceNodes,
           events: calendarEvents_normalize([proposal.after], input.timeZone),
         }).rows.flatMap(row =>
           row.segments.map(segment => ({ surface: `lane:${row.key}`, start: segment.start, span: segment.span })),

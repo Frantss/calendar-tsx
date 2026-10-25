@@ -1,5 +1,6 @@
 import type {
   Calendar_Api,
+  Calendar_ResourceExpansionApi,
   Calendar_EventInput,
   Calendar_Resource,
   Calendar_State,
@@ -7,6 +8,7 @@ import type {
 } from '@calendar-tsx/core';
 import {
   backgroundFeature,
+  resourceExpansionFeature,
   calendarViews,
   calendarFeatures,
   listView,
@@ -21,7 +23,7 @@ export type Room = { capacity: number };
 
 // #region views
 // module scope: views and features are compared by reference
-export const features = calendarFeatures({ backgroundFeature: backgroundFeature() });
+export const features = calendarFeatures({ backgroundFeature: backgroundFeature(), tree: resourceExpansionFeature() });
 export const views = calendarViews({
   features: features,
   views: {
@@ -39,7 +41,9 @@ export type ViewKey = keyof typeof views;
 
 export type DayCalendar = {
   readonly options: { views: { day: Calendar_View } };
-  api: Pick<Calendar_Api<{ day: Calendar_View }, {}>, 'navigate'>;
+  api: Pick<Calendar_Api<{ day: Calendar_View }, {}>, 'navigate'> & {
+    resourceExpansion?: Calendar_ResourceExpansionApi;
+  };
 };
 
 // #region state

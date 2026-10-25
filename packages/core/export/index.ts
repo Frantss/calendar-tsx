@@ -144,6 +144,13 @@ export { createBackgroundLayer, createWeeklyRanges } from '#features/background/
 export { recurrenceFeature } from '#features/recurrence/recurrence-feature';
 export { createRecurringEvent } from '#features/recurrence/recurrence-events';
 export { calendarFeatures } from '#features/calendar-features';
+export { resourceExpansionFeature } from '#features/resource-expansion/resource-expansion-feature';
+export type { Calendar_ResourceNode } from '#resources/resource.types';
+export type {
+  Calendar_ResourceExpansion,
+  Calendar_ResourceExpansionConfig,
+  Calendar_ResourceExpansionApi,
+} from '#features/resource-expansion/resource-expansion.types';
 
 export type {
   Calendar_OperationMap,

@@ -57,6 +57,7 @@ export {
   TimelineViewLane,
   TimelineViewNowIndicator,
   TimelineViewResource,
+  TimelineViewResourceToggle,
   TimelineViewRow,
   TimelineViewSlotLabel,
   TimelineView,

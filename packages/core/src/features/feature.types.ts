@@ -5,6 +5,7 @@ import type { Calendar_Views, Calendar_View } from '#views/view.types';
 import type { Calendar_EventSource, Calendar_EventSourceContext, Calendar_Event } from '#events/event.types';
 import type { Calendar_AnyLayout, Calendar_LayoutInput } from '#layouts/layout.types';
 import type { Calendar_Range } from '#dates/date.types';
+import type { Calendar_ResourceNode } from '#resources/resource.types';
 
 /** What feature hooks receive. */
 export type Calendar_FeatureContext<TConfig = any> = {
@@ -51,6 +52,8 @@ export type Calendar_Feature<TConfig = any> = {
   ) => Calendar_Event<unknown>[];
   /** Runs after the core sort, in registration order, in every view. */
   events?: Calendar_FeatureStage<Calendar_Event<unknown>[], TConfig>;
+  /** Prepares hierarchy metadata before layout; the complete resource input remains available. */
+  resources?: Calendar_FeatureStage<Calendar_ResourceNode<unknown>[], TConfig>;
   /** Adds model fields to the built layout, in every view. */
   decorate?: Calendar_FeatureStage<Calendar_AnyLayout, TConfig>;
 } & Calendar_FeatureExtensions;

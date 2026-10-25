@@ -1,12 +1,13 @@
 import type {
   TimelineViewProps,
+  TimelineViewResourceToggleProps,
   DayProps,
   TimelineViewDayTriggerProps,
   RowProps,
   TimelineViewEventProps,
   TimelineViewBackgroundEventProps,
 } from '#views/timeline/timeline-view.types';
-import type { ReactElement, RefAttributes } from 'react';
+import type { ReactElement, RefAttributes, MouseEvent } from 'react';
 import { forwardRef } from 'react';
 
 import type {
@@ -127,6 +128,9 @@ export const TimelineViewRow = forwardRef<HTMLDivElement, RowProps<unknown, unkn
       {
         'data-unavailable': flag(row.isUnavailable),
         'data-resource-id': row.resource?.id,
+        'data-depth': row.depth,
+        'data-parent-id': row.resource?.parentId,
+        'data-expanded': flag(row.hasChildren && row.isExpanded),
         style: vars({ rows: row.rows }),
         ...part('timeline-row'),
       },
@@ -145,6 +149,9 @@ export const TimelineViewResource = forwardRef<HTMLDivElement, RowProps<unknown,
       {
         'data-unavailable': flag(row.isUnavailable),
         'data-resource-id': row.resource?.id,
+        'data-depth': row.depth,
+        'data-expanded': flag(row.hasChildren && row.isExpanded),
+        style: vars({ 'resource-depth': row.depth }),
         ...part('timeline-resource'),
       },
       props,
@@ -154,6 +161,36 @@ export const TimelineViewResource = forwardRef<HTMLDivElement, RowProps<unknown,
   />
 )) as <TData, TResourceData>(
   props: RowProps<TData, TResourceData> & RefAttributes<HTMLDivElement>,
+) => ReactElement | null;
+
+export const TimelineViewResourceToggle = forwardRef<
+  HTMLButtonElement,
+  TimelineViewResourceToggleProps<unknown, unknown>
+>(({ row, calendar: instance, ...props }, ref) => {
+  if (!row.hasChildren || !row.resource) return null;
+  return (
+    <calendar.button
+      {...calendarProps_merge(
+        {
+          type: 'button',
+          'aria-expanded': row.isExpanded,
+          'data-resource-id': row.resource.id,
+          'aria-label': `${row.isExpanded ? 'Collapse' : 'Expand'} ${row.resource.title}`,
+          ...part('timeline-resource-toggle'),
+        },
+        props,
+        {
+          onClick: (event: MouseEvent<HTMLButtonElement>) => {
+            if (!event.defaultPrevented) instance.api.resourceExpansion.toggle(row.resource!.id);
+          },
+        },
+      )}
+      state={row}
+      ref={ref}
+    />
+  );
+}) as <TData, TResourceData>(
+  props: TimelineViewResourceToggleProps<TData, TResourceData> & RefAttributes<HTMLButtonElement>,
 ) => ReactElement | null;
 
 export const TimelineViewLane = forwardRef<HTMLDivElement, RowProps<unknown, unknown>>(({ row, ...props }, ref) => (

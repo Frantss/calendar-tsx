@@ -10,6 +10,7 @@ import {
   TimelineViewLane,
   TimelineViewNowIndicator,
   TimelineViewResource,
+  TimelineViewResourceToggle,
   TimelineViewRow,
   TimelineViewSlotLabel,
   TimelineViewUnavailable,
@@ -52,7 +53,16 @@ export const Timeline = (props: { calendar: DayCalendar }) => {
             <For each={timeline().rows}>
               {row => (
                 <TimelineViewRow row={row}>
-                  <TimelineViewResource row={row}>{row.resource?.title}</TimelineViewResource>
+                  <TimelineViewResource row={row}>
+                    <Show when={props.calendar.api.resourceExpansion}>
+                      {expansion => (
+                        <TimelineViewResourceToggle row={row} calendar={{ api: { resourceExpansion: expansion() } }}>
+                          <span aria-hidden='true'>{row.isExpanded ? '−' : '+'}</span>
+                        </TimelineViewResourceToggle>
+                      )}
+                    </Show>
+                    {row.resource?.title}
+                  </TimelineViewResource>
                   <TimelineViewLane row={row}>
                     <For each={row.backgrounds}>{background => <TimelineViewBackground background={background} />}</For>
                     <For each={row.backgroundEvents}>

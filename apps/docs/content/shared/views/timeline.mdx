@@ -14,6 +14,46 @@ timelineView({ period: 'month', groupBy: 'resource', slotMinutes: 1440, minSlotW
 timelineView({ period: 'year', slotMinutes: 1440, minSlotWidth: '6rem' });
 ```
 
+## Nested resources
+
+Set a resource's `parentId` to another resource ID. Parents remain schedulable resources. Events, backgrounds and
+availability use direct resource IDs; collapsing a parent hides its descendants without moving their events into
+the parent row.
+
+Register `resourceExpansionFeature` to enable expansion actions. Resources start expanded by default:
+
+```ts
+import { calendarFeatures, calendarViews, resourceExpansionFeature, timelineView } from '@calendar-tsx/core';
+
+const features = calendarFeatures({ tree: resourceExpansionFeature({ initiallyExpanded: true }) });
+const views = calendarViews({
+  features,
+  views: {
+    timeline: timelineView({ days: 7, groupBy: 'resource' }),
+    compact: timelineView({ days: 7, groupBy: 'resource', features: { tree: { initiallyExpanded: false } } }),
+  },
+});
+```
+
+Pass `features` and `views` to the calendar. Call `calendar.api.resourceExpansion.toggle(id)` or
+`setExpanded(id, boolean)`. Leaf actions do nothing; unknown IDs throw. State is a `resourceExpansion` map of
+resource IDs to Boolean overrides. Omitted IDs use that view's `initiallyExpanded` default. Overrides persist by
+ID across navigation, view switches and resource replacement, including while an ancestor is collapsed.
+
+For controlled expansion, pass `state: { resourceExpansion }` and apply the map emitted through
+`onResourceExpansionChange`. Rows change after acknowledgment. External stores use `atoms: { resourceExpansion }`.
+Without the feature, hierarchical Timeline rows remain fully expanded.
+
+Render `TimelineViewResourceToggle` inside `TimelineViewResource`, passing `row` and the typed `calendar` instance.
+The native button exposes `aria-expanded`, supplies an accessible label, and renders only for parents. Supply its
+visible text or icon as children. `preventDefault()` skips the action. The existing Timeline examples show this
+composition for React and Solid. Labels and content remain consumer-owned. The parts retain the labelled-region
+semantics and native tab order; they do not implement treegrid arrow-key navigation.
+
+Expansion affects only Timeline. Hidden resources remain in scheduling constraints. Hit detection and draft
+previews use visible rows; programmatic operations can still target a hidden resource. An active preview disappears
+if its target is collapsed and returns if expanded again.
+
 ## Settings
 
 <include>./common.mdx#durations</include>
@@ -78,6 +118,9 @@ daylight-saving transitions.
 | Row field          | Description                                                      |
 | ------------------ | ---------------------------------------------------------------- |
 | `resource`         | The resource; absent without `groupBy`.                          |
+| `depth`            | Zero-based depth in the resource hierarchy.                      |
+| `hasChildren`      | Whether the resource has direct children.                        |
+| `isExpanded`       | Whether descendants can be visible; false for leaves.            |
 | `segments`         | The row's events.                                                |
 | `backgroundEvents` | Timed and all-day background-event coverage, without stack rows. |
 | `backgrounds`      | Layer coverage, only with `backgroundFeature`.                   |
@@ -119,6 +162,7 @@ resource-limited layers shade only matching rows. An ungrouped timeline shows ev
 | `TimelineViewBody`            | none                      | `div`    | Holds the rows and the now indicator.                                                             |
 | `TimelineViewRow`             | `row`                     | `div`    | `data-unavailable`, `data-resource-id`.                                                           |
 | `TimelineViewResource`        | `row`                     | `div`    | The resource cell; sticks to the start edge.                                                      |
+| `TimelineViewResourceToggle`  | `calendar`, `row`         | `button` | Expands/collapses descendants; `aria-expanded`, default label; omitted for leaves.                |
 | `TimelineViewLane`            | `row`                     | `div`    | Holds the row's unavailable time and events.                                                      |
 | `TimelineViewUnavailable`     | `segment`                 | `div`    | `aria-hidden`.                                                                                    |
 | `TimelineViewBackground`      | `background`              | `div`    | `aria-hidden`, `data-layer`, `data-kind`; render inside `TimelineViewLane`.                       |
@@ -127,6 +171,10 @@ resource-limited layers shade only matching rows. An ungrouped timeline shows ev
 | `TimelineViewNowIndicator`    | `model`                   | `div`    | `aria-hidden`. Renders only while now is inside the range.                                        |
 
 The parts render no slot cells; themes draw the slot lines as a background of each lane.
+
+Rows expose `data-depth`, `data-parent-id` and `data-expanded`. Resource cells expose `data-depth`,
+`data-expanded` and `--cal-resource-depth`. Themes indent each level by `--calendar-resource-indent` (`1rem` by
+default); override that token to change the spacing. Toggle icons inherit the theme's text color and focus style.
 
 With one slot per day, omit the slot-label row; the date header is enough. For subday slots, include minutes in the
 labels. The examples put the full event dates and times in `title` and `aria-label`, so clipped bar text stays

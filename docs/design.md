@@ -1490,6 +1490,51 @@ payloads in core, React and Solid. Runtime tests exercise a third-party boolean 
 constraints and time-grid/timeline previews. Browser tests cover isolated scopes, external activation settings,
 independent operations, third-party transport and existing controlled/touch/scroll/cancellation behavior.
 
+### D62 — Resource parent IDs and Timeline expansion
+
+**Status:** accepted by the user on 2026-10-24. Amends D34's exclusion of nested resources; resource data columns
+remain outside this change.
+
+Resources accept `parentId?: string` in the existing flat input. Core builds a hierarchy once per resource-array
+reference, validates unique IDs, present parents and acyclicity, and derives a depth-first order. Roots and siblings
+retain input order; children may precede parents in input. Traversal and validation are iterative. Resource objects
+and payloads retain identity. Invalid updates throw before replacing the current options. Nested `children` input
+is not supported.
+
+`Calendar_ResourceNode` supplies `resource`, zero-based `depth`, `hasChildren` and `isExpanded`. A feature's optional
+`resources` stage prepares the full node list before layout, using the existing stage dependency cache. Layout input
+retains all ordered resources plus the complete prepared `resourceNodes`. Resource TimeGrid, DayGrid and agendas
+consume the full order. D47's omission of empty agenda groups remains in force.
+
+`resourceExpansionFeature({ initiallyExpanded?: boolean })` owns the `resourceExpansion` ID-to-Boolean override map.
+The factory default is `true`; per-view overrides use D54. State follows D29's internal, controlled or external atom
+ownership. Actions are `api.resourceExpansion.setExpanded(id, boolean)` and `toggle(id)`, with
+`onResourceExpansionChange(next)`. Unknown IDs throw; leaves and unchanged values produce no change callback.
+Controlled actions emit the requested map and wait for acknowledgment. Overrides persist across navigation,
+resource replacement and ancestor collapse. Omitted IDs use the active view's default.
+
+Grouped Timeline renders nodes whose ancestors are expanded. Rows expose `depth`, `hasChildren` and `isExpanded`;
+leaves and the ungrouped row report false for the latter two. Without the feature, all parent nodes are expanded.
+Parents are ordinary schedulable resources with independent events and availability. There is no event rollup,
+availability inheritance, descendant capacity rule or synthetic group-row type.
+
+Normal layout, hit location and event projection share the prepared node metadata. Collapsed resources remain in
+the complete scheduling input. Programmatic operations may target them; hidden targets have no preview geometry.
+An active preview follows expansion reactively, without cancelling the scheduling operation or changing assignments.
+
+React and Solid add `TimelineViewResourceToggle`, a native button taking the row and a typed expansion-capable
+calendar. It exposes `aria-expanded`, a default accessible label and consumer-supplied visible content. Consumer
+`preventDefault()` skips toggling. Leaves render no toggle. D15's labelled region and native button tab order remain;
+treegrid arrow-key navigation is not claimed. Solid restores focus to the matching replacement toggle when its
+object-keyed row iteration remounts a focused control. Resource cells emit `--cal-resource-depth`; themes indent
+using `--calendar-resource-indent` with a `1rem` default.
+
+Rejected: recursive `children` input in this change (duplicate/conflicting-parent normalization adds another input
+contract); consumer-only flattening (duplicates hierarchy and visibility logic across bindings); decoration-only
+collapse (event projections directly rebuild layouts); inherited parent scheduling or summary bars (different
+behavior from direct resource assignment); Timeline collapse state hiding columns in other layouts (different
+geometries and unspecified vertical-header semantics).
+
 ## Open questions
 
 - A row cap can hide an event on a day that has free rows, because a bar from a neighbouring day pushed it down

@@ -67,6 +67,9 @@ export type Calendar_TimelineSegment<TData, TFeatures = {}> = {
 export type Calendar_TimelineRow<TData, TResourceData, TFeatures = {}> = {
   key: string;
   resource?: Calendar_Resource<TResourceData>;
+  depth: number;
+  hasChildren: boolean;
+  isExpanded: boolean;
   isUnavailable: boolean;
   segments: Calendar_TimelineSegment<TData, TFeatures>[];
   backgroundEvents: Calendar_BackgroundEventSegment<TData>[];

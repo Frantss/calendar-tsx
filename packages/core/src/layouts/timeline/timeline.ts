@@ -5,6 +5,8 @@ import type { Calendar_BackgroundEventSegment } from '#layouts/layout.types';
 import type { Calendar_Event } from '#events/event.types';
 import type { Calendar_FirstDayOfWeek, Calendar_Range } from '#dates/date.types';
 import type { Calendar_Resource } from '#calendar/calendar.types';
+import type { Calendar_ResourceNode } from '#resources/resource.types';
+import { calendarResources_build, calendarResources_visible } from '#resources/resources';
 import type {
   Calendar_TimelineLayout,
   Calendar_TimelineRow,
@@ -46,18 +48,19 @@ const stack = <T extends Interval>(items: T[]) => {
 type Projected<TData> = { event: Calendar_Event<TData>; fragments: readonly LayoutCoordinates_Fragment[] };
 
 const buildRow = <TData, TResourceData>({
-  resource,
+  node,
   events,
   backgroundEvents,
   plan,
   minEventMs,
 }: {
-  resource?: Calendar_Resource<TResourceData>;
+  node?: Calendar_ResourceNode<TResourceData>;
   events: Projected<TData>[];
   backgroundEvents: Projected<TData>[];
   plan: LayoutCoordinates_Plan;
   minEventMs: number;
 }): Calendar_TimelineRow<TData, TResourceData> => {
+  const resource = node?.resource;
   const length = layoutCoordinates_length(plan);
   const total = length * plan.dates.dates.length;
   const key = resource?.id ?? 'all';
@@ -123,6 +126,9 @@ const buildRow = <TData, TResourceData>({
   return {
     key,
     resource,
+    depth: node?.depth ?? 0,
+    hasChildren: node?.hasChildren ?? false,
+    isExpanded: node?.isExpanded ?? false,
     isUnavailable: !!resource && availability.length === 0,
     segments,
     backgroundEvents: backgroundEvents.flatMap(({ event, fragments }): Calendar_BackgroundEventSegment<TData>[] => {
@@ -171,6 +177,7 @@ export const layoutTimeline_build = <TData, TResourceData>({
   events,
   backgroundEvents,
   resources,
+  resourceNodes,
   timeZone,
   now,
   firstDayOfWeek,
@@ -180,6 +187,7 @@ export const layoutTimeline_build = <TData, TResourceData>({
   events: Calendar_Event<TData>[];
   backgroundEvents: Calendar_Event<TData>[];
   resources: Calendar_Resource<TResourceData>[];
+  resourceNodes?: Calendar_ResourceNode<TResourceData>[];
   timeZone: string;
   now: Temporal.ZonedDateTime;
   firstDayOfWeek?: Calendar_FirstDayOfWeek;
@@ -188,7 +196,9 @@ export const layoutTimeline_build = <TData, TResourceData>({
   const dates = plan.dates.dates;
   const slotMinutes = definition.slotMinutes ?? DEFAULT_SLOT_MINUTES;
   const slots = layoutCoordinates_slots(plan.dates, slotMinutes);
-  const groups = calendarPeriods_groups(definition.groupBy).includes('resource') ? resources : [undefined];
+  const groups = calendarPeriods_groups(definition.groupBy).includes('resource')
+    ? calendarResources_visible(resourceNodes ?? calendarResources_build(resources))
+    : [undefined];
   const clock = layoutCoordinates_projectInstant(plan, now.toInstant());
   const project = (event: Calendar_Event<TData>) => ({
     event,
@@ -225,9 +235,9 @@ export const layoutTimeline_build = <TData, TResourceData>({
         span: slot.position.span / dates.length,
       })),
     ),
-    rows: groups.map(resource =>
+    rows: groups.map(node =>
       buildRow({
-        resource,
+        node,
         events: projected,
         backgroundEvents: projectedBackgrounds,
         plan,

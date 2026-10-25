@@ -306,6 +306,7 @@
 
   :where([data-scope='calendar'][data-part='timeline-resource']) {
     padding: 0.5rem;
+    padding-inline-start: calc(0.5rem + var(--cal-resource-depth, 0) * var(--calendar-resource-indent, 1rem));
     border-inline-end-color: var(--calendar-border);
     background: var(--calendar-surface);
     font-weight: 400;

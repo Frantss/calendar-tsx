@@ -19,6 +19,7 @@ export type Calendar_Availability = { start: Temporal.ZonedDateTime; end: Tempor
 
 export type Calendar_Resource<TResourceData> = {
   id: string;
+  parentId?: string;
   title: string;
   availability: Calendar_Availability[];
   data: TResourceData;

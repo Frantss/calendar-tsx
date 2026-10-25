@@ -1,10 +1,11 @@
 import type {
   TimelineViewProps,
+  TimelineViewResourceToggleProps,
   RowProps,
   TimelineViewEventProps,
   TimelineViewBackgroundEventProps,
 } from '#views/timeline/timeline-view.types';
-import { Show, splitProps } from 'solid-js';
+import { Show, splitProps, onCleanup } from 'solid-js';
 
 import type {
   Calendar_BackgroundSegment,
@@ -137,6 +138,9 @@ export const TimelineViewRow = <TData, TResourceData>(props: RowProps<TData, TRe
         () => ({
           'data-unavailable': flag(local.row.isUnavailable),
           'data-resource-id': local.row.resource?.id,
+          'data-depth': local.row.depth,
+          'data-parent-id': local.row.resource?.parentId,
+          'data-expanded': flag(local.row.hasChildren && local.row.isExpanded),
           style: vars({ rows: local.row.rows }),
           ...part('timeline-row'),
         }),
@@ -156,12 +160,62 @@ export const TimelineViewResource = <TData, TResourceData>(props: RowProps<TData
         () => ({
           'data-unavailable': flag(local.row.isUnavailable),
           'data-resource-id': local.row.resource?.id,
+          'data-depth': local.row.depth,
+          'data-expanded': flag(local.row.hasChildren && local.row.isExpanded),
+          style: vars({ 'resource-depth': local.row.depth }),
           ...part('timeline-resource'),
         }),
         rest,
       )}
       state={local.row}
     />
+  );
+};
+
+export const TimelineViewResourceToggle = <TData, TResourceData>(
+  props: TimelineViewResourceToggleProps<TData, TResourceData>,
+) => {
+  const [local, rest] = splitProps(props, ['row', 'calendar']);
+  let button: HTMLButtonElement | undefined;
+  onCleanup(() => {
+    if (!button || button.ownerDocument.activeElement !== button) return;
+    const root = button.closest('[data-part="timeline-root"]');
+    const id = local.row.resource?.id;
+    const document = button.ownerDocument;
+    // Solid's For replaces changed row objects; keep keyboard focus on the same resource's replacement toggle.
+    queueMicrotask(() => {
+      if (document.activeElement !== document.body) return;
+      const replacement = [
+        ...(root?.querySelectorAll<HTMLButtonElement>('[data-part="timeline-resource-toggle"]') ?? []),
+      ].find(node => node.dataset.resourceId === id);
+      replacement?.focus({ preventScroll: true });
+    });
+  });
+  return (
+    <Show when={local.row.hasChildren && local.row.resource}>
+      <calendar.button
+        {...calendarProps_merge(
+          () => ({
+            type: 'button',
+            'aria-expanded': local.row.isExpanded,
+            'aria-label': `${local.row.isExpanded ? 'Collapse' : 'Expand'} ${local.row.resource?.title}`,
+            'data-resource-id': local.row.resource?.id,
+            ref: (node: HTMLButtonElement) => {
+              // oxlint-disable-next-line react/immutability -- Solid ref callbacks capture DOM nodes, not React render state.
+              button = node;
+            },
+            ...part('timeline-resource-toggle'),
+          }),
+          rest,
+          {
+            onClick: (event: MouseEvent) => {
+              if (!event.defaultPrevented) local.calendar.api.resourceExpansion.toggle(local.row.resource!.id);
+            },
+          },
+        )}
+        state={local.row}
+      />
+    </Show>
   );
 };
 

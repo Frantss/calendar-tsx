@@ -9,6 +9,7 @@ import { createStore } from '@tanstack/store';
 import { Temporal } from 'temporal-polyfill';
 
 import { intervalClock } from '#calendar/clock';
+import { calendarResources_build } from '#resources/resources';
 import { calendarEvents_defaultOrder, calendarEvents_normalize, calendarEvents_overlaps } from '#events/events';
 import { calendarSources_createResolver } from '#events/sources';
 import { calendarNavigation_resolve, calendarNavigation_view } from '#calendar/navigation';
@@ -86,6 +87,19 @@ export const createCalendar = <
   const optionObservers = new Set<() => void>();
   const mountObservers = new Set<() => () => void>();
   const resolveEvents = calendarSources_createResolver(features);
+  let resourceInput: AnyOptions['resources'];
+  let resourceNodes: ReturnType<typeof calendarResources_build> = [];
+  let orderedResources: NonNullable<AnyOptions['resources']> = [];
+  const resolveResources = (resources: AnyOptions['resources']) => {
+    if (resources !== resourceInput) {
+      const next = calendarResources_build(resources ?? []);
+      resourceInput = resources;
+      resourceNodes = next;
+      orderedResources = next.map(node => node.resource);
+    }
+    return resourceNodes;
+  };
+  resolveResources(initial.resources);
 
   const persisted = createStore(tracked_from(options, options.initialNow ?? clock().now()));
   const featureRuntime = calendarFeatures_createRuntime(features, {
@@ -157,6 +171,11 @@ export const createCalendar = <
     for (const [key, feature] of active)
       if (feature.events) events = featureRuntime.run(key, `${key}:events`, feature.events, events);
 
+    let preparedResources = resolveResources(input.resources);
+    for (const [key, feature] of active)
+      if (feature.resources)
+        preparedResources = featureRuntime.run(key, `${key}:resources`, feature.resources, preparedResources);
+
     const layout = featureRuntime.resolve(definition, definition['~layout']) as Calendar_LayoutFeature;
     layoutInput = {
       firstDayOfWeek: input.firstDayOfWeek ?? 7,
@@ -165,7 +184,8 @@ export const createCalendar = <
       inputRange: viewContext.inputRange,
       events,
       backgroundEvents,
-      resources: input.resources ?? [],
+      resources: orderedResources,
+      resourceNodes: preparedResources,
       timeZone: input.timeZone,
       now,
     };
@@ -254,6 +274,7 @@ export const createCalendar = <
       )
         throw new Error('[calendar] feature definitions cannot change after calendar creation');
       if (next.views !== options.views) calendarFeatures_validateViews(definitions, next.views);
+      resolveResources(next.resources);
       options = next as unknown as AnyOptions;
       persisted.setState(state => {
         const updated = tracked_from(options, state.now);

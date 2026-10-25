@@ -249,7 +249,17 @@ export const CalendarLayout = ({
       <Parts.TimelineViewBody>
         {layout.rows.map(row => (
           <Parts.TimelineViewRow key={row.key} row={row}>
-            <Parts.TimelineViewResource row={row}>{row.resource?.title}</Parts.TimelineViewResource>
+            <Parts.TimelineViewResource row={row}>
+              {calendar.api.resourceExpansion && (
+                <Parts.TimelineViewResourceToggle
+                  row={row}
+                  calendar={{ api: { resourceExpansion: calendar.api.resourceExpansion } }}
+                >
+                  <span aria-hidden='true'>{row.isExpanded ? '−' : '+'}</span>
+                </Parts.TimelineViewResourceToggle>
+              )}
+              {row.resource?.title}
+            </Parts.TimelineViewResource>
             <Parts.TimelineViewLane row={row}>
               {row.backgrounds.map(layer => (
                 <Parts.TimelineViewBackground key={layer.key} background={layer} />
