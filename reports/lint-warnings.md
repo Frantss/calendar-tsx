@@ -15,3 +15,18 @@
 - Template interpolation analysis also reports `packages/core/src/tests/calendar-layout-interactions.spec.ts:425`
   and `:430`. The surface-key fixtures interpolate Temporal dates implicitly. This is a lint diagnostic about string
   conversion, not a failing geometry assertion; both layouts pass their browser tests.
+
+## Core simplification verification, 2026-10-24
+
+The full check still reports diagnostics in unchanged code. Current module locations include
+`packages/react/src/rendering/factory.tsx:68` (callback dependencies), `:72` and `:77` (unbound methods), and `:106`
+(render-time refs); `packages/react/src/calendar/tests/calendar.spec.tsx:39` and `:46` (fixture mutation);
+`apps/docs/src/components/calendar-preview.tsx:67`, `apps/docs/src/routes/_site/docs/playground.tsx:151` and
+`apps/docs/src/routes/playground/preview.tsx:92` (effect state updates). Solid await diagnostics occur at
+`packages/solid/src/views/day-grid/tests/day-grid-view.spec.tsx:225` and
+`packages/solid/src/views/time-grid/tests/time-grid-view.spec.tsx:180`, `:201` and `:216`.
+Core template-interpolation diagnostics occur at `packages/core/src/calendar/tests/calendar.spec.ts:71`,
+`packages/core/src/calendar/tests/navigation.spec.ts:18` and
+`packages/core/src/tests/integration/layout-interactions.spec.ts:432` and `:437`.
+These diagnostics concern callback/ref lifetimes, state update timing and fixture assumptions. They do not fail
+the current lint command; all 669 package tests and 146 Storybook cases pass.
