@@ -334,3 +334,45 @@ it('resolves operation settings and prerequisites by identity with consumer alia
   expect(calendar.api.move.begin('a').status).toBe('unavailable');
   expect('selection' in calendar.api).toBe(false);
 });
+
+it('returns stale when a controlled owner cancels synchronously during draft publication', () => {
+  let snapshot = interactionIdle();
+  let session: ReturnType<typeof start<'move', typeof event.data>>;
+  const trace: string[] = [];
+  const onEventMove = vi.fn();
+  const calendar = createCalendar({
+    ...base,
+    ...views,
+    onEventMove,
+    interactionOwnership: {
+      mode: 'controlled',
+      read: () => snapshot,
+      onChange(next) {
+        snapshot = next;
+        trace.push(next.outcome ?? (next.candidate ? 'candidate' : 'begin'));
+        if (next.candidate?.status === 'valid') session.cancel('owner-cancelled');
+      },
+    },
+  });
+  session = start(calendar.api.move.begin('a'));
+  expect(session.update(target(11))).toEqual({ status: 'stale-session' });
+  expect(trace).toEqual(['begin', 'candidate', 'owner-cancelled']);
+  expect(calendar.api.interactions.store.state).toMatchObject({ session: null, candidate: null, outcome: 'owner-cancelled', preview: null });
+  expect(session.isActive()).toBe(false);
+  expect(onEventMove).not.toHaveBeenCalled();
+  expect(calendar.options.events[0]).toBe(event);
+});
+
+it('marks a target unavailable without refreshing, then refreshes before committing', () => {
+  const movement = { enabled: true };
+  const calendar = createCalendar({ ...base, ...views, movement });
+  const session = start(calendar.api.move.begin('a'));
+  session.update(target(11));
+  movement.enabled = false;
+  const unavailable = session.unavailable('outside-surface');
+  expect(unavailable).toEqual({ status: 'unavailable', reason: 'outside-surface' });
+  expect(unavailable).not.toBe(calendar.api.interactions.store.state.candidate);
+  expect(session.isActive()).toBe(true);
+  expect(session.commit()).toEqual({ status: 'stale-session' });
+  expect(calendar.api.interactions.store.state.outcome).toBe('operation-disabled');
+});

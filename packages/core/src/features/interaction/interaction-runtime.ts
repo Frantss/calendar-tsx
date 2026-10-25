@@ -154,12 +154,6 @@ export const calendarInteractions_create = (host: {
     }
     return result;
   };
-  const cancel = (token: number, reason = 'cancelled'): Calendar_InteractionResult => {
-    if (lease !== token) return { status: 'stale-session' };
-    lease = null;
-    publish({ ...interactionIdle(), outcome: reason });
-    return { status: 'cancelled', reason };
-  };
   const refresh = () => {
     if (read() === pending) pending = null;
     notify();
@@ -211,38 +205,44 @@ export const calendarInteractions_create = (host: {
     publish({ session: { token, intent, source }, candidate: null, outcome: null });
     return { status: 'active', session: handle(token) } as const;
   };
-  const update = (token: number, target: unknown): Calendar_InteractionResult => {
+  const dispatch = (
+    token: number,
+    command: 'update' | 'commit' | 'cancel' | 'unavailable',
+    value?: unknown,
+  ): Calendar_InteractionResult => {
     if (lease !== token) return { status: 'stale-session' };
-    refresh();
+    if (command === 'cancel') {
+      const reason = value === undefined ? 'cancelled' : (value as string);
+      lease = null;
+      publish({ ...interactionIdle(), outcome: reason });
+      return { status: 'cancelled', reason };
+    }
+    if (command !== 'unavailable') refresh();
     if (lease !== token) return { status: 'stale-session' };
     if (pending || read().session?.token !== token) return { status: 'awaiting-owner' };
     const current = read();
-    if (!current.session) return { status: 'stale-session' };
-    const operation = operationFor(current.session.intent.kind, host.read());
-    if (
-      current.session.target !== undefined &&
-      operation?.acceptsTarget(current.session.target) &&
-      operation.acceptsTarget(target) &&
-      (operation.sameTarget?.(current.session.target, target) ?? Object.is(current.session.target, target))
-    )
-      return { status: 'unchanged' };
-    publish({
-      ...current,
-      session: { ...current.session, target },
-      candidate: evaluate(current.session.intent, target),
-    });
-    if (lease !== token) return { status: 'stale-session' };
-    return pending
-      ? { status: 'awaiting-owner' }
-      : ((read().candidate as Calendar_InteractionEvaluation | null) ?? { status: 'stale-session' });
-  };
-  const commit = (token: number): Calendar_InteractionResult => {
-    if (lease !== token) return { status: 'stale-session' };
-    refresh();
-    if (lease !== token) return { status: 'stale-session' };
-    if (pending || read().session?.token !== token) return { status: 'awaiting-owner' };
-    const { session } = read();
+    const session = current.session;
+    if (command === 'unavailable') {
+      const candidate = { status: 'unavailable' as const, reason: value as string };
+      publish({ ...current, session: { ...session!, target: undefined }, candidate });
+      return { ...candidate };
+    }
     if (!session) return { status: 'stale-session' };
+    if (command === 'update') {
+      const operation = operationFor(session.intent.kind, host.read());
+      if (
+        session.target !== undefined &&
+        operation?.acceptsTarget(session.target) &&
+        operation.acceptsTarget(value) &&
+        (operation.sameTarget?.(session.target, value) ?? Object.is(session.target, value))
+      )
+        return { status: 'unchanged' };
+      publish({ ...current, session: { ...session, target: value }, candidate: evaluate(session.intent, value) });
+      if (lease !== token) return { status: 'stale-session' };
+      return pending
+        ? { status: 'awaiting-owner' }
+        : ((read().candidate as Calendar_InteractionEvaluation | null) ?? { status: 'stale-session' });
+    }
     if (session.target === undefined) return { status: 'no-target' };
     const result = evaluate(session.intent, session.target);
     if (result.status !== 'valid') {
@@ -254,11 +254,12 @@ export const calendarInteractions_create = (host: {
     host.emit(result.proposal as Calendar_InteractionProposal, session.intent as Calendar_InteractionIntent);
     return { status: 'committed', proposal: result.proposal as Calendar_InteractionProposal };
   };
+  const cancel = (token: number, reason?: string) => dispatch(token, 'cancel', reason);
   const handle = (token: number): Calendar_InteractionHandle => ({
-    update: target => update(token, target),
-    commit: () => commit(token),
+    update: target => dispatch(token, 'update', target),
+    commit: () => dispatch(token, 'commit'),
     cancel: reason => cancel(token, reason),
-    unavailable: reason => runtime.unavailable(token, reason),
+    unavailable: reason => dispatch(token, 'unavailable', reason),
     isActive: () => lease === token,
   });
   const runtime = {
@@ -286,20 +287,6 @@ export const calendarInteractions_create = (host: {
     dispatch(proposal: Envelope, context: Calendar_FeatureContext, intent: Envelope) {
       registry.get(proposal.kind)?.operation.emit?.(proposal, context, intent);
     },
-    update,
-    unavailable: (token: number, reason: string): Calendar_InteractionResult => {
-      if (lease !== token) return { status: 'stale-session' };
-      if (pending || read().session?.token !== token) return { status: 'awaiting-owner' };
-      const current = read();
-      publish({
-        ...current,
-        session: { ...current.session!, target: undefined },
-        candidate: { status: 'unavailable', reason },
-      });
-      return { status: 'unavailable', reason };
-    },
-    commit,
-    cancel,
     refresh,
     unmount: () => {
       if (lease !== null) cancel(lease, 'unmounted');
