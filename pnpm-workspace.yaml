@@ -20,4 +20,4 @@ peerDependencyRules:
     vite: 1.0.0
 
 minimumReleaseAgeExclude:
-  - '@frantss/fumadocs-theme@0.1.0'
+  - '@frantss/fumadocs-theme@0.1.1'
