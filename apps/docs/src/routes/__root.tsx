@@ -5,6 +5,7 @@ import { NotFound } from '@/components/not-found';
 
 export const Route = createRootRoute({
   head: () => ({
+    links: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
     meta: [
       {
         charSet: 'utf-8',
