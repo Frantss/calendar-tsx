@@ -15,13 +15,14 @@
     "check:types": "vp exec tsc --noEmit && vp exec tsc --noEmit -p examples/core && vp exec tsc --noEmit -p examples/react && vp exec tsc --noEmit -p examples/solid && vp exec tsc --noEmit -p examples/features && vp exec tsc --noEmit -p examples/features/solid"
   },
   "dependencies": {
+    "@frantss/fumadocs-theme": "^0.1.0",
     "@tanstack/react-router": "1.170.45",
     "@tanstack/react-router-devtools": "1.167.2",
     "@tanstack/react-start": "1.169.3",
     "cn": "^0.5.0",
-    "fumadocs-core": "16.17.7",
+    "fumadocs-core": "16.17.8",
     "fumadocs-mdx": "15.4.9",
-    "fumadocs-ui": "npm:@fumadocs/base-ui@16.17.7",
+    "fumadocs-ui": "npm:@fumadocs/base-ui@16.17.8",
     "lucide-react": "^1.61.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
