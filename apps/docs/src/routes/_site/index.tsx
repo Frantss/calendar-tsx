@@ -3,6 +3,7 @@ import { CalendarDays, Code2, Repeat2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { HomeLayout } from 'fumadocs-ui/layouts/home';
 import { baseOptions } from '@/lib/layout.shared';
+import { gitConfig } from '@/lib/shared';
 
 export const Route = createFileRoute('/_site/')({
   component: Home,
@@ -47,6 +48,9 @@ function Home() {
             <Link to='/docs/$' params={{ _splat: 'react/api' }} className={secondaryLinkClassName}>
               React API
             </Link>
+            <a href={`https://github.com/${gitConfig.user}/${gitConfig.repo}`} className={secondaryLinkClassName}>
+              GitHub
+            </a>
           </div>
           <p className='mt-6 text-sm leading-6 text-fd-muted-foreground'>
             Experimental. The API can change or be removed in any release, without notice.
