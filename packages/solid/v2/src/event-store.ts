@@ -1,0 +1,20 @@
+import type { Accessor } from 'solid-js';
+import type { Calendar_EventDefinition, Calendar_EventInput, Calendar_EventStore } from '@calendar-tsx/core';
+import { createEventStore } from '@calendar-tsx/core';
+import { useSelector } from './store';
+
+type EventStore<TEvent extends { id: string }> = Calendar_EventStore<TEvent> & { events: Accessor<TEvent[]> };
+
+export function useCalendarEventStore<TData>(
+  initial?: Calendar_EventInput<TData>[],
+): EventStore<Calendar_EventInput<TData>>;
+export function useCalendarEventStore<TData, TSource extends string = string>(
+  initial: (Calendar_EventDefinition<TData> & { '~source'?: TSource })[],
+): EventStore<Calendar_EventDefinition<TData, Record<TSource, unknown>>>;
+export function useCalendarEventStore<TData>(
+  initial: Calendar_EventDefinition<TData>[] = [],
+): EventStore<Calendar_EventInput<TData>> | EventStore<Calendar_EventDefinition<TData>> {
+  const eventStore = createEventStore(initial);
+  const events = useSelector(eventStore.store, state => state.events);
+  return { ...eventStore, events };
+}

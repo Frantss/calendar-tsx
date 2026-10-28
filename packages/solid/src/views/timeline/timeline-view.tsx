@@ -5,7 +5,7 @@ import type {
   TimelineViewEventProps,
   TimelineViewBackgroundEventProps,
 } from '#views/timeline/timeline-view.types';
-import { Show, splitProps, onCleanup } from 'solid-js';
+import { Show, splitProps, onCleanup } from '#rendering/solid';
 
 import type {
   Calendar_BackgroundSegment,
@@ -197,7 +197,7 @@ export const TimelineViewResourceToggle = <TData, TResourceData>(
         {...calendarProps_merge(
           () => ({
             type: 'button',
-            'aria-expanded': local.row.isExpanded,
+            'aria-expanded': local.row.isExpanded ? 'true' : 'false',
             'aria-label': `${local.row.isExpanded ? 'Collapse' : 'Expand'} ${local.row.resource?.title}`,
             'data-resource-id': local.row.resource?.id,
             ref: (node: HTMLButtonElement) => {
@@ -264,7 +264,7 @@ export const TimelineViewUnavailable = (
     <calendar.div
       {...calendarProps_merge(
         () => ({
-          'aria-hidden': true,
+          'aria-hidden': 'true',
           style: vars({ start: local.segment.start, span: local.segment.span }),
           ...part('timeline-unavailable'),
         }),
@@ -283,7 +283,7 @@ export const TimelineViewBackground = (
     <calendar.div
       {...calendarProps_merge(
         () => ({
-          'aria-hidden': true,
+          'aria-hidden': 'true',
           'data-kind': local.background.kind,
           'data-layer': local.background.layer,
           style: vars({ start: local.background.start, span: local.background.span }),
@@ -302,7 +302,7 @@ export const TimelineViewBackgroundEvent = <TData,>(props: TimelineViewBackgroun
     <calendar.div
       {...calendarProps_merge(
         () => ({
-          'aria-hidden': true,
+          'aria-hidden': 'true',
           'data-continues-before': flag(local.segment.continuesBefore),
           'data-continues-after': flag(local.segment.continuesAfter),
           style: vars({ start: local.segment.start, span: local.segment.span }),
@@ -323,7 +323,7 @@ export const TimelineViewNowIndicator = <TData, TResourceData>(props: TimelineVi
     <Show when={local.model.now !== undefined}>
       <calendar.div
         {...calendarProps_merge(
-          () => ({ 'aria-hidden': true, style: vars({ now: local.model.now }), ...part('timeline-now') }),
+          () => ({ 'aria-hidden': 'true', style: vars({ now: local.model.now }), ...part('timeline-now') }),
           rest,
         )}
         state={local.model}

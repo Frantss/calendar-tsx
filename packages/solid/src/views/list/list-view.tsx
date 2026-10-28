@@ -6,15 +6,15 @@ import type {
   ListViewDayHeaderProps,
   ListViewEventProps,
 } from '#views/list/list-view.types';
-import type { Accessor } from 'solid-js';
-import { Show, createContext, splitProps, useContext } from 'solid-js';
+import type { Accessor } from '#rendering/solid';
+import { Show, calendarContext_create, splitProps } from '#rendering/solid';
 
 import type { Calendar_ListLayout } from '@calendar-tsx/core';
 import type { Calendar_HTMLProps } from '#rendering/rendering.types';
 import { calendarFactory_elements as calendar, calendarProps_merge } from '#rendering/factory';
 import { calendarParts_attributes as part, calendarParts_vars as vars } from '#views/shared/parts';
 
-const ListViewContext = createContext<Accessor<Calendar_ListLayout<unknown>>>();
+const ListViewContext = calendarContext_create<Accessor<Calendar_ListLayout<unknown>>>();
 
 export const ListView = <TData, TResourceData>(props: ListViewProps<TData, TResourceData>) => {
   const [local, rest] = splitProps(props, ['model']);
@@ -86,7 +86,7 @@ export const ListViewEvent = <TData,>(props: ListViewEventProps<TData>) => {
 
 /** Renders only when the list has no days (D18). */
 export const ListViewEmpty = (props: Calendar_HTMLProps<'div'>) => {
-  const model = useContext(ListViewContext);
+  const model = ListViewContext.use();
 
   return (
     <Show when={!model || model().days.length === 0}>

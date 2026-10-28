@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "@solidjs/web",
+    "paths": {
+      "@calendar-tsx/solid/v2": ["./v2/export/index.ts"],
+      "solid-js": ["./v2/node_modules/solid-js"],
+      "@solidjs/web": ["./v2/node_modules/@solidjs/web"],
+      "@solidjs/web/jsx-runtime": ["./v2/node_modules/@solidjs/web/types/jsx.d.ts"],
+      "#calendar/calendar": ["./v2/src/calendar.tsx"],
+      "#events/use-calendar-event-store": ["./v2/src/event-store.ts"],
+      "#interactions/use-calendar-interaction-bindings": ["./v2/src/interactions.ts"],
+      "#rendering/solid": ["./v2/src/solid.ts"],
+      "#*": ["./src/*"]
+    }
+  },
+  "include": ["v2/src/**/*.ts", "v2/src/**/*.tsx", "v2/export/**/*.ts"],
+  "exclude": ["node_modules", "v2/node_modules"]
+}

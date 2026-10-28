@@ -1,4 +1,4 @@
-import type { JSX } from 'solid-js';
+import type { JSX } from '#rendering/solid';
 import type { Temporal } from 'temporal-polyfill';
 import type { Calendar_Api, Calendar_Views } from '@calendar-tsx/core';
 

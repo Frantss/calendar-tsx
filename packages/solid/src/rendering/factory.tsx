@@ -6,9 +6,8 @@ import type {
 } from '#rendering/rendering.types';
 // Port of Ark v6's Solid `ark` factory (chakra-ui/ark, `@ark-ui/solid@6.0.0-next.0`, src/components/factory.tsx)
 // without `asChild` and without `@zag-js/solid`'s `mergeProps` (D25, D31).
-import type { ComponentProps, JSX, ValidComponent } from 'solid-js';
-import { splitProps } from 'solid-js';
-import { Dynamic } from 'solid-js/web';
+import type { ComponentProps, JSX, ValidComponent } from '#rendering/solid';
+import { Dynamic, splitProps, untrack } from '#rendering/solid';
 
 type AnyProps = Record<string, any>;
 
@@ -47,7 +46,7 @@ export const calendarProps_merge = (...sources: PropsSource[]): AnyProps => {
   const result: AnyProps = {};
 
   for (const source of sources) {
-    const resolved = resolve(source);
+    const resolved = untrack(() => resolve(source));
 
     if (!resolved) continue;
 
@@ -90,7 +89,8 @@ const withRender = (Component: ValidComponent) => (props: FactoryProps & AnyProp
   // unlike Ark, `ref` stays in the props, so a part's ref reaches the rendered node through `props()`
   const propsFn: Calendar_PropsFn = userProps => calendarProps_merge(restProps, userProps);
 
-  if (local.render) return local.render(propsFn, () => (local.state ?? EMPTY_STATE) as never);
+  const render = untrack(() => local.render);
+  if (render) return render(propsFn, () => (local.state ?? EMPTY_STATE) as never);
 
   return <Dynamic component={Component} {...restProps} />;
 };

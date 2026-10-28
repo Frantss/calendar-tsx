@@ -1,5 +1,6 @@
 packages:
   - packages/*
+  - packages/solid/v2
   - apps/*
 
 catalogs:
@@ -18,3 +19,8 @@ allowBuilds:
 peerDependencyRules:
   allowedVersions:
     vite: 1.0.0
+
+minimumReleaseAgeExclude:
+  - '@solidjs/signals@2.0.0-rc.19'
+  - '@solidjs/web@2.0.0-rc.19'
+  - solid-js@2.0.0-rc.19

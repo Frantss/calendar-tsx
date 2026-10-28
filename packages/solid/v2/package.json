@@ -1,0 +1,19 @@
+{
+  "name": "@calendar-tsx/solid-v2-dev",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:v2": "vp pack",
+    "test:v2": "vp test",
+    "check:types:v2": "vp exec tsc --noEmit && vp exec tsc -p tests/types && vp exec tsc -p tests/types/tsconfig.public.json"
+  },
+  "devDependencies": {
+    "@calendar-tsx/core": "workspace:*",
+    "@calendar-tsx/solid": "workspace:*",
+    "@solidjs/vite-plugin": "3.0.0-next.51",
+    "@solidjs/web": "2.0.0-rc.19",
+    "@tanstack/store": "^0.11.2",
+    "solid-js": "2.0.0-rc.19",
+    "temporal-polyfill": "^1.0.6"
+  }
+}

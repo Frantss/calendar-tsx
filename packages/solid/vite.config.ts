@@ -19,6 +19,7 @@ export default defineConfig({
   plugins: [solid({ ssr: true })],
   test: {
     ...base.test,
+    include: ['src/**/*.spec.{ts,tsx}'],
     // tests run in the browser; without an explicit environment vite-plugin-solid injects jsdom
     environment: 'node',
     browser: {

@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "solid-js": ["../../node_modules/solid-js"],
+      "@solidjs/web": ["../../node_modules/@solidjs/web"],
+      "@solidjs/web/jsx-runtime": ["../../node_modules/@solidjs/web/types/jsx.d.ts"]
+    }
+  },
+  "include": ["types.verify.tsx"]
+}

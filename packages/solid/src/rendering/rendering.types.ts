@@ -1,4 +1,4 @@
-import type { Accessor, JSX, ComponentProps } from 'solid-js';
+import type { Accessor, JSX, ComponentProps } from '#rendering/solid';
 
 export type Calendar_EmptyState = Record<never, never>;
 

@@ -7,7 +7,7 @@ import type {
   DayGridViewRowBackgroundEventProps,
   DayGridViewOverflowProps,
 } from '#views/day-grid/day-grid-view.types';
-import { Show, splitProps } from 'solid-js';
+import { Show, splitProps } from '#rendering/solid';
 
 import type {
   Calendar_DayBackground,
@@ -159,7 +159,7 @@ export const DayGridViewDayBackground = (
     <calendar.div
       {...calendarProps_merge(
         () => ({
-          'aria-hidden': true,
+          'aria-hidden': 'true',
           'data-kind': local.background.kind,
           'data-layer': local.background.layer,
           ...part('day-grid-day-background'),
@@ -228,7 +228,7 @@ export const DayGridViewRowBackgroundEvent = <TData,>(props: DayGridViewRowBackg
     <calendar.div
       {...calendarProps_merge(
         () => ({
-          'aria-hidden': true,
+          'aria-hidden': 'true',
           'data-continues-before': flag(local.segment.continuesBefore),
           'data-continues-after': flag(local.segment.continuesAfter),
           style: vars({ 'col-start': local.segment.colStart, 'col-span': local.segment.colSpan }),

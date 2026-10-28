@@ -33,13 +33,17 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./v2": {
+      "types": "./dist/v2/index.d.ts",
+      "import": "./dist/v2/index.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "vp pack",
-    "test": "vp test",
+    "build": "vp pack && pnpm --dir v2 build:v2",
+    "test": "vp test && pnpm --dir v2 test:v2",
     "test:dev": "vp test --watch",
-    "check:types": "vp exec tsc --noEmit && vp exec tsc -p tests/types && vp exec tsc -p tests/types/tsconfig.public.json",
+    "check:types": "vp exec tsc --noEmit && vp exec tsc -p tests/types && vp exec tsc -p tests/types/tsconfig.public.json && pnpm --dir v2 check:types:v2",
     "check:package": "publint --strict && attw --pack --no-emoji --profile esm-only"
   },
   "dependencies": {
@@ -57,7 +61,13 @@
     "vite-plugin-solid": "^2.11.14"
   },
   "peerDependencies": {
-    "solid-js": "^1.8.0",
+    "@solidjs/web": "^2.0.0-rc.19",
+    "solid-js": "^1.8.0 || ^2.0.0-rc.19",
     "temporal-polyfill": "^1.0.6"
+  },
+  "peerDependenciesMeta": {
+    "@solidjs/web": {
+      "optional": true
+    }
   }
 }

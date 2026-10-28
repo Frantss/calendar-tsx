@@ -7,7 +7,7 @@ import type {
   TimeGridViewBackgroundEventProps,
   TimeGridViewEventProps,
 } from '#views/time-grid/time-grid-view.types';
-import { Show, splitProps } from 'solid-js';
+import { Show, splitProps } from '#rendering/solid';
 
 import type {
   Calendar_BackgroundSegment,
@@ -139,7 +139,7 @@ export const TimeGridViewAllDayBackgroundEvent = <TData,>(props: TimeGridViewAll
     <calendar.div
       {...calendarProps_merge(
         () => ({
-          'aria-hidden': true,
+          'aria-hidden': 'true',
           'data-continues-before': flag(local.segment.continuesBefore),
           'data-continues-after': flag(local.segment.continuesAfter),
           style: vars({ 'col-start': local.segment.colStart, 'col-span': local.segment.colSpan }),
@@ -228,7 +228,7 @@ export const TimeGridViewUnavailable = (
     <calendar.div
       {...calendarProps_merge(
         () => ({
-          'aria-hidden': true,
+          'aria-hidden': 'true',
           style: vars({ start: local.segment.start, span: local.segment.span }),
           ...part('time-grid-unavailable'),
         }),
@@ -249,7 +249,7 @@ export const TimeGridViewBackground = (
     <calendar.div
       {...calendarProps_merge(
         () => ({
-          'aria-hidden': true,
+          'aria-hidden': 'true',
           'data-kind': local.background.kind,
           'data-layer': local.background.layer,
           style: vars({ start: local.background.start, span: local.background.span }),
@@ -270,7 +270,7 @@ export const TimeGridViewBackgroundEvent = <TData,>(props: TimeGridViewBackgroun
     <calendar.div
       {...calendarProps_merge(
         () => ({
-          'aria-hidden': true,
+          'aria-hidden': 'true',
           'data-continues-before': flag(local.segment.continuesBefore),
           'data-continues-after': flag(local.segment.continuesAfter),
           style: vars({ start: local.segment.start, span: local.segment.span }),
@@ -320,7 +320,7 @@ export const TimeGridViewNowIndicator = <TData, TResourceData>(props: ColumnProp
     <Show when={local.column.now !== undefined}>
       <calendar.div
         {...calendarProps_merge(
-          () => ({ 'aria-hidden': true, style: vars({ now: local.column.now }), ...part('time-grid-now') }),
+          () => ({ 'aria-hidden': 'true', style: vars({ now: local.column.now }), ...part('time-grid-now') }),
           rest,
         )}
         state={local.column}
