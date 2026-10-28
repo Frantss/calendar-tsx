@@ -32,3 +32,11 @@ pnpm exec vp fmt --check apps/docs/content apps/docs/README.md
 
 The docs build compiles MDX and prerenders the site. Check links, navigation and included example paths after
 moving pages. Keep `src/routeTree.gen.ts` generated.
+
+## Theme
+
+The site uses `@frantss/fumadocs-theme` for typography, colors and documentation layout. Import its stylesheet in
+`src/styles/app.css` and use its brand and page wrappers in the shared layout and documentation route.
+
+Keep the package in `ssr.noExternal` in `vite.config.ts` so its components share Fumadocs provider contexts during
+server rendering. The calendar preview iframe loads calendar styles separately.
