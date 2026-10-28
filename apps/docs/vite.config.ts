@@ -12,6 +12,9 @@ export default defineConfig(({ command, isPreview }) => ({
   server: {
     port: 3000,
   },
+  ssr: {
+    noExternal: ['@frantss/fumadocs-theme'],
+  },
   plugins: [
     fumadocsMdx(),
     tailwindcss(),
