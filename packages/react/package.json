@@ -1,6 +1,6 @@
 {
   "name": "@calendar-tsx/react",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "React bindings for @calendar-tsx/core: unstyled, composable calendar parts.",
   "license": "MIT",
   "author": "Frantss <frantss.bongiovanni@gmail.com>",

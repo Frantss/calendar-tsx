@@ -1,5 +1,32 @@
 # @calendar-tsx/core
 
+## 0.3.0
+
+### Minor Changes
+
+- e10dee3: Keep optional feature state isolated across providers and infer calendar-wide feature fields on layout models.
+
+  Navigation triggers now require a `calendar` prop and check `view` against that instance's registered keys. Pass
+  `calendar={calendar}` to day-grid, time-grid and timeline triggers.
+
+  Locale belongs on `CalendarProvider` or `Calendar`. Move `locale` out of core and hook options; the hooks now reject
+  it. `Calendar` continues to forward its locale to the provider.
+
+- 5ebb6de: Move feature implementations, types, tests and runtime mechanics into feature-owned modules. Keep public features, helpers, types and extension maps available from `@calendar-tsx/core`.
+- 5dcea5c: Use `@calendar-tsx/core` as the single public code entry point. Feature factories, helpers and types remain available from root, with their implementations organized by feature internally.
+
+  Breaking: replace imports from `@calendar-tsx/core/background` and `@calendar-tsx/core/recurrence` with imports from `@calendar-tsx/core`.
+
+- 4845668: Implement the D54 factory assembly API: configure features with factories, collect them with `calendarFeatures`, bind typed view overrides with `calendarViews`, and pass both results directly to the calendar or adapter hook.
+
+  Breaking: replace feature constants with factory calls and `createCalendarViews` with `calendarViews({ features, views })`. Move feature options into factory arguments or per-view `features` overrides. Registered features now participate in every view. Object overrides shallow-merge with defaults; arrays replace them. Registration aliases preserve feature types and event-source identities. Feature definitions remain fixed after calendar creation; change per-view configuration through new view definitions.
+
+- c5a703e: Export `DayOfWeek`, a const object with named ISO weekday values from `Monday: 1` through `Sunday: 7`. Use its members for `firstDayOfWeek`, `hiddenDays` and weekly background rules. Existing numeric values remain valid.
+
+### Patch Changes
+
+- 10fcb23: Organize core source into calendar, view, event, date, layout and feature modules. Move types and focused tests beside their implementations, with shared integration tests and support files in dedicated folders. Preserve the root entry, public names, declaration merging and runtime behavior.
+
 ## 0.2.0
 
 ### Minor Changes

@@ -1,5 +1,34 @@
 # @calendar-tsx/solid
 
+## 0.3.0
+
+### Minor Changes
+
+- e10dee3: Keep optional feature state isolated across providers and infer calendar-wide feature fields on layout models.
+
+  Navigation triggers now require a `calendar` prop and check `view` against that instance's registered keys. Pass
+  `calendar={calendar}` to day-grid, time-grid and timeline triggers.
+
+  Locale belongs on `CalendarProvider` or `Calendar`. Move `locale` out of core and hook options; the hooks now reject
+  it. `Calendar` continues to forward its locale to the provider.
+
+- 4845668: Implement the D54 factory assembly API: configure features with factories, collect them with `calendarFeatures`, bind typed view overrides with `calendarViews`, and pass both results directly to the calendar or adapter hook.
+
+  Breaking: replace feature constants with factory calls and `createCalendarViews` with `calendarViews({ features, views })`. Move feature options into factory arguments or per-view `features` overrides. Registered features now participate in every view. Object overrides shallow-merge with defaults; arrays replace them. Registration aliases preserve feature types and event-source identities. Feature definitions remain fixed after calendar creation; change per-view configuration through new view definitions.
+
+- 731ea13: Add SolidJS 2 bindings at `@calendar-tsx/solid/v2`, with shared view parts, lifecycle cleanup, reactive event stores, and interaction bindings.
+
+### Patch Changes
+
+- 95ececc: Group adapter sources, types and tests by calendar, rendering and view ownership while preserving the public root exports and framework behavior.
+- Updated dependencies [e10dee3]
+- Updated dependencies [5ebb6de]
+- Updated dependencies [5dcea5c]
+- Updated dependencies [10fcb23]
+- Updated dependencies [4845668]
+- Updated dependencies [c5a703e]
+  - @calendar-tsx/core@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes
