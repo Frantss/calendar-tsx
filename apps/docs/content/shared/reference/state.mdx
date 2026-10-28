@@ -6,22 +6,22 @@
 | `layout`  | `Calendar_Layout`        | The render model for the active view; switch on `layout.kind`.                  |
 | `now`     | `Temporal.ZonedDateTime` | The clock's current time in `timeZone`.                                         |
 
-Registered [features](../extending/features#state) add their state slices next to these.
+Registered [features](../guide/writing-features#state) add their state slices next to these.
 
 `dateSelectionFeature` adds `selectedRange: Calendar_Selection | null`. Control it with `state` and
 `onSelectionChange`, or provide an external `atoms.selectedRange` store. Transient editing state is separate:
 `calendar.api.interactions.store.state` contains the session, candidate, outcome and preview. Draft changes do not
-rebuild the base layout. See [interaction ownership](../features/interactions#state-and-ownership).
+rebuild the base layout. See [interaction ownership](../guide/interactions#state-and-ownership).
 
 `layout` is typed as the union of the layouts your views use, so only those cases need handling. Each layout's model is
 documented with its view:
 
-| `layout.kind` | Model                                                                                                |
-| ------------- | ---------------------------------------------------------------------------------------------------- |
-| `'dayGrid'`   | [Day grid view](../views/day-grid-view#model)                                                        |
-| `'timeGrid'`  | [Week and day view](../views/week-and-day-view#model), [resource view](../views/resource-view#model) |
-| `'list'`      | [List view](../views/list-view#model)                                                                |
-| `'timeline'`  | [Timeline view](../views/timeline-view#model)                                                        |
+| `layout.kind` | Model                                                                                                    |
+| ------------- | -------------------------------------------------------------------------------------------------------- |
+| `'dayGrid'`   | [Day grid view](../recipes/day-grid-view#model)                                                          |
+| `'timeGrid'`  | [Week and day view](../recipes/week-and-day-view#model), [resource view](../recipes/resource-view#model) |
+| `'list'`      | [List view](../recipes/list-view#model)                                                                  |
+| `'timeline'`  | [Timeline view](../recipes/timeline-view#model)                                                          |
 
 Every item in a model has a `key` that is stable across derivations within its parent, for use as a list key.
 

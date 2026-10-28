@@ -1,0 +1,24 @@
+---
+title: Events
+description: Event input, time zones, ordering, hiding and the event store.
+---
+
+<include>../../../shared/features/events.mdx#input</include>
+
+<include lang='tsx'>../../../../examples/react/events.tsx#filter</include>
+
+<include>../../../shared/features/events.mdx#order</include>
+
+<include lang='ts'>../../../../examples/core/event-order.ts#order</include>
+
+<include>../../../shared/features/events.mdx#store</include>
+
+`useCalendarEventStore` creates one per component. It returns `add`, `update`, `remove` and `reset`, plus `events`,
+the current list, which re-renders the component when it changes:
+
+<include lang='tsx'>../../../../examples/react/events.tsx#store</include>
+
+## Clicking events
+
+Event parts are native buttons with no behavior. Pass `onClick` to open a drawer, a popover or a details page, or
+[render them as links](/docs/react/api/rendering-parts#an-element).

@@ -1,0 +1,92 @@
+---
+title: Primitives and providers
+description: Calendar setup, context, selectors, event stores and interaction bindings.
+---
+
+## `useCalendar`
+
+```ts
+const calendar = useCalendar(() => options);
+```
+
+Takes an accessor returning the [options](options), and returns the [instance](instance). Set accessible-label
+`locale` on `CalendarProvider` or `Calendar`; it is rejected in hook options.
+
+- The instance is created once, from the options read untracked.
+- It mounts with the owner, which starts the clock, and unmounts on cleanup.
+- A render effect passes `options()` through `~update`, and reruns whenever a signal read inside the accessor changes.
+  The state re-derives only when a tracked option changed, so keep `views`, `features`, `events` and `resources`
+  referentially stable.
+
+Read signals inside the accessor (`view: view()`), not outside it, or changes won't reach the calendar.
+
+<Callout type='warn' title='Let the types infer'>
+  Don't pass type arguments such as `useCalendar<Booking>(…)`: TypeScript then stops inferring the rest, and `view`
+  and `onNavigate` widen to `string`. Type `events` instead, for example as `Calendar_EventInput<Booking>[]`.
+</Callout>
+
+## `useCalendarInteractionBindings`
+
+```tsx
+const bindings = useCalendarInteractionBindings(calendar);
+const preview = () => bindings.preview();
+```
+
+Requires interaction and pointer features. Returns callback refs for `root`, `surface(descriptor)` and
+`source(key, descriptor)`, an `operation(key, descriptor)` ref for custom operations, `cancel()`, and a reactive
+`preview` accessor. Read `preview()` inside reactive rendering. The hook mounts browser listeners with the owner
+and releases them on cleanup. Display-only calendars do not call this hook.
+
+See [selection and event editing](../guide/interactions) for setup, source refs and preview rendering.
+
+## `CalendarProvider`
+
+```tsx
+<CalendarProvider value={calendar} locale='en-GB'>
+  {children}
+</CalendarProvider>
+```
+
+Puts an instance in context for the parts and `useCalendarSelector`. Every part must render inside a
+`CalendarProvider` or `Calendar`, or it throws.
+
+| Prop     | Type                  | Default   | Description                                      |
+| -------- | --------------------- | --------- | ------------------------------------------------ |
+| `value`  | The calendar instance | required  | Usually from `useCalendar`.                      |
+| `locale` | `string`              | `'en-US'` | Locale for the parts' default accessible labels. |
+
+## `Calendar`
+
+`useCalendar` and `CalendarProvider` in one component. It takes the core options plus `locale` as props, and re-syncs
+when they change. Use it when nothing outside the tree needs the instance.
+
+<include lang='tsx'>../../../../examples/solid/primitives.tsx#calendar</include>
+
+## `useCalendarSelector`
+
+Selects from the calendar's [state](state) in context, and returns an accessor that updates when the selected value
+changes.
+
+The context cannot carry the instance's types, so the state defaults to the widest type. Annotate the selector's
+parameter with `Calendar_StateOf<typeof calendar>`, or build the type from your views with `Calendar_State`.
+
+<include lang='tsx'>../../../../examples/solid/primitives.tsx#selector</include>
+
+### Narrowing the layout
+
+`<Show>` narrows a value, not a discriminated union, so derive an accessor that is the layout only when it has the
+kind you render. The view examples use this helper:
+
+<include lang='ts' meta='title="layouts.ts"'>
+  ../../../../examples/solid/layouts.ts#narrow
+</include>
+
+## `useCalendarContext`
+
+Returns `{ instance, locale }` from the nearest provider, with the instance's types erased. Parts use it; you rarely
+need it.
+
+## `useCalendarEventStore`
+
+The [event store](/docs/solid/guide/events#event-store). It returns `add`, `update`, `remove` and `reset`, plus
+`events`, an accessor for the current list. Read it inside the `useCalendar` accessor.

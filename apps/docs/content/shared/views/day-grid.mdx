@@ -40,7 +40,7 @@ without resource IDs shades all resources. A cell is `isUnavailable` when its re
 | `dayOverflow(date, resourceId?)` | Marks a date/resource cell as having more events, such as events not loaded yet.                |
 | `fixedWeekCount`                 | Six rows per month. Allowed with `period: 'month'` or month grouping. Defaults to `false`.      |
 
-See [overflow](../features/overflow).
+See [overflow](../guide/overflow).
 
 ## Hidden weekdays
 
@@ -83,7 +83,7 @@ Columns hold `key`, `date` and optional `resource`. Day cells add:
 | `isMultiDay`                        | The event covers more than one date, before clipping. A timed event ending at midnight covers only its start date. |
 | `continuesBefore`, `continuesAfter` | The event extends beyond the visible dates at that bar's edges.                                                    |
 
-Keys are stable within their parent. Render background events before bars. [Background layers](../features/background-layers) decorate each cell and respect its resource scope.
+Keys are stable within their parent. Render background events before bars. [Background layers](../guide/background-layers) decorate each cell and respect its resource scope.
 
 </section>
 

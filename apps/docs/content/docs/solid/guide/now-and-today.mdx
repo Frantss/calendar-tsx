@@ -1,0 +1,18 @@
+---
+title: Now and today
+description: Today's highlight, the now indicator and the clock.
+---
+
+<include>../../../shared/features/now.mdx#intro</include>
+
+## Freezing time
+
+<include lang='tsx'>../../../../examples/solid/now.tsx#fixed</include>
+
+## Now indicator
+
+Render `TimeGridViewNowIndicator` in every column; it renders only in today's column, at `column.now`. See the
+[week and day view](/docs/solid/recipes/week-and-day-view#example).
+
+In timelines, render one `TimelineViewNowIndicator` with the layout as `model`; it renders only while now is in
+the visible range.

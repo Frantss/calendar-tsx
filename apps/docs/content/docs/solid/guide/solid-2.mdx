@@ -1,0 +1,123 @@
+---
+title: SolidJS 2
+description: Install and use the SolidJS 2 adapter at @calendar-tsx/solid/v2.
+---
+
+Use `@calendar-tsx/solid/v2` with SolidJS 2. It exports the same calendar components, view parts and helpers as
+the Solid 1 adapter. The core options, view models, data attributes and theme styles are shared.
+
+## Installation
+
+Use Node.js 22.12 or later for the Solid 2 toolchain.
+
+The adapter requires `solid-js` and `@solidjs/web` from `2.0.0-rc.19`. Use matching versions of both packages.
+This prerelease is the version used to verify the adapter.
+
+```npm
+npm i @calendar-tsx/solid @calendar-tsx/core solid-js@2.0.0-rc.19 @solidjs/web@2.0.0-rc.19 temporal-polyfill
+```
+
+The [theme installation](/docs/solid#install) applies to both adapters.
+
+## Compiler setup
+
+Compile your application with the Solid 2 compiler. For Vite, install the Solid 2 plugin:
+
+```npm
+npm i -D vite @solidjs/vite-plugin@3.0.0-next.51
+```
+
+```ts title="vite.config.ts"
+import { defineConfig } from 'vite';
+import solid from '@solidjs/vite-plugin';
+
+export default defineConfig({
+  plugins: [solid()],
+});
+```
+
+Set the JSX source in your TypeScript configuration:
+
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "@solidjs/web"
+  }
+}
+```
+
+Import every calendar component and helper in a Solid 2 tree from `@calendar-tsx/solid/v2`. Its provider and parts
+share a Solid 2 context. The default `@calendar-tsx/solid` entry uses Solid 1.
+
+## Quick start
+
+This example renders a week of events as a list. Pass your events to `App`; dates and view names stay controlled
+through the options accessor.
+
+<include lang='tsx' meta='title="quick-start.tsx"'>
+  ../../../../examples/solid-v2/quick-start.tsx#app
+</include>
+
+Keep `features` and `views` stable. Read signals and reactive props inside the `useCalendar` accessor. The calendar
+is created once, synchronizes changed options in a render effect, and starts its clock when the owner settles.
+Disposing the owner stops the clock.
+
+`useCalendarSelector` returns an accessor. Read it in JSX or another reactive scope. Annotate its state parameter
+with your calendar's state type, as the example does, because context erases the instance's generic types.
+
+## Managed events and effects
+
+`useCalendarEventStore` returns the same `add`, `update`, `remove` and `reset` methods as the Solid 1 helper.
+Pass `eventStore.events()` inside the options accessor:
+
+<include lang='ts' meta='title="events.ts"'>
+  ../../../../examples/solid-v2/events.ts#store
+</include>
+
+Solid 2 batches signal updates. Observe the resulting calendar state in JSX or an effect. In a test that must read
+the result immediately after a signal write, call Solid's `flush()` before the assertion.
+
+Solid 2 effects use separate read and apply functions. This helper runs inside a calendar provider:
+
+<include lang='ts' meta='title="effects.ts"'>
+  ../../../../examples/solid-v2/effects.ts#effect
+</include>
+
+## Interactions and rendering
+
+The [interaction setup](/docs/solid/guide/interactions) also applies to Solid 2. Import `useCalendar` and
+`useCalendarInteractionBindings` from the v2 entry. Register the required core interaction and pointer features,
+attach the callback refs, and read `bindings.preview()` in JSX. Browser listeners mount when the owner settles
+and are removed on cleanup.
+
+The [render prop](/docs/solid/api/rendering-parts#render) keeps the same contract: spread `props()` onto your
+element and read the part's state through `state()`. Use `JSX` and DOM component types from `@solidjs/web`.
+
+## Server rendering
+
+Import server rendering and hydration functions from the Solid 2 web package:
+
+<include lang='ts' meta='title="server-rendering.ts"'>
+  ../../../../examples/solid-v2/server-rendering.ts#renderer
+</include>
+
+Use the v2 calendar entry on both the server and the client. Enable `ssr: true` in the Vite plugin when using
+hydration. The calendar clock does not start during server rendering. Pass the same `initialNow` instant on both
+sides, as described in [hydration](/docs/solid/guide/server-rendering#hydration).
+
+## Moving from Solid 1
+
+| Setting or import               | Solid 1                               | Solid 2                  |
+| ------------------------------- | ------------------------------------- | ------------------------ |
+| Calendar components and helpers | `@calendar-tsx/solid`                 | `@calendar-tsx/solid/v2` |
+| Web runtime and `JSX` types     | `solid-js/web`, types from `solid-js` | `@solidjs/web`           |
+| TypeScript `jsxImportSource`    | `solid-js`                            | `@solidjs/web`           |
+| Vite plugin                     | `vite-plugin-solid`                   | `@solidjs/vite-plugin`   |
+
+Core imports remain under `@calendar-tsx/core`. Continue with the existing [view guides](/docs/solid/recipes/list-view),
+[primitives reference](/docs/solid/api/primitives), and [themes](/docs/solid/recipes/themes), using v2 calendar
+imports and the Solid 2 compiler setup above.
+
+For changes to other Solid APIs in your application, see
+[Solid's migration guide](https://github.com/solidjs/solid/blob/next/documentation/solid-2.0/MIGRATION.md).

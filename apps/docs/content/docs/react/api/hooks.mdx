@@ -1,0 +1,80 @@
+---
+title: Hooks and providers
+description: Calendar setup, context, selectors, event stores and interaction bindings.
+---
+
+## `useCalendar`
+
+```ts
+const calendar = useCalendar(options);
+```
+
+Takes the [options](options) and returns the [instance](instance). Set accessible-label `locale` on
+`CalendarProvider` or `Calendar`; it is rejected in hook options.
+
+- The instance is created on the first render and kept for the component's lifetime.
+- It mounts in a layout effect, which starts the clock, and unmounts with the component.
+- Every render passes the current options through `~update`. The state re-derives only when a tracked option changed,
+  so keep `views`, `features`, `events` and `resources` referentially stable between renders.
+
+<Callout type='warn' title='Let the types infer'>
+  Don't pass type arguments such as `useCalendar<Booking>(…)`: TypeScript then stops inferring the rest, and `view`
+  and `onNavigate` widen to `string`. Type `events` instead, for example as `Calendar_EventInput<Booking>[]`.
+</Callout>
+
+## `useCalendarInteractionBindings`
+
+```tsx
+const bindings = useCalendarInteractionBindings(calendar);
+```
+
+Requires interaction and pointer features. Returns stable callback refs for `root`, `surface(descriptor)` and
+`source(key, descriptor)`, an `operation(key, descriptor)` ref for custom operations, `cancel()`, and the derived
+`preview` value. The hook mounts browser listeners and cleans them up on unmount. Registration alone does not
+attach listeners; display-only calendars do not call this hook.
+
+Render `preview` as a separate overlay and read rejection reasons from `calendar.api.interactions.store`.
+See [selection and event editing](../guide/interactions) for typed setup and rendering examples.
+
+## `CalendarProvider`
+
+```tsx
+<CalendarProvider value={calendar} locale='en-GB'>
+  {children}
+</CalendarProvider>
+```
+
+Puts an instance in context for the parts and `useCalendarSelector`. Every part must render inside a
+`CalendarProvider` or `Calendar`, or it throws.
+
+| Prop     | Type                  | Default   | Description                                      |
+| -------- | --------------------- | --------- | ------------------------------------------------ |
+| `value`  | The calendar instance | required  | Usually from `useCalendar`.                      |
+| `locale` | `string`              | `'en-US'` | Locale for the parts' default accessible labels. |
+
+## `Calendar`
+
+`useCalendar` and `CalendarProvider` in one component: it takes the core options plus `locale` and `children`. Use
+it when nothing outside the tree needs the instance.
+
+<include lang='tsx'>../../../../examples/react/hooks.tsx#calendar</include>
+
+## `useCalendarSelector`
+
+Selects from the calendar's [state](state) in context, and re-renders when the selected value changes by `===`.
+
+The context cannot carry the instance's types, so the state defaults to the widest type: every layout kind, and events
+with `data: unknown`. Annotate the selector's parameter with `Calendar_StateOf<typeof calendar>`, or build the type from
+your views with `Calendar_State`.
+
+<include lang='tsx'>../../../../examples/react/hooks.tsx#selector</include>
+
+## `useCalendarContext`
+
+Returns `{ instance, locale }` from the nearest provider, with the instance's types erased. Parts use it; you rarely
+need it.
+
+## `useCalendarEventStore`
+
+The [event store](/docs/react/guide/events#event-store), created once per component. It returns `add`, `update`,
+`remove` and `reset`, plus `events`, the current list, which re-renders the component when it changes.

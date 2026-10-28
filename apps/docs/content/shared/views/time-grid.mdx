@@ -81,7 +81,7 @@ Positions inside a column are fractions of its visible clock window.
 | `isToday`                                  | The day is today in `timeZone`.                                     |
 | `segments`                                 | Timed events in this column.                                        |
 | `lanes`                                    | The most lanes any overlap cluster in the column uses.              |
-| `backgroundEvents`                         | See [background events](../features/background-events).             |
+| `backgroundEvents`                         | See [background events](../guide/background-events).                |
 | `now`                                      | Fraction of the window containing now, including overnight columns. |
 | `resource`, `isUnavailable`, `unavailable` | See [resource view](resource-view).                                 |
 
@@ -118,7 +118,7 @@ not overlap. Place events with `inlineStart` and `inlineSize`; `lane` and `lanes
 | `TimeGridViewAxisLabel`             | `slot`                       | `div`    | `slot` is the time slot, not the HTML attribute. Emits `--cal-start`, `--cal-span`.        |
 | `TimeGridViewColumn`                | `column`                     | `div`    | `data-today`, `data-weekday`, `data-unavailable`.                                          |
 | `TimeGridViewBackgroundEvent`       | `segment`                    | `div`    | `aria-hidden`. Render it before the events.                                                |
-| `TimeGridViewBackground`            | `background`                 | `div`    | `aria-hidden`. A [background layer](../features/background-layers)'s shading.              |
+| `TimeGridViewBackground`            | `background`                 | `div`    | `aria-hidden`. A [background layer](../guide/background-layers)'s shading.                 |
 | `TimeGridViewEvent`                 | `segment`                    | `button` | Placed by time and lane; `data-overlap` when it shares lanes, `data-short` when `isShort`. |
 | `TimeGridViewNowIndicator`          | `column`                     | `div`    | `aria-hidden`. Renders only in today's column.                                             |
 

@@ -74,8 +74,8 @@ timeline horizontally.
 - All-day events have no separate row. They stack with timed events, from the start of their first day to the start
   of the day after their last.
 - A resource's [availability](resource-view) is shaded as in the resource view.
-- [Background events](../features/background-events) shade the track without taking stack rows. Register
-  `backgroundFeature` to add [background layers](../features/background-layers).
+- [Background events](../guide/background-events) shade the track without taking stack rows. Register
+  `backgroundFeature` to add [background layers](../guide/background-layers).
 
 ## Brief events
 
@@ -138,7 +138,7 @@ daylight-saving transitions.
 | `isMultiDay`                        | The event covers more than one date, before clipping.              |
 | `continuesBefore`, `continuesAfter` | The event extends past the range.                                  |
 
-Stacking follows [event order](../features/events#order). Display spans that only touch don't overlap.
+Stacking follows [event order](../guide/events#order). Display spans that only touch don't overlap.
 
 Background events and layers are fractions of the track and take no stack rows. Timed shading clips to visible anchor
 windows and can split at dates or DST gaps; all-day shading follows anchor dates, including their overnight portions.
@@ -157,7 +157,7 @@ resource-limited layers shade only matching rows. An ungrouped timeline shows ev
 | `TimelineView`                | `model`                   | `div`    | `role='region'`, labelled "Timeline". Scrolls both ways. `--cal-slot-columns` sizes header slots. |
 | `TimelineViewHeader`          | none                      | `div`    | Sticky; holds the day headers and the slot labels.                                                |
 | `TimelineViewDayHeader`       | `day`                     | `div`    | `data-today`, `data-date`, `data-weekday`.                                                        |
-| `TimelineViewDayTrigger`      | `calendar`, `day`, `view` | `button` | Navigates through `calendar` to `view` on the day. See [day triggers](../features/day-triggers).  |
+| `TimelineViewDayTrigger`      | `calendar`, `day`, `view` | `button` | Navigates through `calendar` to `view` on the day. See [day triggers](../guide/day-triggers).     |
 | `TimelineViewSlotLabel`       | `slot`                    | `div`    | `slot` is the time slot, not the HTML attribute.                                                  |
 | `TimelineViewBody`            | none                      | `div`    | Holds the rows and the now indicator.                                                             |
 | `TimelineViewRow`             | `row`                     | `div`    | `data-unavailable`, `data-resource-id`.                                                           |

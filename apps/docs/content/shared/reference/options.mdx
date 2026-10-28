@@ -4,7 +4,7 @@ createCalendar<TData, TResourceData, TViews, TFeatures>(options);
 
 `TData` is the type of each event's `data` payload and `TResourceData` that of each resource's. `TViews` and
 `TFeatures` are inferred from `views` and `features`, so `view` and `onNavigate` only accept your view keys, and the
-configuration, state and actions of the registered [features](../extending/features) appear on the calendar.
+configuration, state and actions of the registered [features](../guide/writing-features) appear on the calendar.
 
 Let TypeScript infer all four. Passing some explicitly, as in `createCalendar<Booking>(…)`, turns off inference for
 the others, and view keys widen to `string`. Type `events` as `Calendar_EventInput<Booking>[]` instead.
@@ -33,7 +33,7 @@ fixed afterwards. Changing feature definitions throws; create a new instance to 
 
 `views`, `events`, `resources` and each `state` slice are compared by reference. Pass a new array or object to signal
 a change and keep the same reference otherwise, or every update re-derives. Feature options go to their factories and
-per-view overrides to the view definitions; see [features](../extending/features).
+per-view overrides to the view definitions; see [features](../guide/writing-features).
 
 ## `timeZone`
 
@@ -48,9 +48,9 @@ Changing an ID invalidates the calendar's prepared sources and revalidates its a
 
 ## `views`, `view` and `date`
 
-`views` maps your own keys to [views](../getting-started/concepts#views-and-layouts), usually through `calendarViews`. `view`
+`views` maps your own keys to [views](../guide/concepts#views-and-layouts), usually through `calendarViews`. `view`
 selects one, and `date` is any day inside the period to show. Both are controlled: see
-[actions](../features/navigation#actions). An unknown `view` key throws.
+[actions](../guide/navigation#actions). An unknown `view` key throws.
 
 ## `features`
 
@@ -64,7 +64,7 @@ createCalendar({ ...options, views, features });
 
 Every view inherits the registered features. A view can override a feature through `features: { background: layers }`.
 Unknown keys and invalid override types are rejected. Feature definitions are captured at creation; view overrides
-update through a new `views` reference. See [features](../extending/features).
+update through a new `views` reference. See [features](../guide/writing-features).
 
 ## `onNavigate`
 
@@ -73,21 +73,21 @@ Every navigation action calls it with the next `view`, `date`, `range`, `period`
 
 ## `events` and `resources`
 
-See [events and resources](../features/events). Event ids must be unique.
+See [events and resources](../guide/events). Event ids must be unique.
 
 ## `eventOrder`
 
 Sorts the events of the visible range before layout. It receives the view context (`view`, `kind`, `date`, `range`,
 `period`), so the order can differ per view. Without it, events sort by
-[the default order](../features/events#order).
+[the default order](../guide/events#order).
 
 ## `clock` and `initialNow`
 
-See [now and today](../features/now-and-today) and [server rendering](../features/server-rendering).
+See [now and today](../guide/now-and-today) and [server rendering](../guide/server-rendering).
 
 ## `state` and `atoms`
 
-Where feature state lives; see [feature state](../extending/features#state).
+Where feature state lives; see [feature state](../guide/writing-features#state).
 
 ## Interaction options
 
@@ -113,7 +113,7 @@ transfer receiving can override individual fields through their `relocationPolic
 changes revalidate the active draft and preview without re-deriving the base event layout. Defining defaults does
 not register any of these operations.
 
-See [selection and editing](../features/interactions), [policies](../features/editing-policies), and
-[external drops and transfers](../features/drops-and-transfers).
+See [selection and editing](../guide/interactions), [policies](../guide/editing-policies), and
+[external drops and transfers](../guide/drops-and-transfers).
 
 The accessible-label `locale` is a prop of the framework's `CalendarProvider` or `Calendar`, not a calendar option.

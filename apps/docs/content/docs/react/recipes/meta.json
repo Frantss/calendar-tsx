@@ -1,0 +1,15 @@
+{
+  "title": "Recipes",
+  "pages": [
+    "index",
+    "day-grid-view",
+    "week-and-day-view",
+    "resource-view",
+    "timeline-view",
+    "list-view",
+    "themes",
+    "customizing",
+    "tailwind",
+    "custom-themes"
+  ]
+}

@@ -1,5 +1,5 @@
 ---
-title: Overview
+title: Solid
 description: Build calendars in Solid with headless, composable parts.
 ---
 
@@ -7,14 +7,77 @@ description: Build calendars in Solid with headless, composable parts.
 list and timeline views, with or without resources. Part names, props, data attributes and `--cal-*` variables match the React bindings, so the
 same themes style both.
 
-SolidJS 2 applications use [`@calendar-tsx/solid/v2`](/docs/solid/getting-started/solid-2). That guide covers its
+SolidJS 2 applications use [`@calendar-tsx/solid/v2`](/docs/solid/guide/solid-2). That guide covers its
 installation, compiler setup and usage. The other examples use Solid 1 imports.
 
-<Cards>
-  <Card title='Installation' href='/docs/solid/getting-started/installation' />
-  <Card title='Quick start' href='/docs/solid/getting-started/quick-start' />
-  <Card title='Concepts' href='/docs/solid/getting-started/concepts' />
-  <Card title='Day grid view' href='/docs/solid/views/day-grid-view' />
-</Cards>
-
 <Callout title='Experimental'>The API can change or be removed in any release, without notice.</Callout>
+
+## Install
+
+For SolidJS 2, follow the [SolidJS 2 guide](/docs/solid/guide/solid-2) for installation, compiler setup
+and v2 imports. The setup below uses Solid 1.
+
+```npm
+npm i @calendar-tsx/solid @calendar-tsx/core temporal-polyfill
+```
+
+- Solid 1.x, from 1.8.
+- `@calendar-tsx/core` holds the view factories (such as `dayGridView`) and the types; the Solid package builds on it.
+- `temporal-polyfill` provides `Temporal`, which every date and time uses. Import `Temporal` from it until your
+  runtimes ship it natively.
+
+### Styles
+
+The parts are unstyled. For a working look, add the themes package and import one theme:
+
+```npm
+npm i @calendar-tsx/themes
+```
+
+```ts
+import '@calendar-tsx/themes/default.css';
+```
+
+See [themes](/docs/solid/recipes/themes), or [Tailwind](/docs/solid/recipes/tailwind) if your app uses it.
+
+## First calendar
+
+This example uses Solid 1. For SolidJS 2, use the [v2 quick start](/docs/solid/guide/solid-2#quick-start).
+
+<include lang='tsx' meta='title="App.tsx"'>
+  ../../../examples/solid/quick-start.tsx#app
+</include>
+
+### What it does
+
+1. `calendarFeatures` configures the features once, `calendarViews` binds the views to them, and `useCalendar`
+   receives both.
+2. `view` and `date` live in signals. `useCalendar` takes an accessor and re-syncs whenever a signal read inside
+   it changes. The buttons call `calendar.api`, which reports the next view and date to `onNavigate`; setting the
+   signals moves the calendar.
+3. `CalendarProvider` makes the calendar available to the parts.
+4. `Month` selects the layout, an accessor, narrows it to the day-grid kind and renders the parts inside `<Show>` and
+   `<For>`. The selector's state type is annotated, because the context does not carry the calendar's types.
+
+<Callout type='warn' title='Let the types infer'>
+  Don't pass type arguments such as `useCalendar<Booking>(…)`: TypeScript then stops inferring the rest, and `view`
+  and `onNavigate` widen to `string`. Type `events` instead, for example as `Calendar_EventInput<Booking>[]`.
+</Callout>
+
+## Next steps
+
+Try the [playground](/docs/playground) to compare views and themes.
+
+<Cards>
+  <Card
+    title='Concepts'
+    href='/docs/solid/guide/concepts'
+    description='Understand controlled state, views and features.'
+  />
+  <Card
+    title='API reference'
+    href='/docs/solid/api'
+    description='Read the calendar options, instance and state contracts.'
+  />
+  <Card title='Recipes' href='/docs/solid/recipes' description='Render views and style the calendar.' />
+</Cards>

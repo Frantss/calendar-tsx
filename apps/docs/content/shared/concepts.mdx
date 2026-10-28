@@ -2,12 +2,12 @@
 
 `view` and `date` are options you own, usually in component state or the URL. Navigation actions such as `next()`
 compute the next view and date and pass them to `onNavigate`; the calendar only changes when you pass them back in. See
-[navigation](../features/navigation).
+[navigation](../guide/navigation).
 
 ## Events are input
 
 The calendar never stores or mutates events. Pass a new array to change them, filter the array to hide some, or use
-the optional [event store](../features/events#event-store).
+the optional [event store](../guide/events#event-store).
 
 ## One time zone
 
@@ -31,12 +31,12 @@ share a layout with different settings. You switch on `layout.kind` and render t
 ## Unstyled parts
 
 Parts render one element each, with `data-*` state attributes and their geometry as `--cal-*` custom properties.
-Style them with a [theme](../styling/themes) or your own CSS. You format all visible text: the model carries Temporal
+Style them with a [theme](../recipes/themes) or your own CSS. You format all visible text: the model carries Temporal
 values, never strings.
 
 ## Features
 
-Behavior beyond navigation and layout comes from [features](../extending/features). Call each feature factory with
+Behavior beyond navigation and layout comes from [features](../guide/writing-features). Call each feature factory with
 its defaults, collect the results in `calendarFeatures`, and bind that registry to your views with `calendarViews`.
 Views inherit every registered feature and can override its configuration. View factories supply their layout
 features themselves.

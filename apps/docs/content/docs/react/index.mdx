@@ -1,5 +1,5 @@
 ---
-title: Overview
+title: React
 description: Build calendars in React with headless, composable parts.
 ---
 
@@ -7,11 +7,68 @@ description: Build calendars in React with headless, composable parts.
 list and timeline views, with or without resources. The parts emit their layout as data attributes and CSS custom properties, so you style them
 with a theme or your own CSS.
 
-<Cards>
-  <Card title='Installation' href='/docs/react/getting-started/installation' />
-  <Card title='Quick start' href='/docs/react/getting-started/quick-start' />
-  <Card title='Concepts' href='/docs/react/getting-started/concepts' />
-  <Card title='Day grid view' href='/docs/react/views/day-grid-view' />
-</Cards>
-
 <Callout title='Experimental'>The API can change or be removed in any release, without notice.</Callout>
+
+## Install
+
+```npm
+npm i @calendar-tsx/react @calendar-tsx/core temporal-polyfill
+```
+
+- React 18 or 19.
+- `@calendar-tsx/core` holds the view factories (such as `dayGridView`) and the types; the React package builds on it.
+- `temporal-polyfill` provides `Temporal`, which every date and time uses. Import `Temporal` from it until your
+  runtimes ship it natively.
+
+### Styles
+
+The parts are unstyled. For a working look, add the themes package and import one theme:
+
+```npm
+npm i @calendar-tsx/themes
+```
+
+```ts
+import '@calendar-tsx/themes/default.css';
+```
+
+See [themes](/docs/react/recipes/themes), or [Tailwind](/docs/react/recipes/tailwind) if your app uses it.
+
+## First calendar
+
+<include lang='tsx' meta='title="App.tsx"'>
+  ../../../examples/react/quick-start.tsx#app
+</include>
+
+### What it does
+
+1. `calendarFeatures` configures the features once, `calendarViews` binds the views to them, and `useCalendar`
+   receives both.
+2. `view` and `date` live in React state. The buttons call `calendar.api`, which reports the next view and date to
+   `onNavigate`; setting them moves the calendar.
+3. `CalendarProvider` makes the calendar available to the parts.
+4. `Month` selects the layout, checks its kind and renders the day-grid parts. The selector's state type is annotated,
+   because the context does not carry the calendar's types.
+
+<Callout type='warn' title='Let the types infer'>
+  Don't pass type arguments such as `useCalendar<Booking>(…)`: TypeScript then stops inferring the rest, and `view`
+  and `onNavigate` widen to `string`. Type `events` instead, for example as `Calendar_EventInput<Booking>[]`.
+</Callout>
+
+## Next steps
+
+Try the [playground](/docs/playground) to compare views and themes.
+
+<Cards>
+  <Card
+    title='Concepts'
+    href='/docs/react/guide/concepts'
+    description='Understand controlled state, views and features.'
+  />
+  <Card
+    title='API reference'
+    href='/docs/react/api'
+    description='Read the calendar options, instance and state contracts.'
+  />
+  <Card title='Recipes' href='/docs/react/recipes' description='Render views and style the calendar.' />
+</Cards>

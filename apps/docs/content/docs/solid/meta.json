@@ -1,21 +1,5 @@
 {
   "title": "Solid",
-  "description": "@calendar-tsx/solid",
-  "icon": "Hexagon",
   "root": true,
-  "pages": [
-    "index",
-    "---Getting started---",
-    "...getting-started",
-    "---Views---",
-    "...views",
-    "---Features---",
-    "...features",
-    "---Styling---",
-    "...styling",
-    "---Extending---",
-    "...extending",
-    "---Reference---",
-    "...reference"
-  ]
+  "pages": ["index", "guide", "api", "recipes"]
 }

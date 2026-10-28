@@ -18,7 +18,7 @@
 | `setView(view, date?)`     | Calls `onNavigate` with `view`, keeping the date unless one is given. |
 | `navigate({ view, date })` | Calls `onNavigate` with either or both.                               |
 
-Navigation actions emit a request for the owner to apply. See [navigation](../features/navigation).
+Navigation actions emit a request for the owner to apply. See [navigation](../guide/navigation).
 
 ## Interaction APIs
 
@@ -39,7 +39,7 @@ an operation API; the shared controls have no generic `begin`. `evaluate` return
 opening a session. An active `begin` returns a typed `session` with `update(target)`, `commit()`, `cancel(reason?)`,
 `unavailable(reason)` and `isActive()`. Commands return an object with `status`, and a committed result includes its
 typed `proposal`. Tokens appear only in ownership snapshots. A valid commit calls the operation's callback and, for
-selection, updates its state slice. See [selection and editing](../features/interactions#programmatic-edits).
+selection, updates its state slice. See [selection and editing](../guide/interactions#programmatic-edits).
 
 ## Types
 

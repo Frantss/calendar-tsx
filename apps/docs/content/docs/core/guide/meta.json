@@ -1,0 +1,21 @@
+{
+  "title": "Guide",
+  "pages": [
+    "concepts",
+    "navigation",
+    "events",
+    "interactions",
+    "editing-policies",
+    "drops-and-transfers",
+    "recurrence",
+    "background-events",
+    "background-layers",
+    "overflow",
+    "now-and-today",
+    "server-rendering",
+    "writing-features",
+    "writing-an-adapter",
+    "comparison",
+    "migrating-from-fullcalendar"
+  ]
+}
