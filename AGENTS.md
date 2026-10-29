@@ -16,13 +16,22 @@
 - Use clear English guided by ASD-STE100.
 - Avoid preamble.
 - Start each response with a direct answer to the user's request.
-- Finish each response with a brief recap of the state of **goal**, **done**, and **next**, each on a separate line.
+- End each response with brief **Goal**, **Done**, **Next**, and **Needs you**. Drop each if nothing to show.
 
 ## Autonomy
 
 - Weigh blast radius. After approval, proceed with small, reversible changes. Present a proposal before requesting approval for architectural or cross-cutting changes.
 - Request approval before running any action with side effects.
 - After approval, fix encountered bugs directly related to your work and report the fixes afterwards. Apply the same proposal requirement to architectural or cross-cutting bug fixes.
+
+## Context management
+
+- Keep the main context focused on the goal, constraints, decisions, and integration.
+- When sub-agents are available and permitted, delegate bounded research, code exploration, implementation, reviews, and output-heavy checks. Handle trivial operations directly when delegation adds more overhead than it removes.
+- Give each sub-agent a clear goal, relevant context, constraints, and completion criteria. Pass only the context needed for its task.
+- Require a concise summary of results, evidence references, verification outcomes, and unresolved issues. Keep detailed searches, logs, and intermediate output in the sub-agent's context.
+- Verify consequential conclusions against the referenced evidence. Read additional details when needed to resolve uncertainty or integrate changes.
+- Give concurrent sub-agents separate edit ownership. Coordinate work that depends on shared files or results.
 
 ## Proposing solutions
 
