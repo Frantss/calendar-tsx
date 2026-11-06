@@ -24,14 +24,9 @@
 - Request approval before running any action with side effects.
 - After approval, fix encountered bugs directly related to your work and report the fixes afterwards. Apply the same proposal requirement to architectural or cross-cutting bug fixes.
 
-## Context management
+## Orchestration
 
-- Keep the main context focused on the goal, constraints, decisions, and integration.
-- When sub-agents are available and permitted, delegate bounded research, code exploration, implementation, reviews, and output-heavy checks. Handle trivial operations directly when delegation adds more overhead than it removes.
-- Give each sub-agent a clear goal, relevant context, constraints, and completion criteria. Pass only the context needed for its task.
-- Require a concise summary of results, evidence references, verification outcomes, and unresolved issues. Keep detailed searches, logs, and intermediate output in the sub-agent's context.
-- Verify consequential conclusions against the referenced evidence. Read additional details when needed to resolve uncertainty or integrate changes.
-- Give concurrent sub-agents separate edit ownership. Coordinate work that depends on shared files or results.
+- Before starting or resuming project work, read [ORCHESTRATION.md](ORCHESTRATION.md).
 
 ## Proposing solutions
 
@@ -56,8 +51,8 @@
 
 ## Writing documentation
 
-- Write documentation only when requested or when necessary usage, setup, or maintenance guidance would otherwise be missing or inaccurate.
-- Keep each document focused on one purpose. Include only what the reader needs for that purpose.
+- Change documentation only when requested or needed for a concrete reader task. Identify the missing or incorrect guidance before writing; otherwise leave documentation unchanged.
+- Include only what enables that task. Keep implementation summaries, test inventories, and run results in the task report unless needed for continued use or maintenance.
 - Prefer updating the relevant existing document. Keep each fact in one place and avoid restating details already clear from code or configuration.
 - Remove obsolete or redundant text in documentation you touch.
 
