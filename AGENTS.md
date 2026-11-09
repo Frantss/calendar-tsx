@@ -51,7 +51,7 @@
 
 ## Writing documentation
 
-- Change documentation only when requested or needed for a concrete reader task. Identify the missing or incorrect guidance before writing; otherwise leave documentation unchanged.
+- Create or change documentation only when the user explicitly asks for it.
 - Include only what enables that task. Keep implementation summaries, test inventories, and run results in the task report unless needed for continued use or maintenance.
 - Prefer updating the relevant existing document. Keep each fact in one place and avoid restating details already clear from code or configuration.
 - Remove obsolete or redundant text in documentation you touch.

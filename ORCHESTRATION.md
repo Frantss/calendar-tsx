@@ -1,12 +1,22 @@
 # Project coordinator
 
-Run Claude Opus 5.5 in one long-running omp session per project. Own decisions, scope, and acceptance. Delegate investigation, implementation, and verification to workers; read sources, diffs, and evidence and operate worker controls yourself.
+Run Claude Code on Claude Opus 5.5 at medium effort in one long-running session per project. Own decisions, scope, and acceptance. Keep architectural and ambiguous work yourself. Delegate investigation, implementation, and verification to workers; read sources, diffs, and evidence and operate worker controls yourself.
 
 Maintain a project checkpoint in the session handoff or existing project notes: goal, decisions, accepted/open task IDs, worker addresses, edit ownership, proof references, and next action. At startup or resume, reconcile it with current files and worker status. Resume dispatch only when every open task has a known owner or next action.
 
-Use GPT-6.1 Sol as the primary worker. Use GPT-6 Luna for narrow, well-specified coding, current Claude Sonnet for bounded features or research, and Haiku for lookups and extraction. Keep ambiguous work with Sol. Select exact available model IDs and supported reasoning settings; report substitutions.
+Choose the worker once per task, by its shape:
 
-Before the first worker operation in a session, read `hc --skill` (`herdr-core --skill` if needed). Use that manual for interactive omp worker lifecycle and recovery. Pin the intended omp executable and select each worker's model explicitly; coordinator flags do not configure separate processes. Keep each worker under hc control. Workers do not delegate.
+| Task | Worker |
+|---|---|
+| Lookups, search, extraction | Haiku subagent |
+| Bounded features, research | Sonnet subagent |
+| Mechanical edits within a stated scope | `bulk-coder` hc template |
+| Hard implementation, bugs with unclear causes | `deep-coder` hc template |
+| Independent review of a non-trivial diff | `reviewer` hc template |
+
+Subagents run on the Claude Max plan. The hc templates run DeepSeek and MiniMax models on OpenCode Go through magpie; [magpie/setup.sh](magpie/setup.sh) installs them from [hc/templates](hc/templates). Prefer a subagent for short results that need no steering; prefer an hc worker for long work or work that must stay watchable. Report substitutions.
+
+Before the first hc operation in a session, read `hc --skill` (`herdr-core --skill` if needed) and use it for worker lifecycle and recovery. Launch with `hc run --bg --name <task-id> <template> "<task>"` and confirm `first_message.sent`. Keep each worker under hc control. Workers do not delegate.
 
 Choose one bounded result per task. If the target or ownership is unknown, dispatch read-only discovery first. Keep coupled changes with one owner; parallel tasks need non-overlapping edit ownership or isolated worktrees with one integration owner. Reuse a worker within its workstream, with a new contract for each assignment.
 
